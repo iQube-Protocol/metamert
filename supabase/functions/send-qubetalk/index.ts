@@ -17,6 +17,31 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const body = await req.json();
+
+    // ---------- READ (history) ----------
+    if (body.action === "history") {
+      const { channel_id, limit } = body;
+      const { data, error } = await supabase
+        .from("qubetalk_messages")
+        .select("*")
+        .eq("channel_id", channel_id)
+        .order("created_at", { ascending: false })
+        .limit(limit ?? 50);
+
+      if (error) {
+        console.error("[send-qubetalk] History error:", error);
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ---------- WRITE (publish message) ----------
     const { channel_id, message_id, content, from_agent, type, metadata, in_reply_to } = body;
 
     if (!channel_id || !message_id || !content || !from_agent) {

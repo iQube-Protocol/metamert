@@ -14,29 +14,25 @@ import {
 } from "./qubetalk-types";
 
 // ---------------------------------------------------------------------------
-// Read helpers (direct Supabase queries – anon key is fine for SELECT)
+// Read helpers – routed through edge function (service role) to bypass
+// RLS that requires app.current_tenant_id.
 // ---------------------------------------------------------------------------
 
 export async function fetchHistory(
   thread?: QubeTalkThread,
   limit = 50,
 ): Promise<QubeTalkMessage[]> {
-  let query = supabase
-    .from("qubetalk_messages")
-    .select("*")
-    .eq("channel_id", QUBETALK_CHANNEL)
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  const { data, error } = await supabase.functions.invoke("send-qubetalk", {
+    body: {
+      action: "history",
+      channel_id: QUBETALK_CHANNEL,
+      limit,
+    },
+  });
 
-  // NOTE: We skip server-side JSON filtering because RLS policies on this
-  // table require `app.current_tenant_id` which isn't set for the anon role.
-  // Instead we filter client-side after fetching.
-
-  const { data, error } = await query;
   if (error) throw error;
 
-  let messages = (data ?? []).map(mapRow);
-  // Client-side thread filter
+  let messages = ((data as any[]) ?? []).map(mapRow);
   if (thread) {
     messages = messages.filter((m) => m.metadata?.thread === thread);
   }
