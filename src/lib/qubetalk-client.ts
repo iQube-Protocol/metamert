@@ -35,7 +35,12 @@ export async function fetchHistory(
   const { data, error } = await query;
   if (error) throw error;
 
-  return (data ?? []).map(mapRow);
+  let messages = (data ?? []).map(mapRow);
+  // Client-side thread filter
+  if (thread) {
+    messages = messages.filter((m) => m.metadata?.thread === thread);
+  }
+  return messages;
 }
 
 // ---------------------------------------------------------------------------
