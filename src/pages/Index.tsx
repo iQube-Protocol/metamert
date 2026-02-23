@@ -24,8 +24,8 @@ function ShellLayout() {
   return (
     <div className="flex h-screen flex-col bg-background">
       <RuntimeHeader />
-      <SmartMenu />
       <RuntimeFrame />
+      <SmartMenu />
     </div>
   );
 }
