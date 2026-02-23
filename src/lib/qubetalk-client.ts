@@ -14,30 +14,29 @@ import {
 } from "./qubetalk-types";
 
 // ---------------------------------------------------------------------------
-// Read helpers (direct Supabase queries – anon key is fine for SELECT)
+// Read helpers – routed through edge function (service role) to bypass
+// RLS that requires app.current_tenant_id.
 // ---------------------------------------------------------------------------
 
 export async function fetchHistory(
   thread?: QubeTalkThread,
   limit = 50,
 ): Promise<QubeTalkMessage[]> {
-  let query = supabase
-    .from("qubetalk_messages")
-    .select("*")
-    .eq("channel_id", QUBETALK_CHANNEL)
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  const { data, error } = await supabase.functions.invoke("send-qubetalk", {
+    body: {
+      action: "history",
+      channel_id: QUBETALK_CHANNEL,
+      limit,
+    },
+  });
 
-  // Thread is stored inside metadata->thread
-  // Supabase supports JSON filtering with ->>
-  if (thread) {
-    query = query.eq("metadata->>thread", thread);
-  }
-
-  const { data, error } = await query;
   if (error) throw error;
 
-  return (data ?? []).map(mapRow);
+  let messages = ((data as any[]) ?? []).map(mapRow);
+  if (thread) {
+    messages = messages.filter((m) => m.metadata?.thread === thread);
+  }
+  return messages;
 }
 
 // ---------------------------------------------------------------------------
@@ -72,7 +71,7 @@ export async function publishMessage(
       message_id: messageId,
       content: payload.title,
       from_agent: LOVABLE_AGENT,
-      type: payload.type,
+      type: "text", // DB check constraint only allows: text, delegation, response, system, receipt
       metadata: fullPayload,
     },
   });
