@@ -75,7 +75,7 @@ export async function publishMessage(
       message_id: messageId,
       content: payload.title,
       from_agent: LOVABLE_AGENT,
-      type: payload.type,
+      type: "text", // DB check constraint only allows: text, delegation, response, system, receipt
       metadata: fullPayload,
     },
   });
