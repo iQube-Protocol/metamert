@@ -28,11 +28,9 @@ export async function fetchHistory(
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  // Thread is stored inside metadata->thread
-  // Supabase supports JSON filtering with ->>
-  if (thread) {
-    query = query.eq("metadata->>thread", thread);
-  }
+  // NOTE: We skip server-side JSON filtering because RLS policies on this
+  // table require `app.current_tenant_id` which isn't set for the anon role.
+  // Instead we filter client-side after fetching.
 
   const { data, error } = await query;
   if (error) throw error;
