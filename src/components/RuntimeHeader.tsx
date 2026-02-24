@@ -68,8 +68,8 @@ export default function RuntimeHeader() {
   const trustScores = trust.scores ?? {};
   const rScore = scoreToDots(trustScores.reliability, 4);
   const tScore = scoreToDots(trustScores.trust, 3);
-  const rColor = scoreColor(trustScores.reliability);
-  const tColor = scoreColor(trustScores.trust);
+  const rColor = reliabilityDotColor(trustScores.reliability);
+  const tColor = trustDotColor(trustScores.trust);
 
   const renderDots = (filled: number, activeColor: string) =>
     [...Array(5)].map((_, i) => (
