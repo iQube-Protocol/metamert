@@ -51,7 +51,8 @@ export function useShell(): ShellContextValue {
 // ---------------------------------------------------------------------------
 
 function getIframeOrigin(config: ShellConfig): string {
-  return config.iframe.origin || new URL(config.iframe.url).origin;
+  // Prefer postMessageOrigin from proxy, then origin, then derive from URL
+  return (config.iframe as any).postMessageOrigin || config.iframe.origin || new URL(config.iframe.url).origin;
 }
 
 // ---------------------------------------------------------------------------
@@ -108,14 +109,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           ? { ...prev, selectors: { ...prev.selectors, aigent: { ...prev.selectors.aigent, current: id } } }
           : prev
       );
-      applyConfigUpdate(result.shell_config);
+      // Don't apply shell_config from selector response — it overwrites the whole config
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "aigent", id }, getIframeOrigin(config));
       }
     } catch {
       toast.error("Failed to update Aigent selector");
     }
-  }, [config, applyConfigUpdate]);
+  }, [config]);
 
   const selectLLM = useCallback(async (id: string) => {
     try {
@@ -125,14 +126,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           ? { ...prev, selectors: { ...prev.selectors, llm: { ...prev.selectors.llm, current: id } } }
           : prev
       );
-      applyConfigUpdate(result.shell_config);
+      // Don't apply shell_config from selector response — it overwrites the whole config
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "llm", id }, getIframeOrigin(config));
       }
     } catch {
       toast.error("Failed to update LLM selector");
     }
-  }, [config, applyConfigUpdate]);
+  }, [config]);
 
   const handleMenuAction = useCallback(async (itemId: string) => {
     // Handle runtime commands locally
@@ -145,63 +146,65 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       toast.success("Reset to welcome");
       return;
     }
-
-    // Find the menu item in the current config to get its trigger data
-    const menuItem = config?.menu?.items?.find((i: any) => i.id === itemId);
-    const trigger = (menuItem as any)?.trigger;
+    if (itemId === "reset" || itemId === "__runtime_reset__") {
+      setShellState("welcome");
+      setActiveMenuItem(null);
+      setQuickLinksExpanded(true);
+      if (iframeRef.current && config) {
+        postToIframe(iframeRef.current, { type: "RESET_WELCOME" }, getIframeOrigin(config));
+      }
+      toast.success("Reset to welcome");
+      return;
+    }
 
     setShellState("post-welcome");
     setActiveMenuItem(itemId);
 
-    // Build the menu_event from trigger data (already in config) or construct a basic one
-    const menuEvent = trigger
-      ? {
-          action_id: itemId,
-          prompt: trigger.prompt,
-          intent: trigger.intent,
-          surface_plan_instruction: trigger.surface_plan_instruction,
-          copilot_instruction: trigger.copilot_instruction,
-        }
-      : { action_id: itemId, intent: itemId };
-
-    // Try the API call in the background for any server-side effects,
-    // but don't depend on it for iframe communication
     try {
       const result: MenuActionResult = await menuAction(itemId);
-      // Only apply config if it came from upstream (not the hardcoded fallback)
-      // We detect fallback by checking if trust.level is "unverified" + signals match default
       applyConfigUpdate(result.shell_config);
-      // If API returned an iframe_event, forward it too
+      // Forward the API-returned iframe_event directly to the iframe
       if (result.iframe_event && iframeRef.current && config) {
         iframeRef.current.contentWindow?.postMessage(result.iframe_event, getIframeOrigin(config));
+      } else if (result.menu_event && iframeRef.current && config) {
+        // Fallback: forward menu_event as MENU_ACTION
+        postToIframe(
+          iframeRef.current,
+          { type: "MENU_ACTION", item_id: itemId, menu_event: result.menu_event },
+          getIframeOrigin(config),
+        );
       }
     } catch {
-      // API unavailable — that's fine, we use local trigger data
-    }
-
-    // Always send MENU_ACTION with trigger data to iframe
-    if (iframeRef.current && config) {
-      postToIframe(
-        iframeRef.current,
-        { type: "MENU_ACTION", item_id: itemId, menu_event: menuEvent },
-        getIframeOrigin(config),
-      );
+      // API unavailable — send a basic MENU_ACTION from local trigger data
+      const menuItem = config?.menu?.items?.find((i: any) => i.id === itemId);
+      const trigger = (menuItem as any)?.trigger;
+      if (iframeRef.current && config) {
+        const menuEvent = trigger
+          ? { action_id: itemId, prompt: trigger.prompt, intent: trigger.intent }
+          : { action_id: itemId, intent: itemId };
+        postToIframe(
+          iframeRef.current,
+          { type: "MENU_ACTION", item_id: itemId, menu_event: menuEvent },
+          getIframeOrigin(config),
+        );
+      }
     }
     toast.success(`Action: ${itemId}`);
   }, [config, applyConfigUpdate]);
 
   const submitPrompt = useCallback(async (text: string) => {
     if (!text.trim()) return;
+    setShellState("post-welcome");
     try {
       const result: PromptActionResult = await promptAction(text);
-      setShellState("post-welcome");
       applyConfigUpdate(result.shell_config);
 
       if (iframeRef.current && config) {
-        // Forward the API-returned iframe_event if present, otherwise fall back to PROMPT_SUBMIT
+        // Forward the API-returned iframe_event directly
         if (result.iframe_event) {
           iframeRef.current.contentWindow?.postMessage(result.iframe_event, getIframeOrigin(config));
         } else {
+          // Fallback: send PROMPT_SUBMIT
           postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
         }
       }

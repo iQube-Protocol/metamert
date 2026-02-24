@@ -6,7 +6,7 @@ import { resolveIcon } from "@/lib/icon-utils";
  * Full-width on tablet/desktop; horizontally scrollable on mobile.
  */
 export default function QuickLinksBar() {
-  const { config, handleMenuAction, quickLinksExpanded } = useShell();
+  const { config, handleMenuAction, submitPrompt, quickLinksExpanded } = useShell();
 
   const quickLinks = config?.menu?.policy?.quick_links ?? [];
   if (quickLinks.length === 0 || !quickLinksExpanded) return null;
@@ -18,7 +18,15 @@ export default function QuickLinksBar() {
         return (
           <button
             key={ql.id}
-            onClick={() => handleMenuAction(ql.action ?? ql.id)}
+            onClick={() => {
+              // QuickLinks with a prompt go through prompt-action API
+              // Runtime commands (refresh/reset) go through handleMenuAction
+              if (ql.prompt) {
+                submitPrompt(ql.prompt);
+              } else {
+                handleMenuAction(ql.action ?? ql.id);
+              }
+            }}
             className="flex shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg px-2 py-1 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95"
             title={ql.label}
           >
