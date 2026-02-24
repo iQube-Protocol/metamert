@@ -304,6 +304,31 @@ serve(async (req) => {
       });
     }
 
+    // ---- PROMPT ACTION ----
+    if (action === "prompt-action") {
+      try {
+        const res = await upstreamFetch("/runtime/prompt-action", {
+          method: "POST",
+          headers,
+          body: JSON.stringify(reqBody),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return new Response(JSON.stringify(data), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch {
+        // upstream unavailable
+      }
+      console.log("[aa-proxy] prompt-action upstream unavailable, returning fallback");
+      return new Response(JSON.stringify({
+        iframe_event: { type: "PROMPT_SUBMIT", text: reqBody?.text ?? "" },
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(
       JSON.stringify({ error: `Unknown action: ${action}` }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },

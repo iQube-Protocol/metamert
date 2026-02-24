@@ -12,8 +12,18 @@ import { Loader2 } from "lucide-react";
  * Auto-hides after 3s of no interaction; re-appears on pointer enter.
  */
 function FloatingOverlay() {
+  const { shellState, config } = useShell();
   const [visible, setVisible] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const stateBehavior = config?.menu?.policy?.state_behavior;
+  const isWelcome = shellState === "welcome";
+  const showPrompt = isWelcome
+    ? (stateBehavior?.welcome?.show_prompt ?? false)
+    : (stateBehavior?.post_welcome?.show_prompt ?? true);
+  const showQuickLinks = isWelcome
+    ? (stateBehavior?.welcome?.show_quick_links ?? true)
+    : true;
 
   const scheduleHide = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -49,12 +59,16 @@ function FloatingOverlay() {
           visible ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
-        <div className="w-full">
-          <QuickLinksBar />
-        </div>
-        <div className="w-full">
-          <PromptBox />
-        </div>
+        {showQuickLinks && (
+          <div className="w-full">
+            <QuickLinksBar />
+          </div>
+        )}
+        {showPrompt && (
+          <div className="w-full">
+            <PromptBox />
+          </div>
+        )}
       </div>
     </>
   );

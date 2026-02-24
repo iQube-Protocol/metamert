@@ -1,5 +1,11 @@
 import { useShell } from "@/contexts/ShellContext";
 import { resolveIcon } from "@/lib/icon-utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /** Color map for menu item accents — uses CSS custom properties */
 const ITEM_COLORS: Record<string, string> = {
@@ -31,7 +37,7 @@ export default function SmartMenu() {
     const isActive = activeMenuItem === item.id;
     const hsl = ITEM_COLORS[item.id];
 
-    return (
+    const btn = (
       <button
         key={item.id}
         onClick={() => handleMenuAction(item.id)}
@@ -66,24 +72,31 @@ export default function SmartMenu() {
         </span>
       </button>
     );
+
+    if (item.tooltip) {
+      return (
+        <Tooltip key={item.id}>
+          <TooltipTrigger asChild>{btn}</TooltipTrigger>
+          <TooltipContent side="top"><p className="text-xs">{item.tooltip}</p></TooltipContent>
+        </Tooltip>
+      );
+    }
+    return btn;
   };
 
   return (
-    <nav className="flex items-stretch border-t border-border bg-card px-2 py-1.5">
-      {/* Be — left, push to edge */}
-      <div className="flex items-stretch">
-        {left.map((item: any) => renderBtn(item))}
-      </div>
-
-      {/* Earn · Play · Make — always centred */}
-      <div className="flex flex-1 items-stretch justify-center gap-0">
-        {center.map((item: any) => renderBtn(item, true))}
-      </div>
-
-      {/* Share — right, push to edge */}
-      <div className="flex items-stretch">
-        {right.map((item: any) => renderBtn(item))}
-      </div>
-    </nav>
+    <TooltipProvider delayDuration={300}>
+      <nav className="flex items-stretch border-t border-border bg-card px-2 py-1.5">
+        <div className="flex items-stretch">
+          {left.map((item: any) => renderBtn(item))}
+        </div>
+        <div className="flex flex-1 items-stretch justify-center gap-0">
+          {center.map((item: any) => renderBtn(item, true))}
+        </div>
+        <div className="flex items-stretch">
+          {right.map((item: any) => renderBtn(item))}
+        </div>
+      </nav>
+    </TooltipProvider>
   );
 }

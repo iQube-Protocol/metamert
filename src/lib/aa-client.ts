@@ -183,6 +183,19 @@ export async function menuAction(itemId: string): Promise<MenuActionResult> {
 }
 
 // ---------------------------------------------------------------------------
+// Prompt action
+// ---------------------------------------------------------------------------
+
+export interface PromptActionResult {
+  iframe_event?: Record<string, unknown>;
+  shell_config?: ShellConfig;
+}
+
+export async function promptAction(text: string): Promise<PromptActionResult> {
+  return aaProxy<PromptActionResult>("prompt-action", { text });
+}
+
+// ---------------------------------------------------------------------------
 // Accessors
 // ---------------------------------------------------------------------------
 
