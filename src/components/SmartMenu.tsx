@@ -37,7 +37,7 @@ export default function SmartMenu() {
     const isActive = activeMenuItem === item.id;
     const hsl = ITEM_COLORS[item.id];
 
-    return (
+    const btn = (
       <button
         key={item.id}
         onClick={() => handleMenuAction(item.id)}
@@ -72,6 +72,16 @@ export default function SmartMenu() {
         </span>
       </button>
     );
+
+    if (item.tooltip) {
+      return (
+        <Tooltip key={item.id}>
+          <TooltipTrigger asChild>{btn}</TooltipTrigger>
+          <TooltipContent side="top"><p className="text-xs">{item.tooltip}</p></TooltipContent>
+        </Tooltip>
+      );
+    }
+    return btn;
   };
 
   return (
