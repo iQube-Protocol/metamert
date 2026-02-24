@@ -58,23 +58,19 @@ export default function RuntimeHeader() {
 
   const trust = config.trust ?? { level: "unverified", signals: [], scores: {} };
   const trustScores = trust.scores ?? {};
-  const rScore = trustScores?.reliability ?? 4;
-  const tScore = trustScores?.trust ?? (trust.level === "verified" ? 5 : trust.level === "warning" ? 1 : 3);
+  const rScore = scoreToDots(trustScores.reliability, 4);
+  const tScore = scoreToDots(trustScores.trust, 3);
+  const rColor = scoreColor(trustScores.reliability);
+  const tColor = scoreColor(trustScores.trust);
 
-  const dotColorMap: Record<string, string> = {
-    verified: "bg-[hsl(var(--shell-ok))]",
-    warning: "bg-[hsl(var(--shell-warn))]",
-    unverified: "bg-[hsl(var(--shell-fail))]",
-  };
-  const dotColor = dotColorMap[trust.level] ?? "bg-muted-foreground/30";
-
-  const renderDots = (score: number, activeColor: string) =>
+  const renderDots = (filled: number, activeColor: string) =>
     [...Array(5)].map((_, i) => (
       <span
         key={i}
         className={`inline-block h-2 w-2 rounded-full transition-colors duration-200 ${
-          i < score ? activeColor : "bg-muted-foreground/20"
-        }`}
+          i < filled ? activeColor : "bg-muted-foreground/20"
+        } ${inferring ? "animate-[pulse_1s_ease-in-out_infinite]" : ""}`}
+        style={inferring ? { animationDelay: `${i * 100}ms` } : undefined}
       />
     ));
 
