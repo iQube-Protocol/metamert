@@ -243,7 +243,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
       }
     } finally {
-      setInferring(false);
+      // Don't clear inferring here — wait for iframe INFERENCE_COMPLETE/RENDER_COMPLETE message.
+      // Set a safety timeout so animation doesn't run forever if iframe never responds.
+      if (inferTimeoutRef.current) clearTimeout(inferTimeoutRef.current);
+      inferTimeoutRef.current = setTimeout(() => {
+        setInferring(false);
+        inferTimeoutRef.current = null;
+      }, 30000); // 30s max
     }
   }, [config, applyConfigUpdate]);
 
