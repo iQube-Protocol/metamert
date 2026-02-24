@@ -1,3 +1,4 @@
+// aa-proxy v2.1 – POST action-based routing with normalization
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
