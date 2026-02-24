@@ -159,28 +159,50 @@ serve(async (req) => {
 
     // ---- SELECTORS ----
     if (action === "selectors") {
-      const res = await upstreamFetch("/runtime/selectors", {
-        method: "POST",
-        headers,
-        body: JSON.stringify(reqBody),
-      });
-      const data = await res.text();
-      return new Response(data, {
-        status: res.status,
+      try {
+        const res = await upstreamFetch("/runtime/selectors", {
+          method: "POST",
+          headers,
+          body: JSON.stringify(reqBody),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return new Response(JSON.stringify(data), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch {
+        // upstream unavailable
+      }
+      console.log("[aa-proxy] selectors upstream unavailable, returning fallback");
+      return new Response(JSON.stringify({ ok: true, shell_config: DEFAULT_SHELL_CONFIG }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // ---- MENU ACTION ----
     if (action === "menu-action") {
-      const res = await upstreamFetch("/runtime/menu-action", {
-        method: "POST",
-        headers,
-        body: JSON.stringify(reqBody),
-      });
-      const data = await res.text();
-      return new Response(data, {
-        status: res.status,
+      try {
+        const res = await upstreamFetch("/runtime/menu-action", {
+          method: "POST",
+          headers,
+          body: JSON.stringify(reqBody),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return new Response(JSON.stringify(data), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch {
+        // upstream unavailable
+      }
+      console.log("[aa-proxy] menu-action upstream unavailable, returning fallback");
+      const itemId = reqBody?.item_id ?? "unknown";
+      return new Response(JSON.stringify({
+        menu_event: { action_id: itemId, intent: itemId, prompt: `Launching ${itemId}…` },
+        shell_config: DEFAULT_SHELL_CONFIG,
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
