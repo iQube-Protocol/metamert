@@ -33,7 +33,7 @@ function scoreColor(score: number | undefined): string {
  * LLM dropdown groups models by provider with provider header rows.
  */
 export default function RuntimeHeader() {
-  const { config, selectAigent, selectLLM } = useShell();
+  const { config, selectAigent, selectLLM, inferring } = useShell();
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
 
