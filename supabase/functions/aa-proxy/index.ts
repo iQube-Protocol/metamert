@@ -118,6 +118,21 @@ function normalizeShellConfig(raw: any): any {
   if (raw.iframe?.url?.startsWith("http://localhost"))
     raw.iframe.url = DEFAULT_SHELL_CONFIG.iframe.url;
 
+  // 5b. Normalize iframe path: /runtime → /metame/runtime?embed=1
+  if (raw.iframe?.url) {
+    try {
+      const u = new URL(raw.iframe.url);
+      if (u.pathname === "/runtime" || u.pathname === "/") {
+        u.pathname = "/metame/runtime";
+        if (!u.searchParams.has("embed")) u.searchParams.set("embed", "1");
+        raw.iframe.url = u.toString();
+      } else if (u.pathname === "/metame/runtime" && !u.searchParams.has("embed")) {
+        u.searchParams.set("embed", "1");
+        raw.iframe.url = u.toString();
+      }
+    } catch { /* invalid URL, leave as-is */ }
+  }
+
   // 6. Ensure menu.edge_items exists
   if (!raw.menu?.edge_items) raw.menu = { ...raw.menu, edge_items: [] };
 
