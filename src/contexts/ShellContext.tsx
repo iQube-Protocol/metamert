@@ -10,47 +10,6 @@ import {
 import { toast } from "sonner";
 
 // ---------------------------------------------------------------------------
-// Mock data used when the AA-API isn't available yet
-// ---------------------------------------------------------------------------
-
-const MOCK_CONFIG: ShellConfig = {
-  trust: { level: "unverified", signals: ["Phase-1 dev mode"] },
-  selectors: {
-    aigent: {
-      current: "aigent-z",
-      options: [
-        { id: "aigent-z", label: "Aigent Z" },
-        { id: "aigent-q", label: "Aigent Q" },
-      ],
-    },
-    llm: {
-      current: "gpt-4o",
-      options: [
-        { id: "gpt-4o", label: "GPT-4o" },
-        { id: "claude-sonnet", label: "Claude Sonnet" },
-      ],
-    },
-  },
-  menu: {
-    items: [
-      { id: "earn", label: "Earn", enabled: true },
-      { id: "play", label: "Play", enabled: true },
-      { id: "make", label: "Make", enabled: true },
-    ],
-    edge_items: [
-      { id: "be", label: "Be", visible: true },
-      { id: "share", label: "Share", visible: true },
-    ],
-    collapse_mobile: true,
-  },
-  iframe: {
-    url: "https://dev-beta.aigentz.me/runtime",
-    handoff_token: "dev-placeholder-token",
-    origin: "https://dev-beta.aigentz.me",
-  },
-};
-
-// ---------------------------------------------------------------------------
 // Context shape
 // ---------------------------------------------------------------------------
 
@@ -86,24 +45,22 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const hydrate = useCallback(async () => {
     setLoading(true);
     try {
-      // Phase 1: try real API, fall back to mock
+      // Phase 1: auto-auth with placeholder DID in dev
       if (!getToken()) {
-        // Auto-auth with placeholder DID in dev
         try {
           await authenticate("did:metame:dev-shell", async () => "dev-sig");
           setAuthenticated(true);
         } catch {
-          console.warn("[Shell] Auth failed, using mock config");
+          console.warn("[Shell] Auth failed via proxy");
         }
       }
 
-      try {
-        const cfg = await fetchShellConfig();
-        setConfig(cfg);
-      } catch {
-        console.warn("[Shell] shell-config unavailable, using mock");
-        setConfig(MOCK_CONFIG);
-      }
+      // Fetch shell-config (proxy returns default if upstream is unavailable)
+      const cfg = await fetchShellConfig();
+      setConfig(cfg);
+    } catch (err) {
+      console.error("[Shell] Hydration failed:", err);
+      toast.error("Shell hydration failed");
     } finally {
       setLoading(false);
     }
