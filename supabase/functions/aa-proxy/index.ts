@@ -79,6 +79,52 @@ const DEFAULT_SHELL_CONFIG = {
 };
 
 // ---------------------------------------------------------------------------
+// Normalize upstream shell-config to match ShellConfig shape
+// ---------------------------------------------------------------------------
+
+// deno-lint-ignore no-explicit-any
+function normalizeShellConfig(raw: any): any {
+  // 1. Flatten current selectors from object to string ID
+  if (raw.selectors?.aigent?.current?.id)
+    raw.selectors.aigent.current = raw.selectors.aigent.current.id;
+  if (raw.selectors?.llm?.current?.id)
+    raw.selectors.llm.current = raw.selectors.llm.current.id;
+
+  // 2. Rename provider_id -> provider in LLM options
+  for (const opt of raw.selectors?.llm?.options ?? [])
+    if (opt.provider_id && !opt.provider) { opt.provider = opt.provider_id; }
+
+  // 3. Map session -> trust block
+  if (raw.session && !raw.trust) {
+    raw.trust = {
+      level: raw.session.trust_level ?? "unverified",
+      signals: (raw.session.trust_signals ?? []).map((s: any) =>
+        typeof s === "string" ? s : s.label ?? String(s)
+      ),
+      scores: raw.session.scores ?? {},
+    };
+  }
+
+  // 4. Ensure quick_links includes Refresh + Reset
+  const ql = raw.menu?.policy?.quick_links ?? [];
+  const hasRefresh = ql.some((q: any) => q.id === "ql-refresh" || q.action === "refresh");
+  if (!hasRefresh) {
+    ql.push({ id: "ql-refresh", label: "Refresh", icon: "refresh-cw", action: "refresh" });
+    ql.push({ id: "ql-reset", label: "Reset", icon: "rotate-ccw", action: "reset" });
+  }
+  if (raw.menu?.policy) raw.menu.policy.quick_links = ql;
+
+  // 5. Fix localhost iframe URL
+  if (raw.iframe?.url?.startsWith("http://localhost"))
+    raw.iframe.url = DEFAULT_SHELL_CONFIG.iframe.url;
+
+  // 6. Ensure menu.edge_items exists
+  if (!raw.menu?.edge_items) raw.menu = { ...raw.menu, edge_items: [] };
+
+  return raw;
+}
+
+// ---------------------------------------------------------------------------
 // Upstream fetch with primary/fallback
 // ---------------------------------------------------------------------------
 
