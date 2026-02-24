@@ -20,16 +20,18 @@ export default function PromptBox() {
   };
 
   return (
-    <div className="glass-float flex items-center gap-1.5 rounded-xl border-0 px-2 py-1.5 shadow-lg">
-      <div className="flex flex-1 items-center rounded-lg border-0 bg-transparent">
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          placeholder={placeholder}
-          className="flex-1 bg-transparent px-3 py-2 text-sm text-center text-foreground placeholder:text-muted-foreground focus:outline-none"
-        />
+    <div className="glass-float flex items-center rounded-xl px-2 py-1.5 shadow-lg">
+      {/* Left spacer to balance the right-side buttons */}
+      <div className="flex w-[4.75rem] shrink-0" />
+      <input
+        type="text"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+        placeholder={placeholder}
+        className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-center text-foreground placeholder:text-muted-foreground focus:outline-none"
+      />
+      <div className="flex shrink-0 items-center">
         <button
           onClick={handleSubmit}
           disabled={!text.trim()}
@@ -37,14 +39,14 @@ export default function PromptBox() {
         >
           <SendHorizonal className="h-4 w-4" />
         </button>
+        <button
+          onClick={toggleQuickLinks}
+          className="flex h-9 w-9 items-center justify-center rounded-lg bg-transparent text-muted-foreground transition-all duration-150 hover:bg-accent/50 hover:text-accent-foreground active:scale-95"
+          aria-label={quickLinksExpanded ? "Hide quick links" : "Show quick links"}
+        >
+          {quickLinksExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+        </button>
       </div>
-      <button
-        onClick={toggleQuickLinks}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-0 bg-transparent text-muted-foreground transition-all duration-150 hover:bg-accent/50 hover:text-accent-foreground active:scale-95"
-        aria-label={quickLinksExpanded ? "Hide quick links" : "Show quick links"}
-      >
-        {quickLinksExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-      </button>
     </div>
   );
 }
