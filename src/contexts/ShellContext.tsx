@@ -187,7 +187,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           : { action_id: itemId, intent: itemId };
         postToIframe(
           iframeRef.current,
-          { type: "MENU_ACTION", item_id: itemId, menu_event: menuEvent },
+          { type: "MENU_ACTION", action_id: itemId, prompt: menuEvent.prompt, menu_event: menuEvent },
           getIframeOrigin(config),
         );
       }
