@@ -1,162 +1,133 @@
 
 
-## Implement Windsurf Runtime Brief: Header/Menu Parity + Full API Wiring
+## Visual Alignment: Menu System Parity with Reference Screenshots
 
 ### Summary
 
-Windsurf has deployed the AA-API runtime endpoints (`GET /runtime/shell-config`, `POST /runtime/selectors`, `POST /runtime/menu-action`) and sent a detailed behavior brief. The upstream isn't reachable from the edge function yet (still returning fallback), but we need to implement the full enriched payload schema so when it goes live, everything works automatically.
-
-This plan covers: expanding the `ShellConfig` type to match the enriched payload, making header/menu fully payload-driven (icons, tooltips, policy, trust dots), wiring menu actions to forward `menu_event` to iframe, and adding welcome vs post-welcome state support.
+Align the thin-client shell UI to match the reference screenshots. The key architectural change is that the welcome-state prompt box is rendered by the iframe (not the shell), and the shell only renders prompt + quick links in post-welcome state. A "refresh" action resets to the iframe welcome screen.
 
 ---
 
-### Changes Overview
+### State Machine
 
-**1. Expand `ShellConfig` type and default config** (`src/lib/aa-client.ts`, `supabase/functions/aa-proxy/index.ts`)
+```text
+WELCOME (initial)
+  - iframe renders its own centered prompt ("What do you want to do today?")
+  - Shell renders: Header + Quick Links row (icon-only) + Bottom Nav
+  - No shell prompt box
 
-Add the new fields from the Windsurf brief to the TypeScript interface and the proxy's fallback config:
+POST-WELCOME (after first menu action)
+  - iframe renders content (capsule cards etc.)
+  - Shell renders: Header + [collapsible Quick Links] + Prompt Box + Bottom Nav
+  - Prompt box has send button + chevron to toggle quick links visibility
 
-- `selectors.*.options[].icon` and `tooltip` fields
-- `session.trust_level`, `session.scores.trust`, `session.scores.reliability` (mapped into `trust`)
-- `menu.policy` object: `collapse_to_metame_button`, `center_group_ids`, `triad_cluster_gap`, `quick_links[]`, `floating_quick_links[]`, `prompt_box`, `state_behavior`
-- `menu.mode` field (`"expanded" | "collapsed"`)
-- `iframe.bootstrap.context` passthrough
+REFRESH (menu action "refresh")
+  - Resets shellState back to "welcome"
+  - Sends NAVIGATE or CONTEXT_UPDATE to iframe to reload welcome screen
+```
 
-Update `menuAction()` to return the `menu_event` payload (prompt, intent, `surface_plan_instruction`, `copilot_instruction`) so the shell can forward it to the iframe.
+---
 
-**2. Payload-driven RuntimeHeader** (`src/components/RuntimeHeader.tsx`)
+### Changes Required
 
-- Render selector icons from payload `icon` field using lucide dynamic icon lookup (fallback to current behavior when absent)
-- Render selector tooltips from payload
-- Drive trust dots from `trust.scores.trust` and `trust.scores.reliability` (numeric 0-5) when present, fall back to level-based coloring
-- Support `trust.signals` display on hover/tooltip
+**1. Restructure layout in `src/pages/Index.tsx`**
 
-**3. Payload-driven SmartMenu** (`src/components/SmartMenu.tsx`)
+- Remove `PromptBox` from above the iframe
+- Move prompt box + quick links to a new `BottomPanel` component that sits between the iframe and the bottom nav
+- In welcome state: only show quick links row (no prompt box -- iframe has it)
+- In post-welcome state: show collapsible quick links + prompt box with send + chevron
 
-- Remove hardcoded `menuItems` array; build from `config.menu.items` + `config.menu.edge_items` merged in order: `[be, ...items, share]`
-- Use payload `icon` field for icons (lucide dynamic lookup, fallback defaults)
-- Implement collapsed mode: when `menu.mode === "collapsed"`, show Be (left), single "metaMe" button (center, opens triad), Share (right)
-- Respect `menu.policy.triad_cluster_gap` for desktop spacing
-- Render quick links above menu in welcome state
+**2. Redesign quick links in `src/components/SmartMenu.tsx` (or extract to `QuickLinksBar`)**
 
-**4. Wire menu actions to return + forward `menu_event`** (`src/contexts/ShellContext.tsx`, `src/lib/shell-messages.ts`)
+Current: text-label pills (`rounded-full bg-accent px-3 py-1 text-[11px]`)
+Target: icon-only buttons in bordered rounded rectangles, horizontally scrollable
 
-- Update `menuAction()` in `aa-client.ts` to return the full response (including `menu_event` with `prompt`, `intent`, `surface_plan_instruction`)
-- In `ShellContext.handleMenuAction()`: after the API call, forward `MENU_ACTION` with the `menu_event` payload to the iframe via `postToIframe()`
-- Re-hydrate config from the returned `shell_config` if present in response
+- Each quick link renders as a bordered rectangle with only an icon (no label text)
+- Horizontally scrollable row with `overflow-x-auto` and `flex-nowrap`
+- Use `resolveIcon()` for each quick link's icon field
+- Visible in both welcome and post-welcome states (collapsible in post-welcome via chevron)
 
-**5. Wire selector changes to iframe** (`src/contexts/ShellContext.tsx`)
+**3. Create `src/components/PromptBox.tsx`**
 
-- After `updateSelector()` call, send `SELECTOR_CHANGE` postMessage to iframe
-- Re-hydrate config from returned `shell_config` if present
+A dedicated prompt box component (post-welcome only) with:
+- Full-width input field: "What do you want to do today?"
+- Send icon button (paper plane) on the right
+- Chevron toggle button (right of send) to expand/collapse quick links
+- On submit: forward prompt text to iframe via `postToIframe` as a new message type or via `MENU_ACTION`
+- Styling: dark card background, rounded, border
 
-**6. Welcome vs Post-Welcome state** (`src/contexts/ShellContext.tsx`, `src/pages/Index.tsx`)
+**4. Add active item highlight in bottom nav**
 
-- Add `shellState: "welcome" | "post-welcome"` to ShellContext
-- Welcome: show centered prompt box + quick links, menu visible
-- Post-welcome: triggered when first menu action occurs; hide prompt box, keep menu as action rail
-- Driven by `menu.policy.state_behavior.welcome` and `state_behavior.post_welcome`
+- Track which triad item is active (from last menu action or from iframe NAVIGATE messages)
+- Active item gets a highlight ring/circle around its icon (matching the Play highlight in screenshots)
+- Add `activeItem` state to `ShellContext`
 
-**7. Update proxy default config** (`supabase/functions/aa-proxy/index.ts`)
+**5. Update `src/contexts/ShellContext.tsx`**
 
-- Expand `DEFAULT_SHELL_CONFIG` with the new fields (policy, icons, prompt_box) so the fallback mirrors the enriched schema
+- Add `activeMenuItem: string | null` state, set on `handleMenuAction`
+- Add `quickLinksExpanded: boolean` state with toggle
+- Add `resetToWelcome()` function that sets shellState back to "welcome" and sends reset to iframe
+- Wire "refresh" menu action to call `resetToWelcome()`
+- Show quick links in both states (not just welcome)
 
-**8. Send QubeTalk acknowledgment**
+**6. Update `DEFAULT_SHELL_CONFIG` in proxy**
 
-- Post a status message to `#ui-shell` confirming implementation of the brief
+- Add icon fields to quick_links entries so they render as icon-only buttons
+- Update `state_behavior.post_welcome` to `{ show_prompt: true, collapse_quick_links: false }`
+
+**7. Coordinate with Windsurf**
+
+- Send QubeTalk message to `#ui-shell` confirming: welcome prompt is iframe-owned, shell takes over prompt in post-welcome, "refresh" resets to iframe welcome
+- Request confirmation of iframe message type for prompt submission and welcome-reset
+
+---
+
+### File Change List
+
+| File | Change |
+|------|--------|
+| `src/pages/Index.tsx` | Remove inline PromptBox, add BottomPanel between iframe and nav |
+| `src/components/PromptBox.tsx` | New: input + send + chevron toggle component |
+| `src/components/QuickLinksBar.tsx` | New: horizontally scrollable icon-only quick link buttons |
+| `src/components/SmartMenu.tsx` | Remove quick links rendering (moved out), add active item highlight |
+| `src/contexts/ShellContext.tsx` | Add activeMenuItem, quickLinksExpanded, resetToWelcome |
+| `src/lib/shell-messages.ts` | Add PROMPT_SUBMIT and RESET_WELCOME outbound message types |
+| `supabase/functions/aa-proxy/index.ts` | Add icons to quick_links, update state_behavior defaults |
 
 ---
 
 ### Technical Details
 
-#### Expanded ShellConfig interface
+#### QuickLinksBar layout
 
-```typescript
-export interface SelectorOption {
-  id: string;
-  label: string;
-  icon?: string;    // lucide icon name
-  tooltip?: string;
-}
-
-export interface MenuItem {
-  id: string;
-  label: string;
-  icon?: string;
-  tooltip?: string;
-  enabled: boolean;
-  color?: string;
-}
-
-export interface MenuPolicy {
-  collapse_to_metame_button?: boolean;
-  center_group_ids?: string[];
-  triad_cluster_gap?: string;
-  edge_items_when_needed?: boolean;
-  quick_links?: { id: string; label: string; icon?: string; action?: string }[];
-  floating_quick_links?: { id: string; label: string; action: string }[];
-  prompt_box?: { placeholder: string; visible: boolean };
-  state_behavior?: {
-    welcome?: { show_prompt: boolean; show_quick_links: boolean };
-    post_welcome?: { show_prompt: boolean; collapse_quick_links: boolean };
-  };
-}
-
-export interface ShellConfig {
-  trust: {
-    level: "verified" | "unverified" | "warning";
-    signals: string[];
-    scores?: { trust?: number; reliability?: number };
-  };
-  selectors: {
-    aigent: { current: string; options: SelectorOption[] };
-    llm: { current: string; options: SelectorOption[] };
-  };
-  menu: {
-    mode?: "expanded" | "collapsed";
-    items: MenuItem[];
-    edge_items: { id: string; label: string; icon?: string; visible: boolean }[];
-    collapse_mobile: boolean;
-    policy?: MenuPolicy;
-  };
-  iframe: {
-    url: string;
-    handoff_token?: string;
-    origin?: string;
-    bootstrap?: { context?: Record<string, unknown> };
-  };
-}
+```text
+[ icon ] [ icon ] [ icon ] [ icon ] [ icon ] [ icon ] [ icon ] [ icon ]
+  ^-- horizontally scrollable, icon-only, bordered rounded rectangles
 ```
 
-#### Menu action return type
+Each button: `w-[120px] h-10 rounded-lg border border-border flex items-center justify-center`
 
-```typescript
-export interface MenuActionResult {
-  menu_event?: {
-    action_id: string;
-    prompt?: string;
-    intent?: string;
-    surface_plan_instruction?: string;
-    copilot_instruction?: string;
-  };
-  shell_config?: ShellConfig;
-}
+#### PromptBox layout (post-welcome)
+
+```text
++-------------------------------------------------------+----------+-----+
+| What do you want to do today?                         | [send] | [v] |
++-------------------------------------------------------+----------+-----+
 ```
 
-#### Dynamic icon lookup
+- Chevron `v` (ChevronDown) when quick links visible, `>` (ChevronRight) when collapsed
+- Send button: paper plane icon
 
-A small utility using lucide-react's icon registry to map payload icon names to components, with fallback defaults per menu item ID.
+#### Active menu item highlight
 
-#### File change list
+The active triad item (e.g., Play) gets a circular highlight background behind its icon, using a contrasting ring color (e.g., `ring-2 ring-primary` or a colored circle).
 
-| File | Change |
-|------|--------|
-| `src/lib/aa-client.ts` | Expand `ShellConfig` type, `menuAction` returns `MenuActionResult`, `updateSelector` returns optional `shell_config` |
-| `supabase/functions/aa-proxy/index.ts` | Expand `DEFAULT_SHELL_CONFIG` with policy/icons/prompt fields |
-| `src/lib/shell-messages.ts` | Add `menu_event` payload to `MENU_ACTION` outbound type |
-| `src/components/RuntimeHeader.tsx` | Payload-driven icons, tooltips, trust score dots |
-| `src/components/SmartMenu.tsx` | Fully payload-driven, collapsed mode, quick links |
-| `src/contexts/ShellContext.tsx` | Forward menu/selector events to iframe, welcome/post-welcome state, re-hydrate from responses |
-| `src/pages/Index.tsx` | Welcome state prompt box + quick links rendering |
-| `src/lib/icon-utils.ts` | New: dynamic lucide icon lookup utility |
+#### New postMessage types
+
+```typescript
+| { type: "PROMPT_SUBMIT"; text: string }
+| { type: "RESET_WELCOME" }
+```
+
+These let the shell forward user prompt text to the iframe runtime and request a welcome-screen reset.
 
