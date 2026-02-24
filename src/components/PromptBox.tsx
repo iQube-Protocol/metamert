@@ -20,8 +20,8 @@ export default function PromptBox() {
   };
 
   return (
-    <div className="glass-float flex items-center gap-1.5 rounded-xl border border-border px-2 py-1.5 shadow-lg">
-      <div className="flex flex-1 items-center rounded-lg border border-border bg-background">
+    <div className="glass-float flex items-center gap-1.5 rounded-xl border-0 px-2 py-1.5 shadow-lg">
+      <div className="flex flex-1 items-center rounded-lg border-0 bg-transparent">
         <input
           type="text"
           value={text}
@@ -40,7 +40,7 @@ export default function PromptBox() {
       </div>
       <button
         onClick={toggleQuickLinks}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-0 bg-transparent text-muted-foreground transition-all duration-150 hover:bg-accent/50 hover:text-accent-foreground active:scale-95"
         aria-label={quickLinksExpanded ? "Hide quick links" : "Show quick links"}
       >
         {quickLinksExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}

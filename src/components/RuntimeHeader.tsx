@@ -70,13 +70,13 @@ export default function RuntimeHeader() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <header className="flex items-center justify-center border-b border-border bg-card px-3 py-1.5">
-        <div className="flex items-center gap-4">
-
-          {/* Aigent selector — icon-only popover */}
+      <header className="flex items-center justify-between border-b border-border bg-card px-3 py-1.5">
+        {/* Left: selectors */}
+        <div className="flex items-center gap-2">
+          {/* Aigent selector */}
           <Popover open={aigentOpen} onOpenChange={setAigentOpen}>
             <PopoverTrigger asChild>
-              <button className="flex items-center gap-0.5 rounded-md border border-border bg-card px-1.5 h-8 hover:bg-accent/50 transition-colors">
+              <button className="flex items-center gap-0.5 rounded-md px-1.5 h-8 hover:bg-accent/50 transition-colors">
                 <Bot className="h-5 w-5 shrink-0" style={activeAigent?.color ? { color: activeAigent.color } : undefined} />
                 <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
               </button>
@@ -96,10 +96,10 @@ export default function RuntimeHeader() {
             </PopoverContent>
           </Popover>
 
-          {/* LLM selector — icon-only with grouped dropdown */}
+          {/* LLM selector */}
           <Popover open={llmOpen} onOpenChange={setLlmOpen}>
             <PopoverTrigger asChild>
-              <button className="flex items-center gap-0.5 rounded-md border border-border bg-card px-1.5 h-8 hover:bg-accent/50 transition-colors">
+              <button className="flex items-center gap-0.5 rounded-md px-1.5 h-8 hover:bg-accent/50 transition-colors">
                 <ProviderIcon
                   provider={activeLLM?.provider}
                   className="h-5 w-5 shrink-0"
@@ -112,12 +112,10 @@ export default function RuntimeHeader() {
               {llmGroups.map((group, gi) => (
                 <div key={group.provider}>
                   {gi > 0 && <div className="my-1 border-t border-border" />}
-                  {/* Provider header */}
                   <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     <ProviderIcon provider={group.provider} className="h-3.5 w-3.5" style={{ color: group.color }} />
                     {group.provider}
                   </div>
-                  {/* Models */}
                   {group.options.map((o) => (
                     <button
                       key={o.id}
@@ -132,26 +130,26 @@ export default function RuntimeHeader() {
               ))}
             </PopoverContent>
           </Popover>
-
-          {/* Trust dots */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground cursor-default">
-                <div className="flex items-center gap-1">
-                  <span className="font-medium">R</span>
-                  {renderDots(rScore, "bg-[hsl(var(--shell-warn))]")}
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="font-medium">T</span>
-                  {renderDots(tScore, dotColor)}
-                </div>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p className="text-xs">{(trust.signals ?? []).join(" · ") || trust.level}</p>
-            </TooltipContent>
-          </Tooltip>
         </div>
+
+        {/* Right: trust dots */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground cursor-default">
+              <div className="flex items-center gap-1">
+                <span className="font-medium">R</span>
+                {renderDots(rScore, "bg-[hsl(var(--shell-warn))]")}
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="font-medium">T</span>
+                {renderDots(tScore, dotColor)}
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p className="text-xs">{(trust.signals ?? []).join(" · ") || trust.level}</p>
+          </TooltipContent>
+        </Tooltip>
       </header>
     </TooltipProvider>
   );
