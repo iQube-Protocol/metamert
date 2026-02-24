@@ -7,12 +7,39 @@ import QuickLinksBar from "@/components/QuickLinksBar";
 import PromptBox from "@/components/PromptBox";
 import { Loader2 } from "lucide-react";
 
+function ShellLayout() {
+  const { config, loading, hydrate, shellState } = useShell();
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  if (loading || !config) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <span className="ml-3 text-muted-foreground">Hydrating shell…</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen flex-col bg-background">
+      <RuntimeHeader />
+      <div className="relative flex-1 overflow-hidden">
+        <RuntimeFrame />
+        <FloatingOverlay config={config} shellState={shellState} />
+      </div>
+      <SmartMenu />
+    </div>
+  );
+}
+
 /**
  * Floating overlay: QuickLinksBar + PromptBox float above the SmartMenu.
- * Auto-hides after 3s of no interaction; re-appears on pointer enter.
+ * Auto-hides after 4s of no interaction; re-appears on pointer enter.
  */
-function FloatingOverlay() {
-  const { shellState, config } = useShell();
+function FloatingOverlay({ config, shellState }: { config: NonNullable<ReturnType<typeof useShell>["config"]>; shellState: string }) {
   const [visible, setVisible] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -46,12 +73,10 @@ function FloatingOverlay() {
 
   return (
     <>
-      {/* Invisible hover trigger zone — always receives pointer events */}
       <div
         onPointerEnter={handlePointerEnter}
         className="absolute inset-x-0 bottom-0 z-20 h-16"
       />
-      {/* Actual floating content */}
       <div
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
@@ -71,35 +96,6 @@ function FloatingOverlay() {
         )}
       </div>
     </>
-  );
-}
-
-function ShellLayout() {
-  const { config, loading, hydrate } = useShell();
-
-  useEffect(() => {
-    hydrate();
-  }, [hydrate]);
-
-  if (loading || !config) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <span className="ml-3 text-muted-foreground">Hydrating shell…</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-screen flex-col bg-background">
-      <RuntimeHeader />
-      {/* Iframe area with floating overlay */}
-      <div className="relative flex-1 overflow-hidden">
-        <RuntimeFrame />
-        <FloatingOverlay />
-      </div>
-      <SmartMenu />
-    </div>
   );
 }
 
