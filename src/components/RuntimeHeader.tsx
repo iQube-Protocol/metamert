@@ -102,7 +102,7 @@ export default function RuntimeHeader() {
             </div>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            <p className="text-xs">{config.trust.signals.join(" · ") || config.trust.level}</p>
+            <p className="text-xs">{(trust.signals ?? []).join(" · ") || trust.level}</p>
           </TooltipContent>
         </Tooltip>
       </header>
