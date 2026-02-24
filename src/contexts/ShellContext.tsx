@@ -146,47 +146,48 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       toast.success("Reset to welcome");
       return;
     }
-
-    // Find the menu item in the current config to get its trigger data
-    const menuItem = config?.menu?.items?.find((i: any) => i.id === itemId);
-    const trigger = (menuItem as any)?.trigger;
+    if (itemId === "reset" || itemId === "__runtime_reset__") {
+      setShellState("welcome");
+      setActiveMenuItem(null);
+      setQuickLinksExpanded(true);
+      if (iframeRef.current && config) {
+        postToIframe(iframeRef.current, { type: "RESET_WELCOME" }, getIframeOrigin(config));
+      }
+      toast.success("Reset to welcome");
+      return;
+    }
 
     setShellState("post-welcome");
     setActiveMenuItem(itemId);
 
-    // Build the menu_event from trigger data (already in config) or construct a basic one
-    const menuEvent = trigger
-      ? {
-          action_id: itemId,
-          prompt: trigger.prompt,
-          intent: trigger.intent,
-          surface_plan_instruction: trigger.surface_plan_instruction,
-          copilot_instruction: trigger.copilot_instruction,
-        }
-      : { action_id: itemId, intent: itemId };
-
-    // Try the API call in the background for any server-side effects,
-    // but don't depend on it for iframe communication
     try {
       const result: MenuActionResult = await menuAction(itemId);
-      // Only apply config if it came from upstream (not the hardcoded fallback)
-      // We detect fallback by checking if trust.level is "unverified" + signals match default
       applyConfigUpdate(result.shell_config);
-      // If API returned an iframe_event, forward it too
+      // Forward the API-returned iframe_event directly to the iframe
       if (result.iframe_event && iframeRef.current && config) {
         iframeRef.current.contentWindow?.postMessage(result.iframe_event, getIframeOrigin(config));
+      } else if (result.menu_event && iframeRef.current && config) {
+        // Fallback: forward menu_event as MENU_ACTION
+        postToIframe(
+          iframeRef.current,
+          { type: "MENU_ACTION", item_id: itemId, menu_event: result.menu_event },
+          getIframeOrigin(config),
+        );
       }
     } catch {
-      // API unavailable — that's fine, we use local trigger data
-    }
-
-    // Always send MENU_ACTION with trigger data to iframe
-    if (iframeRef.current && config) {
-      postToIframe(
-        iframeRef.current,
-        { type: "MENU_ACTION", item_id: itemId, menu_event: menuEvent },
-        getIframeOrigin(config),
-      );
+      // API unavailable — send a basic MENU_ACTION from local trigger data
+      const menuItem = config?.menu?.items?.find((i: any) => i.id === itemId);
+      const trigger = (menuItem as any)?.trigger;
+      if (iframeRef.current && config) {
+        const menuEvent = trigger
+          ? { action_id: itemId, prompt: trigger.prompt, intent: trigger.intent }
+          : { action_id: itemId, intent: itemId };
+        postToIframe(
+          iframeRef.current,
+          { type: "MENU_ACTION", item_id: itemId, menu_event: menuEvent },
+          getIframeOrigin(config),
+        );
+      }
     }
     toast.success(`Action: ${itemId}`);
   }, [config, applyConfigUpdate]);
