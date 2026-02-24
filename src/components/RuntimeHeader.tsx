@@ -23,6 +23,23 @@ export default function RuntimeHeader() {
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
 
+  // Group LLM options by provider (must be before early return)
+  const llmGroups = useMemo(() => {
+    if (!config) return [];
+    const groups: { provider: string; color: string; options: typeof config.selectors.llm.options }[] = [];
+    const map = new Map<string, typeof groups[0]>();
+    for (const o of config.selectors.llm.options) {
+      const prov = o.provider ?? "Other";
+      if (!map.has(prov)) {
+        const g = { provider: prov, color: o.provider_color ?? o.color ?? "#888", options: [] as typeof config.selectors.llm.options };
+        map.set(prov, g);
+        groups.push(g);
+      }
+      map.get(prov)!.options.push(o);
+    }
+    return groups;
+  }, [config]);
+
   if (!config) return null;
 
   const trust = config.trust ?? { level: "unverified", signals: [], scores: {} };
