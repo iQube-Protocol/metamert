@@ -52,6 +52,25 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
 
     // Detect iframe load error (X-Frame-Options / CSP block)
     const handleIframeLoad = () => {
+      try {
+        // If blocked by X-Frame-Options/CSP, accessing contentDocument throws
+        const iframe = typeof ref === "function" ? null : ref?.current;
+        if (iframe) {
+          // Try to access contentWindow — blocked iframes throw or return null
+          const win = iframe.contentWindow;
+          if (win) {
+            try {
+              // Accessing win.location.href on a cross-origin blocked frame throws
+              void win.location.href;
+            } catch {
+              // Cross-origin is expected — not blocked, just cross-origin
+            }
+          }
+        }
+      } catch {
+        setStatus("blocked");
+        return;
+      }
       // If we haven't received RUNTIME_READY within 5s, mark as loaded but not handshaked
       setTimeout(() => {
         setStatus((s) => (s === "loading" ? "ready" : s));
