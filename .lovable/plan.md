@@ -1,133 +1,87 @@
 
 
-## Visual Alignment: Menu System Parity with Reference Screenshots
+## Fix Blank Screen + QubeTalk Display Issues
 
-### Summary
-
-Align the thin-client shell UI to match the reference screenshots. The key architectural change is that the welcome-state prompt box is rendered by the iframe (not the shell), and the shell only renders prompt + quick links in post-welcome state. A "refresh" action resets to the iframe welcome screen.
+Two separate bugs are crashing the shell and preventing QubeTalk messages from displaying.
 
 ---
 
-### State Machine
+### Issue 1: Blank Screen (Two Crashes)
 
-```text
-WELCOME (initial)
-  - iframe renders its own centered prompt ("What do you want to do today?")
-  - Shell renders: Header + Quick Links row (icon-only) + Bottom Nav
-  - No shell prompt box
+The upstream AA-API is now live and returning shell-config data, but its response shape differs slightly from the DEFAULT_SHELL_CONFIG. The components assume all nested properties exist without null-checking.
 
-POST-WELCOME (after first menu action)
-  - iframe renders content (capsule cards etc.)
-  - Shell renders: Header + [collapsible Quick Links] + Prompt Box + Bottom Nav
-  - Prompt box has send button + chevron to toggle quick links visibility
+**Crash A: `RuntimeHeader.tsx` line 26**
+```
+TypeError: can't access property "scores", config.trust is undefined
+```
+The upstream API may return a config where `trust` is missing or structured differently. Line 26 does `config.trust.scores` without checking if `trust` exists.
 
-REFRESH (menu action "refresh")
-  - Resets shellState back to "welcome"
-  - Sends NAVIGATE or CONTEXT_UPDATE to iframe to reload welcome screen
+**Fix**: Add defensive defaults at the top of RuntimeHeader:
+```typescript
+const trust = config.trust ?? { level: "unverified", signals: [], scores: {} };
+const trustScores = trust.scores ?? {};
+```
+
+**Crash B: `SmartMenu.tsx` line 16**
+```
+TypeError: can't access property "find", edge_items is undefined
+```
+The upstream API may return `menu` without an `edge_items` array. Line 16 destructures `edge_items` from `config.menu`, then line 19 calls `.find()` on it.
+
+**Fix**: Add defensive defaults:
+```typescript
+const items = config.menu?.items ?? [];
+const edge_items = config.menu?.edge_items ?? [];
+const mode = config.menu?.mode ?? "expanded";
+```
+
+**Also fix `QuickLinksBar.tsx`** -- it likely reads `config.menu.policy.quick_links` which could also be undefined from upstream.
+
+---
+
+### Issue 2: QubeTalk Messages Not Showing on /dev
+
+The network requests show successful 200 responses with message data. The messages ARE being fetched. The problem is in `mapRow()` in `qubetalk-client.ts`:
+
+```typescript
+from_agent: typeof row.from_agent === "string" ? JSON.parse(row.from_agent) : row.from_agent,
+```
+
+The upstream messages have `from_agent` as objects like `{"id":"windsurf","name":"Windsurf","role":"executor"}` -- they have `name`, not `label`. But `QubeTalkMessage.from_agent` expects `{ id: string; label: string }`.
+
+The DevDiagnostics component renders: `msg.from_agent?.label ?? msg.from_agent?.id ?? "unknown"`.
+
+This won't crash (it falls back to `id`), so messages should still render. The more likely cause is that the `mapRow` function may throw for some rows (e.g., if `from_agent` is a plain string like `"lovable-metame"` and `JSON.parse` returns a string, not an object), causing the entire history fetch to fail silently.
+
+**Fix**: Make `mapRow` robust by normalizing `from_agent` to always produce `{ id, label }`:
+```typescript
+function mapRow(row: any): QubeTalkMessage {
+  let agent = row.from_agent;
+  if (typeof agent === "string") {
+    try { agent = JSON.parse(agent); } catch { agent = { id: agent, label: agent }; }
+  }
+  if (typeof agent === "string") agent = { id: agent, label: agent };
+  if (!agent?.id) agent = { id: "unknown", label: "unknown" };
+  // map "name" to "label" for compatibility
+  if (agent.name && !agent.label) agent.label = agent.name;
+  ...
+}
 ```
 
 ---
 
-### Changes Required
-
-**1. Restructure layout in `src/pages/Index.tsx`**
-
-- Remove `PromptBox` from above the iframe
-- Move prompt box + quick links to a new `BottomPanel` component that sits between the iframe and the bottom nav
-- In welcome state: only show quick links row (no prompt box -- iframe has it)
-- In post-welcome state: show collapsible quick links + prompt box with send + chevron
-
-**2. Redesign quick links in `src/components/SmartMenu.tsx` (or extract to `QuickLinksBar`)**
-
-Current: text-label pills (`rounded-full bg-accent px-3 py-1 text-[11px]`)
-Target: icon-only buttons in bordered rounded rectangles, horizontally scrollable
-
-- Each quick link renders as a bordered rectangle with only an icon (no label text)
-- Horizontally scrollable row with `overflow-x-auto` and `flex-nowrap`
-- Use `resolveIcon()` for each quick link's icon field
-- Visible in both welcome and post-welcome states (collapsible in post-welcome via chevron)
-
-**3. Create `src/components/PromptBox.tsx`**
-
-A dedicated prompt box component (post-welcome only) with:
-- Full-width input field: "What do you want to do today?"
-- Send icon button (paper plane) on the right
-- Chevron toggle button (right of send) to expand/collapse quick links
-- On submit: forward prompt text to iframe via `postToIframe` as a new message type or via `MENU_ACTION`
-- Styling: dark card background, rounded, border
-
-**4. Add active item highlight in bottom nav**
-
-- Track which triad item is active (from last menu action or from iframe NAVIGATE messages)
-- Active item gets a highlight ring/circle around its icon (matching the Play highlight in screenshots)
-- Add `activeItem` state to `ShellContext`
-
-**5. Update `src/contexts/ShellContext.tsx`**
-
-- Add `activeMenuItem: string | null` state, set on `handleMenuAction`
-- Add `quickLinksExpanded: boolean` state with toggle
-- Add `resetToWelcome()` function that sets shellState back to "welcome" and sends reset to iframe
-- Wire "refresh" menu action to call `resetToWelcome()`
-- Show quick links in both states (not just welcome)
-
-**6. Update `DEFAULT_SHELL_CONFIG` in proxy**
-
-- Add icon fields to quick_links entries so they render as icon-only buttons
-- Update `state_behavior.post_welcome` to `{ show_prompt: true, collapse_quick_links: false }`
-
-**7. Coordinate with Windsurf**
-
-- Send QubeTalk message to `#ui-shell` confirming: welcome prompt is iframe-owned, shell takes over prompt in post-welcome, "refresh" resets to iframe welcome
-- Request confirmation of iframe message type for prompt submission and welcome-reset
-
----
-
-### File Change List
+### Files to Change
 
 | File | Change |
 |------|--------|
-| `src/pages/Index.tsx` | Remove inline PromptBox, add BottomPanel between iframe and nav |
-| `src/components/PromptBox.tsx` | New: input + send + chevron toggle component |
-| `src/components/QuickLinksBar.tsx` | New: horizontally scrollable icon-only quick link buttons |
-| `src/components/SmartMenu.tsx` | Remove quick links rendering (moved out), add active item highlight |
-| `src/contexts/ShellContext.tsx` | Add activeMenuItem, quickLinksExpanded, resetToWelcome |
-| `src/lib/shell-messages.ts` | Add PROMPT_SUBMIT and RESET_WELCOME outbound message types |
-| `supabase/functions/aa-proxy/index.ts` | Add icons to quick_links, update state_behavior defaults |
+| `src/components/RuntimeHeader.tsx` | Add null-safe defaults for `config.trust`, `trust.scores`, `trust.signals` |
+| `src/components/SmartMenu.tsx` | Add null-safe defaults for `config.menu.items`, `edge_items`, `mode` |
+| `src/components/QuickLinksBar.tsx` | Add null-safe defaults for `config.menu.policy.quick_links` |
+| `src/lib/qubetalk-client.ts` | Make `mapRow` robust: handle string agents, map `name` to `label` |
 
 ---
 
-### Technical Details
+### Root Cause Summary
 
-#### QuickLinksBar layout
-
-```text
-[ icon ] [ icon ] [ icon ] [ icon ] [ icon ] [ icon ] [ icon ] [ icon ]
-  ^-- horizontally scrollable, icon-only, bordered rounded rectangles
-```
-
-Each button: `w-[120px] h-10 rounded-lg border border-border flex items-center justify-center`
-
-#### PromptBox layout (post-welcome)
-
-```text
-+-------------------------------------------------------+----------+-----+
-| What do you want to do today?                         | [send] | [v] |
-+-------------------------------------------------------+----------+-----+
-```
-
-- Chevron `v` (ChevronDown) when quick links visible, `>` (ChevronRight) when collapsed
-- Send button: paper plane icon
-
-#### Active menu item highlight
-
-The active triad item (e.g., Play) gets a circular highlight background behind its icon, using a contrasting ring color (e.g., `ring-2 ring-primary` or a colored circle).
-
-#### New postMessage types
-
-```typescript
-| { type: "PROMPT_SUBMIT"; text: string }
-| { type: "RESET_WELCOME" }
-```
-
-These let the shell forward user prompt text to the iframe runtime and request a welcome-screen reset.
+The upstream AA-API shell-config response has a slightly different shape than the hardcoded DEFAULT_SHELL_CONFIG (e.g., missing `trust`, `edge_items`, or `scores` fields). When the upstream returns 200, the proxy passes that response through without merging with defaults. The fix is to make the UI components resilient to missing/partial data.
 
