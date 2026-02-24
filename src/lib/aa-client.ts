@@ -1,64 +1,36 @@
 /**
  * AA-API Client for metaMe Runtime Shell
- * Handles authentication and API communication with the AigentiQ AA-API.
- * All calls go through this module — never call AA-API directly from components.
+ *
+ * All calls are routed through the `aa-proxy` Supabase edge function.
+ * The browser NEVER calls the AA-API directly — the proxy handles
+ * primary/fallback base selection and provides shell-config defaults
+ * when the upstream endpoint isn't available yet.
  */
 
-const PRIMARY_BASE = "https://aa.dev-beta.aigentz.me/aa/v1";
-const FALLBACK_BASE = "https://aigentzbeta-production.up.railway.app/aa/v1";
+import { supabase } from "@/integrations/supabase/client";
 
 let cachedToken: string | null = null;
 let cachedDid: string | null = null;
 let cachedTenantId: string | null = null;
-let activePrimary = true; // true = use PRIMARY_BASE
 
 // ---------------------------------------------------------------------------
-// URL builder
+// Proxy helper
 // ---------------------------------------------------------------------------
 
-function baseUrl(): string {
-  return activePrimary ? PRIMARY_BASE : FALLBACK_BASE;
-}
+async function aaProxy<T = unknown>(
+  action: string,
+  body?: Record<string, unknown>,
+): Promise<T> {
+  const { data, error } = await supabase.functions.invoke("aa-proxy", {
+    body: {
+      action,
+      body,
+      token: cachedToken,
+    },
+  });
 
-function buildUrl(path: string): string {
-  const base = baseUrl();
-  const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  return `${base}${cleanPath}`;
-}
-
-// ---------------------------------------------------------------------------
-// Generic fetch wrapper with Bearer auth + fallback
-// ---------------------------------------------------------------------------
-
-export async function aaFetch(
-  path: string,
-  init: RequestInit = {}
-): Promise<Response> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(init.headers as Record<string, string>),
-  };
-
-  if (cachedToken) {
-    headers["Authorization"] = `Bearer ${cachedToken}`;
-  }
-
-  const url = buildUrl(path);
-  try {
-    const res = await fetch(url, { ...init, headers });
-    if (!res.ok && activePrimary) {
-      // try fallback once
-      activePrimary = false;
-      return aaFetch(path, init);
-    }
-    return res;
-  } catch (err) {
-    if (activePrimary) {
-      activePrimary = false;
-      return aaFetch(path, init);
-    }
-    throw err;
-  }
+  if (error) throw error;
+  return data as T;
 }
 
 // ---------------------------------------------------------------------------
@@ -67,24 +39,19 @@ export async function aaFetch(
 
 export async function authenticate(
   did: string,
-  signNonce: (nonce: string) => Promise<string> | string
+  signNonce: (nonce: string) => Promise<string> | string,
 ): Promise<{ aa_token: string; tenant_id: string }> {
   // Step 1: challenge
-  const challengeRes = await aaFetch("/auth/challenge", {
-    method: "POST",
-    body: JSON.stringify({ did }),
-  });
-  const { nonce } = await challengeRes.json();
+  const { nonce } = await aaProxy<{ nonce: string }>("challenge", { did });
 
   // Step 2: sign
   const signature = await signNonce(nonce);
 
   // Step 3: verify
-  const verifyRes = await aaFetch("/auth/verify", {
-    method: "POST",
-    body: JSON.stringify({ did, signature }),
+  const data = await aaProxy<{ aa_token: string; tenant_id: string }>("verify", {
+    did,
+    signature,
   });
-  const data = await verifyRes.json();
 
   cachedToken = data.aa_token;
   cachedDid = did;
@@ -119,8 +86,7 @@ export interface ShellConfig {
 }
 
 export async function fetchShellConfig(): Promise<ShellConfig> {
-  const res = await aaFetch("/runtime/shell-config");
-  return res.json();
+  return aaProxy<ShellConfig>("shell-config");
 }
 
 // ---------------------------------------------------------------------------
@@ -129,12 +95,9 @@ export async function fetchShellConfig(): Promise<ShellConfig> {
 
 export async function updateSelector(
   type: "aigent" | "llm",
-  id: string
+  id: string,
 ): Promise<void> {
-  await aaFetch("/runtime/selectors", {
-    method: "POST",
-    body: JSON.stringify({ type, id }),
-  });
+  await aaProxy("selectors", { type, id });
 }
 
 // ---------------------------------------------------------------------------
@@ -142,10 +105,7 @@ export async function updateSelector(
 // ---------------------------------------------------------------------------
 
 export async function menuAction(itemId: string): Promise<void> {
-  await aaFetch("/runtime/menu-action", {
-    method: "POST",
-    body: JSON.stringify({ item_id: itemId }),
-  });
+  await aaProxy("menu-action", { item_id: itemId });
 }
 
 // ---------------------------------------------------------------------------
