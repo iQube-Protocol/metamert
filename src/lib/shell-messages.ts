@@ -8,7 +8,9 @@ export type ShellOutbound =
   | { type: "HANDOFF"; handoff_token: string; context?: Record<string, unknown> }
   | { type: "MENU_ACTION"; item_id: string; menu_event?: MenuEvent }
   | { type: "SELECTOR_CHANGE"; selector_type: "aigent" | "llm"; id: string }
-  | { type: "CONTEXT_UPDATE"; payload: Record<string, unknown> };
+  | { type: "CONTEXT_UPDATE"; payload: Record<string, unknown> }
+  | { type: "PROMPT_SUBMIT"; text: string }
+  | { type: "RESET_WELCOME" };
 
 export interface MenuEvent {
   action_id: string;
