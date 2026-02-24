@@ -82,7 +82,7 @@ export function postRawToIframe(
   const envelope = {
     type,
     msg_id: genMsgId(),
-    timestamp: Date.now(),
+    timestamp: new Date().toISOString(),
     source: "shell",
     payload,
   };
