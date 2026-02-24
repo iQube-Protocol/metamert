@@ -1,69 +1,53 @@
 
 
-# Fix: Upstream Runtime Rendering Duplicate Chrome in Embed Mode
-
-## Problem
-
-The iframe at `https://dev-beta.aigentz.me/metame/runtime?embed=1` is rendering its own header (selectors, trust dots), prompt box, and bottom navigation (Be/Earn/Play/Make/Share) -- duplicating the shell's UI elements. The `embed=1` query parameter should signal the upstream runtime to strip its chrome, but the Amplify-deployed runtime is ignoring this flag.
-
-**Visual evidence**: The screenshot shows two sets of selectors, two sets of trust indicators, two bottom menus, and two prompt boxes -- one from the shell and one from the iframe content.
+# Fix: postMessage Origin Mismatch Blocking All Shell-to-iframe Communication
 
 ## Root Cause
 
-This is an **upstream issue**, not a shell bug. The shell is working correctly:
-- It passes `embed=1` in the iframe URL
-- It renders its own header, SmartMenu, QuickLinksBar, and PromptBox as designed
-- The aa-proxy normalizer correctly builds the URL with `embed=1`
+The upstream API returns `postMessageOrigin: "http://localhost:3000"` (a dev-only value). The shell's `getIframeOrigin()` function prioritizes `postMessageOrigin` over `origin`, so every `postMessage` call targets `http://localhost:3000`. The iframe is loaded from `https://dev-beta.aigentz.me`. The browser silently drops all messages because the target origin doesn't match the iframe's actual origin. This is why:
 
-The upstream Next.js runtime (deployed on Amplify) is not checking the `embed` query parameter to conditionally hide its layout chrome.
+- Menu items (Be, Earn, Play, Make, Share) produce no response
+- QuickLinks (Watch, Listen, Read, Find) produce no response
+- Prompt submissions produce no response
+- Selector changes (Aigent/LLM) send messages to the void
 
-## Plan
+## Fix (2 files, 2 changes)
 
-### 1. Notify upstream via QubeTalk
+### 1. `supabase/functions/aa-proxy/index.ts` -- Normalize `postMessageOrigin`
 
-Send a QubeTalk message to the `metame-runtime-thinclient` channel on the `#ui-shell` thread requesting that the Amplify runtime respect `embed=1` by hiding its own header, bottom nav, and prompt box when embedded.
+Add a step in `normalizeShellConfig` to fix or remove `postMessageOrigin` when it points to localhost, just like the existing fix for `origin`:
 
-### 2. Add CSS-based iframe chrome suppression (interim workaround)
+```text
+// After existing step 8 ("Fix localhost origin"), add:
+// 9. Fix localhost postMessageOrigin
+if (raw.iframe?.postMessageOrigin?.startsWith("http://localhost"))
+  raw.iframe.postMessageOrigin = raw.iframe.origin
+    || new URL(raw.iframe.url).origin;
+```
 
-While waiting for the upstream fix, inject a `postMessage` to the iframe requesting it hide its chrome. If the upstream does not support this message, use a CSS-based approach:
+### 2. `src/contexts/ShellContext.tsx` -- Defensive `getIframeOrigin`
 
-- After the iframe loads and transitions to `ready`, send a `SHELL_READY` message that includes a `{ hide_chrome: true }` flag
-- Update `shell-messages.ts` to include `hide_chrome` in the `SHELL_READY` payload
+Update `getIframeOrigin` to skip any localhost origins (belt-and-suspenders in case the proxy normalization is bypassed or cached):
 
-### 3. Alternative: hide shell chrome and defer to iframe (NOT recommended)
+```text
+function getIframeOrigin(config: ShellConfig): string {
+  const pmo = (config.iframe as any).postMessageOrigin;
+  if (pmo && !pmo.startsWith("http://localhost")) return pmo;
+  if (config.iframe.origin && !config.iframe.origin.startsWith("http://localhost"))
+    return config.iframe.origin;
+  return new URL(config.iframe.url).origin;
+}
+```
 
-This would break the thin-client architecture. The shell owns the chrome; the iframe should be content-only. This approach is documented here only to confirm it was considered and rejected.
+## Why This Fixes Everything
+
+- All `postToIframe` calls will now target `https://dev-beta.aigentz.me` instead of `http://localhost:3000`
+- The iframe will receive `MENU_ACTION`, `PROMPT_SUBMIT`, `SELECTOR_CHANGE`, `SHELL_READY`, `HANDOFF`, and `DEVICE_CONTEXT_UPDATE` messages
+- No other code changes are needed -- the message construction logic from previous fixes is correct; the messages were just being sent to the wrong origin
 
 ## Technical Details
 
-### Changes to `src/lib/shell-messages.ts`
+- The proxy fix ensures all consumers of shell-config get a correct `postMessageOrigin`
+- The client-side fix ensures resilience even if a cached or stale config leaks through
+- Both fixes are backward-compatible: if the upstream API starts returning the correct origin, the normalization is a no-op
 
-Extend the `SHELL_READY` outbound message type to include an optional `hide_chrome` flag:
-
-```text
-{ type: "SHELL_READY"; hide_chrome?: boolean }
-```
-
-### Changes to `src/components/RuntimeFrame.tsx`
-
-Update `handleReady` to send `hide_chrome: true` in the `SHELL_READY` message:
-
-```text
-postToIframe(iframeRef.current, { type: "SHELL_READY", hide_chrome: true }, origin);
-```
-
-### QubeTalk notification
-
-Post to channel `metame-runtime-thinclient`, thread `#ui-shell`:
-
-> "The upstream runtime at /metame/runtime?embed=1 is rendering its own header, bottom nav, and prompt box, duplicating the shell chrome. The runtime must check for the `embed=1` query param (or listen for `SHELL_READY` with `hide_chrome: true`) and suppress its own layout chrome when embedded. The shell owns all chrome: header (selectors + trust), SmartMenu, QuickLinksBar, and PromptBox."
-
-### Files to modify
-
-- `src/lib/shell-messages.ts` -- add `hide_chrome` to SHELL_READY type
-- `src/components/RuntimeFrame.tsx` -- send `hide_chrome: true` in SHELL_READY
-- QubeTalk message via `send-qubetalk` edge function
-
-## Expected Outcome
-
-Once the upstream runtime respects `embed=1` or the `hide_chrome` flag, the iframe will render only its content area (capsules, surfaces, welcome screen) without any navigation chrome, eliminating the duplicate UI.
