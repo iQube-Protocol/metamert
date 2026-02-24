@@ -10,16 +10,35 @@ const corsHeaders = {
 const AA_PRIMARY = "https://aa.dev-beta.aigentz.me/aa/v1";
 const AA_FALLBACK = "https://aigentzbeta-production.up.railway.app/aa/v1";
 
-// Canonical provider scores from AA-API spec (providerReliability)
-const PROVIDER_SCORES: Record<string, { trust: number; reliability: number }> = {
-  openai:    { trust: 8.6, reliability: 9.3 },
-  anthropic: { trust: 8.3, reliability: 9.1 },
-  chaingpt:  { trust: 8.0, reliability: 8.8 },
-  venice:    { trust: 7.8, reliability: 8.6 },
-  thirdweb:  { trust: 7.6, reliability: 8.4 },
-  google:    { trust: 7.2, reliability: 8.0 },
-  default:   { trust: 7.2, reliability: 8.0 },
+// Formula-based scoring from WS spec (latest QT #ui-shell):
+// trust  = clamp(base_score - processing_penalty, 1..10)
+// reliability = clamp(base_score + reliability_bonus - processing_penalty, 1..10)
+// processing_penalty = 0.3 when processing=true, else 0.0
+// reliability_bonus = +0.8 for venice/chaingpt/thirdweb, else 0.0
+const PROVIDER_BASE_SCORES: Record<string, number> = {
+  openai: 5.0,
+  anthropic: 5.0,
+  chaingpt: 7.4,
+  venice: 7.8,
+  thirdweb: 7.3,
+  google: 4.5,
+  default: 4.5,
 };
+const RELIABILITY_BONUS_PROVIDERS = new Set(["venice", "chaingpt", "thirdweb"]);
+
+function clamp(v: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, v));
+}
+
+function computeScores(provider: string, processing = false): { trust: number; reliability: number } {
+  const base = PROVIDER_BASE_SCORES[provider] ?? PROVIDER_BASE_SCORES["default"];
+  const penalty = processing ? 0.3 : 0.0;
+  const bonus = RELIABILITY_BONUS_PROVIDERS.has(provider) ? 0.8 : 0.0;
+  return {
+    trust: clamp(base - penalty, 1, 10),
+    reliability: clamp(base + bonus - penalty, 1, 10),
+  };
+}
 
 /** Resolve provider from LLM option id */
 function resolveProvider(llmId?: string): string {
@@ -271,8 +290,8 @@ serve(async (req) => {
             ? data.selectors.llm.current
             : data.selectors?.llm?.current?.id;
           const prov = resolveProvider(currentLlm);
-          const provScores = PROVIDER_SCORES[prov] ?? PROVIDER_SCORES["default"];
-          // Use upstream scores if they differ from static session scores, otherwise inject canonical
+          const provScores = computeScores(prov);
+          // Use upstream scores if they differ from static session scores, otherwise inject computed
           if (!data.trust?.scores || (data.trust.scores.trust === data.session?.scores?.trust)) {
             data.trust = { ...data.trust, scores: provScores };
           }
@@ -302,7 +321,7 @@ serve(async (req) => {
           // deno-lint-ignore no-explicit-any
           const data: any = await res.json();
           const providerId = reqBody?.provider_id ?? resolveProvider(reqBody?.id);
-          const canonicalScores = PROVIDER_SCORES[providerId] ?? PROVIDER_SCORES["default"];
+          const canonicalScores = computeScores(providerId);
           
           // Prefer upstream per-provider scores if present and different from session default
           const upstreamScores = data.shell_config?.trust?.scores;
@@ -331,7 +350,7 @@ serve(async (req) => {
       console.log("[aa-proxy] selectors upstream unavailable, returning fallback");
       // Return provider-specific scores from canonical map
       const providerId = reqBody?.provider_id ?? resolveProvider(reqBody?.id);
-      const scores = PROVIDER_SCORES[providerId] ?? PROVIDER_SCORES["default"];
+      const scores = computeScores(providerId);
       const fallback = {
         ok: true,
         shell_config: {
