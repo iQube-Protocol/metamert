@@ -9,7 +9,7 @@ export default function QuickLinksBar() {
   const { config, handleMenuAction } = useShell();
   if (!config) return null;
 
-  const quickLinks = config.menu.policy?.quick_links ?? [];
+  const quickLinks = config.menu?.policy?.quick_links ?? [];
   if (quickLinks.length === 0) return null;
 
   return (

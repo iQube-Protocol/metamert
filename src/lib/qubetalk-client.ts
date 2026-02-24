@@ -115,11 +115,19 @@ export function subscribeToChannel(
 // ---------------------------------------------------------------------------
 
 function mapRow(row: any): QubeTalkMessage {
+  let agent = row.from_agent;
+  if (typeof agent === "string") {
+    try { agent = JSON.parse(agent); } catch { agent = { id: agent, label: agent }; }
+  }
+  if (typeof agent === "string") agent = { id: agent, label: agent };
+  if (!agent?.id) agent = { id: "unknown", label: "unknown" };
+  if (agent.name && !agent.label) agent.label = agent.name;
+
   return {
     message_id: row.message_id,
     channel_id: row.channel_id,
     content: row.content,
-    from_agent: typeof row.from_agent === "string" ? JSON.parse(row.from_agent) : row.from_agent,
+    from_agent: { id: agent.id, label: agent.label ?? agent.name ?? agent.id },
     type: row.type,
     created_at: row.created_at,
     in_reply_to: row.in_reply_to,

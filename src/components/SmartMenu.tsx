@@ -13,11 +13,13 @@ export default function SmartMenu() {
 
   if (!config) return null;
 
-  const { items, edge_items, mode } = config.menu;
+  const items = config.menu?.items ?? [];
+  const edge_items = config.menu?.edge_items ?? [];
+  const mode = config.menu?.mode ?? "expanded";
   const collapsed = mode === "collapsed";
 
-  const beItem = edge_items.find((e) => e.id === "be");
-  const shareItem = edge_items.find((e) => e.id === "share");
+  const beItem = edge_items.find((e: any) => e.id === "be");
+  const shareItem = edge_items.find((e: any) => e.id === "share");
 
   const renderButton = (
     id: string,
