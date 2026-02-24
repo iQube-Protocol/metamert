@@ -266,7 +266,20 @@ serve(async (req) => {
           body: JSON.stringify(reqBody),
         });
         if (res.ok) {
-          const data = await res.json();
+          // deno-lint-ignore no-explicit-any
+          const data: any = await res.json();
+          // Normalize: hoist session.scores into shell_config.trust if present
+          if (data.session?.scores) {
+            if (!data.shell_config) data.shell_config = {};
+            data.shell_config.trust = {
+              level: data.session.trust_level ?? data.trust?.level ?? "verified",
+              signals: (data.session.trust_signals ?? []).map((s: any) =>
+                typeof s === "string" ? s : s.label ?? String(s)
+              ),
+              scores: data.session.scores,
+            };
+          }
+          if (data.shell_config) normalizeShellConfig(data.shell_config);
           return new Response(JSON.stringify(data), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
@@ -275,7 +288,22 @@ serve(async (req) => {
         // upstream unavailable
       }
       console.log("[aa-proxy] selectors upstream unavailable, returning fallback");
-      return new Response(JSON.stringify({ ok: true, shell_config: DEFAULT_SHELL_CONFIG }), {
+      // Return provider-specific scores from canonical map
+      const providerId = reqBody?.provider_id ?? resolveProvider(reqBody?.id);
+      const scores = PROVIDER_SCORES[providerId] ?? PROVIDER_SCORES["default"];
+      const fallback = {
+        ok: true,
+        shell_config: {
+          ...DEFAULT_SHELL_CONFIG,
+          trust: {
+            ...DEFAULT_SHELL_CONFIG.trust,
+            level: "verified",
+            signals: [`Trust ${scores.trust}/10`, `Reliability ${scores.reliability}/10`],
+            scores,
+          },
+        },
+      };
+      return new Response(JSON.stringify(fallback), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
