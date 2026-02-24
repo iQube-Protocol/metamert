@@ -39,11 +39,53 @@ export type IframeInbound =
   | { type: "STATE_SYNC"; state: Record<string, unknown> }
   | { type: "TRUST_UPDATE"; trust: { level: string; signals: string[]; scores?: Record<string, number> } };
 
+/** Generate a unique message ID */
+function genMsgId(): string {
+  return `shell-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/**
+ * Wrap a ShellOutbound message in the bridge envelope expected by the runtime:
+ * { type, msg_id, timestamp, source: "shell", payload }
+ */
+function toBridgeEnvelope(msg: ShellOutbound): Record<string, unknown> {
+  const { type, ...payload } = msg as Record<string, unknown>;
+  return {
+    type,
+    msg_id: genMsgId(),
+    timestamp: Date.now(),
+    source: "shell",
+    payload,
+  };
+}
+
 export function postToIframe(
   iframe: HTMLIFrameElement,
   msg: ShellOutbound,
   origin: string
 ): void {
-  console.log("[Shell→iframe]", msg.type, msg, "→", origin);
-  iframe.contentWindow?.postMessage(msg, origin);
+  const envelope = toBridgeEnvelope(msg);
+  console.log("[Shell→iframe]", envelope.type, envelope, "→", origin);
+  iframe.contentWindow?.postMessage(envelope, origin);
+}
+
+/**
+ * Wrap a raw API-returned iframe_event in the bridge envelope and post it.
+ * Use this for forwarding `result.iframe_event` from menu-action / prompt-action.
+ */
+export function postRawToIframe(
+  iframe: HTMLIFrameElement,
+  rawEvent: Record<string, unknown>,
+  origin: string
+): void {
+  const { type, ...payload } = rawEvent;
+  const envelope = {
+    type,
+    msg_id: genMsgId(),
+    timestamp: Date.now(),
+    source: "shell",
+    payload,
+  };
+  console.log("[Shell→iframe:raw]", envelope.type, envelope, "→", origin);
+  iframe.contentWindow?.postMessage(envelope, origin);
 }

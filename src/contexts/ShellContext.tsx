@@ -11,7 +11,7 @@ import {
   authenticate,
   getToken,
 } from "@/lib/aa-client";
-import { postToIframe } from "@/lib/shell-messages";
+import { postToIframe, postRawToIframe } from "@/lib/shell-messages";
 import { toast } from "sonner";
 
 // ---------------------------------------------------------------------------
@@ -168,7 +168,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       applyConfigUpdate(result.shell_config);
       // Forward the API-returned iframe_event directly to the iframe
       if (result.iframe_event && iframeRef.current && config) {
-        iframeRef.current.contentWindow?.postMessage(result.iframe_event, getIframeOrigin(config));
+        postRawToIframe(iframeRef.current, result.iframe_event, getIframeOrigin(config));
       } else if (result.menu_event && iframeRef.current && config) {
         // Fallback: forward menu_event as MENU_ACTION
         postToIframe(
@@ -205,7 +205,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       if (iframeRef.current && config) {
         // Forward the API-returned iframe_event directly
         if (result.iframe_event) {
-          iframeRef.current.contentWindow?.postMessage(result.iframe_event, getIframeOrigin(config));
+          postRawToIframe(iframeRef.current, result.iframe_event, getIframeOrigin(config));
         } else {
           // Fallback: send PROMPT_SUBMIT
           postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
