@@ -38,12 +38,12 @@ function FloatingOverlay() {
     <div
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
-      className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-1.5 px-3 pb-2"
+      className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-1.5 px-2 pb-2"
     >
-      <div className={`w-full px-2 md:px-4 lg:px-8 transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+      <div className={`w-full transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
         <QuickLinksBar />
       </div>
-      <div className="w-full px-2 md:px-4 lg:px-8">
+      <div className="w-full">
         <PromptBox />
       </div>
     </div>
