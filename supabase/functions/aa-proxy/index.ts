@@ -301,9 +301,15 @@ serve(async (req) => {
         if (res.ok) {
           // deno-lint-ignore no-explicit-any
           const data: any = await res.json();
-          // Apply canonical provider scores (upstream doesn't differentiate yet)
           const providerId = reqBody?.provider_id ?? resolveProvider(reqBody?.id);
           const canonicalScores = PROVIDER_SCORES[providerId] ?? PROVIDER_SCORES["default"];
+          
+          // Prefer upstream per-provider scores if present and different from session default
+          const upstreamScores = data.shell_config?.trust?.scores;
+          const sessionScores = data.session?.scores;
+          const useUpstream = upstreamScores
+            && (upstreamScores.trust !== sessionScores?.trust || upstreamScores.reliability !== sessionScores?.reliability);
+          const finalScores = useUpstream ? upstreamScores : canonicalScores;
           
           if (!data.shell_config) data.shell_config = {};
           data.shell_config.trust = {
@@ -311,9 +317,10 @@ serve(async (req) => {
             signals: (data.session?.trust_signals ?? []).map((s: any) =>
               typeof s === "string" ? s : s.label ?? String(s)
             ),
-            scores: canonicalScores,
+            scores: finalScores,
           };
           if (data.shell_config) normalizeShellConfig(data.shell_config);
+          console.log("[aa-proxy] selector scores for", providerId, finalScores);
           return new Response(JSON.stringify(data), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
