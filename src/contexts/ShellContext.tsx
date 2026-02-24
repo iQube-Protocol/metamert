@@ -145,10 +145,16 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       setActiveMenuItem(itemId);
 
       if (iframeRef.current && config) {
+        const origin = getIframeOrigin(config);
+        // Forward API-returned iframe_event if present
+        if (result.iframe_event) {
+          iframeRef.current.contentWindow?.postMessage(result.iframe_event, origin);
+        }
+        // Always send MENU_ACTION so iframe knows which item was triggered
         postToIframe(
           iframeRef.current,
           { type: "MENU_ACTION", item_id: itemId, menu_event: result.menu_event },
-          getIframeOrigin(config),
+          origin,
         );
       }
       toast.success(`Action: ${itemId}`);
