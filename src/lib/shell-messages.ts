@@ -11,7 +11,7 @@ export interface DeviceContext {
 }
 
 export type ShellOutbound =
-  | { type: "SHELL_READY" }
+  | { type: "SHELL_READY"; hide_chrome?: boolean }
   | { type: "HANDOFF"; handoff_token: string; context?: Record<string, unknown> }
   | { type: "MENU_ACTION"; item_id: string; menu_event?: MenuEvent }
   | { type: "SELECTOR_CHANGE"; selector_type: "aigent" | "llm"; id: string }
