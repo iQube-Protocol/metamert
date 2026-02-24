@@ -72,6 +72,23 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [quickLinksExpanded, setQuickLinksExpanded] = useState(true);
   const [inferring, setInferring] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
+  const inferTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Listen for iframe signals that inference rendering is complete
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      const t = e.data?.type;
+      if (t === "INFERENCE_COMPLETE" || t === "RUNTIME_READY" || t === "RENDER_COMPLETE") {
+        setInferring(false);
+        if (inferTimeoutRef.current) {
+          clearTimeout(inferTimeoutRef.current);
+          inferTimeoutRef.current = null;
+        }
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, []);
 
   const hydrate = useCallback(async () => {
     setLoading(true);
