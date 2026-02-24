@@ -27,6 +27,7 @@ interface ShellContextValue {
   shellState: ShellState;
   activeMenuItem: string | null;
   quickLinksExpanded: boolean;
+  inferring: boolean;
   toggleQuickLinks: () => void;
   hydrate: () => Promise<void>;
   selectAigent: (id: string) => Promise<void>;
