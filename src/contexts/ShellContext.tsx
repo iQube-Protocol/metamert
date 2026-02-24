@@ -194,16 +194,17 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   const submitPrompt = useCallback(async (text: string) => {
     if (!text.trim()) return;
+    setShellState("post-welcome");
     try {
       const result: PromptActionResult = await promptAction(text);
-      setShellState("post-welcome");
       applyConfigUpdate(result.shell_config);
 
       if (iframeRef.current && config) {
-        // Forward the API-returned iframe_event if present, otherwise fall back to PROMPT_SUBMIT
+        // Forward the API-returned iframe_event directly
         if (result.iframe_event) {
           iframeRef.current.contentWindow?.postMessage(result.iframe_event, getIframeOrigin(config));
         } else {
+          // Fallback: send PROMPT_SUBMIT
           postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
         }
       }
