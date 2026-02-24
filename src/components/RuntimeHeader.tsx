@@ -14,18 +14,26 @@ import {
 } from "@/components/ui/popover";
 import { useState, useMemo } from "react";
 
-/** Map a 0-10 score to 0-5 filled dots */
+/** Map a 0-10 score to 0-5 filled dots using ceil(score/2) per spec */
 function scoreToDots(score: number | undefined, fallback: number): number {
   if (score == null) return fallback;
-  return Math.round(Math.min(10, Math.max(0, score)) / 2);
+  return Math.ceil(Math.min(10, Math.max(0, score)) / 2);
 }
 
-/** Color bucket for a score: high=ok, mid=warn, low=fail */
-function scoreColor(score: number | undefined): string {
+/** Trust dot color: <=3 red, <=6 yellow, >6 green */
+function trustDotColor(score: number | undefined): string {
   const v = score ?? 5;
-  if (v >= 7) return "bg-[hsl(var(--shell-ok))]";
-  if (v >= 4) return "bg-[hsl(var(--shell-warn))]";
-  return "bg-[hsl(var(--shell-fail))]";
+  if (v <= 3) return "bg-[hsl(var(--shell-fail))]";
+  if (v <= 6) return "bg-[hsl(var(--shell-warn))]";
+  return "bg-[hsl(var(--shell-ok))]";
+}
+
+/** Reliability dot color: <=3 red, <=6 yellow, >6 purple */
+function reliabilityDotColor(score: number | undefined): string {
+  const v = score ?? 5;
+  if (v <= 3) return "bg-[hsl(var(--shell-fail))]";
+  if (v <= 6) return "bg-[hsl(var(--shell-warn))]";
+  return "bg-purple-500";
 }
 
 /**
@@ -60,17 +68,19 @@ export default function RuntimeHeader() {
   const trustScores = trust.scores ?? {};
   const rScore = scoreToDots(trustScores.reliability, 4);
   const tScore = scoreToDots(trustScores.trust, 3);
-  const rColor = scoreColor(trustScores.reliability);
-  const tColor = scoreColor(trustScores.trust);
+  const rColor = reliabilityDotColor(trustScores.reliability);
+  const tColor = trustDotColor(trustScores.trust);
 
   const renderDots = (filled: number, activeColor: string) =>
     [...Array(5)].map((_, i) => (
       <span
         key={i}
-        className={`inline-block h-2 w-2 rounded-full transition-colors duration-200 ${
-          i < filled ? activeColor : "bg-muted-foreground/20"
-        } ${inferring ? "animate-[pulse_1s_ease-in-out_infinite]" : ""}`}
-        style={inferring ? { animationDelay: `${i * 100}ms` } : undefined}
+        className={`inline-block h-2 w-2 rounded-full ${
+          inferring
+            ? "animate-pulse transition-all duration-700"
+            : "transition-all duration-300"
+        } ${i < filled ? activeColor : "bg-muted-foreground/20"}`}
+        style={inferring ? { animationDelay: `${i * 150}ms` } : undefined}
       />
     ));
 
