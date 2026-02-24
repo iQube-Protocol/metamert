@@ -3,9 +3,11 @@ import {
   type ShellConfig,
   type MenuActionResult,
   type SelectorResult,
+  type PromptActionResult,
   fetchShellConfig,
   updateSelector,
   menuAction,
+  promptAction,
   authenticate,
   getToken,
 } from "@/lib/aa-client";
