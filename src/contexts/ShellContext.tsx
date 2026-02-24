@@ -32,6 +32,7 @@ interface ShellContextValue {
   handleMenuAction: (itemId: string) => Promise<void>;
   submitPrompt: (text: string) => void;
   resetToWelcome: () => void;
+  updateTrust: (trust: { level: string; signals: string[]; scores?: Record<string, number> }) => void;
   iframeRef: React.RefObject<HTMLIFrameElement>;
 }
 
@@ -175,13 +176,28 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setQuickLinksExpanded((prev) => !prev);
   }, []);
 
+  const updateTrust = useCallback((trust: { level: string; signals: string[]; scores?: Record<string, number> }) => {
+    setConfig((prev) =>
+      prev
+        ? {
+            ...prev,
+            trust: {
+              level: trust.level as ShellConfig["trust"]["level"],
+              signals: trust.signals,
+              scores: trust.scores,
+            },
+          }
+        : prev
+    );
+  }, []);
+
   return (
     <ShellCtx.Provider
       value={{
         config, loading, authenticated, shellState,
         activeMenuItem, quickLinksExpanded, toggleQuickLinks,
         hydrate, selectAigent, selectLLM, handleMenuAction,
-        submitPrompt, resetToWelcome, iframeRef,
+        submitPrompt, resetToWelcome, updateTrust, iframeRef,
       }}
     >
       {children}
