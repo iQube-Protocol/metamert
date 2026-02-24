@@ -17,7 +17,7 @@ function FloatingOverlay() {
 
   const scheduleHide = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setVisible(false), 3000);
+    timerRef.current = setTimeout(() => setVisible(false), 4000);
   }, []);
 
   const handlePointerEnter = useCallback(() => {
@@ -38,15 +38,18 @@ function FloatingOverlay() {
     <div
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
-      className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-1.5 px-2 pb-2"
+      className={`absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-1.5 px-2 pb-2 transition-opacity duration-300 ${
+        visible ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
     >
-      <div className={`w-full transition-opacity duration-300 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+      <div className="w-full">
         <QuickLinksBar />
       </div>
       <div className="w-full">
         <PromptBox />
       </div>
     </div>
+  );
   );
 }
 
