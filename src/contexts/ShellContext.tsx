@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
 import {
   type ShellConfig,
   type MenuActionResult,
@@ -72,6 +72,23 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [quickLinksExpanded, setQuickLinksExpanded] = useState(true);
   const [inferring, setInferring] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
+  const inferTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Listen for iframe signals that inference rendering is complete
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      const t = e.data?.type;
+      if (t === "INFERENCE_COMPLETE" || t === "RUNTIME_READY" || t === "RENDER_COMPLETE") {
+        setInferring(false);
+        if (inferTimeoutRef.current) {
+          clearTimeout(inferTimeoutRef.current);
+          inferTimeoutRef.current = null;
+        }
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, []);
 
   const hydrate = useCallback(async () => {
     setLoading(true);
@@ -109,12 +126,15 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const selectAigent = useCallback(async (id: string) => {
     try {
       const result: SelectorResult = await updateSelector("aigent", id);
-      setConfig((prev) =>
-        prev
-          ? { ...prev, selectors: { ...prev.selectors, aigent: { ...prev.selectors.aigent, current: id } } }
-          : prev
-      );
-      // Don't apply shell_config from selector response — it overwrites the whole config
+      setConfig((prev) => {
+        if (!prev) return prev;
+        const updated = { ...prev, selectors: { ...prev.selectors, aigent: { ...prev.selectors.aigent, current: id } } };
+        // Apply trust scores from selector response if present
+        if (result.shell_config?.trust?.scores) {
+          updated.trust = { ...updated.trust, ...result.shell_config.trust };
+        }
+        return updated;
+      });
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "aigent", id }, getIframeOrigin(config));
       }
@@ -126,12 +146,15 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const selectLLM = useCallback(async (id: string) => {
     try {
       const result: SelectorResult = await updateSelector("llm", id);
-      setConfig((prev) =>
-        prev
-          ? { ...prev, selectors: { ...prev.selectors, llm: { ...prev.selectors.llm, current: id } } }
-          : prev
-      );
-      // Don't apply shell_config from selector response — it overwrites the whole config
+      setConfig((prev) => {
+        if (!prev) return prev;
+        const updated = { ...prev, selectors: { ...prev.selectors, llm: { ...prev.selectors.llm, current: id } } };
+        // Apply trust scores from selector response if present
+        if (result.shell_config?.trust?.scores) {
+          updated.trust = { ...updated.trust, ...result.shell_config.trust };
+        }
+        return updated;
+      });
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "llm", id }, getIframeOrigin(config));
       }
@@ -220,7 +243,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
       }
     } finally {
-      setInferring(false);
+      // Don't clear inferring here — wait for iframe INFERENCE_COMPLETE/RENDER_COMPLETE message.
+      // Set a safety timeout so animation doesn't run forever if iframe never responds.
+      if (inferTimeoutRef.current) clearTimeout(inferTimeoutRef.current);
+      inferTimeoutRef.current = setTimeout(() => {
+        setInferring(false);
+        inferTimeoutRef.current = null;
+      }, 30000); // 30s max
     }
   }, [config, applyConfigUpdate]);
 
