@@ -10,6 +10,29 @@ const corsHeaders = {
 const AA_PRIMARY = "https://aa.dev-beta.aigentz.me/aa/v1";
 const AA_FALLBACK = "https://aigentzbeta-production.up.railway.app/aa/v1";
 
+// Canonical provider scores from AA-API spec (providerReliability)
+const PROVIDER_SCORES: Record<string, { trust: number; reliability: number }> = {
+  openai:    { trust: 8.6, reliability: 9.3 },
+  anthropic: { trust: 8.3, reliability: 9.1 },
+  chaingpt:  { trust: 8.0, reliability: 8.8 },
+  venice:    { trust: 7.8, reliability: 8.6 },
+  thirdweb:  { trust: 7.6, reliability: 8.4 },
+  google:    { trust: 7.2, reliability: 8.0 },
+  default:   { trust: 7.2, reliability: 8.0 },
+};
+
+/** Resolve provider from LLM option id */
+function resolveProvider(llmId?: string): string {
+  if (!llmId) return "default";
+  if (llmId.startsWith("gpt-") || llmId.startsWith("o3")) return "openai";
+  if (llmId.startsWith("claude")) return "anthropic";
+  if (llmId.startsWith("gemini")) return "google";
+  if (llmId.startsWith("venice")) return "venice";
+  if (llmId.startsWith("chaingpt")) return "chaingpt";
+  if (llmId.startsWith("thirdweb")) return "thirdweb";
+  return "default";
+}
+
 // ---------------------------------------------------------------------------
 // Default shell-config (enriched schema matching Windsurf brief)
 // ---------------------------------------------------------------------------
