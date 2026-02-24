@@ -12,7 +12,7 @@ export default function QuickLinksBar() {
   if (quickLinks.length === 0 || !quickLinksExpanded) return null;
 
   return (
-    <div className="flex w-full items-center justify-evenly gap-1 overflow-x-auto rounded-xl border border-border bg-card/95 px-3 py-1.5 shadow-lg backdrop-blur-sm scrollbar-hide animate-in fade-in slide-in-from-bottom-2 duration-200">
+    <div className="glass-float flex w-full items-center justify-evenly gap-1 overflow-x-auto rounded-xl border border-border px-3 py-1.5 shadow-lg scrollbar-hide animate-in fade-in slide-in-from-bottom-2 duration-200">
       {quickLinks.map((ql: any) => {
         const Icon = resolveIcon(ql.icon, ql.id);
         return (

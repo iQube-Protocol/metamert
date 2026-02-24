@@ -13,11 +13,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { resolveIcon } from "@/lib/icon-utils";
-import { Bot } from "lucide-react";
+import { Bot, ChevronDown } from "lucide-react";
 
 /**
- * Compact top header — payload-driven.
- * Left: Aigent (robot icons, colored) + LLM selectors   Right: R + T dot indicators
+ * Compact top header — icon-only selectors + trust dots.
+ * Aigent: colored Bot icon + chevron. LLM: colored provider icon + chevron.
+ * No text labels shown in closed state.
  */
 export default function RuntimeHeader() {
   const { config, selectAigent, selectLLM } = useShell();
@@ -45,19 +46,19 @@ export default function RuntimeHeader() {
       />
     ));
 
-  // Active option helpers
   const activeAigent = config.selectors.aigent.options.find(o => o.id === config.selectors.aigent.current);
   const activeLLM = config.selectors.llm.options.find(o => o.id === config.selectors.llm.current);
 
   return (
     <TooltipProvider delayDuration={300}>
-      <header className="flex items-center justify-between border-b border-border bg-card px-3 py-1.5">
-        {/* Left: Aigent selector (Bot icons with unique colors) + LLM selector */}
-        <div className="flex items-center gap-1.5">
+      <header className="flex items-center justify-center border-b border-border bg-card px-3 py-1.5">
+        {/* Center container for selectors + trust */}
+        <div className="flex items-center gap-4">
+          {/* Aigent selector — icon-only */}
           <Select value={config.selectors.aigent.current} onValueChange={selectAigent}>
-            <SelectTrigger className="h-8 w-auto gap-1 border-border bg-card px-2 text-xs">
-              <Bot className="h-4 w-4 shrink-0" style={activeAigent?.color ? { color: activeAigent.color } : undefined} />
-              <SelectValue />
+            <SelectTrigger className="h-8 w-auto gap-0.5 border-border bg-card px-1.5 [&>span:last-child]:hidden">
+              <Bot className="h-5 w-5 shrink-0" style={activeAigent?.color ? { color: activeAigent.color } : undefined} />
+              <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
             </SelectTrigger>
             <SelectContent>
               {config.selectors.aigent.options.map((o) => (
@@ -80,13 +81,14 @@ export default function RuntimeHeader() {
             </SelectContent>
           </Select>
 
+          {/* LLM selector — icon-only */}
           <Select value={config.selectors.llm.current} onValueChange={selectLLM}>
-            <SelectTrigger className="h-8 w-auto gap-1 border-border bg-card px-2 text-xs">
+            <SelectTrigger className="h-8 w-auto gap-0.5 border-border bg-card px-1.5 [&>span:last-child]:hidden">
               {(() => {
                 const ActiveIcon = activeLLM ? resolveIcon(activeLLM.icon, activeLLM.id) : null;
-                return ActiveIcon ? <ActiveIcon className="h-4 w-4 shrink-0" style={activeLLM?.color ? { color: activeLLM.color } : undefined} /> : null;
+                return ActiveIcon ? <ActiveIcon className="h-5 w-5 shrink-0" style={activeLLM?.color ? { color: activeLLM.color } : undefined} /> : null;
               })()}
-              <SelectValue />
+              <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
             </SelectTrigger>
             <SelectContent>
               {config.selectors.llm.options.map((o) => {
@@ -102,26 +104,26 @@ export default function RuntimeHeader() {
               })}
             </SelectContent>
           </Select>
-        </div>
 
-        {/* Right: R + T trust/reliability dot indicators */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground cursor-default">
-              <div className="flex items-center gap-1">
-                <span className="font-medium">R</span>
-                {renderDots(rScore, "bg-[hsl(var(--shell-warn))]")}
+          {/* Trust dots */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground cursor-default">
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">R</span>
+                  {renderDots(rScore, "bg-[hsl(var(--shell-warn))]")}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">T</span>
+                  {renderDots(tScore, dotColor)}
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <span className="font-medium">T</span>
-                {renderDots(tScore, dotColor)}
-              </div>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p className="text-xs">{(trust.signals ?? []).join(" · ") || trust.level}</p>
-          </TooltipContent>
-        </Tooltip>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-xs">{(trust.signals ?? []).join(" · ") || trust.level}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </header>
     </TooltipProvider>
   );

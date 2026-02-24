@@ -42,10 +42,10 @@ function FloatingOverlay() {
         visible ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
     >
-      <div className="pointer-events-auto w-full max-w-lg md:max-w-full md:px-4 lg:px-8">
+      <div className="pointer-events-auto w-full px-2 md:px-4 lg:px-8">
         <QuickLinksBar />
       </div>
-      <div className="pointer-events-auto w-full max-w-lg md:max-w-full md:px-4 lg:px-8">
+      <div className="pointer-events-auto w-full px-2 md:px-4 lg:px-8">
         <PromptBox />
       </div>
     </div>
