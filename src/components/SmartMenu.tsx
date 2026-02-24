@@ -1,5 +1,11 @@
 import { useShell } from "@/contexts/ShellContext";
 import { resolveIcon } from "@/lib/icon-utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /** Color map for menu item accents — uses CSS custom properties */
 const ITEM_COLORS: Record<string, string> = {
