@@ -22,6 +22,7 @@ export interface SelectorOption {
   label: string;
   icon?: string;
   tooltip?: string;
+  color?: string;
 }
 
 export interface MenuItem {
