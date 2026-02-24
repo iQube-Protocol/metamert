@@ -13,7 +13,7 @@ export interface DeviceContext {
 export type ShellOutbound =
   | { type: "SHELL_READY"; hide_chrome?: boolean }
   | { type: "HANDOFF"; handoff_token: string; context?: Record<string, unknown> }
-  | { type: "MENU_ACTION"; item_id: string; menu_event?: MenuEvent }
+  | { type: "MENU_ACTION"; action_id: string; prompt?: string; menu_event?: MenuEvent }
   | { type: "SELECTOR_CHANGE"; selector_type: "aigent" | "llm"; id: string }
   | { type: "CONTEXT_UPDATE"; payload: Record<string, unknown> }
   | { type: "PROMPT_SUBMIT"; text: string }
@@ -53,7 +53,7 @@ function toBridgeEnvelope(msg: ShellOutbound): Record<string, unknown> {
   return {
     type,
     msg_id: genMsgId(),
-    timestamp: Date.now(),
+    timestamp: new Date().toISOString(),
     source: "shell",
     payload,
   };
@@ -82,7 +82,7 @@ export function postRawToIframe(
   const envelope = {
     type,
     msg_id: genMsgId(),
-    timestamp: Date.now(),
+    timestamp: new Date().toISOString(),
     source: "shell",
     payload,
   };
