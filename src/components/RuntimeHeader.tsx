@@ -14,12 +14,26 @@ import {
 } from "@/components/ui/popover";
 import { useState, useMemo } from "react";
 
+/** Map a 0-10 score to 0-5 filled dots */
+function scoreToDots(score: number | undefined, fallback: number): number {
+  if (score == null) return fallback;
+  return Math.round(Math.min(10, Math.max(0, score)) / 2);
+}
+
+/** Color bucket for a score: high=ok, mid=warn, low=fail */
+function scoreColor(score: number | undefined): string {
+  const v = score ?? 5;
+  if (v >= 7) return "bg-[hsl(var(--shell-ok))]";
+  if (v >= 4) return "bg-[hsl(var(--shell-warn))]";
+  return "bg-[hsl(var(--shell-fail))]";
+}
+
 /**
  * Compact header: colored Bot icon (aigent) + LLM provider logo, both icon-only.
  * LLM dropdown groups models by provider with provider header rows.
  */
 export default function RuntimeHeader() {
-  const { config, selectAigent, selectLLM } = useShell();
+  const { config, selectAigent, selectLLM, inferring } = useShell();
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
 
@@ -44,23 +58,19 @@ export default function RuntimeHeader() {
 
   const trust = config.trust ?? { level: "unverified", signals: [], scores: {} };
   const trustScores = trust.scores ?? {};
-  const rScore = trustScores?.reliability ?? 4;
-  const tScore = trustScores?.trust ?? (trust.level === "verified" ? 5 : trust.level === "warning" ? 1 : 3);
+  const rScore = scoreToDots(trustScores.reliability, 4);
+  const tScore = scoreToDots(trustScores.trust, 3);
+  const rColor = scoreColor(trustScores.reliability);
+  const tColor = scoreColor(trustScores.trust);
 
-  const dotColorMap: Record<string, string> = {
-    verified: "bg-[hsl(var(--shell-ok))]",
-    warning: "bg-[hsl(var(--shell-warn))]",
-    unverified: "bg-[hsl(var(--shell-fail))]",
-  };
-  const dotColor = dotColorMap[trust.level] ?? "bg-muted-foreground/30";
-
-  const renderDots = (score: number, activeColor: string) =>
+  const renderDots = (filled: number, activeColor: string) =>
     [...Array(5)].map((_, i) => (
       <span
         key={i}
         className={`inline-block h-2 w-2 rounded-full transition-colors duration-200 ${
-          i < score ? activeColor : "bg-muted-foreground/20"
-        }`}
+          i < filled ? activeColor : "bg-muted-foreground/20"
+        } ${inferring ? "animate-[pulse_1s_ease-in-out_infinite]" : ""}`}
+        style={inferring ? { animationDelay: `${i * 100}ms` } : undefined}
       />
     ));
 
@@ -138,11 +148,11 @@ export default function RuntimeHeader() {
             <div className="flex items-center gap-3 text-xs text-muted-foreground cursor-default">
               <div className="flex items-center gap-1">
                 <span className="font-medium">R</span>
-                {renderDots(rScore, "bg-[hsl(var(--shell-warn))]")}
+                {renderDots(rScore, rColor)}
               </div>
               <div className="flex items-center gap-1">
                 <span className="font-medium">T</span>
-                {renderDots(tScore, dotColor)}
+                {renderDots(tScore, tColor)}
               </div>
             </div>
           </TooltipTrigger>

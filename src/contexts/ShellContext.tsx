@@ -27,6 +27,7 @@ interface ShellContextValue {
   shellState: ShellState;
   activeMenuItem: string | null;
   quickLinksExpanded: boolean;
+  inferring: boolean;
   toggleQuickLinks: () => void;
   hydrate: () => Promise<void>;
   selectAigent: (id: string) => Promise<void>;
@@ -69,6 +70,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [shellState, setShellState] = useState<ShellState>("welcome");
   const [activeMenuItem, setActiveMenuItem] = useState<string | null>(null);
   const [quickLinksExpanded, setQuickLinksExpanded] = useState(true);
+  const [inferring, setInferring] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
 
   const hydrate = useCallback(async () => {
@@ -198,6 +200,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const submitPrompt = useCallback(async (text: string) => {
     if (!text.trim()) return;
     setShellState("post-welcome");
+    setInferring(true);
     try {
       const result: PromptActionResult = await promptAction(text);
       applyConfigUpdate(result.shell_config);
@@ -216,6 +219,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
       }
+    } finally {
+      setInferring(false);
     }
   }, [config, applyConfigUpdate]);
 
@@ -251,7 +256,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     <ShellCtx.Provider
       value={{
         config, loading, authenticated, shellState,
-        activeMenuItem, quickLinksExpanded, toggleQuickLinks,
+        activeMenuItem, quickLinksExpanded, inferring, toggleQuickLinks,
         hydrate, selectAigent, selectLLM, handleMenuAction,
         submitPrompt, resetToWelcome, updateTrust, iframeRef,
       }}
