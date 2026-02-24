@@ -23,16 +23,17 @@ export default function RuntimeHeader() {
   const { config, selectAigent, selectLLM } = useShell();
   if (!config) return null;
 
-  const trustScores = config.trust.scores;
+  const trust = config.trust ?? { level: "unverified", signals: [], scores: {} };
+  const trustScores = trust.scores ?? {};
   const rScore = trustScores?.reliability ?? 4;
-  const tScore = trustScores?.trust ?? (config.trust.level === "verified" ? 5 : config.trust.level === "warning" ? 1 : 3);
+  const tScore = trustScores?.trust ?? (trust.level === "verified" ? 5 : trust.level === "warning" ? 1 : 3);
 
   const trustColors: Record<string, string> = {
     verified: "bg-emerald-400",
     unverified: "bg-yellow-400",
     warning: "bg-red-400",
   };
-  const dotColor = trustColors[config.trust.level] ?? "bg-muted-foreground";
+  const dotColor = trustColors[trust.level] ?? "bg-muted-foreground";
 
   const renderDots = (score: number, color: string) =>
     [...Array(5)].map((_, i) => (
