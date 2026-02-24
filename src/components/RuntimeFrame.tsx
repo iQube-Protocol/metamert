@@ -1,11 +1,18 @@
 import { useEffect, useCallback } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import EmbedFrame from "@/components/EmbedFrame";
-import { postToIframe, type IframeInbound } from "@/lib/shell-messages";
+import { postToIframe, type IframeInbound, type DeviceType } from "@/lib/shell-messages";
 import { toast } from "sonner";
 
+function getDeviceType(): DeviceType {
+  const w = window.innerWidth;
+  if (w < 768) return "mobile";
+  if (w < 1024) return "tablet";
+  return "desktop";
+}
+
 export default function RuntimeFrame() {
-  const { config, iframeRef } = useShell();
+  const { config, iframeRef, updateTrust } = useShell();
 
   const handleReady = useCallback(() => {
     if (!config || !iframeRef.current) return;
@@ -22,6 +29,35 @@ export default function RuntimeFrame() {
         origin
       );
     }
+
+    // Step 3: Send initial device context
+    postToIframe(iframeRef.current, {
+      type: "DEVICE_CONTEXT_UPDATE",
+      context: {
+        device: getDeviceType(),
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+      },
+    }, origin);
+  }, [config, iframeRef]);
+
+  // Forward viewport/device changes to iframe
+  useEffect(() => {
+    if (!config || !iframeRef.current) return;
+    const origin = config.iframe.origin || new URL(config.iframe.url).origin;
+
+    const handleResize = () => {
+      if (!iframeRef.current) return;
+      postToIframe(iframeRef.current, {
+        type: "DEVICE_CONTEXT_UPDATE",
+        context: {
+          device: getDeviceType(),
+          viewport: { width: window.innerWidth, height: window.innerHeight },
+        },
+      }, origin);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [config, iframeRef]);
 
   // Listen for iframe → shell messages
@@ -47,12 +83,22 @@ export default function RuntimeFrame() {
         case "REQUEST_TRUST_REFRESH":
           console.log("[Shell] Trust refresh requested");
           break;
+        case "WELCOME_COMPLETE":
+          console.log("[Shell] Welcome completed by iframe");
+          break;
+        case "STATE_SYNC":
+          console.log("[Shell] STATE_SYNC received:", msg.state);
+          break;
+        case "TRUST_UPDATE":
+          console.log("[Shell] TRUST_UPDATE received:", msg.trust);
+          updateTrust(msg.trust);
+          break;
       }
     }
 
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
-  }, [config]);
+  }, [config, updateTrust]);
 
   if (!config) return null;
 

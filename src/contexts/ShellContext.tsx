@@ -32,6 +32,7 @@ interface ShellContextValue {
   handleMenuAction: (itemId: string) => Promise<void>;
   submitPrompt: (text: string) => void;
   resetToWelcome: () => void;
+  updateTrust: (trust: { level: string; signals: string[]; scores?: Record<string, number> }) => void;
   iframeRef: React.RefObject<HTMLIFrameElement>;
 }
 
