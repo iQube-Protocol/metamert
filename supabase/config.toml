@@ -1,1 +1,4 @@
 project_id = "bsjhfvctmduxhohtllly"
+
+[functions.aa-proxy]
+verify_jwt = false
