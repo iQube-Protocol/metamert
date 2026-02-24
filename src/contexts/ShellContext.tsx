@@ -88,9 +88,17 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const applyConfigUpdate = useCallback((newConfig?: ShellConfig) => {
-    if (newConfig) setConfig(newConfig);
+  /** Only apply a shell_config update if it came from live upstream (not hardcoded fallback) */
+  const isLiveConfig = useCallback((cfg?: ShellConfig): boolean => {
+    if (!cfg) return false;
+    // The fallback config has trust.level "unverified" with signal "Phase-1 dev mode"
+    if (cfg.trust?.level === "unverified" && cfg.trust?.signals?.[0] === "Phase-1 dev mode") return false;
+    return true;
   }, []);
+
+  const applyConfigUpdate = useCallback((newConfig?: ShellConfig) => {
+    if (isLiveConfig(newConfig)) setConfig(newConfig);
+  }, [isLiveConfig]);
 
   const selectAigent = useCallback(async (id: string) => {
     try {
