@@ -78,7 +78,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handler = (e: MessageEvent) => {
       const t = e.data?.type;
-      if (t === "INFERENCE_COMPLETE" || t === "RUNTIME_READY" || t === "RENDER_COMPLETE") {
+      // Any of these signals means the iframe finished rendering
+      if (
+        t === "INFERENCE_COMPLETE" ||
+        t === "RUNTIME_READY" ||
+        t === "RENDER_COMPLETE" ||
+        t === "STATE_SYNC" ||
+        t === "WELCOME_COMPLETE"
+      ) {
         setInferring(false);
         if (inferTimeoutRef.current) {
           clearTimeout(inferTimeoutRef.current);
