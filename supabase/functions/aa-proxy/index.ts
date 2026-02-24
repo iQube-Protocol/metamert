@@ -143,7 +143,12 @@ function normalizeShellConfig(raw: any): any {
   if (raw.iframe?.origin?.startsWith("http://localhost"))
     raw.iframe.origin = new URL(raw.iframe.url).origin;
 
-  // 9. Hoist bootstrap.handoff_token
+  // 9. Fix localhost postMessageOrigin
+  if (raw.iframe?.postMessageOrigin?.startsWith("http://localhost"))
+    raw.iframe.postMessageOrigin = raw.iframe.origin
+      || new URL(raw.iframe.url).origin;
+
+  // 10. Hoist bootstrap.handoff_token
   if (raw.iframe?.bootstrap?.handoff_token && !raw.iframe.handoff_token)
     raw.iframe.handoff_token = raw.iframe.bootstrap.handoff_token;
 
