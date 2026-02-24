@@ -78,7 +78,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handler = (e: MessageEvent) => {
       const t = e.data?.type;
-      // Any of these signals means the iframe finished rendering
+      // Any of these signals means the iframe finished rendering.
+      // Keep the animation running for 2s after receipt so the user
+      // sees the dots settle while the content paints on screen.
       if (
         t === "INFERENCE_COMPLETE" ||
         t === "RUNTIME_READY" ||
@@ -86,11 +88,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         t === "STATE_SYNC" ||
         t === "WELCOME_COMPLETE"
       ) {
-        setInferring(false);
         if (inferTimeoutRef.current) {
           clearTimeout(inferTimeoutRef.current);
           inferTimeoutRef.current = null;
         }
+        inferTimeoutRef.current = setTimeout(() => {
+          setInferring(false);
+          inferTimeoutRef.current = null;
+        }, 2000);
       }
     };
     window.addEventListener("message", handler);
@@ -194,6 +199,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
     setShellState("post-welcome");
     setActiveMenuItem(itemId);
+    setInferring(true);
+
+    // Safety timeout so animation doesn't run forever
+    if (inferTimeoutRef.current) clearTimeout(inferTimeoutRef.current);
+    inferTimeoutRef.current = setTimeout(() => {
+      setInferring(false);
+      inferTimeoutRef.current = null;
+    }, 30000);
 
     try {
       const result: MenuActionResult = await menuAction(itemId);
