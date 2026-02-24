@@ -67,21 +67,6 @@ export default function RuntimeHeader() {
   const activeAigent = config.selectors.aigent.options.find(o => o.id === config.selectors.aigent.current);
   const activeLLM = config.selectors.llm.options.find(o => o.id === config.selectors.llm.current);
 
-  // Group LLM options by provider
-  const llmGroups = useMemo(() => {
-    const groups: { provider: string; color: string; options: typeof config.selectors.llm.options }[] = [];
-    const map = new Map<string, typeof groups[0]>();
-    for (const o of config.selectors.llm.options) {
-      const prov = o.provider ?? "Other";
-      if (!map.has(prov)) {
-        const g = { provider: prov, color: o.provider_color ?? o.color ?? "#888", options: [] as typeof config.selectors.llm.options };
-        map.set(prov, g);
-        groups.push(g);
-      }
-      map.get(prov)!.options.push(o);
-    }
-    return groups;
-  }, [config.selectors.llm.options]);
 
   return (
     <TooltipProvider delayDuration={300}>
