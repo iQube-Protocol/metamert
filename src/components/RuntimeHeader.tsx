@@ -53,6 +53,11 @@ export default function RuntimeHeader() {
         <div className="flex items-center gap-1.5">
           <Select value={config.selectors.aigent.current} onValueChange={selectAigent}>
             <SelectTrigger className="h-8 w-auto gap-1 border-border bg-card px-2 text-xs">
+              {(() => {
+                const active = config.selectors.aigent.options.find(o => o.id === config.selectors.aigent.current);
+                const ActiveIcon = active ? resolveIcon(active.icon, active.id) : null;
+                return ActiveIcon ? <ActiveIcon className="h-3.5 w-3.5" style={active?.color ? { color: active.color } : undefined} /> : null;
+              })()}
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
