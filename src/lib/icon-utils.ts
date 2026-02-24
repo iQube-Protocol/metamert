@@ -5,7 +5,7 @@
 import { icons, type LucideIcon } from "lucide-react";
 import {
   Coins, PlayCircle, Pencil, Users, Share2,
-  Bot, Cpu, MessageSquare,
+  Bot, Cpu, MessageSquare, Sparkles, Zap,
   Eye, Headphones, BookOpen, Search, RefreshCw, RotateCcw,
 } from "lucide-react";
 
@@ -18,15 +18,23 @@ const DEFAULTS: Record<string, LucideIcon> = {
   share: Share2,
   "aigent-z": Bot,
   "aigent-q": Bot,
-  "gpt-4o": Cpu,
+  "aigent-m": Bot,
+  "gpt-4o": Sparkles,
   "claude-sonnet": MessageSquare,
+  "gemini-pro": Zap,
   // Quick link defaults
   "ql-watch": Eye,
+  watch: Eye,
   "ql-listen": Headphones,
+  listen: Headphones,
   "ql-read": BookOpen,
+  read: BookOpen,
   "ql-find": Search,
+  find: Search,
   "ql-refresh": RefreshCw,
+  refresh: RefreshCw,
   "ql-reset": RotateCcw,
+  reset: RotateCcw,
 };
 
 /**

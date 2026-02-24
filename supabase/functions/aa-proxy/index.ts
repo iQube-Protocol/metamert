@@ -23,28 +23,28 @@ const DEFAULT_SHELL_CONFIG = {
     aigent: {
       current: "aigent-z",
       options: [
-        { id: "aigent-z", label: "Aigent Z", icon: "bot", tooltip: "Primary orchestration agent" },
-        { id: "aigent-q", label: "Aigent Q", icon: "bot", tooltip: "Query agent" },
+        { id: "aigent-z", label: "Aigent Z", icon: "bot", color: "#3b82f6", tooltip: "Primary orchestration agent" },
+        { id: "aigent-q", label: "Aigent Q", icon: "bot", color: "#a855f7", tooltip: "Query agent" },
+        { id: "aigent-m", label: "Aigent M", icon: "bot", color: "#22c55e", tooltip: "Media agent" },
       ],
     },
     llm: {
       current: "gpt-4o",
       options: [
-        { id: "gpt-4o", label: "GPT-4o", icon: "cpu", tooltip: "OpenAI GPT-4o" },
-        { id: "claude-sonnet", label: "Claude Sonnet", icon: "message-square", tooltip: "Anthropic Claude" },
+        { id: "gpt-4o", label: "GPT-4o", icon: "sparkles", color: "#10b981", tooltip: "OpenAI GPT-4o" },
+        { id: "claude-sonnet", label: "Claude Sonnet", icon: "message-square", color: "#d97706", tooltip: "Anthropic Claude 3.5 Sonnet" },
+        { id: "gemini-pro", label: "Gemini Pro", icon: "zap", color: "#6366f1", tooltip: "Google Gemini Pro" },
       ],
     },
   },
   menu: {
     mode: "expanded",
     items: [
+      { id: "be", label: "Be", icon: "users", enabled: true },
       { id: "earn", label: "Earn", icon: "coins", enabled: true },
-      { id: "play", label: "Play", icon: "gamepad-2", enabled: true },
-      { id: "make", label: "Make", icon: "wrench", enabled: true },
-    ],
-    edge_items: [
-      { id: "be", label: "Be", icon: "user", visible: true },
-      { id: "share", label: "Share", icon: "share-2", visible: true },
+      { id: "play", label: "Play", icon: "play-circle", enabled: true },
+      { id: "make", label: "Make", icon: "pencil", enabled: true },
+      { id: "share", label: "Share", icon: "share-2", enabled: true },
     ],
     collapse_mobile: true,
     policy: {

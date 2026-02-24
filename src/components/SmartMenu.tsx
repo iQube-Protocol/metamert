@@ -1,35 +1,35 @@
 import { useShell } from "@/contexts/ShellContext";
 import { resolveIcon } from "@/lib/icon-utils";
 
-/** IDs that form the tight center cluster */
-const CENTER_IDS = new Set(["earn", "play", "make"]);
+/** Color map for menu item accents — uses CSS custom properties */
+const ITEM_COLORS: Record<string, string> = {
+  be: "var(--menu-be)",
+  earn: "var(--menu-earn)",
+  play: "var(--menu-play)",
+  make: "var(--menu-make)",
+  share: "var(--menu-share)",
+};
 
 /**
  * Bottom navigation: Be | Earn·Play·Make | Share
- * All 5 items from config.menu.items. Center triad is clustered tightly.
+ * 5 items total. Center triad clustered tightly on tablet/desktop.
  */
 export default function SmartMenu() {
   const { config, activeMenuItem, handleMenuAction } = useShell();
   if (!config) return null;
 
   const allItems = config.menu?.items ?? [];
-  const edgeItems = config.menu?.edge_items ?? [];
+  const centerIds = new Set(config.menu?.policy?.center_group_ids ?? ["earn", "play", "make"]);
 
-  // Build unified list: edge_items (be/share) + items, deduped
-  const itemMap = new Map<string, any>();
-  for (const e of edgeItems) itemMap.set(e.id, { ...e, enabled: e.visible !== false });
-  for (const i of allItems) itemMap.set(i.id, i);
-
-  // Ordered: be first, center group, share last
-  const be = itemMap.get("be");
-  const share = itemMap.get("share");
-  const center = ["earn", "play", "make"]
-    .map((id) => itemMap.get(id))
-    .filter(Boolean);
+  // Split into left edge, center cluster, right edge
+  const left = allItems.filter((i: any) => i.id === "be");
+  const center = allItems.filter((i: any) => centerIds.has(i.id));
+  const right = allItems.filter((i: any) => i.id === "share");
 
   const renderBtn = (item: any, isCenter = false) => {
     const Icon = resolveIcon(item.icon, item.id);
     const isActive = activeMenuItem === item.id;
+    const hsl = ITEM_COLORS[item.id];
 
     return (
       <button
@@ -37,7 +37,7 @@ export default function SmartMenu() {
         onClick={() => handleMenuAction(item.id)}
         aria-pressed={isActive}
         className={`flex flex-col items-center justify-center gap-0.5 rounded-md py-1.5 text-[11px] transition-all duration-200
-          ${isCenter ? "flex-1" : "w-14 shrink-0"}
+          ${isCenter ? "min-w-[3.5rem] px-1" : "w-14 shrink-0"}
           ${isActive ? "scale-105" : "hover:bg-accent hover:text-accent-foreground"}
         `}
       >
@@ -46,18 +46,21 @@ export default function SmartMenu() {
             isActive ? "shadow-md" : ""
           }`}
           style={
-            isActive
+            isActive && hsl
               ? {
-                  backgroundColor: `hsl(var(--menu-${item.id}))`,
+                  backgroundColor: `hsl(${hsl})`,
                   color: "hsl(var(--foreground))",
-                  boxShadow: `0 0 10px hsl(var(--menu-${item.id}) / 0.5)`,
+                  boxShadow: `0 0 10px hsl(${hsl} / 0.5)`,
                 }
-              : undefined
+              : { color: hsl ? `hsl(${hsl})` : undefined }
           }
         >
           {Icon ? <Icon className="h-5 w-5" /> : <span className="h-5 w-5" />}
         </span>
-        <span className={`transition-colors ${isActive ? "font-semibold" : "text-muted-foreground"}`}>
+        <span
+          className={`transition-colors ${isActive ? "font-semibold" : "text-muted-foreground"}`}
+          style={isActive && hsl ? { color: `hsl(${hsl})` } : undefined}
+        >
           {item.label}
         </span>
       </button>
@@ -67,15 +70,15 @@ export default function SmartMenu() {
   return (
     <nav className="flex items-stretch justify-between border-t border-border bg-card px-2 py-1.5">
       {/* Be — left */}
-      {be && renderBtn(be)}
+      {left.map((item: any) => renderBtn(item))}
 
       {/* Earn · Play · Make — tight center cluster */}
-      <div className="flex flex-1 items-stretch justify-center gap-0">
+      <div className="flex items-stretch justify-center gap-0 md:gap-1">
         {center.map((item: any) => renderBtn(item, true))}
       </div>
 
       {/* Share — right */}
-      {share && renderBtn(share)}
+      {right.map((item: any) => renderBtn(item))}
     </nav>
   );
 }
