@@ -53,7 +53,7 @@ function toBridgeEnvelope(msg: ShellOutbound): Record<string, unknown> {
   return {
     type,
     msg_id: genMsgId(),
-    timestamp: Date.now(),
+    timestamp: new Date().toISOString(),
     source: "shell",
     payload,
   };
