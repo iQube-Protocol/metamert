@@ -44,5 +44,6 @@ export function postToIframe(
   msg: ShellOutbound,
   origin: string
 ): void {
+  console.log("[Shell→iframe]", msg.type, msg, "→", origin);
   iframe.contentWindow?.postMessage(msg, origin);
 }
