@@ -23,6 +23,10 @@ export interface SelectorOption {
   icon?: string;
   tooltip?: string;
   color?: string;
+  /** For LLM options: provider grouping */
+  provider?: string;
+  provider_icon?: string;
+  provider_color?: string;
 }
 
 export interface MenuItem {

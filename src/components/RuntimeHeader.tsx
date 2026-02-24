@@ -1,27 +1,45 @@
 import { useShell } from "@/contexts/ShellContext";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { resolveIcon } from "@/lib/icon-utils";
-import { Bot, ChevronDown } from "lucide-react";
+import { Bot, ChevronDown, Check } from "lucide-react";
+import ProviderIcon from "@/components/ProviderIcon";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useState, useMemo } from "react";
 
 /**
- * Compact top header — icon-only selectors + trust dots.
- * Aigent: colored Bot icon + chevron. LLM: colored provider icon + chevron.
- * No text labels shown in closed state.
+ * Compact header: colored Bot icon (aigent) + LLM provider logo, both icon-only.
+ * LLM dropdown groups models by provider with provider header rows.
  */
 export default function RuntimeHeader() {
   const { config, selectAigent, selectLLM } = useShell();
+  const [aigentOpen, setAigentOpen] = useState(false);
+  const [llmOpen, setLlmOpen] = useState(false);
+
+  // Group LLM options by provider (must be before early return)
+  const llmGroups = useMemo(() => {
+    if (!config) return [];
+    const groups: { provider: string; color: string; options: typeof config.selectors.llm.options }[] = [];
+    const map = new Map<string, typeof groups[0]>();
+    for (const o of config.selectors.llm.options) {
+      const prov = o.provider ?? "Other";
+      if (!map.has(prov)) {
+        const g = { provider: prov, color: o.provider_color ?? o.color ?? "#888", options: [] as typeof config.selectors.llm.options };
+        map.set(prov, g);
+        groups.push(g);
+      }
+      map.get(prov)!.options.push(o);
+    }
+    return groups;
+  }, [config]);
+
   if (!config) return null;
 
   const trust = config.trust ?? { level: "unverified", signals: [], scores: {} };
@@ -49,61 +67,71 @@ export default function RuntimeHeader() {
   const activeAigent = config.selectors.aigent.options.find(o => o.id === config.selectors.aigent.current);
   const activeLLM = config.selectors.llm.options.find(o => o.id === config.selectors.llm.current);
 
+
   return (
     <TooltipProvider delayDuration={300}>
       <header className="flex items-center justify-center border-b border-border bg-card px-3 py-1.5">
-        {/* Center container for selectors + trust */}
         <div className="flex items-center gap-4">
-          {/* Aigent selector — icon-only */}
-          <Select value={config.selectors.aigent.current} onValueChange={selectAigent}>
-            <SelectTrigger className="h-8 w-auto gap-0.5 border-border bg-card px-1.5 [&>span:last-child]:hidden">
-              <Bot className="h-5 w-5 shrink-0" style={activeAigent?.color ? { color: activeAigent.color } : undefined} />
-              <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
-            </SelectTrigger>
-            <SelectContent>
-              {config.selectors.aigent.options.map((o) => (
-                <SelectItem key={o.id} value={o.id}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="flex items-center gap-1.5">
-                        <Bot className="h-3.5 w-3.5" style={o.color ? { color: o.color } : undefined} />
-                        {o.label}
-                      </span>
-                    </TooltipTrigger>
-                    {o.tooltip && (
-                      <TooltipContent side="bottom">
-                        <p className="text-xs">{o.tooltip}</p>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
 
-          {/* LLM selector — icon-only */}
-          <Select value={config.selectors.llm.current} onValueChange={selectLLM}>
-            <SelectTrigger className="h-8 w-auto gap-0.5 border-border bg-card px-1.5 [&>span:last-child]:hidden">
-              {(() => {
-                const ActiveIcon = activeLLM ? resolveIcon(activeLLM.icon, activeLLM.id) : null;
-                return ActiveIcon ? <ActiveIcon className="h-5 w-5 shrink-0" style={activeLLM?.color ? { color: activeLLM.color } : undefined} /> : null;
-              })()}
-              <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
-            </SelectTrigger>
-            <SelectContent>
-              {config.selectors.llm.options.map((o) => {
-                const Icon = resolveIcon(o.icon, o.id);
-                return (
-                  <SelectItem key={o.id} value={o.id}>
-                    <span className="flex items-center gap-1.5">
-                      {Icon && <Icon className="h-3.5 w-3.5" style={o.color ? { color: o.color } : undefined} />}
-                      {o.label}
-                    </span>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+          {/* Aigent selector — icon-only popover */}
+          <Popover open={aigentOpen} onOpenChange={setAigentOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-0.5 rounded-md border border-border bg-card px-1.5 h-8 hover:bg-accent/50 transition-colors">
+                <Bot className="h-5 w-5 shrink-0" style={activeAigent?.color ? { color: activeAigent.color } : undefined} />
+                <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-1 z-50 bg-popover" align="start">
+              {config.selectors.aigent.options.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => { selectAigent(o.id); setAigentOpen(false); }}
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent transition-colors"
+                >
+                  <Bot className="h-4 w-4 shrink-0" style={o.color ? { color: o.color } : undefined} />
+                  <span className="flex-1 text-left">{o.label}</span>
+                  {o.id === config.selectors.aigent.current && <Check className="h-3.5 w-3.5 text-primary" />}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
+
+          {/* LLM selector — icon-only with grouped dropdown */}
+          <Popover open={llmOpen} onOpenChange={setLlmOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-0.5 rounded-md border border-border bg-card px-1.5 h-8 hover:bg-accent/50 transition-colors">
+                <ProviderIcon
+                  provider={activeLLM?.provider}
+                  className="h-5 w-5 shrink-0"
+                  style={activeLLM?.provider_color ? { color: activeLLM.provider_color } : undefined}
+                />
+                <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-1 z-50 bg-popover" align="start">
+              {llmGroups.map((group, gi) => (
+                <div key={group.provider}>
+                  {gi > 0 && <div className="my-1 border-t border-border" />}
+                  {/* Provider header */}
+                  <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <ProviderIcon provider={group.provider} className="h-3.5 w-3.5" style={{ color: group.color }} />
+                    {group.provider}
+                  </div>
+                  {/* Models */}
+                  {group.options.map((o) => (
+                    <button
+                      key={o.id}
+                      onClick={() => { selectLLM(o.id); setLlmOpen(false); }}
+                      className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 pl-7 text-sm hover:bg-accent transition-colors"
+                    >
+                      <span className="flex-1 text-left">{o.label}</span>
+                      {o.id === config.selectors.llm.current && <Check className="h-3.5 w-3.5 text-primary" />}
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </PopoverContent>
+          </Popover>
 
           {/* Trust dots */}
           <Tooltip>
