@@ -1,19 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-/**
- * AA-Proxy Edge Function
- * 
- * Proxies all AA-API calls from the browser through this server-side function,
- * ensuring tokens and API details stay off the client. Provides a fallback
- * shell-config when the upstream endpoint isn't ready yet.
- *
- * Request body: { action, path?, body?, token? }
- *   - action: "challenge" | "verify" | "shell-config" | "selectors" | "menu-action"
- *   - path: optional override (unused for most actions)
- *   - body: JSON body to forward upstream
- *   - token: AA bearer token for authenticated calls
- */
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -24,43 +10,63 @@ const AA_PRIMARY = "https://aa.dev-beta.aigentz.me/aa/v1";
 const AA_FALLBACK = "https://aigentzbeta-production.up.railway.app/aa/v1";
 
 // ---------------------------------------------------------------------------
-// Default shell-config returned when the upstream endpoint doesn't exist yet
+// Default shell-config (enriched schema matching Windsurf brief)
 // ---------------------------------------------------------------------------
 
 const DEFAULT_SHELL_CONFIG = {
-  trust: { level: "unverified", signals: ["Phase-1 dev mode"] },
+  trust: {
+    level: "unverified",
+    signals: ["Phase-1 dev mode"],
+    scores: { trust: 3, reliability: 4 },
+  },
   selectors: {
     aigent: {
       current: "aigent-z",
       options: [
-        { id: "aigent-z", label: "Aigent Z" },
-        { id: "aigent-q", label: "Aigent Q" },
+        { id: "aigent-z", label: "Aigent Z", icon: "bot", tooltip: "Primary orchestration agent" },
+        { id: "aigent-q", label: "Aigent Q", icon: "bot", tooltip: "Query agent" },
       ],
     },
     llm: {
       current: "gpt-4o",
       options: [
-        { id: "gpt-4o", label: "GPT-4o" },
-        { id: "claude-sonnet", label: "Claude Sonnet" },
+        { id: "gpt-4o", label: "GPT-4o", icon: "cpu", tooltip: "OpenAI GPT-4o" },
+        { id: "claude-sonnet", label: "Claude Sonnet", icon: "message-square", tooltip: "Anthropic Claude" },
       ],
     },
   },
   menu: {
+    mode: "expanded",
     items: [
-      { id: "earn", label: "Earn", enabled: true },
-      { id: "play", label: "Play", enabled: true },
-      { id: "make", label: "Make", enabled: true },
+      { id: "earn", label: "Earn", icon: "coins", enabled: true },
+      { id: "play", label: "Play", icon: "gamepad-2", enabled: true },
+      { id: "make", label: "Make", icon: "wrench", enabled: true },
     ],
     edge_items: [
-      { id: "be", label: "Be", visible: true },
-      { id: "share", label: "Share", visible: true },
+      { id: "be", label: "Be", icon: "user", visible: true },
+      { id: "share", label: "Share", icon: "share-2", visible: true },
     ],
     collapse_mobile: true,
+    policy: {
+      collapse_to_metame_button: false,
+      center_group_ids: ["earn", "play", "make"],
+      triad_cluster_gap: "0.25rem",
+      quick_links: [
+        { id: "ql-explore", label: "Explore", action: "explore" },
+        { id: "ql-wallet", label: "Wallet", action: "wallet" },
+      ],
+      prompt_box: { placeholder: "Ask metaMe anything…", visible: true },
+      state_behavior: {
+        welcome: { show_prompt: true, show_quick_links: true },
+        post_welcome: { show_prompt: false, collapse_quick_links: true },
+      },
+    },
   },
   iframe: {
     url: "https://dev-beta.aigentz.me/runtime",
     handoff_token: "dev-placeholder-token",
     origin: "https://dev-beta.aigentz.me",
+    bootstrap: { context: {} },
   },
 };
 
@@ -76,11 +82,9 @@ async function upstreamFetch(
   try {
     const res = await fetch(url1, init);
     if (res.ok) return res;
-    // If primary returns non-ok, try fallback
   } catch {
     // primary unreachable
   }
-
   const url2 = `${AA_FALLBACK}${path}`;
   return fetch(url2, init);
 }
@@ -147,8 +151,6 @@ serve(async (req) => {
       } catch {
         // upstream unavailable
       }
-
-      // Fallback: return default config
       console.log("[aa-proxy] shell-config upstream unavailable, returning default");
       return new Response(JSON.stringify(DEFAULT_SHELL_CONFIG), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

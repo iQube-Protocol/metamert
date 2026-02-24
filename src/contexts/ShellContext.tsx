@@ -1,22 +1,28 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import {
   type ShellConfig,
+  type MenuActionResult,
+  type SelectorResult,
   fetchShellConfig,
   updateSelector,
   menuAction,
   authenticate,
   getToken,
 } from "@/lib/aa-client";
+import { postToIframe } from "@/lib/shell-messages";
 import { toast } from "sonner";
 
 // ---------------------------------------------------------------------------
 // Context shape
 // ---------------------------------------------------------------------------
 
-interface ShellState {
+export type ShellState = "welcome" | "post-welcome";
+
+interface ShellContextValue {
   config: ShellConfig | null;
   loading: boolean;
   authenticated: boolean;
+  shellState: ShellState;
   hydrate: () => Promise<void>;
   selectAigent: (id: string) => Promise<void>;
   selectLLM: (id: string) => Promise<void>;
@@ -24,12 +30,20 @@ interface ShellState {
   iframeRef: React.RefObject<HTMLIFrameElement>;
 }
 
-const ShellCtx = createContext<ShellState | null>(null);
+const ShellCtx = createContext<ShellContextValue | null>(null);
 
-export function useShell(): ShellState {
+export function useShell(): ShellContextValue {
   const ctx = useContext(ShellCtx);
   if (!ctx) throw new Error("useShell must be used inside ShellProvider");
   return ctx;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function getIframeOrigin(config: ShellConfig): string {
+  return config.iframe.origin || new URL(config.iframe.url).origin;
 }
 
 // ---------------------------------------------------------------------------
@@ -40,12 +54,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState<ShellConfig | null>(null);
   const [loading, setLoading] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  const [shellState, setShellState] = useState<ShellState>("welcome");
   const iframeRef = useRef<HTMLIFrameElement>(null!);
 
   const hydrate = useCallback(async () => {
     setLoading(true);
     try {
-      // Phase 1: auto-auth with placeholder DID in dev
       if (!getToken()) {
         try {
           await authenticate("did:metame:dev-shell", async () => "dev-sig");
@@ -54,8 +68,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           console.warn("[Shell] Auth failed via proxy");
         }
       }
-
-      // Fetch shell-config (proxy returns default if upstream is unavailable)
       const cfg = await fetchShellConfig();
       setConfig(cfg);
     } catch (err) {
@@ -66,44 +78,74 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Re-hydrate config from action responses when present
+  const applyConfigUpdate = useCallback((newConfig?: ShellConfig) => {
+    if (newConfig) setConfig(newConfig);
+  }, []);
+
   const selectAigent = useCallback(async (id: string) => {
     try {
-      await updateSelector("aigent", id);
+      const result: SelectorResult = await updateSelector("aigent", id);
       setConfig((prev) =>
         prev
           ? { ...prev, selectors: { ...prev.selectors, aigent: { ...prev.selectors.aigent, current: id } } }
           : prev
       );
+      applyConfigUpdate(result.shell_config);
+
+      // Forward to iframe
+      if (iframeRef.current && config) {
+        postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "aigent", id }, getIframeOrigin(config));
+      }
     } catch {
       toast.error("Failed to update Aigent selector");
     }
-  }, []);
+  }, [config, applyConfigUpdate]);
 
   const selectLLM = useCallback(async (id: string) => {
     try {
-      await updateSelector("llm", id);
+      const result: SelectorResult = await updateSelector("llm", id);
       setConfig((prev) =>
         prev
           ? { ...prev, selectors: { ...prev.selectors, llm: { ...prev.selectors.llm, current: id } } }
           : prev
       );
+      applyConfigUpdate(result.shell_config);
+
+      if (iframeRef.current && config) {
+        postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "llm", id }, getIframeOrigin(config));
+      }
     } catch {
       toast.error("Failed to update LLM selector");
     }
-  }, []);
+  }, [config, applyConfigUpdate]);
 
   const handleMenuAction = useCallback(async (itemId: string) => {
     try {
-      await menuAction(itemId);
+      const result: MenuActionResult = await menuAction(itemId);
+      applyConfigUpdate(result.shell_config);
+
+      // Transition to post-welcome on first action
+      setShellState("post-welcome");
+
+      // Forward menu_event to iframe
+      if (iframeRef.current && config) {
+        postToIframe(
+          iframeRef.current,
+          { type: "MENU_ACTION", item_id: itemId, menu_event: result.menu_event },
+          getIframeOrigin(config),
+        );
+      }
+
       toast.success(`Action: ${itemId}`);
     } catch {
       toast.error(`Menu action failed: ${itemId}`);
     }
-  }, []);
+  }, [config, applyConfigUpdate]);
 
   return (
     <ShellCtx.Provider
-      value={{ config, loading, authenticated, hydrate, selectAigent, selectLLM, handleMenuAction, iframeRef }}
+      value={{ config, loading, authenticated, shellState, hydrate, selectAigent, selectLLM, handleMenuAction, iframeRef }}
     >
       {children}
     </ShellCtx.Provider>
