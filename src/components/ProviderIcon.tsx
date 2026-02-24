@@ -39,10 +39,51 @@ function GoogleIcon({ className, style }: Omit<Props, "provider">) {
   );
 }
 
+/** Venice.ai mark */
+function VeniceIcon({ className, style }: Omit<Props, "provider">) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} style={style}>
+      <path d="M12 2L2 22h20L12 2zm0 4.5L18.5 20h-13L12 6.5z" />
+    </svg>
+  );
+}
+
+/** ChainGPT mark */
+function ChainGPTIcon({ className, style }: Omit<Props, "provider">) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} style={style}>
+      <path d="M12 1.5a2.5 2.5 0 0 1 2.5 2.5v1.17a7.5 7.5 0 0 1 4.33 4.33H20a2.5 2.5 0 0 1 0 5h-1.17a7.5 7.5 0 0 1-4.33 4.33V20a2.5 2.5 0 0 1-5 0v-1.17A7.5 7.5 0 0 1 5.17 14.5H4a2.5 2.5 0 0 1 0-5h1.17A7.5 7.5 0 0 1 9.5 5.17V4A2.5 2.5 0 0 1 12 1.5zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
+    </svg>
+  );
+}
+
+/** ThirdWeb mark */
+function ThirdWebIcon({ className, style }: Omit<Props, "provider">) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} style={style}>
+      <path d="M3 7h4l2 5 2-5h4l2 5 2-5h4l-4 10h-4l-2-5-2 5H7L3 7z" />
+    </svg>
+  );
+}
+
+/** Fallback: first letter in a circle */
+function FallbackIcon({ provider, className, style }: Props) {
+  const letter = (provider ?? "?").charAt(0).toUpperCase();
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style}>
+      <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" strokeWidth="2" />
+      <text x="12" y="16.5" textAnchor="middle" fill="currentColor" fontSize="12" fontWeight="600">{letter}</text>
+    </svg>
+  );
+}
+
 export default function ProviderIcon({ provider, className = "h-5 w-5", style }: Props) {
   const p = (provider ?? "").toLowerCase();
   if (p === "openai") return <OpenAIIcon className={className} style={style} />;
   if (p === "anthropic") return <AnthropicIcon className={className} style={style} />;
   if (p === "google") return <GoogleIcon className={className} style={style} />;
-  return null;
+  if (p === "venice") return <VeniceIcon className={className} style={style} />;
+  if (p === "chaingpt") return <ChainGPTIcon className={className} style={style} />;
+  if (p === "thirdweb") return <ThirdWebIcon className={className} style={style} />;
+  return <FallbackIcon provider={provider} className={className} style={style} />;
 }

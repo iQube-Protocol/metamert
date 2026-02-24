@@ -43,14 +43,15 @@ export default function SmartMenu() {
       >
         <span
           className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${
-            isActive ? "shadow-md" : ""
+            isActive ? "shadow-md backdrop-blur-md" : ""
           }`}
           style={
             isActive && hsl
               ? {
-                  backgroundColor: `hsl(${hsl})`,
-                  color: "hsl(var(--foreground))",
-                  boxShadow: `0 0 10px hsl(${hsl} / 0.5)`,
+                  backgroundColor: `hsl(${hsl} / 0.25)`,
+                  color: `hsl(${hsl})`,
+                  boxShadow: `0 0 12px hsl(${hsl} / 0.4)`,
+                  border: `1px solid hsl(${hsl} / 0.35)`,
                 }
               : { color: hsl ? `hsl(${hsl})` : undefined }
           }
