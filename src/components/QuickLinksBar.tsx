@@ -14,16 +14,16 @@ export default function QuickLinksBar() {
 
   return (
     <div className="flex gap-2 overflow-x-auto px-3 py-2 scrollbar-hide">
-      {quickLinks.map((ql) => {
+      {quickLinks.map((ql: any) => {
         const Icon = resolveIcon(ql.icon, ql.id);
         return (
           <button
             key={ql.id}
             onClick={() => handleMenuAction(ql.action ?? ql.id)}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground shadow-sm transition-all duration-150 hover:bg-accent hover:text-accent-foreground hover:shadow-md active:scale-95"
             title={ql.label}
           >
-            {Icon ? <Icon className="h-5 w-5" /> : <span className="text-xs">{ql.label.charAt(0)}</span>}
+            {Icon ? <Icon className="h-5 w-5" /> : <span className="text-xs font-medium">{ql.label.charAt(0)}</span>}
           </button>
         );
       })}

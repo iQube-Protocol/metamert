@@ -5,7 +5,7 @@ import { Menu } from "lucide-react";
 
 /**
  * Bottom navigation bar: Be | Earn · Play · Make | Share
- * With active item highlight and collapsed triad flyout.
+ * With active item highlight ring and collapsed triad flyout.
  */
 export default function SmartMenu() {
   const { config, activeMenuItem, handleMenuAction } = useShell();
@@ -33,14 +33,22 @@ export default function SmartMenu() {
       <button
         key={id}
         onClick={() => handleMenuAction(id)}
-        className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded-md py-1.5 text-[11px] transition-colors hover:bg-accent hover:text-accent-foreground ${
+        className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded-md py-1.5 text-[11px] transition-all duration-200 ${
           isEdge ? "text-muted-foreground" : "text-foreground"
-        }`}
+        } ${isActive ? "scale-105" : "hover:bg-accent hover:text-accent-foreground"}`}
       >
-        <span className={`flex h-7 w-7 items-center justify-center rounded-full ${isActive ? "bg-primary text-primary-foreground" : ""}`}>
+        <span
+          className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${
+            isActive
+              ? "bg-primary text-primary-foreground shadow-[0_0_8px_hsl(var(--primary)/0.4)]"
+              : ""
+          }`}
+        >
           {Icon ? <Icon className="h-5 w-5" /> : <span className="h-5 w-5" />}
         </span>
-        <span>{label}</span>
+        <span className={`transition-colors ${isActive ? "font-semibold text-primary" : ""}`}>
+          {label}
+        </span>
       </button>
     );
   };
@@ -59,15 +67,15 @@ export default function SmartMenu() {
             <span>metaMe</span>
           </button>
           {triadOpen && (
-            <div className="absolute bottom-full mb-1 flex gap-1 rounded-lg border border-border bg-card p-1 shadow-lg">
-              {items.filter((i) => i.enabled).map((item) =>
+            <div className="absolute bottom-full mb-1 flex gap-1 rounded-lg border border-border bg-card p-1 shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200">
+              {items.filter((i: any) => i.enabled).map((item: any) =>
                 renderButton(item.id, item.label, item.icon)
               )}
             </div>
           )}
         </div>
       ) : (
-        items.filter((i) => i.enabled).map((item) =>
+        items.filter((i: any) => i.enabled).map((item: any) =>
           renderButton(item.id, item.label, item.icon)
         )
       )}
