@@ -70,6 +70,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [shellState, setShellState] = useState<ShellState>("welcome");
   const [activeMenuItem, setActiveMenuItem] = useState<string | null>(null);
   const [quickLinksExpanded, setQuickLinksExpanded] = useState(true);
+  const [inferring, setInferring] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
 
   const hydrate = useCallback(async () => {
