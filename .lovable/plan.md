@@ -1,58 +1,69 @@
 
 
-# Fix iframe rendering: API response normalization
+# Fix: Upstream Runtime Rendering Duplicate Chrome in Embed Mode
 
-## Problems identified
+## Problem
 
-There are three mismatches between what the upstream API returns and what the shell code expects:
+The iframe at `https://dev-beta.aigentz.me/metame/runtime?embed=1` is rendering its own header (selectors, trust dots), prompt box, and bottom navigation (Be/Earn/Play/Make/Share) -- duplicating the shell's UI elements. The `embed=1` query parameter should signal the upstream runtime to strip its chrome, but the Amplify-deployed runtime is ignoring this flag.
 
-### 1. `postMessageOrigin` not mapped to `origin`
-The API returns `iframe.postMessageOrigin: "http://localhost:3000"` but `ShellConfig` expects `iframe.origin`. The normalizer in aa-proxy never maps this field, so `config.iframe.origin` is always `undefined`. This breaks the postMessage handshake origin filtering and means the EmbedFrame ignores origin checks entirely.
+**Visual evidence**: The screenshot shows two sets of selectors, two sets of trust indicators, two bottom menus, and two prompt boxes -- one from the shell and one from the iframe content.
 
-### 2. `handoff_token` is nested inside `bootstrap`, not at top level
-The API returns `iframe.bootstrap.handoff_token: "rt_000..."` but the shell reads `config.iframe.handoff_token` (top level). So the HANDOFF message is never sent because `config.iframe.handoff_token` is always undefined.
+## Root Cause
 
-### 3. Localhost `postMessageOrigin` not overridden
-Even once mapped, the origin is `http://localhost:3000` which is wrong for production. The normalizer already fixes localhost in `iframe.url` but not in the origin/postMessageOrigin field.
+This is an **upstream issue**, not a shell bug. The shell is working correctly:
+- It passes `embed=1` in the iframe URL
+- It renders its own header, SmartMenu, QuickLinksBar, and PromptBox as designed
+- The aa-proxy normalizer correctly builds the URL with `embed=1`
 
-## Solution
+The upstream Next.js runtime (deployed on Amplify) is not checking the `embed` query parameter to conditionally hide its layout chrome.
 
-Update the `normalizeShellConfig` function in `supabase/functions/aa-proxy/index.ts` to handle these three cases:
+## Plan
 
-### Changes to `supabase/functions/aa-proxy/index.ts`
+### 1. Notify upstream via QubeTalk
 
-Add three normalization steps to `normalizeShellConfig()`:
+Send a QubeTalk message to the `metame-runtime-thinclient` channel on the `#ui-shell` thread requesting that the Amplify runtime respect `embed=1` by hiding its own header, bottom nav, and prompt box when embedded.
 
-1. **Map `postMessageOrigin` to `origin`**: If `iframe.postMessageOrigin` exists, copy it to `iframe.origin` and delete the old key.
+### 2. Add CSS-based iframe chrome suppression (interim workaround)
 
-2. **Fix localhost origin**: If `iframe.origin` starts with `http://localhost`, replace it with the origin derived from `iframe.url` (e.g., `https://dev-beta.aigentz.me`).
+While waiting for the upstream fix, inject a `postMessage` to the iframe requesting it hide its chrome. If the upstream does not support this message, use a CSS-based approach:
 
-3. **Hoist `bootstrap.handoff_token`**: If `iframe.bootstrap.handoff_token` exists and `iframe.handoff_token` does not, copy it up to `iframe.handoff_token`.
+- After the iframe loads and transitions to `ready`, send a `SHELL_READY` message that includes a `{ hide_chrome: true }` flag
+- Update `shell-messages.ts` to include `hide_chrome` in the `SHELL_READY` payload
 
-### Technical detail
+### 3. Alternative: hide shell chrome and defer to iframe (NOT recommended)
+
+This would break the thin-client architecture. The shell owns the chrome; the iframe should be content-only. This approach is documented here only to confirm it was considered and rejected.
+
+## Technical Details
+
+### Changes to `src/lib/shell-messages.ts`
+
+Extend the `SHELL_READY` outbound message type to include an optional `hide_chrome` flag:
 
 ```text
-// In normalizeShellConfig(), add after the existing localhost URL fix:
-
-// 7. Map postMessageOrigin -> origin
-if (raw.iframe?.postMessageOrigin && !raw.iframe.origin)
-  raw.iframe.origin = raw.iframe.postMessageOrigin;
-
-// 8. Fix localhost origin
-if (raw.iframe?.origin?.startsWith("http://localhost"))
-  raw.iframe.origin = new URL(raw.iframe.url).origin;
-
-// 9. Hoist bootstrap.handoff_token
-if (raw.iframe?.bootstrap?.handoff_token && !raw.iframe.handoff_token)
-  raw.iframe.handoff_token = raw.iframe.bootstrap.handoff_token;
+{ type: "SHELL_READY"; hide_chrome?: boolean }
 ```
 
-### File changes
+### Changes to `src/components/RuntimeFrame.tsx`
 
-- **`supabase/functions/aa-proxy/index.ts`** -- Add the three normalization steps above inside the existing `normalizeShellConfig` function, after the existing step 5 (Fix localhost iframe URL).
+Update `handleReady` to send `hide_chrome: true` in the `SHELL_READY` message:
 
-No other files need to change. After deploying the updated edge function, the iframe will receive the correct origin for postMessage filtering and the handoff token for authentication.
+```text
+postToIframe(iframeRef.current, { type: "SHELL_READY", hide_chrome: true }, origin);
+```
 
-## Note on CSP / X-Frame-Options
+### QubeTalk notification
 
-If after this fix the iframe still shows a blank page, it may be because the upstream server (`dev-beta.aigentz.me`) does not include the Lovable preview domains in its `frame-ancestors` CSP directive. That is a server-side configuration on the AigentiQ side, not something fixable in this shell. The EmbedFrame already handles this gracefully -- it will show the iframe content after a 5-second timeout even without a RUNTIME_READY handshake, and falls back to an "Open in New Tab" button if blocked.
+Post to channel `metame-runtime-thinclient`, thread `#ui-shell`:
+
+> "The upstream runtime at /metame/runtime?embed=1 is rendering its own header, bottom nav, and prompt box, duplicating the shell chrome. The runtime must check for the `embed=1` query param (or listen for `SHELL_READY` with `hide_chrome: true`) and suppress its own layout chrome when embedded. The shell owns all chrome: header (selectors + trust), SmartMenu, QuickLinksBar, and PromptBox."
+
+### Files to modify
+
+- `src/lib/shell-messages.ts` -- add `hide_chrome` to SHELL_READY type
+- `src/components/RuntimeFrame.tsx` -- send `hide_chrome: true` in SHELL_READY
+- QubeTalk message via `send-qubetalk` edge function
+
+## Expected Outcome
+
+Once the upstream runtime respects `embed=1` or the `hide_chrome` flag, the iframe will render only its content area (capsules, surfaces, welcome screen) without any navigation chrome, eliminating the duplicate UI.
