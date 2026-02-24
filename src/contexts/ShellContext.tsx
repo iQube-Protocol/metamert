@@ -109,14 +109,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           ? { ...prev, selectors: { ...prev.selectors, aigent: { ...prev.selectors.aigent, current: id } } }
           : prev
       );
-      applyConfigUpdate(result.shell_config);
+      // Don't apply shell_config from selector response — it overwrites the whole config
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "aigent", id }, getIframeOrigin(config));
       }
     } catch {
       toast.error("Failed to update Aigent selector");
     }
-  }, [config, applyConfigUpdate]);
+  }, [config]);
 
   const selectLLM = useCallback(async (id: string) => {
     try {
@@ -126,14 +126,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           ? { ...prev, selectors: { ...prev.selectors, llm: { ...prev.selectors.llm, current: id } } }
           : prev
       );
-      applyConfigUpdate(result.shell_config);
+      // Don't apply shell_config from selector response — it overwrites the whole config
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "llm", id }, getIframeOrigin(config));
       }
     } catch {
       toast.error("Failed to update LLM selector");
     }
-  }, [config, applyConfigUpdate]);
+  }, [config]);
 
   const handleMenuAction = useCallback(async (itemId: string) => {
     // Handle runtime commands locally
