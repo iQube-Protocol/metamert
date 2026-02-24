@@ -31,9 +31,13 @@ const DEFAULT_SHELL_CONFIG = {
     llm: {
       current: "gpt-4o",
       options: [
-        { id: "gpt-4o", label: "GPT-4o", icon: "sparkles", color: "#10b981", tooltip: "OpenAI GPT-4o" },
-        { id: "claude-sonnet", label: "Claude Sonnet", icon: "message-square", color: "#d97706", tooltip: "Anthropic Claude 3.5 Sonnet" },
-        { id: "gemini-pro", label: "Gemini Pro", icon: "zap", color: "#6366f1", tooltip: "Google Gemini Pro" },
+        { id: "gpt-4o", label: "GPT-4o", icon: "sparkles", color: "#10b981", provider: "OpenAI", provider_icon: "openai", provider_color: "#10b981", tooltip: "OpenAI GPT-4o" },
+        { id: "gpt-4.5", label: "GPT-4.5", icon: "sparkles", color: "#10b981", provider: "OpenAI", provider_icon: "openai", provider_color: "#10b981", tooltip: "OpenAI GPT-4.5 Preview" },
+        { id: "o3-mini", label: "o3-mini", icon: "sparkles", color: "#10b981", provider: "OpenAI", provider_icon: "openai", provider_color: "#10b981", tooltip: "OpenAI o3-mini" },
+        { id: "claude-sonnet", label: "Claude 3.5 Sonnet", icon: "message-square", color: "#d97706", provider: "Anthropic", provider_icon: "anthropic", provider_color: "#d97706", tooltip: "Anthropic Claude 3.5 Sonnet" },
+        { id: "claude-opus", label: "Claude 3 Opus", icon: "message-square", color: "#d97706", provider: "Anthropic", provider_icon: "anthropic", provider_color: "#d97706", tooltip: "Anthropic Claude 3 Opus" },
+        { id: "gemini-pro", label: "Gemini 2.0 Pro", icon: "zap", color: "#4285F4", provider: "Google", provider_icon: "google", provider_color: "#4285F4", tooltip: "Google Gemini 2.0 Pro" },
+        { id: "gemini-flash", label: "Gemini 2.0 Flash", icon: "zap", color: "#4285F4", provider: "Google", provider_icon: "google", provider_color: "#4285F4", tooltip: "Google Gemini 2.0 Flash" },
       ],
     },
   },
