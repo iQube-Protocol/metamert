@@ -20,8 +20,8 @@ export default function PromptBox() {
   };
 
   return (
-    <div className="glass-float flex items-center gap-1.5 rounded-xl border border-border px-2 py-1.5 shadow-lg">
-      <div className="flex flex-1 items-center rounded-lg border border-border bg-background">
+    <div className="glass-float flex items-center gap-1.5 rounded-xl border-0 px-2 py-1.5 shadow-lg">
+      <div className="flex flex-1 items-center rounded-lg border-0 bg-transparent">
         <input
           type="text"
           value={text}
