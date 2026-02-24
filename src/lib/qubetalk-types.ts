@@ -3,7 +3,22 @@
 // qubetalk_messages table schema in QubeBase (Supabase).
 // ---------------------------------------------------------------------------
 
-/** Thread names within the metame-runtime-thinclient channel */
+/**
+ * Thread names within the metame-runtime-thinclient channel.
+ *
+ * ── Permission matrix (updated 2026-02-24 per owner directive) ──
+ *
+ * | Thread       | Lovable          | ChatGPT    | Aigent Z   | Windsurf       |
+ * |------------- |----------------- |----------- |----------- |--------------- |
+ * | #spec        | read/write (UI)  | authority  | state      | read           |
+ * | #api-wiring  | read/write (*)   | review     | owner      | implementation |
+ * | #ui-shell    | owner            | review     | read       | implementation |
+ * | #dev-exec    | read/write       | coord      | validation | implementation |
+ * | #ops         | status           | status     | owner      | status         |
+ *
+ * (*) Lovable unblocked on #api-wiring for iframe postMessage handshake
+ *     and shell-config API wiring coordination.
+ */
 export type QubeTalkThread = "spec" | "api-wiring" | "ui-shell" | "dev-exec" | "ops";
 
 /** Message payload types */
