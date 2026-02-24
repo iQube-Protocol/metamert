@@ -12,14 +12,14 @@ export default function QuickLinksBar() {
   if (quickLinks.length === 0 || !quickLinksExpanded) return null;
 
   return (
-    <div className="glass-float flex w-full items-center justify-evenly gap-1 overflow-x-auto rounded-xl border-0 px-3 py-1.5 shadow-lg scrollbar-hide animate-in fade-in slide-in-from-bottom-2 duration-200">
+    <div className="glass-float flex w-full items-center justify-between rounded-xl px-2 py-1.5 shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200">
       {quickLinks.map((ql: any) => {
         const Icon = resolveIcon(ql.icon, ql.id);
         return (
           <button
             key={ql.id}
             onClick={() => handleMenuAction(ql.action ?? ql.id)}
-            className="flex shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-1 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95"
+            className="flex shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg px-2 py-1 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95"
             title={ql.label}
           >
             {Icon ? <Icon className="h-4 w-4" /> : <span className="text-xs font-medium">{ql.label.charAt(0)}</span>}
