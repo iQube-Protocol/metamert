@@ -20,19 +20,19 @@ function scoreToDots(score: number | undefined, fallback: number): number {
   return Math.ceil(Math.min(10, Math.max(0, score)) / 2);
 }
 
-/** Trust dot color: <=3 red, <=6 yellow, >6 green */
+/** Trust dot color: 1-3 red-500, 4-6 yellow-500, 7-10 green-500 */
 function trustDotColor(score: number | undefined): string {
   const v = score ?? 5;
-  if (v <= 3) return "bg-[hsl(var(--shell-fail))]";
-  if (v <= 6) return "bg-[hsl(var(--shell-warn))]";
-  return "bg-[hsl(var(--shell-ok))]";
+  if (v <= 3) return "bg-red-500";
+  if (v <= 6) return "bg-yellow-500";
+  return "bg-green-500";
 }
 
-/** Reliability dot color: <=3 red, <=6 yellow, >6 purple */
+/** Reliability dot color: 1-3 red-500, 4-6 yellow-500, 7-10 purple-500 */
 function reliabilityDotColor(score: number | undefined): string {
   const v = score ?? 5;
-  if (v <= 3) return "bg-[hsl(var(--shell-fail))]";
-  if (v <= 6) return "bg-[hsl(var(--shell-warn))]";
+  if (v <= 3) return "bg-red-500";
+  if (v <= 6) return "bg-yellow-500";
   return "bg-purple-500";
 }
 
@@ -75,11 +75,11 @@ export default function RuntimeHeader() {
     [...Array(5)].map((_, i) => (
       <span
         key={i}
-        className={`inline-block h-2 w-2 rounded-full ${
+        className={`inline-block h-1.5 w-1.5 rounded-full ${
           inferring
             ? "animate-pulse transition-all duration-700"
             : "transition-all duration-300"
-        } ${i < filled ? activeColor : "bg-muted-foreground/20"}`}
+        } ${i < filled ? activeColor : "bg-gray-400"}`}
         style={inferring ? { animationDelay: `${i * 150}ms` } : undefined}
       />
     ));
@@ -155,13 +155,13 @@ export default function RuntimeHeader() {
         {/* Right: trust dots */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground cursor-default">
-              <div className="flex items-center gap-1">
-                <span className="font-medium">R</span>
+      <div className="flex items-center gap-4 bg-muted/20 rounded-lg px-3 py-2 text-xs text-muted-foreground cursor-default">
+              <div className="flex items-center gap-0.5">
+                <span className="font-medium mr-1">R</span>
                 {renderDots(rScore, rColor)}
               </div>
-              <div className="flex items-center gap-1">
-                <span className="font-medium">T</span>
+              <div className="flex items-center gap-0.5">
+                <span className="font-medium mr-1">T</span>
                 {renderDots(tScore, tColor)}
               </div>
             </div>
