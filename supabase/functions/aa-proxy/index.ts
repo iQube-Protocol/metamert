@@ -266,7 +266,17 @@ serve(async (req) => {
         });
         if (res.ok) {
           const data = normalizeShellConfig(await res.json());
-          console.log("[aa-proxy] shell-config normalized from upstream");
+          // Inject provider-specific scores based on current LLM
+          const currentLlm = typeof data.selectors?.llm?.current === "string"
+            ? data.selectors.llm.current
+            : data.selectors?.llm?.current?.id;
+          const prov = resolveProvider(currentLlm);
+          const provScores = PROVIDER_SCORES[prov] ?? PROVIDER_SCORES["default"];
+          // Use upstream scores if they differ from static session scores, otherwise inject canonical
+          if (!data.trust?.scores || (data.trust.scores.trust === data.session?.scores?.trust)) {
+            data.trust = { ...data.trust, scores: provScores };
+          }
+          console.log("[aa-proxy] shell-config normalized, scores for", prov, data.trust?.scores);
           return new Response(JSON.stringify(data), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
