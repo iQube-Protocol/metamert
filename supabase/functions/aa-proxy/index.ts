@@ -291,17 +291,18 @@ serve(async (req) => {
         if (res.ok) {
           // deno-lint-ignore no-explicit-any
           const data: any = await res.json();
-          // Normalize: hoist session.scores into shell_config.trust if present
-          if (data.session?.scores) {
-            if (!data.shell_config) data.shell_config = {};
-            data.shell_config.trust = {
-              level: data.session.trust_level ?? data.trust?.level ?? "verified",
-              signals: (data.session.trust_signals ?? []).map((s: any) =>
-                typeof s === "string" ? s : s.label ?? String(s)
-              ),
-              scores: data.session.scores,
-            };
-          }
+          // Apply canonical provider scores (upstream doesn't differentiate yet)
+          const providerId = reqBody?.provider_id ?? resolveProvider(reqBody?.id);
+          const canonicalScores = PROVIDER_SCORES[providerId] ?? PROVIDER_SCORES["default"];
+          
+          if (!data.shell_config) data.shell_config = {};
+          data.shell_config.trust = {
+            level: data.session?.trust_level ?? data.trust?.level ?? "verified",
+            signals: (data.session?.trust_signals ?? []).map((s: any) =>
+              typeof s === "string" ? s : s.label ?? String(s)
+            ),
+            scores: canonicalScores,
+          };
           if (data.shell_config) normalizeShellConfig(data.shell_config);
           return new Response(JSON.stringify(data), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
