@@ -50,7 +50,6 @@ function FloatingOverlay() {
       </div>
     </div>
   );
-  );
 }
 
 function ShellLayout() {
