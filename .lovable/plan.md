@@ -1,87 +1,95 @@
 
 
-## Fix Blank Screen + QubeTalk Display Issues
+## Fix: Normalize Upstream API Response in aa-proxy
 
-Two separate bugs are crashing the shell and preventing QubeTalk messages from displaying.
+The shell code is correct and all previous edits are intact. The problem is that the upstream AA-API is now reachable and returning a response with a different shape than the shell expects. The proxy needs to normalize the upstream response before returning it to the browser.
 
----
+### Root Cause
 
-### Issue 1: Blank Screen (Two Crashes)
+The `aa-proxy` edge function tries the upstream first. When the upstream was down, the fallback `DEFAULT_SHELL_CONFIG` was used (which matched the shell's types). Now the upstream responds successfully, but its shape differs from what `ShellConfig` expects.
 
-The upstream AA-API is now live and returning shell-config data, but its response shape differs slightly from the DEFAULT_SHELL_CONFIG. The components assume all nested properties exist without null-checking.
+### Upstream vs Shell Shape Mismatches
 
-**Crash A: `RuntimeHeader.tsx` line 26**
-```
-TypeError: can't access property "scores", config.trust is undefined
-```
-The upstream API may return a config where `trust` is missing or structured differently. Line 26 does `config.trust.scores` without checking if `trust` exists.
+| Field | Upstream returns | Shell expects |
+|-------|-----------------|---------------|
+| `selectors.aigent.current` | Object `{id, label, color, ...}` | String `"aigent-z"` |
+| `selectors.llm.current` | Object `{id, label, ...}` | String `"gpt-4o"` |
+| `selectors.llm.options[].provider_id` | `"openai"` | Field named `provider` |
+| Trust data location | `session.trust_level`, `session.scores` | `trust.level`, `trust.scores` |
+| Trust signals | `session.trust_signals` (array of objects) | `trust.signals` (array of strings) |
+| `menu.edge_items` | Not present (items have `edge: true` flag) | Separate array expected |
+| Quick links | 4 items (Watch, Listen, Read, Find) | 6 items (+ Refresh, Reset) |
+| iframe URL | `http://localhost:3000/...` | Should use env var or fallback |
 
-**Fix**: Add defensive defaults at the top of RuntimeHeader:
-```typescript
-const trust = config.trust ?? { level: "unverified", signals: [], scores: {} };
-const trustScores = trust.scores ?? {};
-```
+### Changes
 
-**Crash B: `SmartMenu.tsx` line 16**
-```
-TypeError: can't access property "find", edge_items is undefined
-```
-The upstream API may return `menu` without an `edge_items` array. Line 16 destructures `edge_items` from `config.menu`, then line 19 calls `.find()` on it.
+#### 1. `supabase/functions/aa-proxy/index.ts` -- Add normalization layer
 
-**Fix**: Add defensive defaults:
-```typescript
-const items = config.menu?.items ?? [];
-const edge_items = config.menu?.edge_items ?? [];
-const mode = config.menu?.mode ?? "expanded";
-```
+After receiving a successful upstream response for `shell-config`, normalize it before returning:
 
-**Also fix `QuickLinksBar.tsx`** -- it likely reads `config.menu.policy.quick_links` which could also be undefined from upstream.
+- Extract `current` as string: if `selectors.aigent.current` is an object, use `.id`
+- Rename `provider_id` to `provider` in LLM options
+- Map `session.trust_level` / `session.scores` / `session.trust_signals` into the `trust` block
+- Append Refresh and Reset to `quick_links` if missing
+- Override `iframe.url` with env var `VITE_RUNTIME_IFRAME_URL` or keep the upstream URL but only if it's not localhost
+- Keep `DEFAULT_SHELL_CONFIG` as the final fallback
 
----
+This is a single new function `normalizeShellConfig(raw)` added to the proxy, called on the upstream response before returning it.
 
-### Issue 2: QubeTalk Messages Not Showing on /dev
+#### 2. `src/lib/aa-client.ts` -- Defensive type handling
 
-The network requests show successful 200 responses with message data. The messages ARE being fetched. The problem is in `mapRow()` in `qubetalk-client.ts`:
+Add a client-side safety check in `fetchShellConfig` so that if `selectors.*.current` arrives as an object, it extracts `.id`. This is belt-and-suspenders defense.
 
-```typescript
-from_agent: typeof row.from_agent === "string" ? JSON.parse(row.from_agent) : row.from_agent,
-```
+#### 3. No other files change
 
-The upstream messages have `from_agent` as objects like `{"id":"windsurf","name":"Windsurf","role":"executor"}` -- they have `name`, not `label`. But `QubeTalkMessage.from_agent` expects `{ id: string; label: string }`.
+SmartMenu, QuickLinksBar, PromptBox, RuntimeHeader, Index -- all stay as-is. The visual code is correct; it just needs correctly shaped data.
 
-The DevDiagnostics component renders: `msg.from_agent?.label ?? msg.from_agent?.id ?? "unknown"`.
+### Technical Detail: normalizeShellConfig function
 
-This won't crash (it falls back to `id`), so messages should still render. The more likely cause is that the `mapRow` function may throw for some rows (e.g., if `from_agent` is a plain string like `"lovable-metame"` and `JSON.parse` returns a string, not an object), causing the entire history fetch to fail silently.
+```text
+function normalizeShellConfig(raw: any): object {
+  // 1. Flatten current selectors from object to string ID
+  if (raw.selectors?.aigent?.current?.id)
+    raw.selectors.aigent.current = raw.selectors.aigent.current.id;
+  if (raw.selectors?.llm?.current?.id)
+    raw.selectors.llm.current = raw.selectors.llm.current.id;
 
-**Fix**: Make `mapRow` robust by normalizing `from_agent` to always produce `{ id, label }`:
-```typescript
-function mapRow(row: any): QubeTalkMessage {
-  let agent = row.from_agent;
-  if (typeof agent === "string") {
-    try { agent = JSON.parse(agent); } catch { agent = { id: agent, label: agent }; }
+  // 2. Rename provider_id -> provider in LLM options
+  for (const opt of raw.selectors?.llm?.options ?? [])
+    if (opt.provider_id && !opt.provider) opt.provider = opt.provider_id;
+
+  // 3. Map session -> trust block
+  if (raw.session && !raw.trust) {
+    raw.trust = {
+      level: raw.session.trust_level ?? "unverified",
+      signals: (raw.session.trust_signals ?? []).map(s => s.label),
+      scores: raw.session.scores ?? {},
+    };
   }
-  if (typeof agent === "string") agent = { id: agent, label: agent };
-  if (!agent?.id) agent = { id: "unknown", label: "unknown" };
-  // map "name" to "label" for compatibility
-  if (agent.name && !agent.label) agent.label = agent.name;
-  ...
+
+  // 4. Ensure quick_links includes Refresh + Reset
+  const ql = raw.menu?.policy?.quick_links ?? [];
+  const hasRefresh = ql.some(q => q.id === "ql-refresh" || q.action === "refresh");
+  if (!hasRefresh) {
+    ql.push({ id: "ql-refresh", label: "Refresh", icon: "refresh-cw", action: "refresh" });
+    ql.push({ id: "ql-reset", label: "Reset", icon: "rotate-ccw", action: "reset" });
+  }
+  if (raw.menu?.policy) raw.menu.policy.quick_links = ql;
+
+  // 5. Fix localhost iframe URL
+  if (raw.iframe?.url?.startsWith("http://localhost"))
+    raw.iframe.url = DEFAULT_SHELL_CONFIG.iframe.url;
+
+  // 6. Ensure menu.edge_items exists (empty array if not)
+  if (!raw.menu?.edge_items) raw.menu = { ...raw.menu, edge_items: [] };
+
+  return raw;
 }
 ```
 
----
+This function is called in the `shell-config` action handler right after a successful upstream fetch, before returning the JSON to the browser.
 
-### Files to Change
+### Why it looked like changes reverted
 
-| File | Change |
-|------|--------|
-| `src/components/RuntimeHeader.tsx` | Add null-safe defaults for `config.trust`, `trust.scores`, `trust.signals` |
-| `src/components/SmartMenu.tsx` | Add null-safe defaults for `config.menu.items`, `edge_items`, `mode` |
-| `src/components/QuickLinksBar.tsx` | Add null-safe defaults for `config.menu.policy.quick_links` |
-| `src/lib/qubetalk-client.ts` | Make `mapRow` robust: handle string agents, map `name` to `label` |
-
----
-
-### Root Cause Summary
-
-The upstream AA-API shell-config response has a slightly different shape than the hardcoded DEFAULT_SHELL_CONFIG (e.g., missing `trust`, `edge_items`, or `scores` fields). When the upstream returns 200, the proxy passes that response through without merging with defaults. The fix is to make the UI components resilient to missing/partial data.
+The shell was rendering correctly when the upstream was down (using the fallback config). Once the upstream came online and started responding, the mismatched data shape caused selectors not to highlight, trust dots to disappear, and the iframe to fail loading (`localhost` URL). This made the UI look like it had gone back to a broken state -- but the code was always correct.
 
