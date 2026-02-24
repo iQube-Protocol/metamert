@@ -296,6 +296,7 @@ serve(async (req) => {
       const itemId = reqBody?.item_id ?? "unknown";
       return new Response(JSON.stringify({
         menu_event: { action_id: itemId, intent: itemId, prompt: `Launching ${itemId}…` },
+        iframe_event: { type: "MENU_ACTION", item_id: itemId, intent: itemId },
         shell_config: DEFAULT_SHELL_CONFIG,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

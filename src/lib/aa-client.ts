@@ -99,6 +99,7 @@ export interface MenuActionResult {
     surface_plan_instruction?: string;
     copilot_instruction?: string;
   };
+  iframe_event?: Record<string, unknown>;
   shell_config?: ShellConfig;
 }
 
