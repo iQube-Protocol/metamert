@@ -170,9 +170,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       const result: MenuActionResult = await menuAction(itemId);
       // Only apply config if it came from upstream (not the hardcoded fallback)
       // We detect fallback by checking if trust.level is "unverified" + signals match default
-      if (result.shell_config && result.shell_config.trust?.level !== "unverified") {
-        applyConfigUpdate(result.shell_config);
-      }
+      applyConfigUpdate(result.shell_config);
       // If API returned an iframe_event, forward it too
       if (result.iframe_event && iframeRef.current && config) {
         iframeRef.current.contentWindow?.postMessage(result.iframe_event, getIframeOrigin(config));
