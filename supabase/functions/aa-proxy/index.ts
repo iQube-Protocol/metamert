@@ -10,6 +10,29 @@ const corsHeaders = {
 const AA_PRIMARY = "https://aa.dev-beta.aigentz.me/aa/v1";
 const AA_FALLBACK = "https://aigentzbeta-production.up.railway.app/aa/v1";
 
+// Canonical provider scores from AA-API spec (providerReliability)
+const PROVIDER_SCORES: Record<string, { trust: number; reliability: number }> = {
+  openai:    { trust: 8.6, reliability: 9.3 },
+  anthropic: { trust: 8.3, reliability: 9.1 },
+  chaingpt:  { trust: 8.0, reliability: 8.8 },
+  venice:    { trust: 7.8, reliability: 8.6 },
+  thirdweb:  { trust: 7.6, reliability: 8.4 },
+  google:    { trust: 7.2, reliability: 8.0 },
+  default:   { trust: 7.2, reliability: 8.0 },
+};
+
+/** Resolve provider from LLM option id */
+function resolveProvider(llmId?: string): string {
+  if (!llmId) return "default";
+  if (llmId.startsWith("gpt-") || llmId.startsWith("o3")) return "openai";
+  if (llmId.startsWith("claude")) return "anthropic";
+  if (llmId.startsWith("gemini")) return "google";
+  if (llmId.startsWith("venice")) return "venice";
+  if (llmId.startsWith("chaingpt")) return "chaingpt";
+  if (llmId.startsWith("thirdweb")) return "thirdweb";
+  return "default";
+}
+
 // ---------------------------------------------------------------------------
 // Default shell-config (enriched schema matching Windsurf brief)
 // ---------------------------------------------------------------------------
@@ -266,7 +289,21 @@ serve(async (req) => {
           body: JSON.stringify(reqBody),
         });
         if (res.ok) {
-          const data = await res.json();
+          // deno-lint-ignore no-explicit-any
+          const data: any = await res.json();
+          // Apply canonical provider scores (upstream doesn't differentiate yet)
+          const providerId = reqBody?.provider_id ?? resolveProvider(reqBody?.id);
+          const canonicalScores = PROVIDER_SCORES[providerId] ?? PROVIDER_SCORES["default"];
+          
+          if (!data.shell_config) data.shell_config = {};
+          data.shell_config.trust = {
+            level: data.session?.trust_level ?? data.trust?.level ?? "verified",
+            signals: (data.session?.trust_signals ?? []).map((s: any) =>
+              typeof s === "string" ? s : s.label ?? String(s)
+            ),
+            scores: canonicalScores,
+          };
+          if (data.shell_config) normalizeShellConfig(data.shell_config);
           return new Response(JSON.stringify(data), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
@@ -275,7 +312,22 @@ serve(async (req) => {
         // upstream unavailable
       }
       console.log("[aa-proxy] selectors upstream unavailable, returning fallback");
-      return new Response(JSON.stringify({ ok: true, shell_config: DEFAULT_SHELL_CONFIG }), {
+      // Return provider-specific scores from canonical map
+      const providerId = reqBody?.provider_id ?? resolveProvider(reqBody?.id);
+      const scores = PROVIDER_SCORES[providerId] ?? PROVIDER_SCORES["default"];
+      const fallback = {
+        ok: true,
+        shell_config: {
+          ...DEFAULT_SHELL_CONFIG,
+          trust: {
+            ...DEFAULT_SHELL_CONFIG.trust,
+            level: "verified",
+            signals: [`Trust ${scores.trust}/10`, `Reliability ${scores.reliability}/10`],
+            scores,
+          },
+        },
+      };
+      return new Response(JSON.stringify(fallback), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
