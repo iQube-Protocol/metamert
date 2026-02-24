@@ -75,10 +75,12 @@ export default function RuntimeHeader() {
     [...Array(5)].map((_, i) => (
       <span
         key={i}
-        className={`inline-block h-2 w-2 rounded-full transition-colors duration-200 ${
-          i < filled ? activeColor : "bg-muted-foreground/20"
-        } ${inferring ? "animate-[pulse_1s_ease-in-out_infinite]" : ""}`}
-        style={inferring ? { animationDelay: `${i * 100}ms` } : undefined}
+        className={`inline-block h-2 w-2 rounded-full ${
+          inferring
+            ? "animate-pulse transition-all duration-700"
+            : "transition-all duration-300"
+        } ${i < filled ? activeColor : "bg-muted-foreground/20"}`}
+        style={inferring ? { animationDelay: `${i * 150}ms` } : undefined}
       />
     ));
 
