@@ -23,10 +23,15 @@ interface ShellContextValue {
   loading: boolean;
   authenticated: boolean;
   shellState: ShellState;
+  activeMenuItem: string | null;
+  quickLinksExpanded: boolean;
+  toggleQuickLinks: () => void;
   hydrate: () => Promise<void>;
   selectAigent: (id: string) => Promise<void>;
   selectLLM: (id: string) => Promise<void>;
   handleMenuAction: (itemId: string) => Promise<void>;
+  submitPrompt: (text: string) => void;
+  resetToWelcome: () => void;
   iframeRef: React.RefObject<HTMLIFrameElement>;
 }
 
@@ -55,6 +60,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [shellState, setShellState] = useState<ShellState>("welcome");
+  const [activeMenuItem, setActiveMenuItem] = useState<string | null>(null);
+  const [quickLinksExpanded, setQuickLinksExpanded] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
 
   const hydrate = useCallback(async () => {
@@ -78,7 +85,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Re-hydrate config from action responses when present
   const applyConfigUpdate = useCallback((newConfig?: ShellConfig) => {
     if (newConfig) setConfig(newConfig);
   }, []);
@@ -92,8 +98,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           : prev
       );
       applyConfigUpdate(result.shell_config);
-
-      // Forward to iframe
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "aigent", id }, getIframeOrigin(config));
       }
@@ -111,7 +115,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           : prev
       );
       applyConfigUpdate(result.shell_config);
-
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "llm", id }, getIframeOrigin(config));
       }
@@ -121,14 +124,23 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }, [config, applyConfigUpdate]);
 
   const handleMenuAction = useCallback(async (itemId: string) => {
+    // Handle refresh → reset to welcome
+    if (itemId === "refresh") {
+      setShellState("welcome");
+      setActiveMenuItem(null);
+      if (iframeRef.current && config) {
+        postToIframe(iframeRef.current, { type: "RESET_WELCOME" }, getIframeOrigin(config));
+      }
+      toast.success("Reset to welcome");
+      return;
+    }
+
     try {
       const result: MenuActionResult = await menuAction(itemId);
       applyConfigUpdate(result.shell_config);
-
-      // Transition to post-welcome on first action
       setShellState("post-welcome");
+      setActiveMenuItem(itemId);
 
-      // Forward menu_event to iframe
       if (iframeRef.current && config) {
         postToIframe(
           iframeRef.current,
@@ -136,16 +148,41 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           getIframeOrigin(config),
         );
       }
-
       toast.success(`Action: ${itemId}`);
     } catch {
       toast.error(`Menu action failed: ${itemId}`);
     }
   }, [config, applyConfigUpdate]);
 
+  const submitPrompt = useCallback((text: string) => {
+    if (!text.trim()) return;
+    if (iframeRef.current && config) {
+      postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
+    }
+    toast.success("Prompt sent");
+  }, [config]);
+
+  const resetToWelcome = useCallback(() => {
+    setShellState("welcome");
+    setActiveMenuItem(null);
+    setQuickLinksExpanded(true);
+    if (iframeRef.current && config) {
+      postToIframe(iframeRef.current, { type: "RESET_WELCOME" }, getIframeOrigin(config));
+    }
+  }, [config]);
+
+  const toggleQuickLinks = useCallback(() => {
+    setQuickLinksExpanded((prev) => !prev);
+  }, []);
+
   return (
     <ShellCtx.Provider
-      value={{ config, loading, authenticated, shellState, hydrate, selectAigent, selectLLM, handleMenuAction, iframeRef }}
+      value={{
+        config, loading, authenticated, shellState,
+        activeMenuItem, quickLinksExpanded, toggleQuickLinks,
+        hydrate, selectAigent, selectLLM, handleMenuAction,
+        submitPrompt, resetToWelcome, iframeRef,
+      }}
     >
       {children}
     </ShellCtx.Provider>

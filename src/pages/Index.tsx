@@ -3,25 +3,23 @@ import { ShellProvider, useShell } from "@/contexts/ShellContext";
 import RuntimeHeader from "@/components/RuntimeHeader";
 import SmartMenu from "@/components/SmartMenu";
 import RuntimeFrame from "@/components/RuntimeFrame";
+import QuickLinksBar from "@/components/QuickLinksBar";
+import PromptBox from "@/components/PromptBox";
 import { Loader2 } from "lucide-react";
 
-function PromptBox() {
-  const { config, shellState } = useShell();
-  if (!config) return null;
+function BottomPanel() {
+  const { shellState, quickLinksExpanded } = useShell();
 
-  const policy = config.menu.policy;
-  const showPrompt =
-    shellState === "welcome"
-      ? policy?.state_behavior?.welcome?.show_prompt ?? false
-      : policy?.state_behavior?.post_welcome?.show_prompt ?? false;
+  if (shellState === "welcome") {
+    // Welcome: icon-only quick links row, no prompt (iframe has it)
+    return <QuickLinksBar />;
+  }
 
-  if (!showPrompt || !policy?.prompt_box?.visible) return null;
-
+  // Post-welcome: collapsible quick links + prompt box
   return (
-    <div className="flex items-center justify-center px-4 py-3">
-      <div className="w-full max-w-md rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-muted-foreground">
-        {policy.prompt_box.placeholder}
-      </div>
+    <div className="border-t border-border bg-background">
+      {quickLinksExpanded && <QuickLinksBar />}
+      <PromptBox />
     </div>
   );
 }
@@ -45,8 +43,8 @@ function ShellLayout() {
   return (
     <div className="flex h-screen flex-col bg-background">
       <RuntimeHeader />
-      <PromptBox />
       <RuntimeFrame />
+      <BottomPanel />
       <SmartMenu />
     </div>
   );
