@@ -157,13 +157,28 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [config, applyConfigUpdate]);
 
-  const submitPrompt = useCallback((text: string) => {
+  const submitPrompt = useCallback(async (text: string) => {
     if (!text.trim()) return;
-    if (iframeRef.current && config) {
-      postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
+    try {
+      const result: PromptActionResult = await promptAction(text);
+      setShellState("post-welcome");
+      applyConfigUpdate(result.shell_config);
+
+      if (iframeRef.current && config) {
+        // Forward the API-returned iframe_event if present, otherwise fall back to PROMPT_SUBMIT
+        if (result.iframe_event) {
+          iframeRef.current.contentWindow?.postMessage(result.iframe_event, getIframeOrigin(config));
+        } else {
+          postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
+        }
+      }
+    } catch {
+      // Fallback: send directly to iframe
+      if (iframeRef.current && config) {
+        postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
+      }
     }
-    toast.success("Prompt sent");
-  }, [config]);
+  }, [config, applyConfigUpdate]);
 
   const resetToWelcome = useCallback(() => {
     setShellState("welcome");

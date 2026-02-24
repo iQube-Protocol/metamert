@@ -59,12 +59,16 @@ function FloatingOverlay() {
           visible ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
-        <div className="w-full">
-          <QuickLinksBar />
-        </div>
-        <div className="w-full">
-          <PromptBox />
-        </div>
+        {showQuickLinks && (
+          <div className="w-full">
+            <QuickLinksBar />
+          </div>
+        )}
+        {showPrompt && (
+          <div className="w-full">
+            <PromptBox />
+          </div>
+        )}
       </div>
     </>
   );

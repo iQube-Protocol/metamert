@@ -85,21 +85,18 @@ export default function SmartMenu() {
   };
 
   return (
-    <nav className="flex items-stretch border-t border-border bg-card px-2 py-1.5">
-      {/* Be — left, push to edge */}
-      <div className="flex items-stretch">
-        {left.map((item: any) => renderBtn(item))}
-      </div>
-
-      {/* Earn · Play · Make — always centred */}
-      <div className="flex flex-1 items-stretch justify-center gap-0">
-        {center.map((item: any) => renderBtn(item, true))}
-      </div>
-
-      {/* Share — right, push to edge */}
-      <div className="flex items-stretch">
-        {right.map((item: any) => renderBtn(item))}
-      </div>
-    </nav>
+    <TooltipProvider delayDuration={300}>
+      <nav className="flex items-stretch border-t border-border bg-card px-2 py-1.5">
+        <div className="flex items-stretch">
+          {left.map((item: any) => renderBtn(item))}
+        </div>
+        <div className="flex flex-1 items-stretch justify-center gap-0">
+          {center.map((item: any) => renderBtn(item, true))}
+        </div>
+        <div className="flex items-stretch">
+          {right.map((item: any) => renderBtn(item))}
+        </div>
+      </nav>
+    </TooltipProvider>
   );
 }
