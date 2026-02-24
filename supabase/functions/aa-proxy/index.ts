@@ -211,7 +211,8 @@ serve(async (req) => {
           headers,
         });
         if (res.ok) {
-          const data = await res.json();
+          const data = normalizeShellConfig(await res.json());
+          console.log("[aa-proxy] shell-config normalized from upstream");
           return new Response(JSON.stringify(data), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });

@@ -153,7 +153,14 @@ export async function authenticate(
 // ---------------------------------------------------------------------------
 
 export async function fetchShellConfig(): Promise<ShellConfig> {
-  return aaProxy<ShellConfig>("shell-config");
+  const raw = await aaProxy<ShellConfig>("shell-config");
+  // Belt-and-suspenders: flatten current if object leaked through
+  const s = raw?.selectors;
+  if (s?.aigent?.current && typeof s.aigent.current === "object")
+    s.aigent.current = (s.aigent.current as any).id ?? "aigent-z";
+  if (s?.llm?.current && typeof s.llm.current === "object")
+    s.llm.current = (s.llm.current as any).id ?? "gpt-4o";
+  return raw;
 }
 
 // ---------------------------------------------------------------------------
