@@ -125,12 +125,10 @@ function normalizeShellConfig(raw: any): any {
       const u = new URL(raw.iframe.url);
       if (u.pathname === "/runtime" || u.pathname === "/") {
         u.pathname = "/metame/runtime";
-        if (!u.searchParams.has("embed")) u.searchParams.set("embed", "1");
-        raw.iframe.url = u.toString();
-      } else if (u.pathname === "/metame/runtime" && !u.searchParams.has("embed")) {
-        u.searchParams.set("embed", "1");
-        raw.iframe.url = u.toString();
       }
+      if (!u.searchParams.has("embed")) u.searchParams.set("embed", "1");
+      if (!u.searchParams.has("shell")) u.searchParams.set("shell", "thin");
+      raw.iframe.url = u.toString();
     } catch { /* invalid URL, leave as-is */ }
   }
 
