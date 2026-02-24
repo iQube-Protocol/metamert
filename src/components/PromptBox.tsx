@@ -28,7 +28,7 @@ export default function PromptBox() {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           placeholder={placeholder}
-          className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+          className="flex-1 bg-transparent px-3 py-2 text-sm text-center text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
         <button
           onClick={handleSubmit}
