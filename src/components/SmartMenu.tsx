@@ -1,71 +1,64 @@
-import { useState } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import { resolveIcon } from "@/lib/icon-utils";
-import { Menu } from "lucide-react";
 
-/** Per-item accent color CSS vars keyed by menu item ID */
-const ITEM_COLORS: Record<string, string> = {
-  be: "var(--menu-be)",
-  earn: "var(--menu-earn)",
-  play: "var(--menu-play)",
-  make: "var(--menu-make)",
-  share: "var(--menu-share)",
-};
+/** IDs that form the tight center cluster */
+const CENTER_IDS = new Set(["earn", "play", "make"]);
 
 /**
- * Bottom navigation bar: Be | Earn · Play · Make | Share
- * Mobile: 5-in-row. Desktop: Be left, tight triad center, Share right.
- * Active item uses per-item accent color ring.
+ * Bottom navigation: Be | Earn·Play·Make | Share
+ * All 5 items from config.menu.items. Center triad is clustered tightly.
  */
 export default function SmartMenu() {
   const { config, activeMenuItem, handleMenuAction } = useShell();
-  const [triadOpen, setTriadOpen] = useState(false);
-
   if (!config) return null;
 
-  const items = config.menu?.items ?? [];
-  const edge_items = config.menu?.edge_items ?? [];
-  const mode = config.menu?.mode ?? "expanded";
-  const collapsed = mode === "collapsed";
+  const allItems = config.menu?.items ?? [];
+  const edgeItems = config.menu?.edge_items ?? [];
 
-  const beItem = edge_items.find((e: any) => e.id === "be");
-  const shareItem = edge_items.find((e: any) => e.id === "share");
+  // Build unified list: edge_items (be/share) + items, deduped
+  const itemMap = new Map<string, any>();
+  for (const e of edgeItems) itemMap.set(e.id, { ...e, enabled: e.visible !== false });
+  for (const i of allItems) itemMap.set(i.id, i);
 
-  const renderButton = (
-    id: string,
-    label: string,
-    iconName?: string,
-    isEdge = false,
-  ) => {
-    const Icon = resolveIcon(iconName, id);
-    const isActive = activeMenuItem === id;
-    const accentColor = ITEM_COLORS[id];
+  // Ordered: be first, center group, share last
+  const be = itemMap.get("be");
+  const share = itemMap.get("share");
+  const center = ["earn", "play", "make"]
+    .map((id) => itemMap.get(id))
+    .filter(Boolean);
+
+  const renderBtn = (item: any, isCenter = false) => {
+    const Icon = resolveIcon(item.icon, item.id);
+    const isActive = activeMenuItem === item.id;
 
     return (
       <button
-        key={id}
-        onClick={() => handleMenuAction(id)}
+        key={item.id}
+        onClick={() => handleMenuAction(item.id)}
         aria-pressed={isActive}
         className={`flex flex-col items-center justify-center gap-0.5 rounded-md py-1.5 text-[11px] transition-all duration-200
-          ${isEdge ? "flex-none w-14" : "flex-1"}
+          ${isCenter ? "flex-1" : "w-14 shrink-0"}
           ${isActive ? "scale-105" : "hover:bg-accent hover:text-accent-foreground"}
-          ${isActive ? "text-foreground" : isEdge ? "text-muted-foreground" : "text-foreground"}
         `}
       >
         <span
           className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${
-            isActive ? "shadow-[0_0_10px_0.5px]" : ""
+            isActive ? "shadow-md" : ""
           }`}
           style={
-            isActive && accentColor
-              ? { backgroundColor: `hsl(${accentColor.replace("var(", "").replace(")", "")})`, color: "hsl(var(--foreground))", boxShadow: `0 0 10px hsl(${accentColor.replace("var(", "").replace(")", "")} / 0.5)` }
+            isActive
+              ? {
+                  backgroundColor: `hsl(var(--menu-${item.id}))`,
+                  color: "hsl(var(--foreground))",
+                  boxShadow: `0 0 10px hsl(var(--menu-${item.id}) / 0.5)`,
+                }
               : undefined
           }
         >
           {Icon ? <Icon className="h-5 w-5" /> : <span className="h-5 w-5" />}
         </span>
-        <span className={`transition-colors ${isActive ? "font-semibold" : ""}`}>
-          {label}
+        <span className={`transition-colors ${isActive ? "font-semibold" : "text-muted-foreground"}`}>
+          {item.label}
         </span>
       </button>
     );
@@ -73,37 +66,16 @@ export default function SmartMenu() {
 
   return (
     <nav className="flex items-stretch justify-between border-t border-border bg-card px-2 py-1.5">
-      {/* Be — left edge */}
-      {beItem?.visible !== false && renderButton(beItem?.id ?? "be", beItem?.label ?? "Be", beItem?.icon, true)}
+      {/* Be — left */}
+      {be && renderBtn(be)}
 
-      {collapsed ? (
-        <div className="relative flex flex-1 items-center justify-center">
-          <button
-            onClick={() => setTriadOpen(!triadOpen)}
-            className="flex flex-col items-center justify-center gap-0.5 rounded-md px-4 py-1.5 text-[11px] text-foreground transition-colors duration-200 hover:bg-accent hover:text-accent-foreground"
-          >
-            <Menu className="h-5 w-5" />
-            <span>metaMe</span>
-          </button>
-          {triadOpen && (
-            <div className="absolute bottom-full mb-1 flex gap-1 rounded-lg border border-border bg-card p-1 shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200">
-              {items.filter((i: any) => i.enabled).map((item: any) =>
-                renderButton(item.id, item.label, item.icon)
-              )}
-            </div>
-          )}
-        </div>
-      ) : (
-        /* Triad center — tight group on desktop */
-        <div className="flex flex-1 items-stretch justify-center gap-0 md:gap-0.5">
-          {items.filter((i: any) => i.enabled).map((item: any) =>
-            renderButton(item.id, item.label, item.icon)
-          )}
-        </div>
-      )}
+      {/* Earn · Play · Make — tight center cluster */}
+      <div className="flex flex-1 items-stretch justify-center gap-0">
+        {center.map((item: any) => renderBtn(item, true))}
+      </div>
 
-      {/* Share — right edge */}
-      {shareItem?.visible !== false && renderButton(shareItem?.id ?? "share", shareItem?.label ?? "Share", shareItem?.icon, true)}
+      {/* Share — right */}
+      {share && renderBtn(share)}
     </nav>
   );
 }
