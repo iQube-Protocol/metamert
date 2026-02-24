@@ -12,13 +12,23 @@ function BottomPanel() {
 
   if (shellState === "welcome") {
     // Welcome: icon-only quick links row, no prompt (iframe has it)
-    return <QuickLinksBar />;
+    return (
+      <div className="border-t border-border bg-background">
+        <QuickLinksBar />
+      </div>
+    );
   }
 
-  // Post-welcome: collapsible quick links + prompt box
+  // Post-welcome: prompt box + collapsible quick links above it
   return (
     <div className="border-t border-border bg-background">
-      {quickLinksExpanded && <QuickLinksBar />}
+      <div
+        className={`overflow-hidden transition-all duration-200 ${
+          quickLinksExpanded ? "max-h-16 opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <QuickLinksBar />
+      </div>
       <PromptBox />
     </div>
   );
