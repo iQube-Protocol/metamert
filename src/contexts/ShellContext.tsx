@@ -129,12 +129,15 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const selectLLM = useCallback(async (id: string) => {
     try {
       const result: SelectorResult = await updateSelector("llm", id);
-      setConfig((prev) =>
-        prev
-          ? { ...prev, selectors: { ...prev.selectors, llm: { ...prev.selectors.llm, current: id } } }
-          : prev
-      );
-      // Don't apply shell_config from selector response — it overwrites the whole config
+      setConfig((prev) => {
+        if (!prev) return prev;
+        const updated = { ...prev, selectors: { ...prev.selectors, llm: { ...prev.selectors.llm, current: id } } };
+        // Apply trust scores from selector response if present
+        if (result.shell_config?.trust?.scores) {
+          updated.trust = { ...updated.trust, ...result.shell_config.trust };
+        }
+        return updated;
+      });
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "llm", id }, getIframeOrigin(config));
       }
