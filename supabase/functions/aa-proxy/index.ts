@@ -121,6 +121,18 @@ function normalizeShellConfig(raw: any): any {
   // 6. Ensure menu.edge_items exists
   if (!raw.menu?.edge_items) raw.menu = { ...raw.menu, edge_items: [] };
 
+  // 7. Map postMessageOrigin -> origin
+  if (raw.iframe?.postMessageOrigin && !raw.iframe.origin)
+    raw.iframe.origin = raw.iframe.postMessageOrigin;
+
+  // 8. Fix localhost origin
+  if (raw.iframe?.origin?.startsWith("http://localhost"))
+    raw.iframe.origin = new URL(raw.iframe.url).origin;
+
+  // 9. Hoist bootstrap.handoff_token
+  if (raw.iframe?.bootstrap?.handoff_token && !raw.iframe.handoff_token)
+    raw.iframe.handoff_token = raw.iframe.bootstrap.handoff_token;
+
   return raw;
 }
 
