@@ -11,7 +11,7 @@ import {
   authenticate,
   getToken,
 } from "@/lib/aa-client";
-import { postToIframe } from "@/lib/shell-messages";
+import { postToIframe, postRawToIframe } from "@/lib/shell-messages";
 import { toast } from "sonner";
 
 // ---------------------------------------------------------------------------
