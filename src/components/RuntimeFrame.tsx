@@ -61,7 +61,7 @@ export default function RuntimeFrame() {
       ref={iframeRef}
       url={config.iframe.url}
       origin={config.iframe.origin}
-      className="flex-1"
+      className="absolute inset-0 h-full w-full"
       onReady={handleReady}
     />
   );

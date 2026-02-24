@@ -96,7 +96,7 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
         <iframe
           ref={ref}
           src={src}
-          className="h-full w-full border-0"
+          className="absolute inset-0 h-full w-full border-0"
           allow="clipboard-write; clipboard-read"
           onLoad={handleIframeLoad}
           title="metaMe Runtime"
