@@ -51,7 +51,8 @@ export function useShell(): ShellContextValue {
 // ---------------------------------------------------------------------------
 
 function getIframeOrigin(config: ShellConfig): string {
-  return config.iframe.origin || new URL(config.iframe.url).origin;
+  // Prefer postMessageOrigin from proxy, then origin, then derive from URL
+  return (config.iframe as any).postMessageOrigin || config.iframe.origin || new URL(config.iframe.url).origin;
 }
 
 // ---------------------------------------------------------------------------
