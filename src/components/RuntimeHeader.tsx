@@ -148,11 +148,11 @@ export default function RuntimeHeader() {
             <div className="flex items-center gap-3 text-xs text-muted-foreground cursor-default">
               <div className="flex items-center gap-1">
                 <span className="font-medium">R</span>
-                {renderDots(rScore, "bg-[hsl(var(--shell-warn))]")}
+                {renderDots(rScore, rColor)}
               </div>
               <div className="flex items-center gap-1">
                 <span className="font-medium">T</span>
-                {renderDots(tScore, dotColor)}
+                {renderDots(tScore, tColor)}
               </div>
             </div>
           </TooltipTrigger>
