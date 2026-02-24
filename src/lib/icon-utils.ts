@@ -3,19 +3,30 @@
  * Falls back to sensible defaults per menu item ID.
  */
 import { icons, type LucideIcon } from "lucide-react";
-import { Coins, Gamepad2, Wrench, User, Share2, Bot, Cpu, MessageSquare } from "lucide-react";
+import {
+  Coins, PlayCircle, Pencil, Users, Share2,
+  Bot, Cpu, MessageSquare,
+  Eye, Headphones, BookOpen, Search, RefreshCw, RotateCcw,
+} from "lucide-react";
 
 /** Default icon map keyed by well-known item IDs */
 const DEFAULTS: Record<string, LucideIcon> = {
-  be: User,
+  be: Users,
   earn: Coins,
-  play: Gamepad2,
-  make: Wrench,
+  play: PlayCircle,
+  make: Pencil,
   share: Share2,
   "aigent-z": Bot,
   "aigent-q": Bot,
   "gpt-4o": Cpu,
   "claude-sonnet": MessageSquare,
+  // Quick link defaults
+  "ql-watch": Eye,
+  "ql-listen": Headphones,
+  "ql-read": BookOpen,
+  "ql-find": Search,
+  "ql-refresh": RefreshCw,
+  "ql-reset": RotateCcw,
 };
 
 /**

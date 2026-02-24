@@ -1,29 +1,46 @@
+import { useEffect, useRef, useCallback } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import { resolveIcon } from "@/lib/icon-utils";
 
 /**
- * Horizontally scrollable icon-only quick link buttons.
- * Visible in both welcome and post-welcome states.
+ * Floating quick-links bar: Watch, Listen, Read, Find, Refresh, Reset.
+ * Equally spaced horizontal row, hidden via quickLinksExpanded toggle.
  */
 export default function QuickLinksBar() {
-  const { config, handleMenuAction } = useShell();
-  if (!config) return null;
+  const { config, handleMenuAction, quickLinksExpanded } = useShell();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const barRef = useRef<HTMLDivElement>(null);
 
-  const quickLinks = config.menu?.policy?.quick_links ?? [];
-  if (quickLinks.length === 0) return null;
+  const resetTimer = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const quickLinks = config?.menu?.policy?.quick_links ?? [];
+  if (quickLinks.length === 0 || !quickLinksExpanded) return null;
 
   return (
-    <div className="flex gap-2 overflow-x-auto px-3 py-2 scrollbar-hide">
+    <div
+      ref={barRef}
+      onPointerEnter={resetTimer}
+      className="flex items-center justify-evenly gap-1 rounded-xl border border-border bg-card/95 px-2 py-1.5 shadow-lg backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-200"
+    >
       {quickLinks.map((ql: any) => {
         const Icon = resolveIcon(ql.icon, ql.id);
         return (
           <button
             key={ql.id}
-            onClick={() => handleMenuAction(ql.action ?? ql.id)}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground shadow-sm transition-all duration-150 hover:bg-accent hover:text-accent-foreground hover:shadow-md active:scale-95"
+            onClick={() => handleMenuAction(ql.action ?? ql.prompt ?? ql.id)}
+            className="flex flex-col items-center justify-center gap-0.5 rounded-lg px-2 py-1 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95"
             title={ql.label}
           >
-            {Icon ? <Icon className="h-5 w-5" /> : <span className="text-xs font-medium">{ql.label.charAt(0)}</span>}
+            {Icon ? <Icon className="h-4 w-4" /> : <span className="text-xs font-medium">{ql.label.charAt(0)}</span>}
+            <span className="text-[9px] leading-tight">{ql.label}</span>
           </button>
         );
       })}
