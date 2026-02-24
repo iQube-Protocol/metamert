@@ -200,6 +200,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const submitPrompt = useCallback(async (text: string) => {
     if (!text.trim()) return;
     setShellState("post-welcome");
+    setInferring(true);
     try {
       const result: PromptActionResult = await promptAction(text);
       applyConfigUpdate(result.shell_config);
@@ -218,6 +219,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
       }
+    } finally {
+      setInferring(false);
     }
   }, [config, applyConfigUpdate]);
 
