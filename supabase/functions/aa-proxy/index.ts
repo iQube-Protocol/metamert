@@ -72,7 +72,7 @@ const DEFAULT_SHELL_CONFIG = {
     },
   },
   iframe: {
-    url: "https://dev-beta.aigentz.me/metame/runtime?embed=1",
+    url: "https://dev-beta.aigentz.me/metame/runtime?embed=1&shell=thin",
     handoff_token: "dev-placeholder-token",
     origin: "https://dev-beta.aigentz.me",
     bootstrap: { context: {} },
