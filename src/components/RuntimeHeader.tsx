@@ -14,6 +14,20 @@ import {
 } from "@/components/ui/popover";
 import { useState, useMemo } from "react";
 
+/** Map a 0-10 score to 0-5 filled dots */
+function scoreToDots(score: number | undefined, fallback: number): number {
+  if (score == null) return fallback;
+  return Math.round(Math.min(10, Math.max(0, score)) / 2);
+}
+
+/** Color bucket for a score: high=ok, mid=warn, low=fail */
+function scoreColor(score: number | undefined): string {
+  const v = score ?? 5;
+  if (v >= 7) return "bg-[hsl(var(--shell-ok))]";
+  if (v >= 4) return "bg-[hsl(var(--shell-warn))]";
+  return "bg-[hsl(var(--shell-fail))]";
+}
+
 /**
  * Compact header: colored Bot icon (aigent) + LLM provider logo, both icon-only.
  * LLM dropdown groups models by provider with provider header rows.
