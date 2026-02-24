@@ -19,7 +19,7 @@ export default function RuntimeFrame() {
     const origin = config.iframe.origin || new URL(config.iframe.url).origin;
 
     // Step 1: SHELL_READY
-    postToIframe(iframeRef.current, { type: "SHELL_READY" }, origin);
+    postToIframe(iframeRef.current, { type: "SHELL_READY", hide_chrome: true }, origin);
 
     // Step 2: HANDOFF with token
     if (config.iframe.handoff_token) {
