@@ -68,3 +68,24 @@ export function postToIframe(
   console.log("[Shell→iframe]", envelope.type, envelope, "→", origin);
   iframe.contentWindow?.postMessage(envelope, origin);
 }
+
+/**
+ * Wrap a raw API-returned iframe_event in the bridge envelope and post it.
+ * Use this for forwarding `result.iframe_event` from menu-action / prompt-action.
+ */
+export function postRawToIframe(
+  iframe: HTMLIFrameElement,
+  rawEvent: Record<string, unknown>,
+  origin: string
+): void {
+  const { type, ...payload } = rawEvent;
+  const envelope = {
+    type,
+    msg_id: genMsgId(),
+    timestamp: Date.now(),
+    source: "shell",
+    payload,
+  };
+  console.log("[Shell→iframe:raw]", envelope.type, envelope, "→", origin);
+  iframe.contentWindow?.postMessage(envelope, origin);
+}
