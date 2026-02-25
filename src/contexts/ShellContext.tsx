@@ -81,13 +81,28 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       // Any of these signals means the iframe finished rendering.
       // Keep the animation running for 2s after receipt so the user
       // sees the dots settle while the content paints on screen.
+      // Inference-complete signals: stop animation after 2s grace period
       if (
         t === "INFERENCE_COMPLETE" ||
-        t === "RUNTIME_READY" ||
         t === "RENDER_COMPLETE" ||
-        t === "STATE_SYNC" ||
-        t === "WELCOME_COMPLETE"
+        t === "STATE_SYNC"
       ) {
+        // If the iframe completed an inference while we're still in welcome,
+        // transition to post-welcome so the prompt box becomes visible.
+        setShellState((prev) => (prev === "welcome" ? "post-welcome" : prev));
+
+        if (inferTimeoutRef.current) {
+          clearTimeout(inferTimeoutRef.current);
+          inferTimeoutRef.current = null;
+        }
+        inferTimeoutRef.current = setTimeout(() => {
+          setInferring(false);
+          inferTimeoutRef.current = null;
+        }, 2000);
+      }
+
+      // These signals just stop animation but don't trigger state transition
+      if (t === "RUNTIME_READY" || t === "WELCOME_COMPLETE") {
         if (inferTimeoutRef.current) {
           clearTimeout(inferTimeoutRef.current);
           inferTimeoutRef.current = null;
