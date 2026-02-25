@@ -257,6 +257,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   const submitPrompt = useCallback(async (text: string) => {
     if (!text.trim()) return;
+    console.log("[Shell] submitPrompt: transitioning to post-welcome, inferring=true");
     setShellState("post-welcome");
     setInferring(true);
     try {

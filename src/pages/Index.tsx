@@ -60,7 +60,9 @@ function FloatingOverlay({ config, shellState }: { config: NonNullable<ReturnTyp
   const handlePointerEnter = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     setVisible(true);
-  }, []);
+    // Re-schedule hide so it doesn't persist forever
+    scheduleHide();
+  }, [scheduleHide]);
 
   const handlePointerLeave = useCallback(() => {
     scheduleHide();
