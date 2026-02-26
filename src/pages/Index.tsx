@@ -58,12 +58,12 @@ function ShellLayout() {
     scheduleHide();
   }, [scheduleHide]);
 
-  // Re-show on shell state change
+  // Re-show on shell state change or iframe lifecycle signal
   useEffect(() => {
     setOverlayVisible(true);
     scheduleHide();
     return () => { clearHideTimer(); };
-  }, [scheduleHide, clearHideTimer, shellState]);
+  }, [scheduleHide, clearHideTimer, shellState, overlayTrigger]);
 
   if (loading || !config) {
     return (

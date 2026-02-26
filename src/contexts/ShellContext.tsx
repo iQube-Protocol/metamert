@@ -375,7 +375,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     <ShellCtx.Provider
       value={{
         config, loading, authenticated, shellState,
-        activeMenuItem, quickLinksExpanded, inferring, toggleQuickLinks,
+        activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, toggleQuickLinks,
         hydrate, selectAigent, selectLLM, handleMenuAction,
         submitPrompt, resetToWelcome, updateTrust, iframeRef,
       }}
