@@ -75,8 +75,8 @@ export default function RuntimeHeader() {
     [...Array(5)].map((_, i) => (
       <span
         key={i}
-        className={`inline-block h-1.5 w-1.5 rounded-full transition-all duration-300 ${
-          inferring ? "animate-dot-wave" : ""
+        className={`inline-block h-1.5 w-1.5 rounded-full ${
+          inferring ? "animate-pulse duration-700" : "transition-all duration-300"
         } ${i < filled ? activeColor : "bg-gray-400"}`}
         style={inferring ? { animationDelay: `${i * 150}ms` } : undefined}
       />
