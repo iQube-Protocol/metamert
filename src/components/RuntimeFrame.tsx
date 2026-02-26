@@ -2,6 +2,7 @@ import { useEffect, useCallback } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import EmbedFrame from "@/components/EmbedFrame";
 import { postToIframe, normalizeInbound, type DeviceType } from "@/lib/shell-messages";
+import { resolveIframeOrigin } from "@/lib/iframe-origin";
 
 function getDeviceType(): DeviceType {
   const w = window.innerWidth;
@@ -15,7 +16,7 @@ export default function RuntimeFrame() {
 
   const handleReady = useCallback(() => {
     if (!config || !iframeRef.current) return;
-    const origin = config.iframe.origin || new URL(config.iframe.url).origin;
+    const origin = resolveIframeOrigin(config);
 
     // Step 1: SHELL_READY
     postToIframe(iframeRef.current, { type: "SHELL_READY", hide_chrome: true }, origin);
@@ -42,7 +43,7 @@ export default function RuntimeFrame() {
   // Forward viewport/device changes to iframe
   useEffect(() => {
     if (!config || !iframeRef.current) return;
-    const origin = config.iframe.origin || new URL(config.iframe.url).origin;
+    const origin = resolveIframeOrigin(config);
 
     const handleResize = () => {
       if (!iframeRef.current) return;
@@ -62,7 +63,7 @@ export default function RuntimeFrame() {
   // Listen for iframe → shell messages
   useEffect(() => {
     if (!config) return;
-    const origin = config.iframe.origin || new URL(config.iframe.url).origin;
+    const origin = resolveIframeOrigin(config);
 
     function handler(ev: MessageEvent) {
       if (ev.origin !== origin) return;

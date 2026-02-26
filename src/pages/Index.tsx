@@ -100,10 +100,13 @@ function FloatingOverlay({ config, shellState, visible, onPointerEnter, onPointe
   onBlurCapture: () => void;
 }) {
   const stateBehavior = config?.menu?.policy?.state_behavior;
+  const promptBoxPolicy = config?.menu?.policy?.prompt_box;
   const isWelcome = shellState === "welcome";
   const showPrompt = isWelcome
     ? (stateBehavior?.welcome?.show_prompt ?? false)
-    : (stateBehavior?.post_welcome?.show_prompt ?? true);
+    : (stateBehavior?.post_welcome?.show_prompt
+        ?? (promptBoxPolicy as any)?.visible
+        ?? true);
   const showQuickLinks = isWelcome
     ? (stateBehavior?.welcome?.show_quick_links ?? true)
     : true;

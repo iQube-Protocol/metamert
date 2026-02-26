@@ -18,6 +18,7 @@ import {
   isInferenceStart,
   isInferenceComplete,
 } from "@/lib/shell-messages";
+import { resolveIframeOrigin } from "@/lib/iframe-origin";
 import { toast } from "sonner";
 
 // ---------------------------------------------------------------------------
@@ -57,12 +58,9 @@ export function useShell(): ShellContextValue {
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Use shared origin resolver */
 function getIframeOrigin(config: ShellConfig): string {
-  const pmo = (config.iframe as any).postMessageOrigin;
-  if (pmo && !pmo.startsWith("http://localhost")) return pmo;
-  if (config.iframe.origin && !config.iframe.origin.startsWith("http://localhost"))
-    return config.iframe.origin;
-  return new URL(config.iframe.url).origin;
+  return resolveIframeOrigin(config);
 }
 
 /** Centralized inference lifecycle helpers used by the provider */
@@ -123,18 +121,22 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     const runtimeOrigin = getIframeOrigin(config);
 
     const handler = (e: MessageEvent) => {
-      // Strict origin guard — only accept messages from the runtime iframe
-      if (e.origin !== runtimeOrigin) return;
+      // Accept messages from runtime origin OR wildcard if origin is "*"
+      if (runtimeOrigin !== "*" && e.origin !== runtimeOrigin) return;
 
       const msg = normalizeInbound(e.data);
       if (!msg) return;
 
       const t = msg.type as string;
 
+      if (import.meta.env.DEV) {
+        console.log("[Shell:lifecycle]", t, "origin:", e.origin, "state:", msg.state ?? "-");
+      }
+
       // Inference start signals
       if (isInferenceStart(msg)) {
         console.log("[Shell] Inference START signal:", t);
-        setShellState((prev) => (prev === "welcome" ? "post-welcome" : prev));
+        setShellState("post-welcome");
         inferCtrl.current?.start();
         return;
       }
@@ -142,7 +144,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       // Inference completion signals
       if (isInferenceComplete(msg)) {
         console.log("[Shell] Inference COMPLETE signal:", t);
-        setShellState((prev) => (prev === "welcome" ? "post-welcome" : prev));
+        setShellState("post-welcome");
         inferCtrl.current?.complete();
         return;
       }
@@ -150,6 +152,19 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       // WELCOME_COMPLETE — iframe's welcome flow is done; activate prompt box
       if (t === "WELCOME_COMPLETE") {
         console.log("[Shell] WELCOME_COMPLETE → transitioning to post-welcome");
+        setShellState("post-welcome");
+        inferCtrl.current?.complete();
+        return;
+      }
+
+      // Catch-all: any PROMPT_SUBMIT echo or RESPONSE from runtime means
+      // the first prompt was handled inside iframe — transition shell
+      if (
+        t === "PROMPT_SUBMIT" || t === "PROMPT_RESPONSE" ||
+        t === "RESPONSE" || t === "CHAT_RESPONSE" ||
+        t === "RESULT" || t === "OUTPUT"
+      ) {
+        console.log("[Shell] Prompt lifecycle signal:", t, "→ post-welcome");
         setShellState("post-welcome");
         inferCtrl.current?.complete();
         return;
