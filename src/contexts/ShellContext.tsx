@@ -11,7 +11,13 @@ import {
   authenticate,
   getToken,
 } from "@/lib/aa-client";
-import { postToIframe, postRawToIframe } from "@/lib/shell-messages";
+import {
+  postToIframe,
+  postRawToIframe,
+  normalizeInbound,
+  isInferenceStart,
+  isInferenceComplete,
+} from "@/lib/shell-messages";
 import { toast } from "sonner";
 
 // ---------------------------------------------------------------------------
@@ -59,6 +65,35 @@ function getIframeOrigin(config: ShellConfig): string {
   return new URL(config.iframe.url).origin;
 }
 
+/** Centralized inference lifecycle helpers used by the provider */
+function createInferenceController(
+  setInferring: React.Dispatch<React.SetStateAction<boolean>>,
+) {
+  let safetyTimer: ReturnType<typeof setTimeout> | null = null;
+  let graceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function clearTimers() {
+    if (safetyTimer) { clearTimeout(safetyTimer); safetyTimer = null; }
+    if (graceTimer) { clearTimeout(graceTimer); graceTimer = null; }
+  }
+
+  function start() {
+    clearTimers();
+    setInferring(true);
+    safetyTimer = setTimeout(() => { setInferring(false); safetyTimer = null; }, 30_000);
+  }
+
+  function complete() {
+    if (safetyTimer) { clearTimeout(safetyTimer); safetyTimer = null; }
+    if (graceTimer) { clearTimeout(graceTimer); graceTimer = null; }
+    graceTimer = setTimeout(() => { setInferring(false); graceTimer = null; }, 2_000);
+  }
+
+  function cleanup() { clearTimers(); }
+
+  return { start, complete, cleanup };
+}
+
 // ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
@@ -72,41 +107,51 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [quickLinksExpanded, setQuickLinksExpanded] = useState(true);
   const [inferring, setInferring] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
-  const inferTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
 
-  // Listen for iframe signals that inference rendering is complete
+  // Lazily create inference controller
+  if (!inferCtrl.current) {
+    inferCtrl.current = createInferenceController(setInferring);
+  }
+
+  // Clean up timers on unmount
+  useEffect(() => () => inferCtrl.current?.cleanup(), []);
+
+  // Listen for iframe inference lifecycle signals
   useEffect(() => {
-    const handler = (e: MessageEvent) => {
-      const t = e.data?.type;
-      // Any of these signals means the iframe finished rendering.
-      // Keep the animation running for 2s after receipt so the user
-      // sees the dots settle while the content paints on screen.
-      // Inference-complete signals: stop animation after 2s grace period
-      if (
-        t === "INFERENCE_COMPLETE" ||
-        t === "RENDER_COMPLETE" ||
-        t === "STATE_SYNC"
-      ) {
-        // If the iframe completed an inference while we're still in welcome,
-        // transition to post-welcome so the prompt box becomes visible.
-        setShellState((prev) => (prev === "welcome" ? "post-welcome" : prev));
+    if (!config) return;
+    const runtimeOrigin = getIframeOrigin(config);
 
-        if (inferTimeoutRef.current) {
-          clearTimeout(inferTimeoutRef.current);
-          inferTimeoutRef.current = null;
-        }
-        inferTimeoutRef.current = setTimeout(() => {
-          setInferring(false);
-          inferTimeoutRef.current = null;
-        }, 2000);
+    const handler = (e: MessageEvent) => {
+      // Strict origin guard — only accept messages from the runtime iframe
+      if (e.origin !== runtimeOrigin) return;
+
+      const msg = normalizeInbound(e.data);
+      if (!msg) return;
+
+      const t = msg.type as string;
+
+      // Inference start signals
+      if (isInferenceStart(msg)) {
+        console.log("[Shell] Inference START signal:", t);
+        setShellState((prev) => (prev === "welcome" ? "post-welcome" : prev));
+        inferCtrl.current?.start();
+        return;
       }
 
-      // RUNTIME_READY / WELCOME_COMPLETE are lifecycle signals — do NOT clear inferring.
-      // Only completion signals above should stop the animation.
+      // Inference completion signals
+      if (isInferenceComplete(msg)) {
+        console.log("[Shell] Inference COMPLETE signal:", t);
+        setShellState((prev) => (prev === "welcome" ? "post-welcome" : prev));
+        inferCtrl.current?.complete();
+        return;
+      }
+
+      // RUNTIME_READY / WELCOME_COMPLETE are lifecycle signals — no inferring change.
     };
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
-  }, []);
+  }, [config]);
 
   const hydrate = useCallback(async () => {
     setLoading(true);
@@ -205,14 +250,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
     setShellState("post-welcome");
     setActiveMenuItem(itemId);
-    setInferring(true);
-
-    // Safety timeout so animation doesn't run forever
-    if (inferTimeoutRef.current) clearTimeout(inferTimeoutRef.current);
-    inferTimeoutRef.current = setTimeout(() => {
-      setInferring(false);
-      inferTimeoutRef.current = null;
-    }, 30000);
+    inferCtrl.current?.start();
 
     try {
       const result: MenuActionResult = await menuAction(itemId);
@@ -250,7 +288,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     if (!text.trim()) return;
     console.log("[Shell] submitPrompt: transitioning to post-welcome, inferring=true");
     setShellState("post-welcome");
-    setInferring(true);
+    inferCtrl.current?.start();
     try {
       const result: PromptActionResult = await promptAction(text);
       applyConfigUpdate(result.shell_config);
@@ -270,13 +308,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
       }
     } finally {
-      // Don't clear inferring here — wait for iframe INFERENCE_COMPLETE/RENDER_COMPLETE message.
-      // Set a safety timeout so animation doesn't run forever if iframe never responds.
-      if (inferTimeoutRef.current) clearTimeout(inferTimeoutRef.current);
-      inferTimeoutRef.current = setTimeout(() => {
-        setInferring(false);
-        inferTimeoutRef.current = null;
-      }, 30000); // 30s max
+      // Safety timeout via inferCtrl — wait for iframe completion signals
+      inferCtrl.current?.start();
     }
   }, [config, applyConfigUpdate]);
 

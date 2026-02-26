@@ -1,8 +1,7 @@
 import { useEffect, useCallback } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import EmbedFrame from "@/components/EmbedFrame";
-import { postToIframe, type IframeInbound, type DeviceType } from "@/lib/shell-messages";
-import { toast } from "sonner";
+import { postToIframe, normalizeInbound, type DeviceType } from "@/lib/shell-messages";
 
 function getDeviceType(): DeviceType {
   const w = window.innerWidth;
@@ -67,10 +66,11 @@ export default function RuntimeFrame() {
 
     function handler(ev: MessageEvent) {
       if (ev.origin !== origin) return;
-      const msg = ev.data as IframeInbound;
-      if (!msg?.type) return;
+      const msg = normalizeInbound(ev.data);
+      if (!msg) return;
+      const t = msg.type as string;
 
-      switch (msg.type) {
+      switch (t) {
         case "NAVIGATE":
           console.log("[Shell] NAVIGATE →", msg.path);
           break;
@@ -91,7 +91,10 @@ export default function RuntimeFrame() {
           break;
         case "TRUST_UPDATE":
           console.log("[Shell] TRUST_UPDATE received:", msg.trust);
-          updateTrust(msg.trust);
+          if (msg.trust && typeof msg.trust === "object") {
+            const trust = msg.trust as { level: string; signals: string[]; scores?: Record<string, number> };
+            updateTrust(trust);
+          }
           break;
       }
     }
