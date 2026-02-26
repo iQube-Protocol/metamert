@@ -43,7 +43,7 @@ export default function RuntimeFrame() {
   // Forward viewport/device changes to iframe
   useEffect(() => {
     if (!config || !iframeRef.current) return;
-    const origin = config.iframe.origin || new URL(config.iframe.url).origin;
+    const origin = resolveIframeOrigin(config);
 
     const handleResize = () => {
       if (!iframeRef.current) return;
