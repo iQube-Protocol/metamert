@@ -35,6 +35,7 @@ interface ShellContextValue {
   activeMenuItem: string | null;
   quickLinksExpanded: boolean;
   inferring: boolean;
+  overlayTrigger: number;
   toggleQuickLinks: () => void;
   hydrate: () => Promise<void>;
   selectAigent: (id: string) => Promise<void>;
@@ -104,6 +105,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [activeMenuItem, setActiveMenuItem] = useState<string | null>(null);
   const [quickLinksExpanded, setQuickLinksExpanded] = useState(true);
   const [inferring, setInferring] = useState(false);
+  const [overlayTrigger, setOverlayTrigger] = useState(0);
+  const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
 
@@ -138,6 +141,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         console.log("[Shell] Inference START signal:", t);
         setShellState("post-welcome");
         inferCtrl.current?.start();
+        bumpOverlay();
         return;
       }
 
@@ -146,6 +150,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         console.log("[Shell] Inference COMPLETE signal:", t);
         setShellState("post-welcome");
         inferCtrl.current?.complete();
+        bumpOverlay();
         return;
       }
 
@@ -154,6 +159,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         console.log("[Shell] WELCOME_COMPLETE → transitioning to post-welcome");
         setShellState("post-welcome");
         inferCtrl.current?.complete();
+        bumpOverlay();
         return;
       }
 
@@ -167,6 +173,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         console.log("[Shell] Prompt lifecycle signal:", t, "→ post-welcome");
         setShellState("post-welcome");
         inferCtrl.current?.complete();
+        bumpOverlay();
         return;
       }
 
@@ -368,7 +375,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     <ShellCtx.Provider
       value={{
         config, loading, authenticated, shellState,
-        activeMenuItem, quickLinksExpanded, inferring, toggleQuickLinks,
+        activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, toggleQuickLinks,
         hydrate, selectAigent, selectLLM, handleMenuAction,
         submitPrompt, resetToWelcome, updateTrust, iframeRef,
       }}
