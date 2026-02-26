@@ -96,6 +96,8 @@ function FloatingOverlay({ config, shellState, visible, onPointerEnter, onPointe
     </div>
   );
 }
+
+// Separate default export ensures HMR boundary includes ShellProvider
 export default function Index() {
   return (
     <ShellProvider>
