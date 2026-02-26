@@ -1,53 +1,39 @@
 
 
-# Fix: postMessage Origin Mismatch Blocking All Shell-to-iframe Communication
+## Analysis: Score Indicator Animation Not Triggering During Inference
 
-## Root Cause
+### Root Cause
 
-The upstream API returns `postMessageOrigin: "http://localhost:3000"` (a dev-only value). The shell's `getIframeOrigin()` function prioritizes `postMessageOrigin` over `origin`, so every `postMessage` call targets `http://localhost:3000`. The iframe is loaded from `https://dev-beta.aigentz.me`. The browser silently drops all messages because the target origin doesn't match the iframe's actual origin. This is why:
+Two issues are combining to prevent the animation:
 
-- Menu items (Be, Earn, Play, Make, Share) produce no response
-- QuickLinks (Watch, Listen, Read, Find) produce no response
-- Prompt submissions produce no response
-- Selector changes (Aigent/LLM) send messages to the void
+1. **Premature clearing by lifecycle signals**: The iframe sends `RUNTIME_READY` on initial load and `WELCOME_COMPLETE` shortly after. Both of these schedule `setInferring(false)` via a 2-second timeout in `ShellContext.tsx` (lines 105-114). When the user subsequently triggers inference (prompt or menu action), `inferring` is set to `true`, but the iframe often immediately responds with one of these lifecycle signals again, which re-schedules the 2-second clear — killing the animation almost instantly.
 
-## Fix (2 files, 2 changes)
+2. **`animate-pulse` is nearly invisible on 1.5px dots**: The current code at `RuntimeHeader.tsx:80` uses Tailwind's built-in `animate-pulse` (a subtle opacity fade). On dots that are only `h-1.5 w-1.5`, this is effectively invisible. The design spec calls for a custom "dot-wave" animation with opacity 1.0 → 0.4 and scale 1.0 → 1.4, staggered at 150ms intervals — which was never added to the codebase.
 
-### 1. `supabase/functions/aa-proxy/index.ts` -- Normalize `postMessageOrigin`
+### Plan
 
-Add a step in `normalizeShellConfig` to fix or remove `postMessageOrigin` when it points to localhost, just like the existing fix for `origin`:
+**File 1: `tailwind.config.ts`** — Add the custom `dot-wave` keyframe animation:
+- Add a `dot-wave` keyframe: `{ "0%, 100%": { opacity: 1, transform: "scale(1)" }, "50%": { opacity: 0.4, transform: "scale(1.4)" } }`
+- Register `animate-dot-wave` with `dot-wave 1.2s ease-in-out infinite`
 
-```text
-// After existing step 8 ("Fix localhost origin"), add:
-// 9. Fix localhost postMessageOrigin
-if (raw.iframe?.postMessageOrigin?.startsWith("http://localhost"))
-  raw.iframe.postMessageOrigin = raw.iframe.origin
-    || new URL(raw.iframe.url).origin;
-```
+**File 2: `src/contexts/ShellContext.tsx`** — Guard the inferring-clearing logic:
+- **Lifecycle signals** (`RUNTIME_READY`, `WELCOME_COMPLETE`): These should NOT clear `inferring`. They are iframe boot/navigation signals, not inference completion signals. Remove the `setInferring(false)` timeout from the `RUNTIME_READY` / `WELCOME_COMPLETE` branch entirely.
+- **Completion signals** (`INFERENCE_COMPLETE`, `RENDER_COMPLETE`, `STATE_SYNC`): These correctly indicate inference is done — keep the 2-second grace period timeout for these only.
+- The existing 30-second safety timeout in `submitPrompt` and `handleMenuAction` remains as the fallback.
 
-### 2. `src/contexts/ShellContext.tsx` -- Defensive `getIframeOrigin`
+**File 3: `src/components/RuntimeHeader.tsx`** — Switch to the custom animation:
+- Replace `animate-pulse transition-all duration-700` with `animate-dot-wave` on the dots when `inferring` is true.
+- Keep the staggered `animationDelay: i * 150ms` style for the wave effect.
 
-Update `getIframeOrigin` to skip any localhost origins (belt-and-suspenders in case the proxy normalization is bypassed or cached):
+### Summary of Changes
 
 ```text
-function getIframeOrigin(config: ShellConfig): string {
-  const pmo = (config.iframe as any).postMessageOrigin;
-  if (pmo && !pmo.startsWith("http://localhost")) return pmo;
-  if (config.iframe.origin && !config.iframe.origin.startsWith("http://localhost"))
-    return config.iframe.origin;
-  return new URL(config.iframe.url).origin;
-}
+ShellContext listener logic (before):
+  INFERENCE_COMPLETE / RENDER_COMPLETE / STATE_SYNC → clear in 2s ✓
+  RUNTIME_READY / WELCOME_COMPLETE → clear in 2s ✗ (kills animation)
+
+ShellContext listener logic (after):
+  INFERENCE_COMPLETE / RENDER_COMPLETE / STATE_SYNC → clear in 2s ✓
+  RUNTIME_READY / WELCOME_COMPLETE → no-op on inferring ✓
 ```
-
-## Why This Fixes Everything
-
-- All `postToIframe` calls will now target `https://dev-beta.aigentz.me` instead of `http://localhost:3000`
-- The iframe will receive `MENU_ACTION`, `PROMPT_SUBMIT`, `SELECTOR_CHANGE`, `SHELL_READY`, `HANDOFF`, and `DEVICE_CONTEXT_UPDATE` messages
-- No other code changes are needed -- the message construction logic from previous fixes is correct; the messages were just being sent to the wrong origin
-
-## Technical Details
-
-- The proxy fix ensures all consumers of shell-config get a correct `postMessageOrigin`
-- The client-side fix ensures resilience even if a cached or stale config leaks through
-- Both fixes are backward-compatible: if the upstream API starts returning the correct origin, the normalization is a no-op
 
