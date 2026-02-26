@@ -1,39 +1,35 @@
 
 
-## Analysis: Score Indicator Animation Not Triggering During Inference
+## Analysis: Floating Menu Disappears Then Reappears
 
 ### Root Cause
 
-Two issues are combining to prevent the animation:
+The `shellState` prop changes from `"welcome"` to `"post-welcome"` during hydration or iframe signals. When this prop changes, the `FloatingOverlay` component re-renders, which triggers the `useEffect` on line 71-74 (because `scheduleHide` is in the dependency array). This effect calls `scheduleHide()` again — but it does NOT reset `visible` to `true` first.
 
-1. **Premature clearing by lifecycle signals**: The iframe sends `RUNTIME_READY` on initial load and `WELCOME_COMPLETE` shortly after. Both of these schedule `setInferring(false)` via a 2-second timeout in `ShellContext.tsx` (lines 105-114). When the user subsequently triggers inference (prompt or menu action), `inferring` is set to `true`, but the iframe often immediately responds with one of these lifecycle signals again, which re-schedules the 2-second clear — killing the animation almost instantly.
+Here's the sequence:
+1. Timer fires after 4s → `visible = false` → overlay fades out (correct)
+2. `shellState` changes (e.g. iframe sends `INFERENCE_COMPLETE` which sets `shellState` to `"post-welcome"`) → component re-renders
+3. The `useEffect` fires `scheduleHide()` — but `visible` is still `false`
+4. The `showPrompt` / `showQuickLinks` derived values change (because `isWelcome` flips), causing the overlay content to change
+5. React re-renders with new content, but `visible` remains `false` for 300ms (the CSS transition duration), then the new 4s timer hasn't set it back to `true`
 
-2. **`animate-pulse` is nearly invisible on 1.5px dots**: The current code at `RuntimeHeader.tsx:80` uses Tailwind's built-in `animate-pulse` (a subtle opacity fade). On dots that are only `h-1.5 w-1.5`, this is effectively invisible. The design spec calls for a custom "dot-wave" animation with opacity 1.0 → 0.4 and scale 1.0 → 1.4, staggered at 150ms intervals — which was never added to the codebase.
+The flicker happens because on state transitions, the overlay content changes (prompt appears/disappears) triggering a visual re-layout, but the visibility isn't explicitly restored.
 
-### Plan
+### Fix
 
-**File 1: `tailwind.config.ts`** — Add the custom `dot-wave` keyframe animation:
-- Add a `dot-wave` keyframe: `{ "0%, 100%": { opacity: 1, transform: "scale(1)" }, "50%": { opacity: 0.4, transform: "scale(1.4)" } }`
-- Register `animate-dot-wave` with `dot-wave 1.2s ease-in-out infinite`
+When `shellState` changes, reset `visible` to `true` and restart the hide timer. This ensures the overlay is always shown fresh after a state transition, then auto-hides after 4s.
 
-**File 2: `src/contexts/ShellContext.tsx`** — Guard the inferring-clearing logic:
-- **Lifecycle signals** (`RUNTIME_READY`, `WELCOME_COMPLETE`): These should NOT clear `inferring`. They are iframe boot/navigation signals, not inference completion signals. Remove the `setInferring(false)` timeout from the `RUNTIME_READY` / `WELCOME_COMPLETE` branch entirely.
-- **Completion signals** (`INFERENCE_COMPLETE`, `RENDER_COMPLETE`, `STATE_SYNC`): These correctly indicate inference is done — keep the 2-second grace period timeout for these only.
-- The existing 30-second safety timeout in `submitPrompt` and `handleMenuAction` remains as the fallback.
+**File: `src/pages/Index.tsx`**
 
-**File 3: `src/components/RuntimeHeader.tsx`** — Switch to the custom animation:
-- Replace `animate-pulse transition-all duration-700` with `animate-dot-wave` on the dots when `inferring` is true.
-- Keep the staggered `animationDelay: i * 150ms` style for the wave effect.
+Replace the single `useEffect` with one that watches `shellState`:
 
-### Summary of Changes
-
-```text
-ShellContext listener logic (before):
-  INFERENCE_COMPLETE / RENDER_COMPLETE / STATE_SYNC → clear in 2s ✓
-  RUNTIME_READY / WELCOME_COMPLETE → clear in 2s ✗ (kills animation)
-
-ShellContext listener logic (after):
-  INFERENCE_COMPLETE / RENDER_COMPLETE / STATE_SYNC → clear in 2s ✓
-  RUNTIME_READY / WELCOME_COMPLETE → no-op on inferring ✓
+```typescript
+useEffect(() => {
+  setVisible(true);
+  scheduleHide();
+  return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+}, [scheduleHide, shellState]);
 ```
+
+This adds `shellState` to the dependency array and calls `setVisible(true)` before scheduling the hide — so on every state transition the overlay appears, then auto-hides after 4s. On initial mount it also starts visible (which matches the current `useState(true)` initial value, so no change there).
 
