@@ -63,7 +63,7 @@ export default function RuntimeFrame() {
   // Listen for iframe → shell messages
   useEffect(() => {
     if (!config) return;
-    const origin = config.iframe.origin || new URL(config.iframe.url).origin;
+    const origin = resolveIframeOrigin(config);
 
     function handler(ev: MessageEvent) {
       if (ev.origin !== origin) return;
