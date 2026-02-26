@@ -18,6 +18,7 @@ import {
   isInferenceStart,
   isInferenceComplete,
 } from "@/lib/shell-messages";
+import { resolveIframeOrigin } from "@/lib/iframe-origin";
 import { toast } from "sonner";
 
 // ---------------------------------------------------------------------------
