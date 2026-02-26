@@ -1,35 +1,61 @@
 
+Objective: restore the dot animation pattern itself (the traveling, sequential pulse across dots) while keeping the current inference trigger/stop behavior unchanged.
 
-## Analysis: Floating Menu Disappears Then Reappears
+What I verified in the codebase:
+1) `src/components/RuntimeHeader.tsx`
+- Current dot rendering uses:
+  - `inferring ? "animate-pulse transition-all duration-700" : "transition-all duration-300"`
+- The previous sequential effect is missing because:
+  - `animate-dot-wave` is no longer applied.
+  - per-dot `animationDelay` is no longer applied.
 
-### Root Cause
+2) `tailwind.config.ts`
+- `dot-wave` keyframes and `animation["dot-wave"]` are still present.
+- This means the sequence animation infrastructure still exists and can be re-used.
 
-The `shellState` prop changes from `"welcome"` to `"post-welcome"` during hydration or iframe signals. When this prop changes, the `FloatingOverlay` component re-renders, which triggers the `useEffect` on line 71-74 (because `scheduleHide` is in the dependency array). This effect calls `scheduleHide()` again — but it does NOT reset `visible` to `true` first.
+3) `src/contexts/ShellContext.tsx`
+- Current inference behavior logic (completion-signal-based stop + safety timeout) is already in place.
+- No behavior rollback is required for your request.
 
-Here's the sequence:
-1. Timer fires after 4s → `visible = false` → overlay fades out (correct)
-2. `shellState` changes (e.g. iframe sends `INFERENCE_COMPLETE` which sets `shellState` to `"post-welcome"`) → component re-renders
-3. The `useEffect` fires `scheduleHide()` — but `visible` is still `false`
-4. The `showPrompt` / `showQuickLinks` derived values change (because `isWelcome` flips), causing the overlay content to change
-5. React re-renders with new content, but `visible` remains `false` for 300ms (the CSS transition duration), then the new 4s timer hasn't set it back to `true`
+Clarification status:
+- No blocking unknowns. Your request is specific: keep behavior timing logic changes, restore the original dot animation pattern.
 
-The flicker happens because on state transitions, the overlay content changes (prompt appears/disappears) triggering a visual re-layout, but the visibility isn't explicitly restored.
+Implementation plan:
+1) Restore the original sequential animation wiring in `RuntimeHeader` dots
+- Update `renderDots()` in `src/components/RuntimeHeader.tsx` so that when `inferring` is true:
+  - class includes `animate-dot-wave`
+  - inline style applies stagger: `animationDelay: \`${i * 150}ms\``
+- Keep current color logic and filled/unfilled dot logic unchanged.
+- Keep non-inferring state static (no animation).
 
-### Fix
+2) Preserve all inference trigger/stop behavior as-is
+- Do not modify `src/contexts/ShellContext.tsx`.
+- This keeps your preferred behavior updates while restoring only the visual pattern.
 
-When `shellState` changes, reset `visible` to `true` and restart the hide timer. This ensures the overlay is always shown fresh after a state transition, then auto-hides after 4s.
+3) Validate and tune (only if needed for visual parity)
+- If sequence feels off after restore, only tweak the stagger increment (e.g. 120–180ms) and/or `dot-wave` duration (currently 1.2s) in `tailwind.config.ts` for exact prior feel.
+- Default plan is to first restore exact previous wiring before any tuning.
 
-**File: `src/pages/Index.tsx`**
+Technical details (for implementation):
+- Primary file to change: `src/components/RuntimeHeader.tsx`
+- Expected dot render shape during inference:
+  - `className` contains `animate-dot-wave`
+  - `style={inferring ? { animationDelay: \`${i * 150}ms\` } : undefined}`
+- No API changes, no shell protocol changes, no context/state-model changes.
+- Existing Tailwind keyframes already support this (`dot-wave`).
 
-Replace the single `useEffect` with one that watches `shellState`:
+Validation plan (end-to-end):
+1) Hard refresh preview (to avoid stale CSS/JS artifacts).
+2) Trigger inference via prompt submit:
+- Confirm dots animate in a left-to-right sequential wave (single-dot emphasis moving across).
+3) Trigger inference via SmartMenu action:
+- Confirm same sequence pattern appears.
+4) Confirm behavior logic remains unchanged:
+- Dots start/stop according to current completion-signal logic (no reversion of trigger behavior).
+5) Check mobile + desktop:
+- Verify sequence looks consistent at current mobile viewport and standard desktop viewport.
 
-```typescript
-useEffect(() => {
-  setVisible(true);
-  scheduleHide();
-  return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-}, [scheduleHide, shellState]);
-```
-
-This adds `shellState` to the dependency array and calls `setVisible(true)` before scheduling the hide — so on every state transition the overlay appears, then auto-hides after 4s. On initial mount it also starts visible (which matches the current `useState(true)` initial value, so no change there).
-
+Acceptance criteria:
+- During inference, dots visibly animate as a sequential traveling pattern (not uniform pulse-all-at-once).
+- No change to current inference lifecycle behavior.
+- No regressions in trust/reliability dot colors, menu interactions, or header layout.
