@@ -39,6 +39,72 @@ export type IframeInbound =
   | { type: "STATE_SYNC"; state: Record<string, unknown> }
   | { type: "TRUST_UPDATE"; trust: { level: string; signals: string[]; scores?: Record<string, number> } };
 
+/**
+ * Normalize an inbound iframe message that may arrive as either:
+ *   - direct: { type, field1, field2, ... }
+ *   - envelope: { type, payload: { field1, field2, ... } }
+ * Returns a flat object with `type` at top level and all payload fields merged.
+ */
+export function normalizeInbound(raw: unknown): Record<string, unknown> | null {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as Record<string, unknown>;
+  const type = obj.type;
+  if (typeof type !== "string" || !type) return null;
+
+  // If envelope-style with payload object, merge payload fields at top level
+  const payload =
+    obj.payload && typeof obj.payload === "object" && !Array.isArray(obj.payload)
+      ? (obj.payload as Record<string, unknown>)
+      : {};
+
+  // Top-level fields (except meta) take precedence over payload fields
+  const { msg_id: _1, timestamp: _2, source: _3, payload: _4, ...topFields } = obj;
+  return { ...payload, ...topFields, type };
+}
+
+/**
+ * Check if a normalized inbound message indicates inference is actively processing.
+ */
+export function isInferenceStart(msg: Record<string, unknown>): boolean {
+  const t = msg.type as string;
+  // Explicit start signals
+  if (t === "INFERENCE_START" || t === "RENDER_START" || t === "PROCESSING_START") return true;
+  // STATE_SYNC with processing/busy/inferring flags
+  if (t === "STATE_SYNC") {
+    const state = (msg.state ?? msg) as Record<string, unknown>;
+    return (
+      state.processing === true ||
+      state.busy === true ||
+      state.inferring === true ||
+      state.isProcessing === true
+    );
+  }
+  return false;
+}
+
+/**
+ * Check if a normalized inbound message indicates inference is complete.
+ */
+export function isInferenceComplete(msg: Record<string, unknown>): boolean {
+  const t = msg.type as string;
+  // Explicit completion signals
+  if (t === "INFERENCE_COMPLETE" || t === "RENDER_COMPLETE") return true;
+  // STATE_SYNC with processing done
+  if (t === "STATE_SYNC") {
+    const state = (msg.state ?? msg) as Record<string, unknown>;
+    // Only treat as complete if an explicit false flag is present
+    if (
+      state.processing === false ||
+      state.busy === false ||
+      state.inferring === false ||
+      state.isProcessing === false
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** Generate a unique message ID */
 function genMsgId(): string {
   return `shell-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
