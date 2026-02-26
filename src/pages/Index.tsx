@@ -8,7 +8,7 @@ import PromptBox from "@/components/PromptBox";
 import { Loader2 } from "lucide-react";
 
 function ShellLayout() {
-  const { config, loading, hydrate, shellState } = useShell();
+  const { config, loading, hydrate, shellState, overlayTrigger } = useShell();
   const [overlayVisible, setOverlayVisible] = useState(true);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hoveringRef = useRef(false);
