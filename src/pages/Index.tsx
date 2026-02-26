@@ -112,6 +112,8 @@ function FloatingOverlay({ config, shellState, visible, onPointerEnter, onPointe
     <div
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
+      onFocusCapture={onFocusCapture}
+      onBlurCapture={onBlurCapture}
       className={`absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-1.5 px-2 pb-2 transition-opacity duration-300 ${
         visible ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
