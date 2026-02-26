@@ -101,17 +101,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         }, 2000);
       }
 
-      // These signals just stop animation but don't trigger state transition
-      if (t === "RUNTIME_READY" || t === "WELCOME_COMPLETE") {
-        if (inferTimeoutRef.current) {
-          clearTimeout(inferTimeoutRef.current);
-          inferTimeoutRef.current = null;
-        }
-        inferTimeoutRef.current = setTimeout(() => {
-          setInferring(false);
-          inferTimeoutRef.current = null;
-        }, 2000);
-      }
+      // RUNTIME_READY / WELCOME_COMPLETE are lifecycle signals — do NOT clear inferring.
+      // Only completion signals above should stop the animation.
     };
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
