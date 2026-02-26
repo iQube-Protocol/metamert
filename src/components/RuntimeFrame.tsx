@@ -2,6 +2,7 @@ import { useEffect, useCallback } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import EmbedFrame from "@/components/EmbedFrame";
 import { postToIframe, normalizeInbound, type DeviceType } from "@/lib/shell-messages";
+import { resolveIframeOrigin } from "@/lib/iframe-origin";
 
 function getDeviceType(): DeviceType {
   const w = window.innerWidth;
