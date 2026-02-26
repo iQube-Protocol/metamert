@@ -1,100 +1,35 @@
 
-Goal: make the header R/T indicators animate in lockstep with real iframe inference (including welcome-state inference initiated inside the iframe), and stop only when inference/render is actually complete.
 
-What I found in the current code
-1) Animation styling is present
-- `RuntimeHeader.tsx` correctly uses:
-  - `animate-dot-wave` when `inferring === true`
-  - staggered `animationDelay` (`i * 150ms`)
-- `tailwind.config.ts` still defines `dot-wave` keyframes and animation.
+## Problem
 
-2) The main issue is inference state signaling, not CSS
-- `inferring` is only set to `true` in shell-owned actions:
-  - `submitPrompt()`
-  - `handleMenuAction()`
-- During iframe-owned welcome prompt flow (spinner appears inside iframe), shell often never sets `inferring=true`.
+The prompt box visibility is controlled by `shellState`:
+- In `"welcome"` state: `show_prompt` defaults to `false` (line 104-105 of Index.tsx)
+- In `"post-welcome"` state: `show_prompt` defaults to `true`
 
-3) Completion handling is currently too aggressive
-- In `ShellContext.tsx`, any `STATE_SYNC` is treated like inference completion and schedules `inferring=false` after 2s.
-- This can desync the indicators from the iframe spinner if `STATE_SYNC` is sent during processing.
+The transition from `"welcome"` → `"post-welcome"` only happens in two places in `ShellContext.tsx`:
+1. Shell-owned actions (`submitPrompt`, `handleMenuAction`) — these explicitly call `setShellState("post-welcome")`
+2. The iframe message listener — but only when `isInferenceStart()` or `isInferenceComplete()` matches
 
-4) Message parsing is fragile
-- Current listeners read `e.data.type` directly and do not robustly normalize envelope-style payloads.
-- `ShellContext` completion listener also lacks strict runtime-origin filtering, so it can react to unrelated window messages.
+The iframe during its welcome flow likely doesn't send explicit `INFERENCE_START` or `STATE_SYNC { busy: true }` signals. It may send `WELCOME_COMPLETE` or other messages, but those are logged in `RuntimeFrame.tsx` without triggering any state transition. So the shell stays in `"welcome"` and the prompt box never appears.
 
-Implementation plan
-1) Make iframe message handling inference-aware (start + complete), not completion-only
-- File: `src/contexts/ShellContext.tsx`
-- Replace current “`STATE_SYNC` always means complete” logic with a lifecycle parser:
-  - Start inference (`setInferring(true)`) on:
-    - explicit start-like message types (e.g. `INFERENCE_START`, `RENDER_START`, `PROCESSING_START` if present)
-    - `STATE_SYNC` indicating processing/busy=true in payload/state
-  - Complete inference (2s grace, existing behavior) on:
-    - explicit completion types (`INFERENCE_COMPLETE`, `RENDER_COMPLETE`)
-    - `STATE_SYNC` indicating processing/busy=false
-- Keep existing 30s safety timeout.
-- Keep existing shell-owned start triggers (`submitPrompt`, `handleMenuAction`) unchanged.
+## Fix
 
-2) Normalize inbound message shapes before interpreting
-- File: `src/lib/shell-messages.ts`
-- Add a small helper to normalize iframe inbound events from either form:
-  - direct: `{ type, ... }`
-  - envelope/payload style: `{ type, payload: {...} }` and safely expose merged fields for consumers.
-- This avoids missing state flags when runtime sends data under `payload`.
+**File: `src/contexts/ShellContext.tsx`** — In the iframe message listener (around line 120-150), also transition to `"post-welcome"` when receiving `WELCOME_COMPLETE`. This message explicitly indicates the iframe's welcome sequence is done and the shell should take over prompt ownership.
 
-3) Apply strict origin guard for inference lifecycle listener
-- File: `src/contexts/ShellContext.tsx`
-- Use runtime origin derived from current config (same safe origin logic already used elsewhere) and ignore non-runtime `postMessage` events.
-- This prevents accidental `inferring` toggles from unrelated messages.
+Additionally, treat `PROMPT_SUBMIT` coming FROM the iframe (if the runtime echoes it) and any unrecognized activity-like signals as potential transition triggers.
 
-4) Keep RuntimeFrame and ShellContext in sync on message interpretation
-- File: `src/components/RuntimeFrame.tsx`
-- Use the same normalization helper for inbound events, so `TRUST_UPDATE` and `STATE_SYNC` parsing are consistent.
-- Preserve current toast suppression behavior.
+**File: `src/components/RuntimeFrame.tsx`** — In the `WELCOME_COMPLETE` case handler, call a shell context method to trigger the state transition (or move the transition logic entirely into `ShellContext.tsx`'s listener which already runs).
 
-Technical details (implementation-level)
-- New inference lifecycle behavior:
-  - `onInferenceStart()`:
-    - clear any pending completion timer
-    - set `inferring=true`
-    - refresh 30s safety timer
-  - `onInferenceComplete()`:
-    - clear safety timer
-    - start 2s grace timer
-    - then set `inferring=false`
-- `STATE_SYNC` handling:
-  - no longer treated as unconditional completion
-  - evaluated by payload state flags (processing/busy/inferring booleans)
-- Envelope compatibility:
-  - read fields from both top-level and `payload` to support protocol variants without regressions.
+### Implementation steps
 
-Why this addresses your exact complaint
-- Right now, iframe spinner can run while shell indicators stay static because shell never receives/uses a start signal path for iframe-owned inference.
-- This plan makes indicators start when iframe reports processing and only stop when iframe reports completion/rendered state (plus the existing 2s grace).
+1. **`src/contexts/ShellContext.tsx`** — In the inference lifecycle `useEffect` handler, add a branch after the inference start/complete checks:
+   - If `msg.type === "WELCOME_COMPLETE"`: transition `shellState` to `"post-welcome"` and call `inferCtrl.complete()` (inference is done at this point)
+   - If `msg.type === "RUNTIME_READY"`: no state change (keep as-is, it's just a lifecycle signal)
 
-Validation plan (end-to-end)
-1) Welcome flow (iframe-owned prompt)
-- Trigger inference using the iframe’s own prompt input.
-- Expected: R/T dots begin wave animation as spinner appears.
-- Expected: animation continues during processing and through render, then stops after grace period.
+2. **`src/lib/shell-messages.ts`** — No changes needed. The `normalizeInbound` function already handles `WELCOME_COMPLETE` correctly.
 
-2) Post-welcome flow (shell-owned prompt)
-- Submit via shell `PromptBox`.
-- Expected: same synchronized behavior.
+3. **No changes** to layout, menu, overlay persistence, animation, or any other component.
 
-3) Menu-triggered inference
-- Tap `Earn/Play/Make`.
-- Expected: indicators animate immediately and stay synced to runtime completion.
+### Why this works
+The iframe sends `WELCOME_COMPLETE` when its internal welcome prompt flow finishes. Currently the shell logs it but does nothing. By treating it as a state transition trigger, the shell moves to `"post-welcome"`, which causes `showPrompt` to become `true`, and the prompt box appears — exactly as intended.
 
-4) Idle behavior
-- No spinner / no processing:
-- Expected: indicators remain static, no phantom animation.
-
-5) Mobile and desktop check
-- Verify same synchronization behavior on both viewport classes.
-
-Acceptance criteria
-- Indicators animate whenever runtime spinner indicates active inference (including iframe-initiated inference).
-- Indicators do not stop early while iframe is still processing.
-- Indicators stop shortly after render completes (current grace behavior retained).
-- No regressions to refresh/reset toast policy or menu/header layout.
