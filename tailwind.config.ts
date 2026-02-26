@@ -80,10 +80,15 @@ export default {
             height: "0",
           },
         },
+        "dot-wave": {
+          "0%, 100%": { opacity: "1", transform: "scale(1)" },
+          "50%": { opacity: "0.4", transform: "scale(1.4)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "dot-wave": "dot-wave 1.2s ease-in-out infinite",
       },
     },
   },
