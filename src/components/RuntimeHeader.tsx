@@ -77,7 +77,7 @@ export default function RuntimeHeader() {
         key={i}
         className={`inline-block h-1.5 w-1.5 rounded-full ${
           inferring
-            ? "animate-dot-wave"
+            ? "animate-pulse transition-all duration-700"
             : "transition-all duration-300"
         } ${i < filled ? activeColor : "bg-gray-400"}`}
         style={inferring ? { animationDelay: `${i * 150}ms` } : undefined}
