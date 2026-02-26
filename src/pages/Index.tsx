@@ -90,12 +90,14 @@ function ShellLayout() {
  * Floating overlay: QuickLinksBar + PromptBox float above the SmartMenu.
  * Visibility controlled by parent; no independent trigger zone.
  */
-function FloatingOverlay({ config, shellState, visible, onPointerEnter, onPointerLeave }: {
+function FloatingOverlay({ config, shellState, visible, onPointerEnter, onPointerLeave, onFocusCapture, onBlurCapture }: {
   config: NonNullable<ReturnType<typeof useShell>["config"]>;
   shellState: string;
   visible: boolean;
   onPointerEnter: () => void;
   onPointerLeave: () => void;
+  onFocusCapture: () => void;
+  onBlurCapture: () => void;
 }) {
   const stateBehavior = config?.menu?.policy?.state_behavior;
   const isWelcome = shellState === "welcome";
