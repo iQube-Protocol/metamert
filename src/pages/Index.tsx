@@ -11,19 +11,50 @@ function ShellLayout() {
   const { config, loading, hydrate, shellState } = useShell();
   const [overlayVisible, setOverlayVisible] = useState(true);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoveringRef = useRef(false);
+  const focusedRef = useRef(false);
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
 
-  const scheduleHide = useCallback(() => {
-    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    hideTimerRef.current = setTimeout(() => setOverlayVisible(false), 4000);
+  const clearHideTimer = useCallback(() => {
+    if (hideTimerRef.current) { clearTimeout(hideTimerRef.current); hideTimerRef.current = null; }
   }, []);
 
+  const scheduleHide = useCallback(() => {
+    clearHideTimer();
+    // Don't hide while hovering or focused
+    if (hoveringRef.current || focusedRef.current) return;
+    hideTimerRef.current = setTimeout(() => setOverlayVisible(false), 4000);
+  }, [clearHideTimer]);
+
   const showOverlay = useCallback(() => {
-    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    clearHideTimer();
     setOverlayVisible(true);
+    // Only schedule if not hovering/focused
+    if (!hoveringRef.current && !focusedRef.current) scheduleHide();
+  }, [clearHideTimer, scheduleHide]);
+
+  const handlePointerEnter = useCallback(() => {
+    hoveringRef.current = true;
+    clearHideTimer();
+    setOverlayVisible(true);
+  }, [clearHideTimer]);
+
+  const handlePointerLeave = useCallback(() => {
+    hoveringRef.current = false;
+    scheduleHide();
+  }, [scheduleHide]);
+
+  const handleOverlayFocus = useCallback(() => {
+    focusedRef.current = true;
+    clearHideTimer();
+    setOverlayVisible(true);
+  }, [clearHideTimer]);
+
+  const handleOverlayBlur = useCallback(() => {
+    focusedRef.current = false;
     scheduleHide();
   }, [scheduleHide]);
 
@@ -31,8 +62,8 @@ function ShellLayout() {
   useEffect(() => {
     setOverlayVisible(true);
     scheduleHide();
-    return () => { if (hideTimerRef.current) clearTimeout(hideTimerRef.current); };
-  }, [scheduleHide, shellState]);
+    return () => { clearHideTimer(); };
+  }, [scheduleHide, clearHideTimer, shellState]);
 
   if (loading || !config) {
     return (
@@ -48,9 +79,9 @@ function ShellLayout() {
       <RuntimeHeader />
       <div className="relative flex-1 overflow-hidden">
         <RuntimeFrame />
-        <FloatingOverlay config={config} shellState={shellState} visible={overlayVisible} onPointerEnter={showOverlay} onPointerLeave={scheduleHide} />
+        <FloatingOverlay config={config} shellState={shellState} visible={overlayVisible} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave} onFocusCapture={handleOverlayFocus} onBlurCapture={handleOverlayBlur} />
       </div>
-      <SmartMenu onPointerEnter={showOverlay} onPointerLeave={scheduleHide} />
+      <SmartMenu onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave} />
     </div>
   );
 }
