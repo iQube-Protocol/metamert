@@ -58,12 +58,9 @@ export function useShell(): ShellContextValue {
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Use shared origin resolver */
 function getIframeOrigin(config: ShellConfig): string {
-  const pmo = (config.iframe as any).postMessageOrigin;
-  if (pmo && !pmo.startsWith("http://localhost")) return pmo;
-  if (config.iframe.origin && !config.iframe.origin.startsWith("http://localhost"))
-    return config.iframe.origin;
-  return new URL(config.iframe.url).origin;
+  return resolveIframeOrigin(config);
 }
 
 /** Centralized inference lifecycle helpers used by the provider */
