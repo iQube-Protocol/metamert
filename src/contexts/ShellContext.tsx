@@ -147,7 +147,15 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // RUNTIME_READY / WELCOME_COMPLETE are lifecycle signals — no inferring change.
+      // WELCOME_COMPLETE — iframe's welcome flow is done; activate prompt box
+      if (t === "WELCOME_COMPLETE") {
+        console.log("[Shell] WELCOME_COMPLETE → transitioning to post-welcome");
+        setShellState("post-welcome");
+        inferCtrl.current?.complete();
+        return;
+      }
+
+      // RUNTIME_READY is a lifecycle signal — no state change needed.
     };
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
