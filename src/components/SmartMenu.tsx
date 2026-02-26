@@ -20,7 +20,7 @@ const ITEM_COLORS: Record<string, string> = {
  * Bottom navigation: Be | Earn·Play·Make | Share
  * 5 items total. Center triad clustered tightly on tablet/desktop.
  */
-export default function SmartMenu() {
+export default function SmartMenu({ onPointerEnter, onPointerLeave }: { onPointerEnter?: () => void; onPointerLeave?: () => void }) {
   const { config, activeMenuItem, handleMenuAction } = useShell();
   if (!config) return null;
 
@@ -86,7 +86,7 @@ export default function SmartMenu() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <nav className="flex items-stretch border-t border-border bg-card px-2 py-1.5">
+      <nav className="flex items-stretch border-t border-border bg-card px-2 py-1.5" onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
         <div className="flex items-stretch">
           {left.map((item: any) => renderBtn(item))}
         </div>
