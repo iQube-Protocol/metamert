@@ -141,6 +141,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         console.log("[Shell] Inference START signal:", t);
         setShellState("post-welcome");
         inferCtrl.current?.start();
+        bumpOverlay();
         return;
       }
 
@@ -149,6 +150,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         console.log("[Shell] Inference COMPLETE signal:", t);
         setShellState("post-welcome");
         inferCtrl.current?.complete();
+        bumpOverlay();
         return;
       }
 
@@ -157,6 +159,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         console.log("[Shell] WELCOME_COMPLETE → transitioning to post-welcome");
         setShellState("post-welcome");
         inferCtrl.current?.complete();
+        bumpOverlay();
         return;
       }
 
@@ -170,6 +173,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         console.log("[Shell] Prompt lifecycle signal:", t, "→ post-welcome");
         setShellState("post-welcome");
         inferCtrl.current?.complete();
+        bumpOverlay();
         return;
       }
 
