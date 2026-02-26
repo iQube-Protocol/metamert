@@ -69,9 +69,10 @@ function FloatingOverlay({ config, shellState }: { config: NonNullable<ReturnTyp
   }, [scheduleHide]);
 
   useEffect(() => {
+    setVisible(true);
     scheduleHide();
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [scheduleHide]);
+  }, [scheduleHide, shellState]);
 
   return (
     <>
