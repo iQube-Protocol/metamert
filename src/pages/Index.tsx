@@ -9,10 +9,30 @@ import { Loader2 } from "lucide-react";
 
 function ShellLayout() {
   const { config, loading, hydrate, shellState } = useShell();
+  const [overlayVisible, setOverlayVisible] = useState(true);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  const scheduleHide = useCallback(() => {
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = setTimeout(() => setOverlayVisible(false), 4000);
+  }, []);
+
+  const showOverlay = useCallback(() => {
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    setOverlayVisible(true);
+    scheduleHide();
+  }, [scheduleHide]);
+
+  // Re-show on shell state change
+  useEffect(() => {
+    setOverlayVisible(true);
+    scheduleHide();
+    return () => { if (hideTimerRef.current) clearTimeout(hideTimerRef.current); };
+  }, [scheduleHide, shellState]);
 
   if (loading || !config) {
     return (
@@ -28,21 +48,24 @@ function ShellLayout() {
       <RuntimeHeader />
       <div className="relative flex-1 overflow-hidden">
         <RuntimeFrame />
-        <FloatingOverlay config={config} shellState={shellState} />
+        <FloatingOverlay config={config} shellState={shellState} visible={overlayVisible} onPointerEnter={showOverlay} onPointerLeave={scheduleHide} />
       </div>
-      <SmartMenu />
+      <SmartMenu onPointerEnter={showOverlay} onPointerLeave={scheduleHide} />
     </div>
   );
 }
 
 /**
  * Floating overlay: QuickLinksBar + PromptBox float above the SmartMenu.
- * Auto-hides after 4s of no interaction; re-appears on pointer enter.
+ * Visibility controlled by parent; no independent trigger zone.
  */
-function FloatingOverlay({ config, shellState }: { config: NonNullable<ReturnType<typeof useShell>["config"]>; shellState: string }) {
-  const [visible, setVisible] = useState(true);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+function FloatingOverlay({ config, shellState, visible, onPointerEnter, onPointerLeave }: {
+  config: NonNullable<ReturnType<typeof useShell>["config"]>;
+  shellState: string;
+  visible: boolean;
+  onPointerEnter: () => void;
+  onPointerLeave: () => void;
+}) {
   const stateBehavior = config?.menu?.policy?.state_behavior;
   const isWelcome = shellState === "welcome";
   const showPrompt = isWelcome
@@ -52,56 +75,27 @@ function FloatingOverlay({ config, shellState }: { config: NonNullable<ReturnTyp
     ? (stateBehavior?.welcome?.show_quick_links ?? true)
     : true;
 
-  const scheduleHide = useCallback(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setVisible(false), 4000);
-  }, []);
-
-  const handlePointerEnter = useCallback(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setVisible(true);
-    // Re-schedule hide so it doesn't persist forever
-    scheduleHide();
-  }, [scheduleHide]);
-
-  const handlePointerLeave = useCallback(() => {
-    scheduleHide();
-  }, [scheduleHide]);
-
-  useEffect(() => {
-    setVisible(true);
-    scheduleHide();
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [scheduleHide, shellState]);
-
   return (
-    <>
-      <div
-        onPointerEnter={handlePointerEnter}
-        className="absolute inset-x-0 bottom-0 z-20 h-16"
-      />
-      <div
-        onPointerEnter={handlePointerEnter}
-        onPointerLeave={handlePointerLeave}
-        className={`absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-1.5 px-2 pb-2 transition-opacity duration-300 ${
-          visible ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        {showQuickLinks && (
-          <div className="w-full">
-            <QuickLinksBar />
-          </div>
-        )}
-        {showPrompt && (
-          <div className="w-full">
-            <PromptBox />
-          </div>
-        )}
-      </div>
-    </>
+    <div
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
+      className={`absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-1.5 px-2 pb-2 transition-opacity duration-300 ${
+        visible ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
+    >
+      {showQuickLinks && (
+        <div className="w-full">
+          <QuickLinksBar />
+        </div>
+      )}
+      {showPrompt && (
+        <div className="w-full">
+          <PromptBox />
+        </div>
+      )}
+    </div>
   );
 }
-
 export default function Index() {
   return (
     <ShellProvider>
