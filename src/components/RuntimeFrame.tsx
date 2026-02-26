@@ -16,7 +16,7 @@ export default function RuntimeFrame() {
 
   const handleReady = useCallback(() => {
     if (!config || !iframeRef.current) return;
-    const origin = config.iframe.origin || new URL(config.iframe.url).origin;
+    const origin = resolveIframeOrigin(config);
 
     // Step 1: SHELL_READY
     postToIframe(iframeRef.current, { type: "SHELL_READY", hide_chrome: true }, origin);
