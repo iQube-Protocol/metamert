@@ -1,61 +1,100 @@
 
-Objective: restore the dot animation pattern itself (the traveling, sequential pulse across dots) while keeping the current inference trigger/stop behavior unchanged.
+Goal: make the header R/T indicators animate in lockstep with real iframe inference (including welcome-state inference initiated inside the iframe), and stop only when inference/render is actually complete.
 
-What I verified in the codebase:
-1) `src/components/RuntimeHeader.tsx`
-- Current dot rendering uses:
-  - `inferring ? "animate-pulse transition-all duration-700" : "transition-all duration-300"`
-- The previous sequential effect is missing because:
-  - `animate-dot-wave` is no longer applied.
-  - per-dot `animationDelay` is no longer applied.
+What I found in the current code
+1) Animation styling is present
+- `RuntimeHeader.tsx` correctly uses:
+  - `animate-dot-wave` when `inferring === true`
+  - staggered `animationDelay` (`i * 150ms`)
+- `tailwind.config.ts` still defines `dot-wave` keyframes and animation.
 
-2) `tailwind.config.ts`
-- `dot-wave` keyframes and `animation["dot-wave"]` are still present.
-- This means the sequence animation infrastructure still exists and can be re-used.
+2) The main issue is inference state signaling, not CSS
+- `inferring` is only set to `true` in shell-owned actions:
+  - `submitPrompt()`
+  - `handleMenuAction()`
+- During iframe-owned welcome prompt flow (spinner appears inside iframe), shell often never sets `inferring=true`.
 
-3) `src/contexts/ShellContext.tsx`
-- Current inference behavior logic (completion-signal-based stop + safety timeout) is already in place.
-- No behavior rollback is required for your request.
+3) Completion handling is currently too aggressive
+- In `ShellContext.tsx`, any `STATE_SYNC` is treated like inference completion and schedules `inferring=false` after 2s.
+- This can desync the indicators from the iframe spinner if `STATE_SYNC` is sent during processing.
 
-Clarification status:
-- No blocking unknowns. Your request is specific: keep behavior timing logic changes, restore the original dot animation pattern.
+4) Message parsing is fragile
+- Current listeners read `e.data.type` directly and do not robustly normalize envelope-style payloads.
+- `ShellContext` completion listener also lacks strict runtime-origin filtering, so it can react to unrelated window messages.
 
-Implementation plan:
-1) Restore the original sequential animation wiring in `RuntimeHeader` dots
-- Update `renderDots()` in `src/components/RuntimeHeader.tsx` so that when `inferring` is true:
-  - class includes `animate-dot-wave`
-  - inline style applies stagger: `animationDelay: \`${i * 150}ms\``
-- Keep current color logic and filled/unfilled dot logic unchanged.
-- Keep non-inferring state static (no animation).
+Implementation plan
+1) Make iframe message handling inference-aware (start + complete), not completion-only
+- File: `src/contexts/ShellContext.tsx`
+- Replace current “`STATE_SYNC` always means complete” logic with a lifecycle parser:
+  - Start inference (`setInferring(true)`) on:
+    - explicit start-like message types (e.g. `INFERENCE_START`, `RENDER_START`, `PROCESSING_START` if present)
+    - `STATE_SYNC` indicating processing/busy=true in payload/state
+  - Complete inference (2s grace, existing behavior) on:
+    - explicit completion types (`INFERENCE_COMPLETE`, `RENDER_COMPLETE`)
+    - `STATE_SYNC` indicating processing/busy=false
+- Keep existing 30s safety timeout.
+- Keep existing shell-owned start triggers (`submitPrompt`, `handleMenuAction`) unchanged.
 
-2) Preserve all inference trigger/stop behavior as-is
-- Do not modify `src/contexts/ShellContext.tsx`.
-- This keeps your preferred behavior updates while restoring only the visual pattern.
+2) Normalize inbound message shapes before interpreting
+- File: `src/lib/shell-messages.ts`
+- Add a small helper to normalize iframe inbound events from either form:
+  - direct: `{ type, ... }`
+  - envelope/payload style: `{ type, payload: {...} }` and safely expose merged fields for consumers.
+- This avoids missing state flags when runtime sends data under `payload`.
 
-3) Validate and tune (only if needed for visual parity)
-- If sequence feels off after restore, only tweak the stagger increment (e.g. 120–180ms) and/or `dot-wave` duration (currently 1.2s) in `tailwind.config.ts` for exact prior feel.
-- Default plan is to first restore exact previous wiring before any tuning.
+3) Apply strict origin guard for inference lifecycle listener
+- File: `src/contexts/ShellContext.tsx`
+- Use runtime origin derived from current config (same safe origin logic already used elsewhere) and ignore non-runtime `postMessage` events.
+- This prevents accidental `inferring` toggles from unrelated messages.
 
-Technical details (for implementation):
-- Primary file to change: `src/components/RuntimeHeader.tsx`
-- Expected dot render shape during inference:
-  - `className` contains `animate-dot-wave`
-  - `style={inferring ? { animationDelay: \`${i * 150}ms\` } : undefined}`
-- No API changes, no shell protocol changes, no context/state-model changes.
-- Existing Tailwind keyframes already support this (`dot-wave`).
+4) Keep RuntimeFrame and ShellContext in sync on message interpretation
+- File: `src/components/RuntimeFrame.tsx`
+- Use the same normalization helper for inbound events, so `TRUST_UPDATE` and `STATE_SYNC` parsing are consistent.
+- Preserve current toast suppression behavior.
 
-Validation plan (end-to-end):
-1) Hard refresh preview (to avoid stale CSS/JS artifacts).
-2) Trigger inference via prompt submit:
-- Confirm dots animate in a left-to-right sequential wave (single-dot emphasis moving across).
-3) Trigger inference via SmartMenu action:
-- Confirm same sequence pattern appears.
-4) Confirm behavior logic remains unchanged:
-- Dots start/stop according to current completion-signal logic (no reversion of trigger behavior).
-5) Check mobile + desktop:
-- Verify sequence looks consistent at current mobile viewport and standard desktop viewport.
+Technical details (implementation-level)
+- New inference lifecycle behavior:
+  - `onInferenceStart()`:
+    - clear any pending completion timer
+    - set `inferring=true`
+    - refresh 30s safety timer
+  - `onInferenceComplete()`:
+    - clear safety timer
+    - start 2s grace timer
+    - then set `inferring=false`
+- `STATE_SYNC` handling:
+  - no longer treated as unconditional completion
+  - evaluated by payload state flags (processing/busy/inferring booleans)
+- Envelope compatibility:
+  - read fields from both top-level and `payload` to support protocol variants without regressions.
 
-Acceptance criteria:
-- During inference, dots visibly animate as a sequential traveling pattern (not uniform pulse-all-at-once).
-- No change to current inference lifecycle behavior.
-- No regressions in trust/reliability dot colors, menu interactions, or header layout.
+Why this addresses your exact complaint
+- Right now, iframe spinner can run while shell indicators stay static because shell never receives/uses a start signal path for iframe-owned inference.
+- This plan makes indicators start when iframe reports processing and only stop when iframe reports completion/rendered state (plus the existing 2s grace).
+
+Validation plan (end-to-end)
+1) Welcome flow (iframe-owned prompt)
+- Trigger inference using the iframe’s own prompt input.
+- Expected: R/T dots begin wave animation as spinner appears.
+- Expected: animation continues during processing and through render, then stops after grace period.
+
+2) Post-welcome flow (shell-owned prompt)
+- Submit via shell `PromptBox`.
+- Expected: same synchronized behavior.
+
+3) Menu-triggered inference
+- Tap `Earn/Play/Make`.
+- Expected: indicators animate immediately and stay synced to runtime completion.
+
+4) Idle behavior
+- No spinner / no processing:
+- Expected: indicators remain static, no phantom animation.
+
+5) Mobile and desktop check
+- Verify same synchronization behavior on both viewport classes.
+
+Acceptance criteria
+- Indicators animate whenever runtime spinner indicates active inference (including iframe-initiated inference).
+- Indicators do not stop early while iframe is still processing.
+- Indicators stop shortly after render completes (current grace behavior retained).
+- No regressions to refresh/reset toast policy or menu/header layout.
