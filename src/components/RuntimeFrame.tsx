@@ -75,7 +75,7 @@ export default function RuntimeFrame() {
           console.log("[Shell] NAVIGATE →", msg.path);
           break;
         case "TOAST":
-          toast(msg.message, { description: msg.variant === "destructive" ? "Error" : undefined });
+          console.log("[Shell] TOAST (suppressed):", msg.message);
           break;
         case "OPEN_CAPSULE":
           console.log("[Shell] OPEN_CAPSULE →", msg.capsule_id);

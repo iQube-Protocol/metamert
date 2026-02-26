@@ -123,7 +123,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       setConfig(cfg);
     } catch (err) {
       console.error("[Shell] Hydration failed:", err);
-      toast.error("Shell hydration failed");
+      console.error("[Shell] Hydration failed:", err);
     } finally {
       setLoading(false);
     }
@@ -157,7 +157,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "aigent", id }, getIframeOrigin(config));
       }
     } catch {
-      toast.error("Failed to update Aigent selector");
+      console.error("[Shell] Failed to update Aigent selector");
     }
   }, [config]);
 
@@ -177,7 +177,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "llm", id }, getIframeOrigin(config));
       }
     } catch {
-      toast.error("Failed to update LLM selector");
+      console.error("[Shell] Failed to update LLM selector");
     }
   }, [config]);
 
@@ -243,7 +243,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         );
       }
     }
-    toast.success(`Action: ${itemId}`);
+    // No toast for regular menu actions
   }, [config, applyConfigUpdate]);
 
   const submitPrompt = useCallback(async (text: string) => {
