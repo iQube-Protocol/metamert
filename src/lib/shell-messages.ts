@@ -46,9 +46,24 @@ export type IframeInbound =
  * Returns a flat object with `type` at top level and all payload fields merged.
  */
 export function normalizeInbound(raw: unknown): Record<string, unknown> | null {
+  // Handle stringified JSON
+  if (typeof raw === "string") {
+    try { raw = JSON.parse(raw); } catch { return null; }
+  }
   if (!raw || typeof raw !== "object") return null;
   const obj = raw as Record<string, unknown>;
-  const type = obj.type;
+
+  // Support { payload: { type, ... } } envelope (type inside payload)
+  let type = obj.type;
+  if (typeof type !== "string" || !type) {
+    if (obj.payload && typeof obj.payload === "object") {
+      const inner = obj.payload as Record<string, unknown>;
+      if (typeof inner.type === "string") {
+        // Lift type from payload
+        type = inner.type;
+      }
+    }
+  }
   if (typeof type !== "string" || !type) return null;
 
   // If envelope-style with payload object, merge payload fields at top level
