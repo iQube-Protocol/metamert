@@ -105,6 +105,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [activeMenuItem, setActiveMenuItem] = useState<string | null>(null);
   const [quickLinksExpanded, setQuickLinksExpanded] = useState(true);
   const [inferring, setInferring] = useState(false);
+  const [overlayTrigger, setOverlayTrigger] = useState(0);
+  const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
 
