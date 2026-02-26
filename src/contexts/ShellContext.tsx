@@ -35,6 +35,7 @@ interface ShellContextValue {
   activeMenuItem: string | null;
   quickLinksExpanded: boolean;
   inferring: boolean;
+  overlayTrigger: number;
   toggleQuickLinks: () => void;
   hydrate: () => Promise<void>;
   selectAigent: (id: string) => Promise<void>;
