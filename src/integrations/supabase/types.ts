@@ -5136,6 +5136,30 @@ export type Database = {
           },
         ]
       }
+      iqube_wrapped_keys: {
+        Row: {
+          created_at: string
+          ipfs_hash: string | null
+          minter_address: string
+          token_id: number
+          wrapped_key: string
+        }
+        Insert: {
+          created_at?: string
+          ipfs_hash?: string | null
+          minter_address: string
+          token_id: number
+          wrapped_key: string
+        }
+        Update: {
+          created_at?: string
+          ipfs_hash?: string | null
+          minter_address?: string
+          token_id?: number
+          wrapped_key?: string
+        }
+        Relationships: []
+      }
       knowledge_base: {
         Row: {
           category: string | null
