@@ -179,8 +179,32 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
       // RUNTIME_READY is a lifecycle signal — no state change needed.
     };
+
+    // Diagnostic listener: catch METAME_CODEX_CLOSE_LAYER from ANY origin
+    // so WS can confirm the message path through the thin client.
+    const codexCloseHandler = (e: MessageEvent) => {
+      const raw = e.data;
+      const isString = typeof raw === "string";
+      const isObj = raw && typeof raw === "object";
+      const typeMatch =
+        (isString && raw === "METAME_CODEX_CLOSE_LAYER") ||
+        (isObj && (raw.type === "METAME_CODEX_CLOSE_LAYER" ||
+                   (raw.payload && typeof raw.payload === "object" && (raw.payload as any).type === "METAME_CODEX_CLOSE_LAYER")));
+      if (!typeMatch) return;
+      console.log(
+        "[Shell:CODEX_CLOSE_DIAG] METAME_CODEX_CLOSE_LAYER received at thin-client host",
+        { origin: e.origin, dataType: typeof raw, data: raw },
+      );
+      // Thin client does NOT act on this — it is between codex iframe and runtime iframe.
+      // Logged for WS diagnostic confirmation only.
+    };
+
     window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
+    window.addEventListener("message", codexCloseHandler);
+    return () => {
+      window.removeEventListener("message", handler);
+      window.removeEventListener("message", codexCloseHandler);
+    };
   }, [config]);
 
   const hydrate = useCallback(async () => {
