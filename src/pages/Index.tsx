@@ -8,7 +8,7 @@ import PromptBox from "@/components/PromptBox";
 import { Loader2 } from "lucide-react";
 
 function ShellLayout() {
-  const { config, loading, hydrate, shellState, overlayTrigger } = useShell();
+  const { config, loading, hydrate, shellState, overlayTrigger, resetKey } = useShell();
   const [overlayVisible, setOverlayVisible] = useState(true);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hoveringRef = useRef(false);
@@ -93,7 +93,7 @@ function ShellLayout() {
     <div className="flex h-dvh flex-col bg-background">
       <RuntimeHeader />
       <div className="relative flex-1 overflow-hidden">
-        <RuntimeFrame />
+        <RuntimeFrame key={resetKey} />
         <FloatingOverlay config={config} shellState={shellState} visible={overlayVisible} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave} onFocusCapture={handleOverlayFocus} onBlurCapture={handleOverlayBlur} />
       </div>
       <SmartMenu onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave} />

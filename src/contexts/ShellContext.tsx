@@ -36,6 +36,7 @@ interface ShellContextValue {
   quickLinksExpanded: boolean;
   inferring: boolean;
   overlayTrigger: number;
+  resetKey: number;
   toggleQuickLinks: () => void;
   hydrate: () => Promise<void>;
   selectAigent: (id: string) => Promise<void>;
@@ -106,6 +107,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [quickLinksExpanded, setQuickLinksExpanded] = useState(true);
   const [inferring, setInferring] = useState(false);
   const [overlayTrigger, setOverlayTrigger] = useState(0);
+  const [resetKey, setResetKey] = useState(0);
   const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
@@ -319,10 +321,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       setShellState("welcome");
       setActiveMenuItem(null);
       setQuickLinksExpanded(true);
-      if (iframeRef.current && config) {
-        postToIframe(iframeRef.current, { type: "RESET_WELCOME" }, getIframeOrigin(config));
-      }
-      toast.success("Reset to welcome");
+      // Force full iframe remount by bumping resetKey
+      setResetKey((k) => k + 1);
+      toast.success("Reset — iframe remounted");
       return;
     }
 
@@ -441,7 +442,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     <ShellCtx.Provider
       value={{
         config, loading, authenticated, shellState,
-        activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, toggleQuickLinks,
+        activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey, toggleQuickLinks,
         hydrate, selectAigent, selectLLM, handleMenuAction,
         submitPrompt, resetToWelcome, updateTrust, iframeRef,
       }}
