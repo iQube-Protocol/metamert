@@ -9,7 +9,13 @@ export default function QuickLinksBar() {
   const { config, handleMenuAction, submitPrompt, quickLinksExpanded } = useShell();
 
   const quickLinks = (config?.menu?.policy?.quick_links ?? []).filter(
-    (ql: any) => !["refresh", "close_codex", "reset"].includes(ql.id)
+    (ql: any) => {
+      const id = (ql.id ?? "").toLowerCase();
+      const label = (ql.label ?? "").toLowerCase();
+      const action = (ql.action ?? "").toLowerCase();
+      const excluded = ["refresh", "close_codex", "reset", "close"];
+      return !excluded.some(ex => id.includes(ex) || label.includes(ex) || action.includes(ex));
+    }
   );
   if (quickLinks.length === 0 || !quickLinksExpanded) return null;
 
