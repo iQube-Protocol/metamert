@@ -1,5 +1,6 @@
 import { useShell } from "@/contexts/ShellContext";
 import { resolveIcon } from "@/lib/icon-utils";
+import { XCircle } from "lucide-react";
 
 /**
  * Floating quick-links bar: Watch, Listen, Read, Find, Refresh, Reset.
