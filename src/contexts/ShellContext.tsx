@@ -302,6 +302,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Close Codex — pure client-side, no API call
+    if (itemId === "close_codex") {
+      if (iframeRef.current && config) {
+        postToIframe(iframeRef.current, { type: "MENU_ACTION", action_id: "close_codex" }, getIframeOrigin(config));
+      }
+      return;
+    }
+
     setShellState("post-welcome");
     setActiveMenuItem(itemId);
     inferCtrl.current?.start();

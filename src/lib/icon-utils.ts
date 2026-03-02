@@ -6,7 +6,7 @@ import { icons, type LucideIcon } from "lucide-react";
 import {
   Coins, PlayCircle, Pencil, Users, Share2,
   Bot, Cpu, MessageSquare, Sparkles, Zap,
-  Eye, Headphones, BookOpen, Search, RefreshCw, RotateCcw,
+  Eye, Headphones, BookOpen, Search, RefreshCw, RotateCcw, XCircle,
 } from "lucide-react";
 
 /** Default icon map keyed by well-known item IDs */
@@ -35,6 +35,8 @@ const DEFAULTS: Record<string, LucideIcon> = {
   refresh: RefreshCw,
   "ql-reset": RotateCcw,
   reset: RotateCcw,
+  "close-codex": XCircle,
+  "close_codex": XCircle,
 };
 
 /**

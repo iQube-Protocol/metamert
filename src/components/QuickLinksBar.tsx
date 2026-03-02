@@ -1,5 +1,6 @@
 import { useShell } from "@/contexts/ShellContext";
 import { resolveIcon } from "@/lib/icon-utils";
+import { XCircle } from "lucide-react";
 
 /**
  * Floating quick-links bar: Watch, Listen, Read, Find, Refresh, Reset.
@@ -19,8 +20,6 @@ export default function QuickLinksBar() {
           <button
             key={ql.id}
             onClick={() => {
-              // QuickLinks with a prompt go through prompt-action API
-              // Runtime commands (refresh/reset) go through handleMenuAction
               if (ql.prompt) {
                 submitPrompt(ql.prompt);
               } else {
@@ -35,6 +34,15 @@ export default function QuickLinksBar() {
           </button>
         );
       })}
+      {/* Static "Close Codex" button — always present beside Reset */}
+      <button
+        onClick={() => handleMenuAction("close_codex")}
+        className="flex shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg px-2 py-1 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95"
+        title="Close Codex"
+      >
+        <XCircle className="h-4 w-4" />
+        <span className="text-[9px] leading-tight">Close</span>
+      </button>
     </div>
   );
 }
