@@ -13,7 +13,7 @@ export default function QuickLinksBar() {
       const id = (ql.id ?? "").toLowerCase();
       const label = (ql.label ?? "").toLowerCase();
       const action = (ql.action ?? "").toLowerCase();
-      const excluded = ["refresh", "close_codex", "reset", "close"];
+      const excluded = ["refresh", "close_codex", "close"];
       return !excluded.some(ex => id.includes(ex) || label.includes(ex) || action.includes(ex));
     }
   );
