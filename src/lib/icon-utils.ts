@@ -35,6 +35,8 @@ const DEFAULTS: Record<string, LucideIcon> = {
   refresh: RefreshCw,
   "ql-reset": RotateCcw,
   reset: RotateCcw,
+  "close-codex": XCircle,
+  "close_codex": XCircle,
 };
 
 /**
