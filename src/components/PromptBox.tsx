@@ -17,6 +17,8 @@ export default function PromptBox() {
     if (!text.trim()) return;
     submitPrompt(text.trim());
     setText("");
+    // Dismiss mobile keyboard to restore viewport
+    (document.activeElement as HTMLElement)?.blur();
   };
 
   return (

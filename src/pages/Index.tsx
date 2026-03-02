@@ -14,6 +14,21 @@ function ShellLayout() {
   const hoveringRef = useRef(false);
   const focusedRef = useRef(false);
 
+  // Reset scroll when mobile keyboard closes (visualViewport height increases)
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let prevHeight = vv.height;
+    const onResize = () => {
+      if (vv.height > prevHeight) {
+        window.scrollTo(0, 0);
+      }
+      prevHeight = vv.height;
+    };
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
+
   useEffect(() => {
     hydrate();
   }, [hydrate]);
@@ -75,7 +90,7 @@ function ShellLayout() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-background">
       <RuntimeHeader />
       <div className="relative flex-1 overflow-hidden">
         <RuntimeFrame />
