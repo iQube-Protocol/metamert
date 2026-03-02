@@ -145,9 +145,15 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // Check for welcome_inference_completed flag on any message
+      const payload = (msg as any).payload ?? msg;
+      const welcomeInferenceCompleted =
+        payload.welcome_inference_completed === true ||
+        payload.welcome_prompt_executed === true;
+
       // Inference completion signals
       if (isInferenceComplete(msg)) {
-        console.log("[Shell] Inference COMPLETE signal:", t);
+        console.log("[Shell] Inference COMPLETE signal:", t, welcomeInferenceCompleted ? "(welcome_inference_completed)" : "");
         setShellState("post-welcome");
         inferCtrl.current?.complete();
         bumpOverlay();
@@ -156,7 +162,16 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
       // WELCOME_COMPLETE — iframe's welcome flow is done; activate prompt box
       if (t === "WELCOME_COMPLETE") {
-        console.log("[Shell] WELCOME_COMPLETE → transitioning to post-welcome");
+        console.log("[Shell] WELCOME_COMPLETE → transitioning to post-welcome", welcomeInferenceCompleted ? "(welcome_inference_completed)" : "");
+        setShellState("post-welcome");
+        inferCtrl.current?.complete();
+        bumpOverlay();
+        return;
+      }
+
+      // STATE_SYNC with welcome_inference_completed — unlock prompt without menu action
+      if (t === "STATE_SYNC" && welcomeInferenceCompleted) {
+        console.log("[Shell] STATE_SYNC welcome_inference_completed → transitioning to post-welcome");
         setShellState("post-welcome");
         inferCtrl.current?.complete();
         bumpOverlay();
