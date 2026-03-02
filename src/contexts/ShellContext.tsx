@@ -36,6 +36,7 @@ interface ShellContextValue {
   quickLinksExpanded: boolean;
   inferring: boolean;
   overlayTrigger: number;
+  resetKey: number;
   toggleQuickLinks: () => void;
   hydrate: () => Promise<void>;
   selectAigent: (id: string) => Promise<void>;
