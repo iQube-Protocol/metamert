@@ -93,7 +93,7 @@ function ShellLayout() {
     <div className="flex h-dvh flex-col bg-background">
       <RuntimeHeader />
       <div className="relative flex-1 overflow-hidden">
-        <RuntimeFrame />
+        <RuntimeFrame key={resetKey} />
         <FloatingOverlay config={config} shellState={shellState} visible={overlayVisible} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave} onFocusCapture={handleOverlayFocus} onBlurCapture={handleOverlayBlur} />
       </div>
       <SmartMenu onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave} />
