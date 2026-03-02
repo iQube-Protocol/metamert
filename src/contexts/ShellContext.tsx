@@ -177,6 +177,15 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // NAVIGATE with close_codex intent — forward to runtime as MENU_ACTION
+      if (t === "NAVIGATE" && (msg as any).action === "close_codex") {
+        console.log("[Shell:inbound] NAVIGATE close_codex from runtime/codex — forwarding MENU_ACTION to runtime");
+        if (iframeRef.current && config) {
+          postToIframe(iframeRef.current, { type: "MENU_ACTION", action_id: "close_codex" }, getIframeOrigin(config));
+        }
+        return;
+      }
+
       // RUNTIME_READY is a lifecycle signal — no state change needed.
     };
 
