@@ -89,6 +89,9 @@ export default function RuntimeFrame() {
           break;
         case "STATE_SYNC":
           console.log("[Shell] STATE_SYNC received:", msg.state);
+          if ((msg as any).close_codex_handled || ((msg as any).payload && (msg as any).payload.close_codex_handled)) {
+            console.log("[Shell:close_codex] ✅ Runtime acknowledged close_codex dismissal");
+          }
           break;
         case "TRUST_UPDATE":
           console.log("[Shell] TRUST_UPDATE received:", msg.trust);
