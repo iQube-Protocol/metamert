@@ -304,8 +304,18 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
     // Close Codex — pure client-side, no API call
     if (itemId === "close_codex") {
+      const origin = config ? getIframeOrigin(config) : "(no config)";
+      const hasIframe = !!iframeRef.current;
+      const iframeSrc = iframeRef.current?.src ?? "(none)";
+      console.log(
+        "[Shell:close_codex] Dispatching MENU_ACTION close_codex",
+        { target: "runtimeIframeRef (tier 2)", origin, hasIframe, iframeSrc },
+      );
       if (iframeRef.current && config) {
-        postToIframe(iframeRef.current, { type: "MENU_ACTION", action_id: "close_codex" }, getIframeOrigin(config));
+        postToIframe(iframeRef.current, { type: "MENU_ACTION", action_id: "close_codex" }, origin);
+        console.log("[Shell:close_codex] postToIframe completed → awaiting runtime ack (STATE_SYNC close_codex_handled)");
+      } else {
+        console.warn("[Shell:close_codex] Cannot dispatch — missing iframe or config", { hasIframe, hasConfig: !!config });
       }
       return;
     }
