@@ -90,7 +90,7 @@ function ShellLayout() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-background">
       <RuntimeHeader />
       <div className="relative flex-1 overflow-hidden">
         <RuntimeFrame />
