@@ -1,100 +1,26 @@
 
-Goal: make the header R/T indicators animate in lockstep with real iframe inference (including welcome-state inference initiated inside the iframe), and stop only when inference/render is actually complete.
 
-What I found in the current code
-1) Animation styling is present
-- `RuntimeHeader.tsx` correctly uses:
-  - `animate-dot-wave` when `inferring === true`
-  - staggered `animationDelay` (`i * 150ms`)
-- `tailwind.config.ts` still defines `dot-wave` keyframes and animation.
+## Problem
 
-2) The main issue is inference state signaling, not CSS
-- `inferring` is only set to `true` in shell-owned actions:
-  - `submitPrompt()`
-  - `handleMenuAction()`
-- During iframe-owned welcome prompt flow (spinner appears inside iframe), shell often never sets `inferring=true`.
+On mobile/tablet, when the virtual keyboard opens (user taps the PromptBox input), the browser shifts the viewport up. When the keyboard dismisses, the viewport doesn't return to its original position — the app stays "pushed up" and requires a manual scroll/pull to restore.
 
-3) Completion handling is currently too aggressive
-- In `ShellContext.tsx`, any `STATE_SYNC` is treated like inference completion and schedules `inferring=false` after 2s.
-- This can desync the indicators from the iframe spinner if `STATE_SYNC` is sent during processing.
+This is a well-known mobile browser behavior caused by the combination of:
+1. **`h-screen` (100vh)** on the shell container — on mobile browsers, `100vh` includes the area behind the URL bar and doesn't update dynamically when the keyboard appears/disappears, leaving a gap.
+2. **No `visualViewport` resize listener** — the app doesn't react to keyboard show/hide events to reset scroll position.
+3. **Missing `interactive-widget=resizes-content` viewport meta tag** — modern mobile browsers support this hint to properly resize content when the keyboard appears.
 
-4) Message parsing is fragile
-- Current listeners read `e.data.type` directly and do not robustly normalize envelope-style payloads.
-- `ShellContext` completion listener also lacks strict runtime-origin filtering, so it can react to unrelated window messages.
+## Fix
 
-Implementation plan
-1) Make iframe message handling inference-aware (start + complete), not completion-only
-- File: `src/contexts/ShellContext.tsx`
-- Replace current “`STATE_SYNC` always means complete” logic with a lifecycle parser:
-  - Start inference (`setInferring(true)`) on:
-    - explicit start-like message types (e.g. `INFERENCE_START`, `RENDER_START`, `PROCESSING_START` if present)
-    - `STATE_SYNC` indicating processing/busy=true in payload/state
-  - Complete inference (2s grace, existing behavior) on:
-    - explicit completion types (`INFERENCE_COMPLETE`, `RENDER_COMPLETE`)
-    - `STATE_SYNC` indicating processing/busy=false
-- Keep existing 30s safety timeout.
-- Keep existing shell-owned start triggers (`submitPrompt`, `handleMenuAction`) unchanged.
+### 1. `index.html` — Add viewport meta hint
+Add `interactive-widget=resizes-content` to the existing viewport meta tag. This tells the browser to resize the layout viewport when the keyboard appears/disappears instead of just panning.
 
-2) Normalize inbound message shapes before interpreting
-- File: `src/lib/shell-messages.ts`
-- Add a small helper to normalize iframe inbound events from either form:
-  - direct: `{ type, ... }`
-  - envelope/payload style: `{ type, payload: {...} }` and safely expose merged fields for consumers.
-- This avoids missing state flags when runtime sends data under `payload`.
+### 2. `src/index.css` — Use `dvh` instead of `vh`
+No direct change needed here since `h-screen` is used via Tailwind, but we address it in the component.
 
-3) Apply strict origin guard for inference lifecycle listener
-- File: `src/contexts/ShellContext.tsx`
-- Use runtime origin derived from current config (same safe origin logic already used elsewhere) and ignore non-runtime `postMessage` events.
-- This prevents accidental `inferring` toggles from unrelated messages.
+### 3. `src/pages/Index.tsx` — Replace `h-screen` with `h-dvh` and add keyboard dismiss handler
+- Change the shell container from `h-screen` to `h-dvh` (dynamic viewport height, supported by all modern mobile browsers, falls back gracefully).
+- Add a `visualViewport` resize listener that scrolls the document back to `(0,0)` when the viewport height increases (keyboard closing). This is the safety net for browsers that don't fully support `interactive-widget`.
 
-4) Keep RuntimeFrame and ShellContext in sync on message interpretation
-- File: `src/components/RuntimeFrame.tsx`
-- Use the same normalization helper for inbound events, so `TRUST_UPDATE` and `STATE_SYNC` parsing are consistent.
-- Preserve current toast suppression behavior.
+### 4. `src/components/PromptBox.tsx` — Blur input on submit
+After `handleSubmit`, call `document.activeElement?.blur()` to dismiss the keyboard, preventing the viewport from staying shifted after sending a prompt.
 
-Technical details (implementation-level)
-- New inference lifecycle behavior:
-  - `onInferenceStart()`:
-    - clear any pending completion timer
-    - set `inferring=true`
-    - refresh 30s safety timer
-  - `onInferenceComplete()`:
-    - clear safety timer
-    - start 2s grace timer
-    - then set `inferring=false`
-- `STATE_SYNC` handling:
-  - no longer treated as unconditional completion
-  - evaluated by payload state flags (processing/busy/inferring booleans)
-- Envelope compatibility:
-  - read fields from both top-level and `payload` to support protocol variants without regressions.
-
-Why this addresses your exact complaint
-- Right now, iframe spinner can run while shell indicators stay static because shell never receives/uses a start signal path for iframe-owned inference.
-- This plan makes indicators start when iframe reports processing and only stop when iframe reports completion/rendered state (plus the existing 2s grace).
-
-Validation plan (end-to-end)
-1) Welcome flow (iframe-owned prompt)
-- Trigger inference using the iframe’s own prompt input.
-- Expected: R/T dots begin wave animation as spinner appears.
-- Expected: animation continues during processing and through render, then stops after grace period.
-
-2) Post-welcome flow (shell-owned prompt)
-- Submit via shell `PromptBox`.
-- Expected: same synchronized behavior.
-
-3) Menu-triggered inference
-- Tap `Earn/Play/Make`.
-- Expected: indicators animate immediately and stay synced to runtime completion.
-
-4) Idle behavior
-- No spinner / no processing:
-- Expected: indicators remain static, no phantom animation.
-
-5) Mobile and desktop check
-- Verify same synchronization behavior on both viewport classes.
-
-Acceptance criteria
-- Indicators animate whenever runtime spinner indicates active inference (including iframe-initiated inference).
-- Indicators do not stop early while iframe is still processing.
-- Indicators stop shortly after render completes (current grace behavior retained).
-- No regressions to refresh/reset toast policy or menu/header layout.
