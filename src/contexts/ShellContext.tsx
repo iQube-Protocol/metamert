@@ -321,10 +321,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       setShellState("welcome");
       setActiveMenuItem(null);
       setQuickLinksExpanded(true);
-      if (iframeRef.current && config) {
-        postToIframe(iframeRef.current, { type: "RESET_WELCOME" }, getIframeOrigin(config));
-      }
-      toast.success("Reset to welcome");
+      // Force full iframe remount by bumping resetKey
+      setResetKey((k) => k + 1);
+      toast.success("Reset — iframe remounted");
       return;
     }
 
