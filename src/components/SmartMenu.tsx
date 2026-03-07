@@ -54,8 +54,7 @@ export default function SmartMenu() {
   const [hoverPreviewMode, setHoverPreviewMode] = useState<SmartMenuMode | null>(null);
   const hoverTimeout = useRef<ReturnType<typeof setTimeout>>();
 
-  // Touch detection: track last touch timestamp to distinguish touch-tap from pointer-click
-  const lastTouchTime = useRef<number>(0);
+  // No longer needed — using PointerEvent.pointerType directly
 
   // Guard: block phantom hover events after nav restoration or mode activation
   const navRestoredAt = useRef<number>(0);
