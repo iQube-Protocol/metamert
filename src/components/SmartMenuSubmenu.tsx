@@ -96,27 +96,14 @@ function QuickActionsCarousel() {
       >
         {modeConfig.quickActions.map((action) => {
           const Icon = resolveSmartIcon(action.icon, action.id);
-          const isFocal = action.id === modeConfig.defaultCenteredQuickActionId;
-
           return (
-            <button
+            <QuickActionButton
               key={action.id}
-              onClick={() => handleAction(action)}
-              className="flex flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95 shrink-0"
-              style={{
-                scrollSnapAlign: "center",
-                width: "20%", // 5 items visible = 20% each
-                ...(isFocal ? { color: accent } : {}),
-              }}
-              title={action.label}
-            >
-              {Icon ? (
-                <Icon className="h-4 w-4" />
-              ) : (
-                <span className="text-xs font-medium">{action.label.charAt(0)}</span>
-              )}
-              <span className="text-[9px] leading-tight whitespace-nowrap">{action.label}</span>
-            </button>
+              action={action}
+              accent={accent}
+              Icon={Icon}
+              onAction={handleAction}
+            />
           );
         })}
       </div>
