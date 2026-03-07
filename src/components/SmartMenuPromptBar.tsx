@@ -30,10 +30,12 @@ export default function SmartMenuPromptBar() {
   const modeConfig = activeMode ? MODE_CONFIGS[activeMode] : null;
   const accent = modeConfig?.accentHex ?? "#fff";
 
-  // Auto-focus on mount
+  // Auto-focus only when entering prompt mode (not quickActionOnly)
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (viewState === "promptMode") {
+      inputRef.current?.focus();
+    }
+  }, [viewState]);
 
   // Sync prompt-has-text to context for idle logic
   useEffect(() => {
