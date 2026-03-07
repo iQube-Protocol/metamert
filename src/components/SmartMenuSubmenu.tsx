@@ -199,7 +199,7 @@ function CartridgeSelector() {
           ← Back
         </button>
       </div>
-      <div className="flex gap-1.5">
+      <div className="flex gap-1.5 justify-center">
         {cartridgeState.available.map(cart => {
           const isActive = cart.id === cartridgeState.activeCartridgeId;
           const Icon = resolveSmartIcon(cart.icon, cart.id);
@@ -214,8 +214,8 @@ function CartridgeSelector() {
               <div className="flex items-center gap-1">
                 {Icon && <Icon className="h-3.5 w-3.5" />}
                 <span className="font-medium whitespace-nowrap">{cart.label}</span>
+                {isActive && <Check className="h-3 w-3" />}
               </div>
-              {isActive && <Check className="h-3 w-3" />}
             </CartridgePill>
           );
         })}
