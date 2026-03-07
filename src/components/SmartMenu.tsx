@@ -141,7 +141,7 @@ function NavButton({
         className="flex h-8 w-8 items-center justify-center rounded-full transition-colors"
         style={{ color: accent }}
       >
-        {Icon ? <Icon className="h-5 w-5" /> : <span className="h-5 w-5" />}
+        {Icon ? <Icon className={item.id === "play" ? "h-6 w-6" : "h-5 w-5"} /> : <span className="h-5 w-5" />}
       </span>
       <span className="text-muted-foreground">{item.label}</span>
     </button>
