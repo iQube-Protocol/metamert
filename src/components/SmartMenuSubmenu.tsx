@@ -61,6 +61,7 @@ export default function SmartMenuSubmenu({ previewMode }: SmartMenuSubmenuProps 
 function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode } = {}) {
   const {
     activeMode,
+    activateMode,
     handleMenuAction,
     setSubmenuType,
     pauseIdleTimer,
@@ -75,13 +76,18 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
   const handleAction = useCallback((action: QuickActionDef) => {
     pauseIdleTimer();
 
+    // If in hover preview, activate the mode first so prompt mode engages
+    if (overrideMode && overrideMode !== activeMode) {
+      activateMode(overrideMode);
+    }
+
     if (action.id === "cartridge") {
       setSubmenuType("cartridgeSelector");
       return;
     }
 
     handleMenuAction(action.id);
-  }, [handleMenuAction, setSubmenuType, pauseIdleTimer]);
+  }, [handleMenuAction, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode]);
 
   const foldIds = modeConfig.mobileVisibleFold;
   // Find the first fold item's index to auto-scroll there on mount
@@ -193,7 +199,7 @@ function CartridgeSelector() {
           ← Back
         </button>
       </div>
-      <div className="flex gap-1.5">
+      <div className="flex gap-1.5 justify-center">
         {cartridgeState.available.map(cart => {
           const isActive = cart.id === cartridgeState.activeCartridgeId;
           const Icon = resolveSmartIcon(cart.icon, cart.id);
@@ -208,8 +214,8 @@ function CartridgeSelector() {
               <div className="flex items-center gap-1">
                 {Icon && <Icon className="h-3.5 w-3.5" />}
                 <span className="font-medium whitespace-nowrap">{cart.label}</span>
+                {isActive && <Check className="h-3 w-3" />}
               </div>
-              {isActive && <Check className="h-3 w-3" />}
             </CartridgePill>
           );
         })}
@@ -245,7 +251,7 @@ function CodexSelector() {
           ← Back
         </button>
       </div>
-      <div className="flex gap-1.5">
+      <div className="flex gap-1.5 justify-center">
         {codexes.map(cdx => {
           const isActive = cdx.id === cartridgeState.activeCodexId;
           return (
@@ -288,7 +294,7 @@ function CartridgePill({
       onClick={onClick}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
-      className={`flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-xs transition-all duration-150 active:scale-95
+      className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs transition-all duration-150 active:scale-95
         ${isActive ? "" : "text-muted-foreground"}
       `}
       style={color ? { color } : undefined}
