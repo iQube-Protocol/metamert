@@ -76,13 +76,41 @@ export default function SmartMenuPromptBar() {
   };
 
   const handleFocus = () => {
-    resetIdleTimer("promptFocus");
+    promptInputFocused = true;
+    pauseIdleTimer(); // hold everything visible while cursor is in the input
     setInteractionState("focused");
   };
 
   const handleBlur = () => {
+    promptInputFocused = false;
     if (!text) setInteractionState("idle");
+    // Start normal idle sequence now that focus left the input
+    resumeIdleTimer();
   };
+
+  // Click/tap outside the prompt bar → immediate close
+  useEffect(() => {
+    if (viewState !== "promptMode") return;
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (!promptInputFocused) return; // only when input was focused
+      if (barRef.current && !barRef.current.contains(e.target as Node)) {
+        // Clicked outside the prompt bar — close immediately
+        promptInputFocused = false;
+        deactivateMode();
+      }
+    };
+
+    // Use a short delay so the listener doesn't fire on the same event that opened prompt mode
+    const id = setTimeout(() => {
+      document.addEventListener("pointerdown", handlePointerDown, true);
+    }, 50);
+
+    return () => {
+      clearTimeout(id);
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+    };
+  }, [viewState, deactivateMode]);
 
   const submenuHidden = submenuVisibility !== "visibleAuto";
 
