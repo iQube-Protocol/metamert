@@ -5,7 +5,7 @@
  * Prompt mode: transforms into prompt bar with floating submenu above.
  * Spec animations: mode pop, color wash, calm collapse.
  */
-import { useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
@@ -119,11 +119,13 @@ function NavButton({
   onTap: (mode: SmartMenuMode) => void;
   onAction: (id: string) => Promise<void>;
 }) {
+  const [hovered, setHovered] = useState(false);
   const Icon = resolveIcon(item.icon, item.id);
   const accent = MODE_ACCENT[item.id];
+  const isEdge = item.id === "be" || item.id === "share";
+  const iconColor = isEdge ? (hovered ? accent : "hsl(var(--muted-foreground))") : accent;
 
   const handleClick = () => {
-    // Dual event: fire existing menu action + activate mode
     onAction(item.id);
     onTap(item.id);
   };
@@ -131,6 +133,8 @@ function NavButton({
   return (
     <button
       onClick={handleClick}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
       className={`flex flex-col items-center justify-center gap-0.5 rounded-md py-1.5 text-[11px] transition-all duration-200
         ${isCenter ? "min-w-[3.5rem] px-1" : "w-14 shrink-0"}
         hover:bg-accent hover:text-accent-foreground
@@ -139,7 +143,7 @@ function NavButton({
     >
       <span
         className="flex h-8 w-8 items-center justify-center rounded-full transition-colors"
-        style={{ color: accent }}
+        style={{ color: iconColor }}
       >
         {Icon ? <Icon className={item.id === "play" ? "h-6 w-6" : "h-5 w-5"} /> : <span className="h-5 w-5" />}
       </span>
