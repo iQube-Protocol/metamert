@@ -232,6 +232,7 @@ function NavButton({
   onHoverLeave: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
+  const lastTouchTapRef = useRef<number>(0);
   const Icon = resolveIcon(item.icon, item.id);
   const accent = MODE_ACCENT[item.id];
   const isEdge = item.id === "be" || item.id === "share";
@@ -247,8 +248,26 @@ function NavButton({
 
   const handlePointerUp = (e: React.PointerEvent) => {
     e.stopPropagation(); // prevent nav area handler
-    onAction(item.id);
-    onPointerTap(item.id, e.pointerType);
+
+    if (e.pointerType === "touch") {
+      const now = Date.now();
+      const delta = now - lastTouchTapRef.current;
+      lastTouchTapRef.current = now;
+
+      if (delta < 350) {
+        // Double-tap on touch: enter prompt mode + trigger action (like desktop click)
+        lastTouchTapRef.current = 0;
+        onAction(item.id);
+        onPointerTap(item.id, "mouse"); // force prompt mode path
+      } else {
+        // Single tap on touch: quick actions only, NO inference
+        onPointerTap(item.id, "touch");
+      }
+    } else {
+      // Desktop click: original behavior — action + prompt mode
+      onAction(item.id);
+      onPointerTap(item.id, e.pointerType);
+    }
   };
 
   return (
