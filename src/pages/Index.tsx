@@ -8,13 +8,17 @@ import { Loader2 } from "lucide-react";
 function ShellLayout() {
   const { config, loading, hydrate, resetKey, viewState, deactivateMode } = useShell();
 
-  // Reset scroll when mobile keyboard closes
+  // Reset scroll when mobile keyboard closes (viewport height increases)
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
     let prevHeight = vv.height;
     const onResize = () => {
-      if (vv.height > prevHeight) window.scrollTo(0, 0);
+      // Only scroll to top when keyboard is CLOSING (height increasing)
+      // Don't interfere when keyboard is opening
+      if (vv.height > prevHeight + 50) {
+        window.scrollTo(0, 0);
+      }
       prevHeight = vv.height;
     };
     vv.addEventListener("resize", onResize);

@@ -81,10 +81,14 @@ export default function SmartMenuPromptBar() {
     promptInputFocused = true;
     pauseIdleTimer(); // hold everything visible while cursor is in the input
     setInteractionState("focused");
-    // iOS: ensure the prompt bar stays visible when the virtual keyboard opens
-    requestAnimationFrame(() => {
+    // iOS: ensure the prompt bar stays visible when the virtual keyboard opens.
+    // Use a delayed scroll to wait for the keyboard animation to settle.
+    const scrollToInput = () => {
       inputRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
-    });
+    };
+    requestAnimationFrame(scrollToInput);
+    setTimeout(scrollToInput, 300);
+    setTimeout(scrollToInput, 600);
   };
 
   const handleBlur = () => {
