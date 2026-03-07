@@ -3,6 +3,7 @@
  * Contains: Input | Mic | Send | Chevron
  */
 import { useState, useRef, useEffect } from "react";
+import { resolveIcon } from "@/lib/icon-utils";
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS } from "@/lib/smart-menu-config";
 import { SendHorizonal, Mic, ChevronUp, ChevronDown } from "lucide-react";
@@ -70,6 +71,10 @@ export default function SmartMenuPromptBar() {
           border: `1px solid ${accent}35`,
         }}
       >
+        {(() => {
+          const ModeIcon = resolveIcon(undefined, modeConfig?.id);
+          return ModeIcon ? <ModeIcon className="h-4 w-4" /> : null;
+        })()}
         {modeConfig?.label}
       </button>
 
