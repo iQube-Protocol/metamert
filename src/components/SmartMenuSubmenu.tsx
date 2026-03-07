@@ -62,7 +62,7 @@ function QuickActionsCarousel() {
   const accent = modeConfig.accentHex;
 
   const handleAction = useCallback((action: QuickActionDef) => {
-    resetIdleTimer("quickActionOpen");
+    pauseIdleTimer();
 
     if (action.id === "cartridge") {
       setSubmenuType("cartridgeSelector");
