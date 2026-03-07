@@ -5,7 +5,7 @@
  */
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useShell } from "@/contexts/ShellContext";
-import { MODE_CONFIGS, type QuickActionDef } from "@/lib/smart-menu-config";
+import { MODE_CONFIGS, type QuickActionDef, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
 import { SMART_MENU_ICON_DEFAULTS } from "@/lib/smart-menu-icons";
 import { Check } from "lucide-react";
@@ -19,7 +19,12 @@ function resolveSmartIcon(iconName?: string, id?: string): LucideIcon | undefine
   return undefined;
 }
 
-export default function SmartMenuSubmenu() {
+interface SmartMenuSubmenuProps {
+  /** When set, renders quick actions for this mode as a hover preview (no cartridge/codex selectors) */
+  previewMode?: SmartMenuMode;
+}
+
+export default function SmartMenuSubmenu({ previewMode }: SmartMenuSubmenuProps = {}) {
   const {
     activeMode,
     submenuType,
@@ -30,6 +35,11 @@ export default function SmartMenuSubmenu() {
     selectCartridge,
     selectCodex,
   } = useShell();
+
+  // Hover preview mode: always show quick actions for the given mode
+  if (previewMode) {
+    return <QuickActionsCarousel overrideMode={previewMode} />;
+  }
 
   // All hooks above — conditional rendering below
   if (!activeMode || !submenuType) return null;
