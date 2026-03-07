@@ -12,6 +12,7 @@ import { SendHorizonal, Mic, ChevronUp, ChevronDown } from "lucide-react";
 export default function SmartMenuPromptBar() {
   const {
     activeMode,
+    viewState,
     submitPrompt,
     toggleSubmenu,
     submenuVisibility,
