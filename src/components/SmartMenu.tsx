@@ -63,18 +63,20 @@ export default function SmartMenu() {
   const modeActivatedAt = useRef<number>(0);
   const prevViewState = useRef(viewState);
 
-  // Clear stale hover state on any view-state transition
-  if (viewState !== prevViewState.current) {
-    if (viewState === "promptMode" || viewState === "quickActionOnly") {
-      if (hoverPreviewMode !== null) setHoverPreviewMode(null);
-      modeActivatedAt.current = Date.now();
+  // Clear stale hover state on view-state transitions (in useEffect to avoid render-phase setState flicker)
+  useEffect(() => {
+    if (viewState !== prevViewState.current) {
+      if (viewState === "promptMode" || viewState === "quickActionOnly") {
+        setHoverPreviewMode(null);
+        modeActivatedAt.current = Date.now();
+      }
+      if (viewState === "defaultNav" && prevViewState.current !== "defaultNav") {
+        setHoverPreviewMode(null);
+        navRestoredAt.current = Date.now();
+      }
+      prevViewState.current = viewState;
     }
-    if (viewState === "defaultNav" && prevViewState.current !== "defaultNav") {
-      if (hoverPreviewMode !== null) setHoverPreviewMode(null);
-      navRestoredAt.current = Date.now();
-    }
-    prevViewState.current = viewState;
-  }
+  }, [viewState]);
 
   const handleNavHoverEnter = useCallback((mode: SmartMenuMode) => {
     if (Date.now() - navRestoredAt.current < 400) return;
