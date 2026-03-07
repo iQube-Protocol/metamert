@@ -71,6 +71,10 @@ export default function SmartMenuPromptBar() {
           border: `1px solid ${accent}35`,
         }}
       >
+        {(() => {
+          const ModeIcon = resolveIcon(undefined, modeConfig?.id);
+          return ModeIcon ? <ModeIcon className="h-4 w-4" /> : null;
+        })()}
         {modeConfig?.label}
       </button>
 
