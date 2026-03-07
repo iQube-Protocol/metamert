@@ -200,15 +200,15 @@ export default function SmartMenu() {
           onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[0]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            <NavButton item={NAV_ITEMS[0]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
           </div>
           <div className="flex flex-1 items-stretch justify-center gap-0">
             {NAV_ITEMS.slice(1, 4).map(item => (
-              <NavButton key={item.id} item={item} isCenter onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+              <NavButton key={item.id} item={item} isCenter onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
             ))}
           </div>
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[4]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            <NavButton item={NAV_ITEMS[4]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
           </div>
         </nav>
       </div>
