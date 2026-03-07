@@ -1,8 +1,9 @@
 /**
  * SmartMenuPromptBar — the transformed bottom nav in prompt mode.
  * Contains: Input | Mic | Send | Chevron
+ * Spec: accent border trim, ~15px text, swipe-down collapse, text-prevents-idle-collapse.
  */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { resolveIcon } from "@/lib/icon-utils";
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS } from "@/lib/smart-menu-config";
@@ -17,10 +18,13 @@ export default function SmartMenuPromptBar() {
     resetIdleTimer,
     setInteractionState,
     deactivateMode,
+    setPromptHasText,
   } = useShell();
 
   const [text, setText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef<number | null>(null);
 
   const modeConfig = activeMode ? MODE_CONFIGS[activeMode] : null;
   const accent = modeConfig?.accentHex ?? "#fff";
@@ -29,6 +33,23 @@ export default function SmartMenuPromptBar() {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // Sync prompt-has-text to context for idle logic
+  useEffect(() => {
+    setPromptHasText(text.length > 0);
+  }, [text, setPromptHasText]);
+
+  // Swipe-down to collapse
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartY.current === null) return;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    if (dy > 40) deactivateMode(); // swipe down threshold
+    touchStartY.current = null;
+  }, [deactivateMode]);
 
   const handleSubmit = () => {
     if (!text.trim()) return;
@@ -58,14 +79,21 @@ export default function SmartMenuPromptBar() {
 
   return (
     <div
-      className="flex items-center border-t border-border bg-card px-2 gap-1"
-      style={{ height: '3.25rem' }}
+      ref={barRef}
+      className="flex items-center bg-card px-2 gap-1 transition-colors duration-300"
+      style={{
+        height: '3.25rem',
+        // Accent trim: top border in mode color (spec: accent piping/trim)
+        borderTop: `2px solid ${accent}`,
+      }}
       onPointerEnter={() => resetIdleTimer("hover")}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
-      {/* Mode indicator pill */}
+      {/* Mode indicator pill — slight pop animation */}
       <button
         onClick={deactivateMode}
-        className="flex h-8 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-semibold transition-all active:scale-95"
+        className="flex h-8 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-semibold transition-all active:scale-95 animate-scale-in"
         style={{
           backgroundColor: `${accent}20`,
           color: accent,
@@ -78,7 +106,7 @@ export default function SmartMenuPromptBar() {
         })()}
       </button>
 
-      {/* Prompt input */}
+      {/* Prompt input — spec: brilliant white, ~1pt larger than text-sm */}
       <input
         ref={inputRef}
         type="text"
@@ -88,8 +116,11 @@ export default function SmartMenuPromptBar() {
         onBlur={handleBlur}
         onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
         placeholder={modeConfig?.promptPlaceholder ?? "What do you want to do?"}
-        className="min-w-0 flex-1 bg-transparent px-2 py-1 text-sm text-white placeholder:text-muted-foreground focus:outline-none"
-        style={{ caretColor: accent }}
+        className="min-w-0 flex-1 bg-transparent px-2 py-1 text-white placeholder:text-muted-foreground focus:outline-none"
+        style={{
+          caretColor: accent,
+          fontSize: '0.9375rem', // 15px (~1pt larger than 14px text-sm)
+        }}
       />
 
       {/* Controls: Mic | Send | Chevron */}
@@ -97,6 +128,7 @@ export default function SmartMenuPromptBar() {
         <button
           className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
           title="Voice input"
+          onClick={() => resetIdleTimer("micToggle")}
         >
           <Mic className="h-4 w-4" />
         </button>
