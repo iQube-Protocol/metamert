@@ -82,6 +82,15 @@ export default function RuntimeHeader() {
   const activeCart = cartridgeState.available.find(c => c.id === cartridgeState.activeCartridgeId);
   const activeCodex = activeCart?.codexes.find(c => c.id === cartridgeState.activeCodexId);
 
+  const cartridgeColor = (() => {
+    switch (cartridgeState.activeCartridgeId) {
+      case "qriptopian": return "hsl(var(--accent-play))";   // Cyan
+      case "metame-runtime": return "#FF6B6B";                // Coral
+      case "knyt": return "hsl(var(--accent-share))";         // Amber
+      default: return undefined;
+    }
+  })();
+
   return (
     <TooltipProvider delayDuration={300}>
       <header className="flex items-center justify-between border-b border-border bg-card px-3 py-1.5">
