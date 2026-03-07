@@ -5,6 +5,7 @@
  * Prompt mode: transforms into prompt bar with floating submenu above.
  * Spec animations: mode pop, color wash, calm collapse.
  */
+import { useRef, useCallback } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
@@ -47,6 +48,20 @@ export default function SmartMenu() {
     resumeIdleTimer,
   } = useShell();
 
+  // Track when prompt mode activated to skip initial pointerenter
+  const modeActivatedAt = useRef<number>(0);
+  const prevViewState = useRef(viewState);
+  if (viewState === "promptMode" && prevViewState.current !== "promptMode") {
+    modeActivatedAt.current = Date.now();
+  }
+  prevViewState.current = viewState;
+
+  const handlePointerEnter = useCallback(() => {
+    // Skip the pointerenter that fires when the wrapper first renders under the cursor
+    if (Date.now() - modeActivatedAt.current < 400) return;
+    pauseIdleTimer();
+  }, [pauseIdleTimer]);
+
   if (!config) return null;
 
   // Prompt mode: show prompt bar + floating submenu with animations
@@ -54,7 +69,7 @@ export default function SmartMenu() {
     return (
       <div
         className="flex flex-col animate-in fade-in duration-200"
-        onPointerEnter={pauseIdleTimer}
+        onPointerEnter={handlePointerEnter}
         onPointerLeave={resumeIdleTimer}
       >
         {/* Floating submenu above prompt bar */}
