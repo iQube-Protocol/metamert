@@ -84,7 +84,7 @@ export default function SmartMenuPromptBar() {
       style={{
         height: '3.25rem',
         // Accent trim: top border in mode color (spec: accent piping/trim)
-        borderTop: `2px solid ${accent}`,
+        borderTop: `1px solid ${accent}`,
       }}
       onPointerEnter={() => resetIdleTimer("hover")}
       onTouchStart={handleTouchStart}
