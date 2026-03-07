@@ -171,8 +171,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const startIdleTimer = useCallback(() => {
     clearIdleTimer();
     idleTimerRef.current = setTimeout(() => {
-      setSubmenuVisibility("hiddenAutoIdle");
-    }, IDLE_TIMEOUT_MS);
+      // Return to default nav after idle timeout
+      setViewState("defaultNav");
+      setActiveMode(null);
+      setSubmenuTypeState(null);
+      setSubmenuVisibility("visibleAuto");
+    }, 4000);
   }, [clearIdleTimer]);
 
   const resetIdleTimer = useCallback((reason?: string) => {
