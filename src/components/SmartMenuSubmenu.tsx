@@ -68,10 +68,6 @@ function QuickActionsCarousel() {
       setSubmenuType("cartridgeSelector");
       return;
     }
-    if (action.id === "codex") {
-      setSubmenuType("codexSelector");
-      return;
-    }
 
     handleMenuAction(action.id);
   }, [handleMenuAction, setSubmenuType, resetIdleTimer]);
