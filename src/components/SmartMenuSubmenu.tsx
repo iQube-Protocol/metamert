@@ -61,6 +61,7 @@ export default function SmartMenuSubmenu({ previewMode }: SmartMenuSubmenuProps 
 function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode } = {}) {
   const {
     activeMode,
+    viewState,
     activateMode,
     handleMenuAction,
     setSubmenuType,
@@ -81,13 +82,18 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       activateMode(overrideMode);
     }
 
+    // If in quickActionOnly and action triggers inference, transition to prompt mode
+    if (viewState === "quickActionOnly" && action.triggersInference) {
+      activateMode(effectiveMode);
+    }
+
     if (action.id === "cartridge") {
       setSubmenuType("cartridgeSelector");
       return;
     }
 
     handleMenuAction(action.id);
-  }, [handleMenuAction, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode]);
+  }, [handleMenuAction, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode]);
 
   const foldIds = modeConfig.mobileVisibleFold;
   // Find the first fold item's index to auto-scroll there on mount
