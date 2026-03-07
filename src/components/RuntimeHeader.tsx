@@ -152,7 +152,7 @@ export default function RuntimeHeader() {
             <div className="flex items-center gap-1.5 rounded-md px-2 py-1 cursor-default">
               <Box className="h-3.5 w-3.5 text-muted-foreground" />
               {activeCodex && (
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                <span className="rounded-full glass-float px-2 py-0.5 text-[10px] font-medium text-foreground/80">
                   {activeCodex.label}
                 </span>
               )}
