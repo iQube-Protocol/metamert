@@ -77,6 +77,7 @@ interface ShellContextValue {
   selectCodex: (codexId: string) => void;
   resetIdleTimer: (reason?: string) => void;
   setInteractionState: (state: InteractionState) => void;
+  setPromptHasText: (hasText: boolean) => void;
 }
 
 const ShellCtx = createContext<ShellContextValue | null>(null);
@@ -153,8 +154,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     available: DEFAULT_CARTRIDGES,
   });
 
-  // Idle timer ref
+  // Idle timer refs — split: 3s for quick action layer, 4s for full collapse
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const submenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track whether prompt has text (prevents collapse)
+  const promptHasTextRef = useRef(false);
 
   // Lazily create inference controller
   if (!inferCtrl.current) {
@@ -163,15 +167,22 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => () => inferCtrl.current?.cleanup(), []);
 
-  // Idle auto-hide logic
+  // Idle auto-hide logic — split timers per spec
   const clearIdleTimer = useCallback(() => {
     if (idleTimerRef.current) { clearTimeout(idleTimerRef.current); idleTimerRef.current = null; }
+    if (submenuTimerRef.current) { clearTimeout(submenuTimerRef.current); submenuTimerRef.current = null; }
   }, []);
 
   const startIdleTimer = useCallback(() => {
     clearIdleTimer();
+    // 3s: auto-hide quick action floating layer
+    submenuTimerRef.current = setTimeout(() => {
+      setSubmenuVisibility("hiddenAutoIdle");
+      submenuTimerRef.current = null;
+    }, 3000);
+    // 4s: full prompt collapse (only if prompt is empty)
     idleTimerRef.current = setTimeout(() => {
-      // Return to default nav after idle timeout
+      if (promptHasTextRef.current) return; // spec: don't collapse with text
       setViewState("defaultNav");
       setActiveMode(null);
       setSubmenuTypeState(null);
@@ -186,6 +197,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setSubmenuVisibility("visibleAuto");
     startIdleTimer();
   }, [startIdleTimer, submenuVisibility]);
+
+  // Expose prompt text tracking for idle logic
+  const setPromptHasText = useCallback((hasText: boolean) => {
+    promptHasTextRef.current = hasText;
+  }, []);
 
   // Clean up idle timer on unmount
   useEffect(() => () => clearIdleTimer(), [clearIdleTimer]);
@@ -560,7 +576,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         submitPrompt, resetToWelcome, updateTrust, iframeRef,
         // Smart Menu actions
         activateMode, deactivateMode, setSubmenuType, toggleSubmenu,
-        selectCartridge, selectCodex, resetIdleTimer, setInteractionState,
+        selectCartridge, selectCodex, resetIdleTimer, setInteractionState, setPromptHasText,
       }}
     >
       {children}

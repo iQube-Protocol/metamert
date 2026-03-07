@@ -6,7 +6,7 @@ import RuntimeFrame from "@/components/RuntimeFrame";
 import { Loader2 } from "lucide-react";
 
 function ShellLayout() {
-  const { config, loading, hydrate, resetKey } = useShell();
+  const { config, loading, hydrate, resetKey, viewState, deactivateMode } = useShell();
 
   // Reset scroll when mobile keyboard closes
   useEffect(() => {
@@ -25,6 +25,11 @@ function ShellLayout() {
     hydrate();
   }, [hydrate]);
 
+  // Tap-outside-to-collapse: click on runtime area collapses prompt mode
+  const handleRuntimeClick = useCallback(() => {
+    if (viewState === "promptMode") deactivateMode();
+  }, [viewState, deactivateMode]);
+
   if (loading || !config) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -37,7 +42,7 @@ function ShellLayout() {
   return (
     <div className="flex h-dvh flex-col bg-background">
       <RuntimeHeader />
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative flex-1 overflow-hidden" onClick={handleRuntimeClick}>
         <RuntimeFrame key={resetKey} />
       </div>
       <SmartMenu />

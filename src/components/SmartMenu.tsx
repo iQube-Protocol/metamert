@@ -3,6 +3,7 @@
  * 
  * Default: Be | Earn | Play | Make | Share
  * Prompt mode: transforms into prompt bar with floating submenu above.
+ * Spec animations: mode pop, color wash, calm collapse.
  */
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS, type SmartMenuMode } from "@/lib/smart-menu-config";
@@ -46,14 +47,13 @@ export default function SmartMenu() {
 
   if (!config) return null;
 
-  // Prompt mode: show prompt bar + floating submenu
+  // Prompt mode: show prompt bar + floating submenu with animations
   if (viewState === "promptMode" && activeMode) {
-    const modeConfig = MODE_CONFIGS[activeMode];
     return (
-      <div className="flex flex-col">
+      <div className="flex flex-col animate-in fade-in duration-200">
         {/* Floating submenu above prompt bar */}
         {submenuVisibility === "visibleAuto" && (
-          <div className="px-2 pb-1.5">
+          <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
             <SmartMenuSubmenu />
           </div>
         )}
@@ -65,7 +65,7 @@ export default function SmartMenu() {
   // Default nav
   return (
     <TooltipProvider delayDuration={300}>
-      <nav className="flex items-stretch border-t border-border bg-card px-2" style={{ height: '3.25rem' }}>
+      <nav className="flex items-stretch border-t border-border bg-card px-2 animate-in fade-in duration-200" style={{ height: '3.25rem' }}>
         {/* Left edge: Be */}
         <div className="flex items-stretch">
           <NavButton item={NAV_ITEMS[0]} onTap={activateMode} onAction={handleMenuAction} />
@@ -113,6 +113,7 @@ function NavButton({
       className={`flex flex-col items-center justify-center gap-0.5 rounded-md py-1.5 text-[11px] transition-all duration-200
         ${isCenter ? "min-w-[3.5rem] px-1" : "w-14 shrink-0"}
         hover:bg-accent hover:text-accent-foreground
+        active:scale-110
       `}
     >
       <span
