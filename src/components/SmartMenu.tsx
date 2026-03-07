@@ -193,7 +193,8 @@ export default function SmartMenu() {
       <div className="flex flex-col">
         {hoverPreviewMode && (
           <div
-            className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2 duration-150"
+          className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2"
+          style={{ animationDuration: '300ms' }}
             onPointerEnter={() => handleNavHoverEnter(hoverPreviewMode)}
             onPointerLeave={handleNavHoverLeave}
           >
