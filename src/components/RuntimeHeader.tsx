@@ -149,7 +149,7 @@ export default function RuntimeHeader() {
         {/* Center: Active Cartridge + Codex badge */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex items-center gap-1 rounded-md px-2 py-1 cursor-default">
+            <div className="flex items-center gap-0.5 rounded-md px-2 py-1 cursor-default">
               <Box className="h-3.5 w-3.5 text-muted-foreground" />
               {activeCodex && (
                 <span className="rounded-full glass-float px-2 py-0.5 text-[11px] font-medium text-foreground/65">
