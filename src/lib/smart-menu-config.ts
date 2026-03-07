@@ -119,7 +119,6 @@ const PLAY_ACTIONS: QuickActionDef[] = [
   { id: "listen",    label: "Listen",    icon: "headphones", kind: "llm+menu",    triggersInference: true },
   { id: "watch",     label: "Watch",     icon: "eye",        kind: "llm+menu",    triggersInference: true },
   { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true },
-  { id: "codex",     label: "Codex",     icon: "library",    kind: "system-only", triggersInference: false },
   { id: "cartridge", label: "Cartridge", icon: "box",        kind: "system-only", triggersInference: false },
   { id: "share",     label: "Share",     icon: "share-2",    kind: "llm+menu",    triggersInference: true },
   { id: "reset",     label: "Reset",     icon: "rotate-ccw", kind: "system-only", triggersInference: false },
