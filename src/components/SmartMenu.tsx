@@ -48,19 +48,33 @@ export default function SmartMenu() {
     resumeIdleTimer,
   } = useShell();
 
+  // Track when prompt mode activated to skip initial pointerenter
+  const modeActivatedAt = useRef<number>(0);
+  const prevViewState = useRef(viewState);
+  if (viewState === "promptMode" && prevViewState.current !== "promptMode") {
+    modeActivatedAt.current = Date.now();
+  }
+  prevViewState.current = viewState;
+
+  const handlePointerEnter = useCallback(() => {
+    // Skip the pointerenter that fires when the wrapper first renders under the cursor
+    if (Date.now() - modeActivatedAt.current < 400) return;
+    pauseIdleTimer();
+  }, [pauseIdleTimer]);
+
   if (!config) return null;
 
   // Prompt mode: show prompt bar + floating submenu with animations
   if (viewState === "promptMode" && activeMode) {
     return (
-      <div className="flex flex-col animate-in fade-in duration-200">
-        {/* Floating submenu above prompt bar — hover pauses idle timers */}
+      <div
+        className="flex flex-col animate-in fade-in duration-200"
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={resumeIdleTimer}
+      >
+        {/* Floating submenu above prompt bar */}
         {submenuVisibility === "visibleAuto" && (
-          <div
-            className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200"
-            onPointerEnter={pauseIdleTimer}
-            onPointerLeave={resumeIdleTimer}
-          >
+          <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
             <SmartMenuSubmenu />
           </div>
         )}
