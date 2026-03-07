@@ -254,12 +254,12 @@ function NavButton({
 
     if (e.pointerType === "touch") {
       const now = Date.now();
-      const delta = now - lastTouchTapRef.current;
-      lastTouchTapRef.current = now;
+      const delta = now - sharedTapRef.current;
+      sharedTapRef.current = now;
 
       if (delta < 350) {
         // Double-tap on touch: enter prompt mode + trigger action (like desktop click)
-        lastTouchTapRef.current = 0;
+        sharedTapRef.current = 0;
         onAction(item.id);
         onPointerTap(item.id, "mouse"); // force prompt mode path
       } else {
