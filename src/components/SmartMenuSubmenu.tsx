@@ -72,6 +72,7 @@ function QuickActionsCarousel() {
     handleMenuAction(action.id);
   }, [handleMenuAction, setSubmenuType, resetIdleTimer]);
 
+  const foldIds = modeConfig.mobileVisibleFold;
   // Find the first fold item's index to auto-scroll there on mount
   const firstFoldIndex = modeConfig.quickActions.findIndex(a => foldIds.includes(a.id));
 
