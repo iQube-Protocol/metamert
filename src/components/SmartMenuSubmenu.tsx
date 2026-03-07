@@ -53,7 +53,7 @@ function QuickActionsCarousel() {
     activeMode,
     handleMenuAction,
     setSubmenuType,
-    resetIdleTimer,
+    pauseIdleTimer,
   } = useShell();
   const scrollRef = useRef<HTMLDivElement>(null);
 
