@@ -149,22 +149,25 @@ export default function SmartMenu() {
   if (viewState === "quickActionOnly" && activeMode) {
     return (
       <div
-        className="flex flex-col animate-in fade-in duration-200"
+        className="flex flex-col animate-in fade-in"
+        style={{ animationDuration: '350ms' }}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={resumeIdleTimer}
         onTouchStart={handleNavTouchStart}
         onTouchEnd={handleNavSwipeEnd}
       >
         {submenuVisibility === "visibleAuto" && (
-          <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2" style={{ animationDuration: '350ms' }}>
             <SmartMenuSubmenu />
           </div>
         )}
         <nav
-          className="flex items-stretch border-t px-2 pt-1.5 animate-in fade-in duration-200"
+          className="flex items-stretch border-t px-2 pt-1.5 animate-in fade-in transition-all"
           style={{
+            animationDuration: '350ms',
             height: '3.5625rem',
-            borderTopColor: MODE_ACCENT[activeMode],
+            borderTopColor: submenuVisibility === "visibleAuto" ? MODE_ACCENT[activeMode] : 'transparent',
+            transitionDuration: '300ms',
           }}
           onPointerUp={handleNavAreaPointerUp}
         >
