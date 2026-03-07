@@ -76,6 +76,8 @@ interface ShellContextValue {
   selectCartridge: (cartridgeId: string) => void;
   selectCodex: (codexId: string) => void;
   resetIdleTimer: (reason?: string) => void;
+  pauseIdleTimer: () => void;
+  resumeIdleTimer: () => void;
   setInteractionState: (state: InteractionState) => void;
   setPromptHasText: (hasText: boolean) => void;
 }
@@ -195,6 +197,17 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     if (reason === "carouselSwipe" || reason === "carouselDrag") return;
     if (submenuVisibility === "hiddenUserToggle") return; // respect manual toggle
     setSubmenuVisibility("visibleAuto");
+    startIdleTimer();
+  }, [startIdleTimer, submenuVisibility]);
+
+  // Pause idle timer (pointer hovering over interactive area)
+  const pauseIdleTimer = useCallback(() => {
+    clearIdleTimer();
+  }, [clearIdleTimer]);
+
+  // Resume idle timer (pointer left interactive area)
+  const resumeIdleTimer = useCallback(() => {
+    if (submenuVisibility === "hiddenUserToggle") return;
     startIdleTimer();
   }, [startIdleTimer, submenuVisibility]);
 
@@ -576,7 +589,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         submitPrompt, resetToWelcome, updateTrust, iframeRef,
         // Smart Menu actions
         activateMode, deactivateMode, setSubmenuType, toggleSubmenu,
-        selectCartridge, selectCodex, resetIdleTimer, setInteractionState, setPromptHasText,
+        selectCartridge, selectCodex, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
       }}
     >
       {children}
