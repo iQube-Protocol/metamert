@@ -3,7 +3,7 @@
  * Cycles between: quickActions | cartridgeSelector | codexSelector
  * NEVER more than one floating layer (strict 2-layer rule).
  */
-import { useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS, type QuickActionDef } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
@@ -96,27 +96,14 @@ function QuickActionsCarousel() {
       >
         {modeConfig.quickActions.map((action) => {
           const Icon = resolveSmartIcon(action.icon, action.id);
-          const isFocal = action.id === modeConfig.defaultCenteredQuickActionId;
-
           return (
-            <button
+            <QuickActionButton
               key={action.id}
-              onClick={() => handleAction(action)}
-              className="flex flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95 shrink-0"
-              style={{
-                scrollSnapAlign: "center",
-                width: "20%", // 5 items visible = 20% each
-                ...(isFocal ? { color: accent } : {}),
-              }}
-              title={action.label}
-            >
-              {Icon ? (
-                <Icon className="h-4 w-4" />
-              ) : (
-                <span className="text-xs font-medium">{action.label.charAt(0)}</span>
-              )}
-              <span className="text-[9px] leading-tight whitespace-nowrap">{action.label}</span>
-            </button>
+              action={action}
+              accent={accent}
+              Icon={Icon}
+              onAction={handleAction}
+            />
           );
         })}
       </div>
@@ -128,11 +115,59 @@ function QuickActionsCarousel() {
 }
 
 // ---------------------------------------------------------------------------
+// Quick Action Button (grey passive, mode-accent on hover/active)
+// ---------------------------------------------------------------------------
+
+function QuickActionButton({
+  action,
+  accent,
+  Icon,
+  onAction,
+}: {
+  action: QuickActionDef;
+  accent: string;
+  Icon: LucideIcon | undefined;
+  onAction: (a: QuickActionDef) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const [activated, setActivated] = useState(false);
+  const color = hovered || activated ? accent : undefined;
+
+  const handleClick = () => {
+    setActivated(true);
+    onAction(action);
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
+      className="flex flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-muted-foreground transition-all duration-150 active:scale-95 shrink-0"
+      style={{
+        scrollSnapAlign: "center",
+        width: "20%",
+        ...(color ? { color } : {}),
+      }}
+      title={action.label}
+    >
+      {Icon ? (
+        <Icon className="h-4 w-4" />
+      ) : (
+        <span className="text-xs font-medium">{action.label.charAt(0)}</span>
+      )}
+      <span className="text-[9px] leading-tight whitespace-nowrap">{action.label}</span>
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Cartridge Selector
 // ---------------------------------------------------------------------------
 
 function CartridgeSelector() {
-  const { cartridgeState, selectCartridge, setSubmenuType, pauseIdleTimer } = useShell();
+  const { activeMode, cartridgeState, selectCartridge, setSubmenuType, pauseIdleTimer } = useShell();
+  const accent = activeMode ? MODE_CONFIGS[activeMode].accentHex : undefined;
 
   return (
     <div
@@ -153,19 +188,18 @@ function CartridgeSelector() {
           const isActive = cart.id === cartridgeState.activeCartridgeId;
           const Icon = resolveSmartIcon(cart.icon, cart.id);
           return (
-            <button
+            <CartridgePill
               key={cart.id}
+              isActive={isActive}
+              accent={accent}
               onClick={() => selectCartridge(cart.id)}
-              className={`flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-xs transition-all duration-150 active:scale-95
-                ${isActive ? "bg-primary/15 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}
-              `}
             >
               <div className="flex items-center gap-1">
                 {Icon && <Icon className="h-3.5 w-3.5" />}
                 <span className="font-medium whitespace-nowrap">{cart.label}</span>
               </div>
               {isActive && <Check className="h-3 w-3" />}
-            </button>
+            </CartridgePill>
           );
         })}
       </div>
@@ -178,7 +212,8 @@ function CartridgeSelector() {
 // ---------------------------------------------------------------------------
 
 function CodexSelector() {
-  const { cartridgeState, selectCodex, setSubmenuType, pauseIdleTimer } = useShell();
+  const { activeMode, cartridgeState, selectCodex, setSubmenuType, pauseIdleTimer } = useShell();
+  const accent = activeMode ? MODE_CONFIGS[activeMode].accentHex : undefined;
 
   const activeCart = cartridgeState.available.find(c => c.id === cartridgeState.activeCartridgeId);
   const codexes = activeCart?.codexes ?? [];
@@ -203,19 +238,51 @@ function CodexSelector() {
         {codexes.map(cdx => {
           const isActive = cdx.id === cartridgeState.activeCodexId;
           return (
-            <button
+            <CartridgePill
               key={cdx.id}
+              isActive={isActive}
+              accent={accent}
               onClick={() => selectCodex(cdx.id)}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs transition-all duration-150 active:scale-95
-                ${isActive ? "bg-primary/15 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}
-              `}
             >
               <span className="font-medium whitespace-nowrap">{cdx.label}</span>
               {isActive && <Check className="h-3 w-3" />}
-            </button>
+            </CartridgePill>
           );
         })}
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Shared pill button for cartridge/codex selectors
+// ---------------------------------------------------------------------------
+
+function CartridgePill({
+  isActive,
+  accent,
+  onClick,
+  children,
+}: {
+  isActive: boolean;
+  accent?: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const color = isActive ? accent : hovered ? accent : undefined;
+
+  return (
+    <button
+      onClick={onClick}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
+      className={`flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-xs transition-all duration-150 active:scale-95
+        ${isActive ? "" : "text-muted-foreground"}
+      `}
+      style={color ? { color } : undefined}
+    >
+      {children}
+    </button>
   );
 }
