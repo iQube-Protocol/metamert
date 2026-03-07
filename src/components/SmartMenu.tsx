@@ -48,6 +48,20 @@ export default function SmartMenu() {
     resumeIdleTimer,
   } = useShell();
 
+  // Hover preview: show quick actions on rollover without entering prompt mode
+  const [hoverPreviewMode, setHoverPreviewMode] = useState<SmartMenuMode | null>(null);
+  const hoverTimeout = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleNavHoverEnter = useCallback((mode: SmartMenuMode) => {
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    setHoverPreviewMode(mode);
+  }, []);
+
+  const handleNavHoverLeave = useCallback(() => {
+    // Small grace period so moving between items doesn't flicker
+    hoverTimeout.current = setTimeout(() => setHoverPreviewMode(null), 150);
+  }, []);
+
   // Track when prompt mode activated to skip initial pointerenter
   const modeActivatedAt = useRef<number>(0);
   const prevViewState = useRef(viewState);
@@ -86,24 +100,39 @@ export default function SmartMenu() {
   // Default nav
   return (
     <TooltipProvider delayDuration={300}>
-      <nav className="flex items-stretch border-t border-border bg-card px-2 pt-1.5 animate-in fade-in duration-200" style={{ height: '3.5625rem' }}>
-        {/* Left edge: Be */}
-        <div className="flex items-stretch">
-          <NavButton item={NAV_ITEMS[0]} onTap={activateMode} onAction={handleMenuAction} />
-        </div>
+      <div className="flex flex-col">
+        {/* Hover preview submenu — floats above nav */}
+        {hoverPreviewMode && (
+          <div
+            className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2 duration-150"
+            onPointerEnter={() => handleNavHoverEnter(hoverPreviewMode)}
+            onPointerLeave={handleNavHoverLeave}
+          >
+            <SmartMenuSubmenu previewMode={hoverPreviewMode} />
+          </div>
+        )}
+        <nav
+          className="flex items-stretch border-t border-border bg-card px-2 pt-1.5 animate-in fade-in duration-200"
+          style={{ height: '3.5625rem' }}
+        >
+          {/* Left edge: Be */}
+          <div className="flex items-stretch">
+            <NavButton item={NAV_ITEMS[0]} onTap={activateMode} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+          </div>
 
-        {/* Center triad: Earn · Play · Make */}
-        <div className="flex flex-1 items-stretch justify-center gap-0">
-          {NAV_ITEMS.slice(1, 4).map(item => (
-            <NavButton key={item.id} item={item} isCenter onTap={activateMode} onAction={handleMenuAction} />
-          ))}
-        </div>
+          {/* Center triad: Earn · Play · Make */}
+          <div className="flex flex-1 items-stretch justify-center gap-0">
+            {NAV_ITEMS.slice(1, 4).map(item => (
+              <NavButton key={item.id} item={item} isCenter onTap={activateMode} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            ))}
+          </div>
 
-        {/* Right edge: Share */}
-        <div className="flex items-stretch">
-          <NavButton item={NAV_ITEMS[4]} onTap={activateMode} onAction={handleMenuAction} />
-        </div>
-      </nav>
+          {/* Right edge: Share */}
+          <div className="flex items-stretch">
+            <NavButton item={NAV_ITEMS[4]} onTap={activateMode} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+          </div>
+        </nav>
+      </div>
     </TooltipProvider>
   );
 }
@@ -113,11 +142,15 @@ function NavButton({
   isCenter = false,
   onTap,
   onAction,
+  onHoverEnter,
+  onHoverLeave,
 }: {
   item: { id: SmartMenuMode; label: string; icon: string };
   isCenter?: boolean;
   onTap: (mode: SmartMenuMode) => void;
   onAction: (id: string) => Promise<void>;
+  onHoverEnter: (mode: SmartMenuMode) => void;
+  onHoverLeave: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const Icon = resolveIcon(item.icon, item.id);
@@ -137,8 +170,8 @@ function NavButton({
   return (
     <button
       onClick={handleClick}
-      onPointerEnter={() => setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
+      onPointerEnter={() => { setHovered(true); onHoverEnter(item.id); }}
+      onPointerLeave={() => { setHovered(false); onHoverLeave(); }}
       className={`flex flex-col items-center justify-center gap-0.5 rounded-md py-1.5 text-[11px] transition-all duration-200
         ${isCenter ? "min-w-[3.5rem] px-1" : "w-14 shrink-0"}
         active:scale-110
