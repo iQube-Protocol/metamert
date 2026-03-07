@@ -155,11 +155,11 @@ export default function RuntimeHeader() {
           </Popover>
         </div>
 
-        {/* Center: Active Cartridge icon */}
+        {/* Center: Active Cartridge icon — centered with nav below */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex items-center rounded-md px-1 py-1 cursor-default">
-              <Box className="h-[18px] w-[18px] text-muted-foreground" />
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center cursor-default">
+              <Box className="h-[18px] w-[18px]" style={cartridgeColor ? { color: cartridgeColor } : undefined} />
             </div>
           </TooltipTrigger>
           <TooltipContent side="bottom">
