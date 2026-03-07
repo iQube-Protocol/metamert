@@ -1,5 +1,15 @@
+/**
+ * SmartMenu — Liquid UI bottom navigation with nav-to-prompt transformation.
+ * 
+ * Default: Be | Earn | Play | Make | Share
+ * Prompt mode: transforms into prompt bar with floating submenu above.
+ */
 import { useShell } from "@/contexts/ShellContext";
+import { MODE_CONFIGS, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
+import { SMART_MENU_ICON_DEFAULTS } from "@/lib/smart-menu-icons";
+import SmartMenuPromptBar from "@/components/SmartMenuPromptBar";
+import SmartMenuSubmenu from "@/components/SmartMenuSubmenu";
 import {
   Tooltip,
   TooltipContent,
@@ -7,96 +17,111 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-/** Color map for menu item accents — uses CSS custom properties */
-const ITEM_COLORS: Record<string, string> = {
-  be: "var(--menu-be)",
-  earn: "var(--menu-earn)",
-  play: "var(--menu-play)",
-  make: "var(--menu-make)",
-  share: "var(--menu-share)",
+/** Mode accent colors using HSL values from config */
+const MODE_ACCENT: Record<SmartMenuMode, string> = {
+  be: "#4DA3FF",
+  earn: "#22C55E",
+  play: "#00D5FF",
+  make: "#D946EF",
+  share: "#F59E0B",
 };
 
-/**
- * Bottom navigation: Be | Earn·Play·Make | Share
- * 5 items total. Center triad clustered tightly on tablet/desktop.
- */
-export default function SmartMenu({ onPointerEnter, onPointerLeave }: { onPointerEnter?: () => void; onPointerLeave?: () => void }) {
-  const { config, activeMenuItem, handleMenuAction } = useShell();
+const NAV_ITEMS: { id: SmartMenuMode; label: string; icon: string }[] = [
+  { id: "be", label: "Be", icon: "users" },
+  { id: "earn", label: "Earn", icon: "coins" },
+  { id: "play", label: "Play", icon: "play-circle" },
+  { id: "make", label: "Make", icon: "pencil" },
+  { id: "share", label: "Share", icon: "share-2" },
+];
+
+export default function SmartMenu() {
+  const {
+    config,
+    viewState,
+    activeMode,
+    activateMode,
+    handleMenuAction,
+    submenuVisibility,
+  } = useShell();
+
   if (!config) return null;
 
-  const allItems = config.menu?.items ?? [];
-  const centerIds = new Set(config.menu?.policy?.center_group_ids ?? ["earn", "play", "make"]);
-
-  // Split into left edge, center cluster, right edge
-  const left = allItems.filter((i: any) => i.id === "be");
-  const center = allItems.filter((i: any) => centerIds.has(i.id));
-  const right = allItems.filter((i: any) => i.id === "share");
-
-  const renderBtn = (item: any, isCenter = false) => {
-    const Icon = resolveIcon(item.icon, item.id);
-    const isActive = activeMenuItem === item.id;
-    const hsl = ITEM_COLORS[item.id];
-
-    const btn = (
-      <button
-        key={item.id}
-        onClick={() => handleMenuAction(item.id)}
-        aria-pressed={isActive}
-        className={`flex flex-col items-center justify-center gap-0.5 rounded-md py-1.5 text-[11px] transition-all duration-200
-          ${isCenter ? "min-w-[3.5rem] px-1" : "w-14 shrink-0"}
-          ${isActive ? "scale-105" : "hover:bg-accent hover:text-accent-foreground"}
-        `}
-      >
-        <span
-          className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 ${
-            isActive ? "shadow-md backdrop-blur-md" : ""
-          }`}
-          style={
-            isActive && hsl
-              ? {
-                  backgroundColor: `hsl(${hsl} / 0.25)`,
-                  color: `hsl(${hsl})`,
-                  boxShadow: `0 0 12px hsl(${hsl} / 0.4)`,
-                  border: `1px solid hsl(${hsl} / 0.35)`,
-                }
-              : { color: hsl ? `hsl(${hsl})` : undefined }
-          }
-        >
-          {Icon ? <Icon className="h-5 w-5" /> : <span className="h-5 w-5" />}
-        </span>
-        <span
-          className={`transition-colors ${isActive ? "font-semibold" : "text-muted-foreground"}`}
-          style={isActive && hsl ? { color: `hsl(${hsl})` } : undefined}
-        >
-          {item.label}
-        </span>
-      </button>
+  // Prompt mode: show prompt bar + floating submenu
+  if (viewState === "promptMode" && activeMode) {
+    const modeConfig = MODE_CONFIGS[activeMode];
+    return (
+      <div className="flex flex-col">
+        {/* Floating submenu above prompt bar */}
+        {submenuVisibility === "visibleAuto" && (
+          <div className="px-2 pb-1.5">
+            <SmartMenuSubmenu />
+          </div>
+        )}
+        <SmartMenuPromptBar />
+      </div>
     );
+  }
 
-    if (item.tooltip) {
-      return (
-        <Tooltip key={item.id}>
-          <TooltipTrigger asChild>{btn}</TooltipTrigger>
-          <TooltipContent side="top"><p className="text-xs">{item.tooltip}</p></TooltipContent>
-        </Tooltip>
-      );
-    }
-    return btn;
-  };
-
+  // Default nav
   return (
     <TooltipProvider delayDuration={300}>
-      <nav className="flex items-stretch border-t border-border bg-card px-2 py-1.5" onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
+      <nav className="flex items-stretch border-t border-border bg-card px-2 py-1.5">
+        {/* Left edge: Be */}
         <div className="flex items-stretch">
-          {left.map((item: any) => renderBtn(item))}
+          <NavButton item={NAV_ITEMS[0]} onTap={activateMode} onAction={handleMenuAction} />
         </div>
+
+        {/* Center triad: Earn · Play · Make */}
         <div className="flex flex-1 items-stretch justify-center gap-0">
-          {center.map((item: any) => renderBtn(item, true))}
+          {NAV_ITEMS.slice(1, 4).map(item => (
+            <NavButton key={item.id} item={item} isCenter onTap={activateMode} onAction={handleMenuAction} />
+          ))}
         </div>
+
+        {/* Right edge: Share */}
         <div className="flex items-stretch">
-          {right.map((item: any) => renderBtn(item))}
+          <NavButton item={NAV_ITEMS[4]} onTap={activateMode} onAction={handleMenuAction} />
         </div>
       </nav>
     </TooltipProvider>
+  );
+}
+
+function NavButton({
+  item,
+  isCenter = false,
+  onTap,
+  onAction,
+}: {
+  item: { id: SmartMenuMode; label: string; icon: string };
+  isCenter?: boolean;
+  onTap: (mode: SmartMenuMode) => void;
+  onAction: (id: string) => Promise<void>;
+}) {
+  const Icon = resolveIcon(item.icon, item.id);
+  const accent = MODE_ACCENT[item.id];
+
+  const handleClick = () => {
+    // Dual event: fire existing menu action + activate mode
+    onAction(item.id);
+    onTap(item.id);
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className={`flex flex-col items-center justify-center gap-0.5 rounded-md py-1.5 text-[11px] transition-all duration-200
+        ${isCenter ? "min-w-[3.5rem] px-1" : "w-14 shrink-0"}
+        hover:bg-accent hover:text-accent-foreground
+      `}
+    >
+      <span
+        className="flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+        style={{ color: accent }}
+      >
+        {Icon ? <Icon className="h-5 w-5" /> : <span className="h-5 w-5" />}
+      </span>
+      <span className="text-muted-foreground">{item.label}</span>
+    </button>
   );
 }
