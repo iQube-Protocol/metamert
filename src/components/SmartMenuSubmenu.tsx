@@ -87,7 +87,7 @@ function QuickActionsCarousel() {
   return (
     <div
       className="glass-float relative rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200"
-      onPointerEnter={() => resetIdleTimer("hover")}
+      onPointerEnter={pauseIdleTimer}
     >
       <div
         ref={scrollRef}
