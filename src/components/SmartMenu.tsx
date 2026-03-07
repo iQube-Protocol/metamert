@@ -6,7 +6,7 @@
  * Quick-action-only mode: floating submenu without prompt bar (mobile touch).
  * Spec animations: mode pop, color wash, calm collapse.
  */
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
@@ -53,6 +53,8 @@ export default function SmartMenu() {
   // Hover preview: show quick actions on rollover without entering prompt mode
   const [hoverPreviewMode, setHoverPreviewMode] = useState<SmartMenuMode | null>(null);
   const hoverTimeout = useRef<ReturnType<typeof setTimeout>>();
+  // Shared double-tap tracker — survives view-state re-renders
+  const sharedLastTouchTap = useRef<number>(0);
 
   // No longer needed — using PointerEvent.pointerType directly
 
@@ -164,15 +166,15 @@ export default function SmartMenu() {
           onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[0]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            <NavButton item={NAV_ITEMS[0]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
           </div>
           <div className="flex flex-1 items-stretch justify-center gap-0">
             {NAV_ITEMS.slice(1, 4).map(item => (
-              <NavButton key={item.id} item={item} isCenter activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+              <NavButton key={item.id} item={item} isCenter activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
             ))}
           </div>
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[4]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            <NavButton item={NAV_ITEMS[4]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
           </div>
         </nav>
       </div>
@@ -198,15 +200,15 @@ export default function SmartMenu() {
           onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[0]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            <NavButton item={NAV_ITEMS[0]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
           </div>
           <div className="flex flex-1 items-stretch justify-center gap-0">
             {NAV_ITEMS.slice(1, 4).map(item => (
-              <NavButton key={item.id} item={item} isCenter onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+              <NavButton key={item.id} item={item} isCenter onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
             ))}
           </div>
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[4]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            <NavButton item={NAV_ITEMS[4]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
           </div>
         </nav>
       </div>
@@ -222,6 +224,7 @@ function NavButton({
   onAction,
   onHoverEnter,
   onHoverLeave,
+  sharedTapRef,
 }: {
   item: { id: SmartMenuMode; label: string; icon: string };
   isCenter?: boolean;
@@ -230,9 +233,9 @@ function NavButton({
   onAction: (id: string) => Promise<void>;
   onHoverEnter: (mode: SmartMenuMode) => void;
   onHoverLeave: () => void;
+  sharedTapRef: React.MutableRefObject<number>;
 }) {
   const [hovered, setHovered] = useState(false);
-  const lastTouchTapRef = useRef<number>(0);
   const Icon = resolveIcon(item.icon, item.id);
   const accent = MODE_ACCENT[item.id];
   const isEdge = item.id === "be" || item.id === "share";
@@ -251,12 +254,12 @@ function NavButton({
 
     if (e.pointerType === "touch") {
       const now = Date.now();
-      const delta = now - lastTouchTapRef.current;
-      lastTouchTapRef.current = now;
+      const delta = now - sharedTapRef.current;
+      sharedTapRef.current = now;
 
       if (delta < 350) {
         // Double-tap on touch: enter prompt mode + trigger action (like desktop click)
-        lastTouchTapRef.current = 0;
+        sharedTapRef.current = 0;
         onAction(item.id);
         onPointerTap(item.id, "mouse"); // force prompt mode path
       } else {
