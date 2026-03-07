@@ -64,6 +64,7 @@ export default function SmartMenuPromptBar() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
+    if (hasSent && e.target.value) setHasSent(false);
     resetIdleTimer("typing");
     setInteractionState(e.target.value ? "typing" : "focused");
   };
