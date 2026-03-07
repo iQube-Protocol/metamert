@@ -3,7 +3,7 @@
  * Cycles between: quickActions | cartridgeSelector | codexSelector
  * NEVER more than one floating layer (strict 2-layer rule).
  */
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS, type QuickActionDef } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
