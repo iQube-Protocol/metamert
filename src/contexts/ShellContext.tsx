@@ -76,6 +76,8 @@ interface ShellContextValue {
   selectCartridge: (cartridgeId: string) => void;
   selectCodex: (codexId: string) => void;
   resetIdleTimer: (reason?: string) => void;
+  pauseIdleTimer: () => void;
+  resumeIdleTimer: () => void;
   setInteractionState: (state: InteractionState) => void;
   setPromptHasText: (hasText: boolean) => void;
 }
