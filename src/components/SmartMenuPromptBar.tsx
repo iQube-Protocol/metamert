@@ -3,6 +3,7 @@
  * Contains: Input | Mic | Send | Chevron
  */
 import { useState, useRef, useEffect } from "react";
+import { resolveIcon } from "@/lib/icon-utils";
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS } from "@/lib/smart-menu-config";
 import { SendHorizonal, Mic, ChevronUp, ChevronDown } from "lucide-react";
