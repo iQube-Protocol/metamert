@@ -52,7 +52,29 @@ export default function SmartMenu() {
   const [hoverPreviewMode, setHoverPreviewMode] = useState<SmartMenuMode | null>(null);
   const hoverTimeout = useRef<ReturnType<typeof setTimeout>>();
 
+  // Guard: block phantom hover events after nav restoration or mode activation
+  const navRestoredAt = useRef<number>(0);
+  const modeActivatedAt = useRef<number>(0);
+  const prevViewState = useRef(viewState);
+
+  // Clear stale hover state on any view-state transition
+  if (viewState !== prevViewState.current) {
+    // Entering prompt mode — clear hover preview so it doesn't persist
+    if (viewState === "promptMode") {
+      if (hoverPreviewMode !== null) setHoverPreviewMode(null);
+      modeActivatedAt.current = Date.now();
+    }
+    // Returning to defaultNav (idle collapse or manual) — clear + guard
+    if (viewState === "defaultNav" && prevViewState.current !== "defaultNav") {
+      if (hoverPreviewMode !== null) setHoverPreviewMode(null);
+      navRestoredAt.current = Date.now();
+    }
+    prevViewState.current = viewState;
+  }
+
   const handleNavHoverEnter = useCallback((mode: SmartMenuMode) => {
+    // Skip phantom hovers that fire when nav buttons appear under a stationary cursor
+    if (Date.now() - navRestoredAt.current < 400) return;
     if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
     setHoverPreviewMode(mode);
   }, []);
@@ -61,14 +83,6 @@ export default function SmartMenu() {
     // Small grace period so moving between items doesn't flicker
     hoverTimeout.current = setTimeout(() => setHoverPreviewMode(null), 150);
   }, []);
-
-  // Track when prompt mode activated to skip initial pointerenter
-  const modeActivatedAt = useRef<number>(0);
-  const prevViewState = useRef(viewState);
-  if (viewState === "promptMode" && prevViewState.current !== "promptMode") {
-    modeActivatedAt.current = Date.now();
-  }
-  prevViewState.current = viewState;
 
   const handlePointerEnter = useCallback(() => {
     // Skip the pointerenter that fires when the wrapper first renders under the cursor

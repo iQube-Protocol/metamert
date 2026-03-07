@@ -207,9 +207,21 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   // Resume idle timer (pointer left interactive area)
   const resumeIdleTimer = useCallback(() => {
-    if (submenuVisibility === "hiddenUserToggle") return;
+    if (submenuVisibility === "hiddenUserToggle") {
+      // User manually hid quick actions — still start the 4s full-collapse timer
+      // so prompt bar returns to main nav when pointer leaves
+      clearIdleTimer();
+      idleTimerRef.current = setTimeout(() => {
+        if (promptHasTextRef.current) return;
+        setViewState("defaultNav");
+        setActiveMode(null);
+        setSubmenuTypeState(null);
+        setSubmenuVisibility("visibleAuto");
+      }, 4000);
+      return;
+    }
     startIdleTimer();
-  }, [startIdleTimer, submenuVisibility]);
+  }, [startIdleTimer, submenuVisibility, clearIdleTimer]);
 
   // Expose prompt text tracking for idle logic
   const setPromptHasText = useCallback((hasText: boolean) => {
