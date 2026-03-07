@@ -89,15 +89,9 @@ export default function SmartMenu() {
     pauseIdleTimer();
   }, [pauseIdleTimer]);
 
-  // Touch handler: record touch time for touch vs pointer detection
-  const handleTouchEnd = useCallback(() => {
-    lastTouchTime.current = Date.now();
-  }, []);
-
-  // Nav button tap handler: touch → quickActionOnly, pointer → promptMode
-  const handleNavTap = useCallback((mode: SmartMenuMode) => {
-    const isTouch = Date.now() - lastTouchTime.current < 500;
-    if (isTouch) {
+  // Nav button tap handler using pointerType for reliable touch detection
+  const handleNavPointerUp = useCallback((mode: SmartMenuMode, pointerType: string) => {
+    if (pointerType === "touch") {
       activateQuickActions(mode);
     } else {
       activateMode(mode);
@@ -105,11 +99,9 @@ export default function SmartMenu() {
   }, [activateMode, activateQuickActions]);
 
   // Empty nav area tap: show Play quick actions (touch only)
-  const handleNavAreaTap = useCallback((e: React.MouseEvent) => {
-    // Only trigger if tapping the nav bar itself, not a button
+  const handleNavAreaPointerUp = useCallback((e: React.PointerEvent) => {
     if (e.target !== e.currentTarget) return;
-    const isTouch = Date.now() - lastTouchTime.current < 500;
-    if (isTouch) {
+    if (e.pointerType === "touch") {
       activateQuickActions("play");
     }
   }, [activateQuickActions]);
