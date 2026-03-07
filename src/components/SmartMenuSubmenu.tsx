@@ -132,7 +132,7 @@ function QuickActionsCarousel() {
 // ---------------------------------------------------------------------------
 
 function CartridgeSelector() {
-  const { cartridgeState, selectCartridge, setSubmenuType, resetIdleTimer } = useShell();
+  const { cartridgeState, selectCartridge, setSubmenuType, pauseIdleTimer } = useShell();
 
   return (
     <div
