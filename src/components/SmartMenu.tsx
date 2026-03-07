@@ -86,7 +86,7 @@ export default function SmartMenu() {
   // Default nav
   return (
     <TooltipProvider delayDuration={300}>
-      <nav className="flex items-stretch border-t border-border bg-card px-2 pt-1.5 animate-in fade-in duration-200" style={{ height: '3.25rem' }}>
+      <nav className="flex items-stretch border-t border-border bg-card px-2 pt-1.5 animate-in fade-in duration-200" style={{ height: '3.5625rem' }}>
         {/* Left edge: Be */}
         <div className="flex items-stretch">
           <NavButton item={NAV_ITEMS[0]} onTap={activateMode} onAction={handleMenuAction} />
