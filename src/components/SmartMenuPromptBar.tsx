@@ -95,16 +95,12 @@ export default function SmartMenuPromptBar() {
       {/* Mode indicator pill — slight pop animation */}
       <button
         onClick={deactivateMode}
-        className="flex h-8 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-semibold transition-all active:scale-95 animate-scale-in"
-        style={{
-          backgroundColor: `${accent}20`,
-          color: accent,
-          border: `1px solid ${accent}35`,
-        }}
+        className="flex h-8 shrink-0 items-center justify-center transition-all active:scale-95 animate-scale-in"
+        style={{ color: accent }}
       >
         {(() => {
           const ModeIcon = resolveIcon(undefined, modeConfig?.id);
-          return ModeIcon ? <ModeIcon className="h-4 w-4" /> : <span className="text-xs">{modeConfig?.label}</span>;
+          return ModeIcon ? <ModeIcon className="h-5 w-5" /> : <span className="text-xs font-semibold">{modeConfig?.label}</span>;
         })()}
       </button>
 
