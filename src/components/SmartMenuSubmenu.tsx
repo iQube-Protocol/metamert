@@ -70,7 +70,7 @@ function QuickActionsCarousel() {
     }
 
     handleMenuAction(action.id);
-  }, [handleMenuAction, setSubmenuType, resetIdleTimer]);
+  }, [handleMenuAction, setSubmenuType, pauseIdleTimer]);
 
   const foldIds = modeConfig.mobileVisibleFold;
   // Find the first fold item's index to auto-scroll there on mount
