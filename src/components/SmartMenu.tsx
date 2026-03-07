@@ -6,7 +6,7 @@
  * Quick-action-only mode: floating submenu without prompt bar (mobile touch).
  * Spec animations: mode pop, color wash, calm collapse.
  */
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
