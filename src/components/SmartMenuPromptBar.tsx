@@ -22,6 +22,7 @@ export default function SmartMenuPromptBar() {
   } = useShell();
 
   const [text, setText] = useState("");
+  const [hasSent, setHasSent] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number | null>(null);
@@ -55,6 +56,7 @@ export default function SmartMenuPromptBar() {
     if (!text.trim()) return;
     submitPrompt(text.trim());
     setText("");
+    setHasSent(true);
     // Send keeps prompt open (spec requirement)
     resetIdleTimer("typing");
     (document.activeElement as HTMLElement)?.blur();
@@ -62,6 +64,7 @@ export default function SmartMenuPromptBar() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
+    if (hasSent && e.target.value) setHasSent(false);
     resetIdleTimer("typing");
     setInteractionState(e.target.value ? "typing" : "focused");
   };
@@ -115,10 +118,11 @@ export default function SmartMenuPromptBar() {
         onBlur={handleBlur}
         onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
         placeholder={modeConfig?.promptPlaceholder ?? "What do you want to do?"}
-        className="min-w-0 flex-1 bg-transparent px-2 py-1 text-white placeholder:text-muted-foreground focus:outline-none"
+        className="min-w-0 flex-1 bg-transparent px-2 py-1 text-white placeholder:text-muted-foreground placeholder:text-center focus:outline-none"
         style={{
           caretColor: accent,
-          fontSize: '0.9375rem', // 15px (~1pt larger than 14px text-sm)
+          fontSize: '0.9375rem',
+          textAlign: hasSent ? 'left' : 'center',
         }}
       />
 
