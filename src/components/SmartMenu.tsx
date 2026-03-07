@@ -148,7 +148,7 @@ export default function SmartMenu() {
         onPointerEnter={handlePointerEnter}
         onPointerLeave={resumeIdleTimer}
         onTouchStart={handleNavTouchStart}
-        onTouchEnd={(e) => { handleTouchEnd(); handleNavSwipeEnd(e); }}
+        onTouchEnd={handleNavSwipeEnd}
       >
         {submenuVisibility === "visibleAuto" && (
           <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
@@ -161,18 +161,18 @@ export default function SmartMenu() {
             height: '3.5625rem',
             borderTopColor: MODE_ACCENT[activeMode],
           }}
-          onClick={handleNavAreaTap}
+          onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[0]} activeQAMode={activeMode} onTap={handleNavTap} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} onTouchEnd={handleTouchEnd} />
+            <NavButton item={NAV_ITEMS[0]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
           <div className="flex flex-1 items-stretch justify-center gap-0">
             {NAV_ITEMS.slice(1, 4).map(item => (
-              <NavButton key={item.id} item={item} isCenter activeQAMode={activeMode} onTap={handleNavTap} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} onTouchEnd={handleTouchEnd} />
+              <NavButton key={item.id} item={item} isCenter activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
             ))}
           </div>
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[4]} activeQAMode={activeMode} onTap={handleNavTap} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} onTouchEnd={handleTouchEnd} />
+            <NavButton item={NAV_ITEMS[4]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
         </nav>
       </div>
@@ -195,19 +195,18 @@ export default function SmartMenu() {
         <nav
           className="flex items-stretch border-t border-border bg-card px-2 pt-1.5 animate-in fade-in duration-200"
           style={{ height: '3.5625rem' }}
-          onTouchEnd={handleTouchEnd}
-          onClick={handleNavAreaTap}
+          onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[0]} onTap={handleNavTap} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} onTouchEnd={handleTouchEnd} />
+            <NavButton item={NAV_ITEMS[0]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
           <div className="flex flex-1 items-stretch justify-center gap-0">
             {NAV_ITEMS.slice(1, 4).map(item => (
-              <NavButton key={item.id} item={item} isCenter onTap={handleNavTap} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} onTouchEnd={handleTouchEnd} />
+              <NavButton key={item.id} item={item} isCenter onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
             ))}
           </div>
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[4]} onTap={handleNavTap} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} onTouchEnd={handleTouchEnd} />
+            <NavButton item={NAV_ITEMS[4]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
         </nav>
       </div>
@@ -219,20 +218,18 @@ function NavButton({
   item,
   isCenter = false,
   activeQAMode,
-  onTap,
+  onPointerTap,
   onAction,
   onHoverEnter,
   onHoverLeave,
-  onTouchEnd,
 }: {
   item: { id: SmartMenuMode; label: string; icon: string };
   isCenter?: boolean;
   activeQAMode?: SmartMenuMode | null;
-  onTap: (mode: SmartMenuMode) => void;
+  onPointerTap: (mode: SmartMenuMode, pointerType: string) => void;
   onAction: (id: string) => Promise<void>;
   onHoverEnter: (mode: SmartMenuMode) => void;
   onHoverLeave: () => void;
-  onTouchEnd: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const Icon = resolveIcon(item.icon, item.id);
@@ -248,16 +245,15 @@ function NavButton({
       : accent;
   const iconFilter = !isEdge && hovered && !isActiveQA ? "brightness(1.4) drop-shadow(0 0 4px currentColor)" : "none";
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // prevent nav area tap
+  const handlePointerUp = (e: React.PointerEvent) => {
+    e.stopPropagation(); // prevent nav area handler
     onAction(item.id);
-    onTap(item.id);
+    onPointerTap(item.id, e.pointerType);
   };
 
   return (
     <button
-      onClick={handleClick}
-      onTouchEnd={onTouchEnd}
+      onPointerUp={handlePointerUp}
       onPointerEnter={() => { setHovered(true); onHoverEnter(item.id); }}
       onPointerLeave={() => { setHovered(false); onHoverLeave(); }}
       className={`flex flex-col items-center justify-center gap-0.5 rounded-md py-1.5 text-[11px] transition-all duration-200
