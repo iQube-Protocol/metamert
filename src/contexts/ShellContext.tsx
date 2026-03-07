@@ -77,6 +77,7 @@ interface ShellContextValue {
   selectCodex: (codexId: string) => void;
   resetIdleTimer: (reason?: string) => void;
   setInteractionState: (state: InteractionState) => void;
+  setPromptHasText: (hasText: boolean) => void;
 }
 
 const ShellCtx = createContext<ShellContextValue | null>(null);
