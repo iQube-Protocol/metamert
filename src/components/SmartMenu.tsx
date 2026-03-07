@@ -52,14 +52,14 @@ export default function SmartMenu() {
   // Prompt mode: show prompt bar + floating submenu with animations
   if (viewState === "promptMode" && activeMode) {
     return (
-      <div
-        className="flex flex-col animate-in fade-in duration-200"
-        onPointerEnter={pauseIdleTimer}
-        onPointerLeave={resumeIdleTimer}
-      >
-        {/* Floating submenu above prompt bar */}
+      <div className="flex flex-col animate-in fade-in duration-200">
+        {/* Floating submenu above prompt bar — hover pauses idle timers */}
         {submenuVisibility === "visibleAuto" && (
-          <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div
+            className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200"
+            onPointerEnter={pauseIdleTimer}
+            onPointerLeave={resumeIdleTimer}
+          >
             <SmartMenuSubmenu />
           </div>
         )}
