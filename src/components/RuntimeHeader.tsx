@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Bot, ChevronDown, Check } from "lucide-react";
+import { Bot, ChevronDown, Check, Box } from "lucide-react";
 import ProviderIcon from "@/components/ProviderIcon";
 import {
   Popover,
@@ -14,13 +14,12 @@ import {
 } from "@/components/ui/popover";
 import { useState, useMemo } from "react";
 
-/** Map a 0-10 score to 0-5 filled dots using ceil(score/2) per spec */
+/** Map a 0-10 score to 0-5 filled dots using ceil(score/2) */
 function scoreToDots(score: number | undefined, fallback: number): number {
   if (score == null) return fallback;
   return Math.ceil(Math.min(10, Math.max(0, score)) / 2);
 }
 
-/** Trust dot color: 1-3 red-500, 4-6 yellow-500, 7-10 green-500 */
 function trustDotColor(score: number | undefined): string {
   const v = score ?? 5;
   if (v <= 3) return "bg-red-500";
@@ -28,7 +27,6 @@ function trustDotColor(score: number | undefined): string {
   return "bg-green-500";
 }
 
-/** Reliability dot color: 1-3 red-500, 4-6 yellow-500, 7-10 purple-500 */
 function reliabilityDotColor(score: number | undefined): string {
   const v = score ?? 5;
   if (v <= 3) return "bg-red-500";
@@ -36,16 +34,11 @@ function reliabilityDotColor(score: number | undefined): string {
   return "bg-purple-500";
 }
 
-/**
- * Compact header: colored Bot icon (aigent) + LLM provider logo, both icon-only.
- * LLM dropdown groups models by provider with provider header rows.
- */
 export default function RuntimeHeader() {
-  const { config, selectAigent, selectLLM, inferring } = useShell();
+  const { config, selectAigent, selectLLM, inferring, cartridgeState } = useShell();
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
 
-  // Group LLM options by provider (must be before early return)
   const llmGroups = useMemo(() => {
     if (!config) return [];
     const groups: { provider: string; color: string; options: typeof config.selectors.llm.options }[] = [];
@@ -85,6 +78,9 @@ export default function RuntimeHeader() {
   const activeAigent = config.selectors.aigent.options.find(o => o.id === config.selectors.aigent.current);
   const activeLLM = config.selectors.llm.options.find(o => o.id === config.selectors.llm.current);
 
+  // Cartridge/Codex info for header center
+  const activeCart = cartridgeState.available.find(c => c.id === cartridgeState.activeCartridgeId);
+  const activeCodex = activeCart?.codexes.find(c => c.id === cartridgeState.activeCodexId);
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -150,10 +146,28 @@ export default function RuntimeHeader() {
           </Popover>
         </div>
 
+        {/* Center: Active Cartridge + Codex badge */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-1.5 rounded-md px-2 py-1 cursor-default">
+              <Box className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs font-medium text-foreground">{activeCart?.label ?? "—"}</span>
+              {activeCodex && (
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                  {activeCodex.label}
+                </span>
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p className="text-xs">Active cartridge · codex is cartridge-local</p>
+          </TooltipContent>
+        </Tooltip>
+
         {/* Right: trust dots */}
         <Tooltip>
           <TooltipTrigger asChild>
-      <div className="flex items-center gap-4 bg-muted/20 rounded-lg px-3 py-2 text-xs text-muted-foreground cursor-default">
+            <div className="flex items-center gap-4 bg-muted/20 rounded-lg px-3 py-2 text-xs text-muted-foreground cursor-default">
               <div className="flex items-center gap-0.5">
                 <span className="font-medium mr-1">R</span>
                 {renderDots(rScore, rColor)}
