@@ -249,7 +249,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
     // Notify iframe
     if (iframeRef.current && config) {
-      postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "cartridge", id: cartridgeId }, getIframeOrigin(config));
+      postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "cartridge" as any, id: cartridgeId }, getIframeOrigin(config));
     }
   }, [config, startIdleTimer]);
 
