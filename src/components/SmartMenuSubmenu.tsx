@@ -72,6 +72,9 @@ function QuickActionsCarousel() {
     handleMenuAction(action.id);
   }, [handleMenuAction, setSubmenuType, resetIdleTimer]);
 
+  // Find the index of the first visible fold item to scroll to it
+  const foldIds = modeConfig.mobileVisibleFold;
+
   return (
     <div
       className="glass-float relative rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200"
@@ -79,18 +82,21 @@ function QuickActionsCarousel() {
     >
       <div
         ref={scrollRef}
-        className="flex items-center gap-1 overflow-x-auto px-2 py-1.5 scrollbar-hide"
+        className="flex items-center overflow-x-auto px-2 py-1.5 scrollbar-hide"
         style={{ scrollSnapType: "x mandatory" }}
       >
         {modeConfig.quickActions.map((action) => {
           const Icon = resolveSmartIcon(action.icon, action.id);
           const isFocal = action.id === modeConfig.defaultCenteredQuickActionId;
+          const isInFold = foldIds.includes(action.id);
 
           return (
             <button
               key={action.id}
               onClick={() => handleAction(action)}
-              className="flex flex-col items-center justify-center gap-0.5 rounded-lg px-2.5 py-1.5 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95 shrink-0"
+              className={`flex flex-col items-center justify-center gap-0.5 rounded-lg px-2.5 py-1.5 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95 shrink-0
+                ${isInFold ? "flex-1 min-w-0" : ""}
+              `}
               style={{
                 scrollSnapAlign: "center",
                 ...(isFocal ? { color: accent } : {}),
