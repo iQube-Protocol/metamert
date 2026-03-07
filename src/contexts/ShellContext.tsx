@@ -70,6 +70,7 @@ interface ShellContextValue {
 
   // Smart Menu actions
   activateMode: (mode: SmartMenuMode) => void;
+  activateQuickActions: (mode: SmartMenuMode) => void;
   deactivateMode: () => void;
   setSubmenuType: (type: SubmenuType | null) => void;
   toggleSubmenu: () => void;
