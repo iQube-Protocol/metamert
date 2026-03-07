@@ -6,6 +6,7 @@
  * Spec animations: mode pop, color wash, calm collapse.
  */
 import { useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
