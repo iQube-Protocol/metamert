@@ -109,7 +109,8 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
 
   return (
     <div
-      className="glass-float relative rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200"
+      className="glass-float relative rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2"
+      style={{ animationDuration: '350ms' }}
       onPointerEnter={pauseIdleTimer}
     >
       <div
