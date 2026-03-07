@@ -76,13 +76,18 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
   const handleAction = useCallback((action: QuickActionDef) => {
     pauseIdleTimer();
 
+    // If in hover preview, activate the mode first so prompt mode engages
+    if (overrideMode && overrideMode !== activeMode) {
+      activateMode(overrideMode);
+    }
+
     if (action.id === "cartridge") {
       setSubmenuType("cartridgeSelector");
       return;
     }
 
     handleMenuAction(action.id);
-  }, [handleMenuAction, setSubmenuType, pauseIdleTimer]);
+  }, [handleMenuAction, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode]);
 
   const foldIds = modeConfig.mobileVisibleFold;
   // Find the first fold item's index to auto-scroll there on mount
