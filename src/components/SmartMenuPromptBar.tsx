@@ -56,6 +56,7 @@ export default function SmartMenuPromptBar() {
     if (!text.trim()) return;
     submitPrompt(text.trim());
     setText("");
+    setHasSent(true);
     // Send keeps prompt open (spec requirement)
     resetIdleTimer("typing");
     (document.activeElement as HTMLElement)?.blur();
