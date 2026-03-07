@@ -9,6 +9,9 @@ import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS } from "@/lib/smart-menu-config";
 import { SendHorizonal, Mic, ChevronUp, ChevronDown } from "lucide-react";
 
+/** Track whether the prompt input is focused — used to hold idle timers */
+let promptInputFocused = false;
+
 export default function SmartMenuPromptBar() {
   const {
     activeMode,
