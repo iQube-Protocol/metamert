@@ -167,7 +167,6 @@ function QuickActionButton({
 
 function CartridgeSelector() {
   const { activeMode, cartridgeState, selectCartridge, setSubmenuType, pauseIdleTimer } = useShell();
-  const accent = activeMode ? MODE_CONFIGS[activeMode].accentHex : undefined;
 
   return (
     <div
@@ -187,11 +186,12 @@ function CartridgeSelector() {
         {cartridgeState.available.map(cart => {
           const isActive = cart.id === cartridgeState.activeCartridgeId;
           const Icon = resolveSmartIcon(cart.icon, cart.id);
+          const cartAccent = cart.accentHex;
           return (
             <CartridgePill
               key={cart.id}
               isActive={isActive}
-              accent={accent}
+              accent={cartAccent}
               onClick={() => selectCartridge(cart.id)}
             >
               <div className="flex items-center gap-1">
