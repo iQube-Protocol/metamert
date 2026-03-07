@@ -153,8 +153,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     available: DEFAULT_CARTRIDGES,
   });
 
-  // Idle timer ref
+  // Idle timer refs — split: 3s for quick action layer, 4s for full collapse
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const submenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track whether prompt has text (prevents collapse)
+  const promptHasTextRef = useRef(false);
 
   // Lazily create inference controller
   if (!inferCtrl.current) {
