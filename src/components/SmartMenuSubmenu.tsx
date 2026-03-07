@@ -186,7 +186,7 @@ function CodexSelector() {
   return (
     <div
       className="glass-float rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200 p-2"
-      onPointerEnter={() => resetIdleTimer("hover")}
+      onPointerEnter={pauseIdleTimer}
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
