@@ -22,6 +22,7 @@ export default function SmartMenuPromptBar() {
   } = useShell();
 
   const [text, setText] = useState("");
+  const [hasSent, setHasSent] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number | null>(null);
