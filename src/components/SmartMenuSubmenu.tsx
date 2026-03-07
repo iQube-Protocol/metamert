@@ -178,7 +178,7 @@ function CartridgeSelector() {
 // ---------------------------------------------------------------------------
 
 function CodexSelector() {
-  const { cartridgeState, selectCodex, setSubmenuType, resetIdleTimer } = useShell();
+  const { cartridgeState, selectCodex, setSubmenuType, pauseIdleTimer } = useShell();
 
   const activeCart = cartridgeState.available.find(c => c.id === cartridgeState.activeCartridgeId);
   const codexes = activeCart?.codexes ?? [];
