@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Bot, ChevronDown, Check, Box } from "lucide-react";
+import { Bot, ChevronDown, Check } from "lucide-react";
 import ProviderIcon from "@/components/ProviderIcon";
 import {
   Popover,
@@ -13,6 +13,16 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useState, useMemo } from "react";
+
+import cartridgeMetame from "@/assets/cartridge-metame.png";
+import cartridgeQriptopian from "@/assets/cartridge-qriptopian.png";
+import cartridgeMetaknyts from "@/assets/cartridge-metaknyts.png";
+
+const CARTRIDGE_ICONS: Record<string, string> = {
+  "metame-runtime": cartridgeMetame,
+  "qriptopian": cartridgeQriptopian,
+  "knyt": cartridgeMetaknyts,
+};
 
 /** Map a 0-10 score to 0-5 filled dots using ceil(score/2) */
 function scoreToDots(score: number | undefined, fallback: number): number {
