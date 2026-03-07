@@ -151,7 +151,6 @@ export default function RuntimeHeader() {
           <TooltipTrigger asChild>
             <div className="flex items-center gap-1.5 rounded-md px-2 py-1 cursor-default">
               <Box className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs font-medium text-foreground">{activeCart?.label ?? "—"}</span>
               {activeCodex && (
                 <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
                   {activeCodex.label}
