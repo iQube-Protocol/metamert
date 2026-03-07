@@ -82,9 +82,18 @@ export default function RuntimeHeader() {
   const activeCart = cartridgeState.available.find(c => c.id === cartridgeState.activeCartridgeId);
   const activeCodex = activeCart?.codexes.find(c => c.id === cartridgeState.activeCodexId);
 
+  const cartridgeColor = (() => {
+    switch (cartridgeState.activeCartridgeId) {
+      case "qriptopian": return "hsl(var(--accent-play))";   // Cyan
+      case "metame-runtime": return "#FF6B6B";                // Coral
+      case "knyt": return "hsl(var(--accent-share))";         // Amber
+      default: return undefined;
+    }
+  })();
+
   return (
     <TooltipProvider delayDuration={300}>
-      <header className="flex items-center justify-between border-b border-border bg-card px-3 py-1.5">
+      <header className="relative flex items-center justify-between border-b border-border bg-card px-3 py-1.5">
         {/* Left: selectors */}
         <div className="flex items-center gap-2">
           {/* Aigent selector */}
@@ -146,11 +155,11 @@ export default function RuntimeHeader() {
           </Popover>
         </div>
 
-        {/* Center: Active Cartridge icon */}
+        {/* Center: Active Cartridge icon — centered with nav below */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex items-center rounded-md px-1 py-1 cursor-default">
-              <Box className="h-[18px] w-[18px] text-muted-foreground" />
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center cursor-default">
+              <Box className="h-[18px] w-[18px]" style={cartridgeColor ? { color: cartridgeColor } : undefined} />
             </div>
           </TooltipTrigger>
           <TooltipContent side="bottom">
