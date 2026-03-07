@@ -294,7 +294,7 @@ function CartridgePill({
       onClick={onClick}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
-      className={`flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-xs transition-all duration-150 active:scale-95
+      className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs transition-all duration-150 active:scale-95
         ${isActive ? "" : "text-muted-foreground"}
       `}
       style={color ? { color } : undefined}
