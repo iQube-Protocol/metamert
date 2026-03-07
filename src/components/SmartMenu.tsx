@@ -166,7 +166,7 @@ export default function SmartMenu() {
           style={{
             animationDuration: '350ms',
             height: '3.5625rem',
-            borderTopColor: submenuVisibility === "visibleAuto" ? MODE_ACCENT[activeMode] : 'transparent',
+            borderTopColor: submenuVisibility === "visibleAuto" ? MODE_ACCENT[activeMode] : 'hsl(var(--border))',
             transitionDuration: '300ms',
           }}
           onPointerUp={handleNavAreaPointerUp}
