@@ -262,7 +262,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     startIdleTimer();
 
     if (iframeRef.current && config) {
-      postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "codex", id: codexId }, getIframeOrigin(config));
+      postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "codex" as any, id: codexId }, getIframeOrigin(config));
     }
   }, [config, startIdleTimer]);
 

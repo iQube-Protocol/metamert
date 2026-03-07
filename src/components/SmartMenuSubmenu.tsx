@@ -5,7 +5,7 @@
  */
 import { useRef, useCallback } from "react";
 import { useShell } from "@/contexts/ShellContext";
-import { MODE_CONFIGS, type SmartMenuMode, type QuickActionDef } from "@/lib/smart-menu-config";
+import { MODE_CONFIGS, type QuickActionDef } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
 import { SMART_MENU_ICON_DEFAULTS } from "@/lib/smart-menu-icons";
 import { Check } from "lucide-react";
@@ -13,10 +13,8 @@ import type { LucideIcon } from "lucide-react";
 
 /** Resolve icon from smart menu defaults or lucide fallback */
 function resolveSmartIcon(iconName?: string, id?: string): LucideIcon | undefined {
-  // Try standard resolveIcon first
   const standard = resolveIcon(iconName, id);
   if (standard) return standard;
-  // Fall back to smart menu icon map
   if (id && SMART_MENU_ICON_DEFAULTS[id]) return SMART_MENU_ICON_DEFAULTS[id];
   return undefined;
 }
@@ -33,6 +31,7 @@ export default function SmartMenuSubmenu() {
     selectCodex,
   } = useShell();
 
+  // All hooks above — conditional rendering below
   if (!activeMode || !submenuType) return null;
 
   if (submenuType === "cartridgeSelector") {
@@ -42,7 +41,6 @@ export default function SmartMenuSubmenu() {
     return <CodexSelector />;
   }
 
-  // Quick actions carousel
   return <QuickActionsCarousel />;
 }
 
@@ -66,7 +64,6 @@ function QuickActionsCarousel() {
   const handleAction = useCallback((action: QuickActionDef) => {
     resetIdleTimer("quickActionOpen");
 
-    // System-only actions: cartridge/codex selectors or reset
     if (action.id === "cartridge") {
       setSubmenuType("cartridgeSelector");
       return;
@@ -76,24 +73,17 @@ function QuickActionsCarousel() {
       return;
     }
 
-    // Fire the action (dual event: runtime + menu)
     handleMenuAction(action.id);
   }, [handleMenuAction, setSubmenuType, resetIdleTimer]);
 
-  // Calculate initial scroll to center the focal item
-  const focalIndex = modeConfig.quickActions.findIndex(
-    a => a.id === modeConfig.defaultCenteredQuickActionId
-  );
-
   return (
     <div
-      className="glass-float rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200"
+      className="glass-float relative rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200"
       onPointerEnter={() => resetIdleTimer("hover")}
     >
       <div
         ref={scrollRef}
         className="flex items-center gap-1 overflow-x-auto px-2 py-1.5 scrollbar-hide"
-        onScroll={() => {/* carousel scroll does NOT reset idle */}}
         style={{ scrollSnapType: "x mandatory" }}
       >
         {modeConfig.quickActions.map((action) => {
