@@ -178,19 +178,19 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   const startIdleTimer = useCallback(() => {
     clearIdleTimer();
-    // 3s: auto-hide quick action floating layer
+    // 4s: auto-hide quick action floating layer
     submenuTimerRef.current = setTimeout(() => {
       setSubmenuVisibility("hiddenAutoIdle");
       submenuTimerRef.current = null;
-    }, 3000);
-    // 4s: full prompt collapse (only if prompt is empty)
+    }, 4000);
+    // 5s: full prompt collapse (only if prompt is empty)
     idleTimerRef.current = setTimeout(() => {
       if (promptHasTextRef.current) return; // spec: don't collapse with text
       setViewState("defaultNav");
       setActiveMode(null);
       setSubmenuTypeState(null);
       setSubmenuVisibility("visibleAuto");
-    }, 4000);
+    }, 5000);
   }, [clearIdleTimer]);
 
   const resetIdleTimer = useCallback((reason?: string) => {
