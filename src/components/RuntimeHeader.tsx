@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Bot, ChevronDown, Check, Box } from "lucide-react";
+import { Bot, ChevronDown, Check } from "lucide-react";
 import ProviderIcon from "@/components/ProviderIcon";
 import {
   Popover,
@@ -13,6 +13,16 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useState, useMemo } from "react";
+
+import cartridgeMetame from "@/assets/cartridge-metame.png";
+import cartridgeQriptopian from "@/assets/cartridge-qriptopian.png";
+import cartridgeMetaknyts from "@/assets/cartridge-metaknyts.png";
+
+const CARTRIDGE_ICONS: Record<string, string> = {
+  "metame-runtime": cartridgeMetame,
+  "qriptopian": cartridgeQriptopian,
+  "knyt": cartridgeMetaknyts,
+};
 
 /** Map a 0-10 score to 0-5 filled dots using ceil(score/2) */
 function scoreToDots(score: number | undefined, fallback: number): number {
@@ -146,11 +156,23 @@ export default function RuntimeHeader() {
           </Popover>
         </div>
 
-        {/* Center: Active Cartridge + Codex badge */}
+        {/* Center: Active Cartridge icon + Codex badge */}
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex items-center gap-1.5 rounded-md px-2 py-1 cursor-default">
-              <Box className="h-3.5 w-3.5 text-muted-foreground" />
+              {activeCart && CARTRIDGE_ICONS[activeCart.id] ? (
+                <img
+                  src={CARTRIDGE_ICONS[activeCart.id]}
+                  alt={activeCart.label}
+                  className="h-5 w-auto object-contain"
+                />
+              ) : (
+                <img
+                  src={cartridgeMetame}
+                  alt="Cartridge"
+                  className="h-5 w-auto object-contain"
+                />
+              )}
               {activeCodex && (
                 <span className="rounded-full glass-float px-2 py-0.5 text-[10px] font-medium text-foreground/80">
                   {activeCodex.label}
@@ -159,7 +181,7 @@ export default function RuntimeHeader() {
             </div>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            <p className="text-xs">Active cartridge · codex is cartridge-local</p>
+            <p className="text-xs">{activeCart?.label ?? "Cartridge"} · {activeCodex?.label ?? "codex"}</p>
           </TooltipContent>
         </Tooltip>
 
