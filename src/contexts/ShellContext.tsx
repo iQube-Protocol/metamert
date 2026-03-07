@@ -166,15 +166,22 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => () => inferCtrl.current?.cleanup(), []);
 
-  // Idle auto-hide logic
+  // Idle auto-hide logic — split timers per spec
   const clearIdleTimer = useCallback(() => {
     if (idleTimerRef.current) { clearTimeout(idleTimerRef.current); idleTimerRef.current = null; }
+    if (submenuTimerRef.current) { clearTimeout(submenuTimerRef.current); submenuTimerRef.current = null; }
   }, []);
 
   const startIdleTimer = useCallback(() => {
     clearIdleTimer();
+    // 3s: auto-hide quick action floating layer
+    submenuTimerRef.current = setTimeout(() => {
+      setSubmenuVisibility("hiddenAutoIdle");
+      submenuTimerRef.current = null;
+    }, 3000);
+    // 4s: full prompt collapse (only if prompt is empty)
     idleTimerRef.current = setTimeout(() => {
-      // Return to default nav after idle timeout
+      if (promptHasTextRef.current) return; // spec: don't collapse with text
       setViewState("defaultNav");
       setActiveMode(null);
       setSubmenuTypeState(null);
@@ -189,6 +196,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setSubmenuVisibility("visibleAuto");
     startIdleTimer();
   }, [startIdleTimer, submenuVisibility]);
+
+  // Expose prompt text tracking for idle logic
+  const setPromptHasText = useCallback((hasText: boolean) => {
+    promptHasTextRef.current = hasText;
+  }, []);
 
   // Clean up idle timer on unmount
   useEffect(() => () => clearIdleTimer(), [clearIdleTimer]);
