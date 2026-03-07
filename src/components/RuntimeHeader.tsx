@@ -93,7 +93,7 @@ export default function RuntimeHeader() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <header className="flex items-center justify-between border-b border-border bg-card px-3 py-1.5">
+      <header className="relative flex items-center justify-between border-b border-border bg-card px-3 py-1.5">
         {/* Left: selectors */}
         <div className="flex items-center gap-2">
           {/* Aigent selector */}
