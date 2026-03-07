@@ -61,6 +61,7 @@ export default function SmartMenuSubmenu({ previewMode }: SmartMenuSubmenuProps 
 function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode } = {}) {
   const {
     activeMode,
+    activateMode,
     handleMenuAction,
     setSubmenuType,
     pauseIdleTimer,
