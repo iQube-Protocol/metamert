@@ -70,6 +70,7 @@ interface ShellContextValue {
 
   // Smart Menu actions
   activateMode: (mode: SmartMenuMode) => void;
+  activateQuickActions: (mode: SmartMenuMode) => void;
   deactivateMode: () => void;
   setSubmenuType: (type: SubmenuType | null) => void;
   toggleSubmenu: () => void;
@@ -234,7 +235,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   // Smart Menu actions
   const activateMode = useCallback((mode: SmartMenuMode) => {
     // If tapping active mode, deactivate (collapse)
-    if (activeMode === mode && viewState === "promptMode") {
+    if (activeMode === mode && (viewState === "promptMode" || viewState === "quickActionOnly")) {
       setViewState("defaultNav");
       setActiveMode(null);
       setSubmenuTypeState(null);
@@ -243,6 +244,24 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setViewState("promptMode");
+    setActiveMode(mode);
+    setSubmenuTypeState("quickActions");
+    setSubmenuVisibility("visibleAuto");
+    startIdleTimer();
+  }, [activeMode, viewState, clearIdleTimer, startIdleTimer]);
+
+  // Quick-action-only mode: show submenu without prompt bar (no keyboard on mobile)
+  const activateQuickActions = useCallback((mode: SmartMenuMode) => {
+    // If tapping same mode in quickActionOnly, collapse
+    if (activeMode === mode && viewState === "quickActionOnly") {
+      setViewState("defaultNav");
+      setActiveMode(null);
+      setSubmenuTypeState(null);
+      setSubmenuVisibility("visibleAuto");
+      clearIdleTimer();
+      return;
+    }
+    setViewState("quickActionOnly");
     setActiveMode(mode);
     setSubmenuTypeState("quickActions");
     setSubmenuVisibility("visibleAuto");
@@ -600,7 +619,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         hydrate, selectAigent, selectLLM, handleMenuAction,
         submitPrompt, resetToWelcome, updateTrust, iframeRef,
         // Smart Menu actions
-        activateMode, deactivateMode, setSubmenuType, toggleSubmenu,
+        activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
         selectCartridge, selectCodex, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
       }}
     >
