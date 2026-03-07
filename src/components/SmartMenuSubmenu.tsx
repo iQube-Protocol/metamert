@@ -58,7 +58,7 @@ export default function SmartMenuSubmenu({ previewMode }: SmartMenuSubmenuProps 
 // Quick Actions Carousel
 // ---------------------------------------------------------------------------
 
-function QuickActionsCarousel() {
+function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode } = {}) {
   const {
     activeMode,
     handleMenuAction,
@@ -67,8 +67,9 @@ function QuickActionsCarousel() {
   } = useShell();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  if (!activeMode) return null;
-  const modeConfig = MODE_CONFIGS[activeMode];
+  const effectiveMode = overrideMode ?? activeMode;
+  if (!effectiveMode) return null;
+  const modeConfig = MODE_CONFIGS[effectiveMode];
   const accent = modeConfig.accentHex;
 
   const handleAction = useCallback((action: QuickActionDef) => {
