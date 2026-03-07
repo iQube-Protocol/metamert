@@ -37,6 +37,7 @@ export interface CartridgeDef {
   id: string;
   label: string;
   icon?: string;
+  accentHex?: string;
   default_codex_id: string;
   codexes: CodexDef[];
   agents?: string[];
