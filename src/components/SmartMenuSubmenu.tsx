@@ -53,7 +53,7 @@ function QuickActionsCarousel() {
     activeMode,
     handleMenuAction,
     setSubmenuType,
-    resetIdleTimer,
+    pauseIdleTimer,
   } = useShell();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -62,7 +62,7 @@ function QuickActionsCarousel() {
   const accent = modeConfig.accentHex;
 
   const handleAction = useCallback((action: QuickActionDef) => {
-    resetIdleTimer("quickActionOpen");
+    pauseIdleTimer();
 
     if (action.id === "cartridge") {
       setSubmenuType("cartridgeSelector");
@@ -70,7 +70,7 @@ function QuickActionsCarousel() {
     }
 
     handleMenuAction(action.id);
-  }, [handleMenuAction, setSubmenuType, resetIdleTimer]);
+  }, [handleMenuAction, setSubmenuType, pauseIdleTimer]);
 
   const foldIds = modeConfig.mobileVisibleFold;
   // Find the first fold item's index to auto-scroll there on mount
@@ -87,7 +87,7 @@ function QuickActionsCarousel() {
   return (
     <div
       className="glass-float relative rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200"
-      onPointerEnter={() => resetIdleTimer("hover")}
+      onPointerEnter={pauseIdleTimer}
     >
       <div
         ref={scrollRef}
@@ -132,12 +132,12 @@ function QuickActionsCarousel() {
 // ---------------------------------------------------------------------------
 
 function CartridgeSelector() {
-  const { cartridgeState, selectCartridge, setSubmenuType, resetIdleTimer } = useShell();
+  const { cartridgeState, selectCartridge, setSubmenuType, pauseIdleTimer } = useShell();
 
   return (
     <div
       className="glass-float rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200 p-2"
-      onPointerEnter={() => resetIdleTimer("hover")}
+      onPointerEnter={pauseIdleTimer}
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Cartridge</span>
@@ -178,7 +178,7 @@ function CartridgeSelector() {
 // ---------------------------------------------------------------------------
 
 function CodexSelector() {
-  const { cartridgeState, selectCodex, setSubmenuType, resetIdleTimer } = useShell();
+  const { cartridgeState, selectCodex, setSubmenuType, pauseIdleTimer } = useShell();
 
   const activeCart = cartridgeState.available.find(c => c.id === cartridgeState.activeCartridgeId);
   const codexes = activeCart?.codexes ?? [];
@@ -186,7 +186,7 @@ function CodexSelector() {
   return (
     <div
       className="glass-float rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200 p-2"
-      onPointerEnter={() => resetIdleTimer("hover")}
+      onPointerEnter={pauseIdleTimer}
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
