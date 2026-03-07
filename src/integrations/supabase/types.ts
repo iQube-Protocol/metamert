@@ -5160,6 +5160,66 @@ export type Database = {
         }
         Relationships: []
       }
+      iqubes: {
+        Row: {
+          access_policy: string
+          business_model: string
+          category: string
+          created_at: string | null
+          description: string | null
+          ipfs_hash: string
+          ipfs_url: string
+          iqube_type: string
+          is_encrypted: boolean
+          minter_address: string
+          owner_address: string
+          price: string | null
+          risk_score: number
+          title: string
+          token_id: number
+          tx_hash: string
+          visibility: string
+        }
+        Insert: {
+          access_policy?: string
+          business_model?: string
+          category: string
+          created_at?: string | null
+          description?: string | null
+          ipfs_hash: string
+          ipfs_url: string
+          iqube_type: string
+          is_encrypted?: boolean
+          minter_address: string
+          owner_address: string
+          price?: string | null
+          risk_score?: number
+          title: string
+          token_id: number
+          tx_hash: string
+          visibility?: string
+        }
+        Update: {
+          access_policy?: string
+          business_model?: string
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          ipfs_hash?: string
+          ipfs_url?: string
+          iqube_type?: string
+          is_encrypted?: boolean
+          minter_address?: string
+          owner_address?: string
+          price?: string | null
+          risk_score?: number
+          title?: string
+          token_id?: number
+          tx_hash?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       knowledge_base: {
         Row: {
           category: string | null
