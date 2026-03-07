@@ -17,7 +17,7 @@ import {
 const DEFAULTS: Record<string, LucideIcon> = {
   be: Users,
   earn: Coins,
-  play: PlayCircle,
+  play: Play,
   make: Pencil,
   share: Share2,
   "aigent-z": Bot,
