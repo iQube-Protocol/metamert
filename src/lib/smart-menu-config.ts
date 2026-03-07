@@ -37,6 +37,7 @@ export interface CartridgeDef {
   id: string;
   label: string;
   icon?: string;
+  accentHex?: string;
   default_codex_id: string;
   codexes: CodexDef[];
   agents?: string[];
@@ -82,8 +83,9 @@ export interface ModeConfig {
 export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
   {
     id: "metame-runtime",
-    label: "MetaMe Runtime",
-    icon: "cpu",
+    label: "metaMe",
+    icon: "box",
+    accentHex: "#FF6B6B",
     default_codex_id: "metame-core",
     codexes: [{ id: "metame-core", label: "Runtime Core" }],
     agents: ["metame-agent"],
@@ -91,7 +93,8 @@ export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
   {
     id: "qriptopian",
     label: "Qriptopian",
-    icon: "book-open",
+    icon: "box",
+    accentHex: "#00D5FF",
     default_codex_id: "qriptopian-codex",
     codexes: [
       { id: "qriptopian-codex", label: "Qriptopian" },
@@ -102,7 +105,8 @@ export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
   {
     id: "knyt",
     label: "KNYT",
-    icon: "sword",
+    icon: "box",
+    accentHex: "#F59E0B",
     default_codex_id: "knyt-codex",
     codexes: [{ id: "knyt-codex", label: "KNYT" }],
     agents: ["moneypenny", "know1", "nakamoto"],
