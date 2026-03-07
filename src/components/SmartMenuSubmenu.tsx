@@ -251,7 +251,7 @@ function CodexSelector() {
           ← Back
         </button>
       </div>
-      <div className="flex gap-1.5">
+      <div className="flex gap-1.5 justify-center">
         {codexes.map(cdx => {
           const isActive = cdx.id === cartridgeState.activeCodexId;
           return (
