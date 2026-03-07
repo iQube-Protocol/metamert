@@ -1,100 +1,70 @@
 
-Goal: make the header R/T indicators animate in lockstep with real iframe inference (including welcome-state inference initiated inside the iframe), and stop only when inference/render is actually complete.
 
-What I found in the current code
-1) Animation styling is present
-- `RuntimeHeader.tsx` correctly uses:
-  - `animate-dot-wave` when `inferring === true`
-  - staggered `animationDelay` (`i * 150ms`)
-- `tailwind.config.ts` still defines `dot-wave` keyframes and animation.
+## Bug Analysis
 
-2) The main issue is inference state signaling, not CSS
-- `inferring` is only set to `true` in shell-owned actions:
-  - `submitPrompt()`
-  - `handleMenuAction()`
-- During iframe-owned welcome prompt flow (spinner appears inside iframe), shell often never sets `inferring=true`.
+### Bug 1: Hover preview quicklinks persist after cursor leaves menu area
 
-3) Completion handling is currently too aggressive
-- In `ShellContext.tsx`, any `STATE_SYNC` is treated like inference completion and schedules `inferring=false` after 2s.
-- This can desync the indicators from the iframe spinner if `STATE_SYNC` is sent during processing.
+**Root cause**: When a nav button is clicked, `handleClick` calls `onTap(item.id)` which triggers `activateMode()`, switching `viewState` to `"promptMode"`. The SmartMenu component then renders the prompt-mode branch instead of the default-nav branch. However, `hoverPreviewMode` state is **never cleared** during this transition -- it just becomes invisible because the prompt-mode branch doesn't read it.
 
-4) Message parsing is fragile
-- Current listeners read `e.data.type` directly and do not robustly normalize envelope-style payloads.
-- `ShellContext` completion listener also lacks strict runtime-origin filtering, so it can react to unrelated window messages.
+When idle collapse fires and `viewState` returns to `"defaultNav"`, the default-nav branch renders again. Since `hoverPreviewMode` still holds its stale value (e.g. `"play"`), the hover preview submenu immediately renders -- even though the cursor is nowhere near the menu. There is no `onPointerLeave` event to clear it because the cursor was never over the newly rendered elements.
 
-Implementation plan
-1) Make iframe message handling inference-aware (start + complete), not completion-only
-- File: `src/contexts/ShellContext.tsx`
-- Replace current “`STATE_SYNC` always means complete” logic with a lifecycle parser:
-  - Start inference (`setInferring(true)`) on:
-    - explicit start-like message types (e.g. `INFERENCE_START`, `RENDER_START`, `PROCESSING_START` if present)
-    - `STATE_SYNC` indicating processing/busy=true in payload/state
-  - Complete inference (2s grace, existing behavior) on:
-    - explicit completion types (`INFERENCE_COMPLETE`, `RENDER_COMPLETE`)
-    - `STATE_SYNC` indicating processing/busy=false
-- Keep existing 30s safety timeout.
-- Keep existing shell-owned start triggers (`submitPrompt`, `handleMenuAction`) unchanged.
+**Fix (SmartMenu.tsx only)**: Clear `hoverPreviewMode` whenever `viewState` transitions away from `"defaultNav"` (entering prompt mode) AND when it returns to `"defaultNav"` (idle collapse). Add a check: when `viewState` changes to `"promptMode"`, immediately set `hoverPreviewMode` to `null`. Also add a `navRestoredAt` guard (as previously discussed) to block phantom hover events for 400ms after nav restoration.
 
-2) Normalize inbound message shapes before interpreting
-- File: `src/lib/shell-messages.ts`
-- Add a small helper to normalize iframe inbound events from either form:
-  - direct: `{ type, ... }`
-  - envelope/payload style: `{ type, payload: {...} }` and safely expose merged fields for consumers.
-- This avoids missing state flags when runtime sends data under `payload`.
+Concrete change: Add an effect or render-time check in `SmartMenu`:
+```
+// Clear hover preview when leaving defaultNav
+if (viewState === "promptMode" && hoverPreviewMode !== null) {
+  setHoverPreviewMode(null);
+}
 
-3) Apply strict origin guard for inference lifecycle listener
-- File: `src/contexts/ShellContext.tsx`
-- Use runtime origin derived from current config (same safe origin logic already used elsewhere) and ignore non-runtime `postMessage` events.
-- This prevents accidental `inferring` toggles from unrelated messages.
+// Guard against phantom hovers after nav restoration
+const navRestoredAt = useRef<number>(0);
+if (viewState === "defaultNav" && prevViewState.current !== "defaultNav") {
+  navRestoredAt.current = Date.now();
+  // Also clear any stale hover state
+  if (hoverPreviewMode !== null) setHoverPreviewMode(null);
+}
+```
+Update `handleNavHoverEnter` to skip if within 400ms of `navRestoredAt`.
 
-4) Keep RuntimeFrame and ShellContext in sync on message interpretation
-- File: `src/components/RuntimeFrame.tsx`
-- Use the same normalization helper for inbound events, so `TRUST_UPDATE` and `STATE_SYNC` parsing are consistent.
-- Preserve current toast suppression behavior.
+### Bug 2: Prompt bar stays stuck after manually collapsing the floating quick actions
 
-Technical details (implementation-level)
-- New inference lifecycle behavior:
-  - `onInferenceStart()`:
-    - clear any pending completion timer
-    - set `inferring=true`
-    - refresh 30s safety timer
-  - `onInferenceComplete()`:
-    - clear safety timer
-    - start 2s grace timer
-    - then set `inferring=false`
-- `STATE_SYNC` handling:
-  - no longer treated as unconditional completion
-  - evaluated by payload state flags (processing/busy/inferring booleans)
-- Envelope compatibility:
-  - read fields from both top-level and `payload` to support protocol variants without regressions.
+**Root cause**: When the user clicks the chevron to hide quick actions, `toggleSubmenu()` sets `submenuVisibility` to `"hiddenUserToggle"` and calls `clearIdleTimer()` -- killing both the 3s submenu timer and the 4s full-collapse timer. 
 
-Why this addresses your exact complaint
-- Right now, iframe spinner can run while shell indicators stay static because shell never receives/uses a start signal path for iframe-owned inference.
-- This plan makes indicators start when iframe reports processing and only stop when iframe reports completion/rendered state (plus the existing 2s grace).
+After this, `resumeIdleTimer()` (called on `onPointerLeave` of the prompt-mode wrapper) checks `if (submenuVisibility === "hiddenUserToggle") return;` and **does nothing**. So no new idle timer is ever started. The prompt bar stays visible forever with no way to auto-collapse, even when the cursor leaves the area entirely.
 
-Validation plan (end-to-end)
-1) Welcome flow (iframe-owned prompt)
-- Trigger inference using the iframe’s own prompt input.
-- Expected: R/T dots begin wave animation as spinner appears.
-- Expected: animation continues during processing and through render, then stops after grace period.
+**Fix (ShellContext.tsx only)**: `resumeIdleTimer` should still start the **full collapse timer** even when submenu is `hiddenUserToggle`. The user-toggle only hides the floating quick-action layer -- it should not prevent the prompt bar from eventually collapsing.
 
-2) Post-welcome flow (shell-owned prompt)
-- Submit via shell `PromptBox`.
-- Expected: same synchronized behavior.
+Concrete change in `resumeIdleTimer`:
+```
+const resumeIdleTimer = useCallback(() => {
+  if (submenuVisibility === "hiddenUserToggle") {
+    // Still start the 4s full-collapse timer, just skip the 3s submenu timer
+    clearIdleTimer();
+    idleTimerRef.current = setTimeout(() => {
+      if (promptHasTextRef.current) return;
+      setViewState("defaultNav");
+      setActiveMode(null);
+      setSubmenuTypeState(null);
+      setSubmenuVisibility("visibleAuto");
+    }, 4000);
+    return;
+  }
+  startIdleTimer();
+}, [startIdleTimer, submenuVisibility, clearIdleTimer]);
+```
 
-3) Menu-triggered inference
-- Tap `Earn/Play/Make`.
-- Expected: indicators animate immediately and stay synced to runtime completion.
+## Files Changed
 
-4) Idle behavior
-- No spinner / no processing:
-- Expected: indicators remain static, no phantom animation.
+1. **`src/components/SmartMenu.tsx`** -- Clear `hoverPreviewMode` on view-state transitions; add `navRestoredAt` guard in `handleNavHoverEnter`
+2. **`src/contexts/ShellContext.tsx`** -- Update `resumeIdleTimer` to start the 4s collapse timer even when `submenuVisibility === "hiddenUserToggle"`
 
-5) Mobile and desktop check
-- Verify same synchronization behavior on both viewport classes.
+## What stays unchanged
 
-Acceptance criteria
-- Indicators animate whenever runtime spinner indicates active inference (including iframe-initiated inference).
-- Indicators do not stop early while iframe is still processing.
-- Indicators stop shortly after render completes (current grace behavior retained).
-- No regressions to refresh/reset toast policy or menu/header layout.
+- All other idle timer logic (3s submenu hide, carousel swipe ignoring, text-prevents-collapse)
+- `toggleSubmenu` behavior (still toggles between visible/hidden states)
+- `pauseIdleTimer` behavior
+- `activateMode` / `deactivateMode` logic
+- SmartMenuSubmenu and SmartMenuPromptBar -- no changes
+- Hover preview actionability (clicking quick actions from hover still works)
+
