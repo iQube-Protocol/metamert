@@ -619,7 +619,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         hydrate, selectAigent, selectLLM, handleMenuAction,
         submitPrompt, resetToWelcome, updateTrust, iframeRef,
         // Smart Menu actions
-        activateMode, deactivateMode, setSubmenuType, toggleSubmenu,
+        activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
         selectCartridge, selectCodex, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
       }}
     >

@@ -9,7 +9,7 @@ import type { LucideIcon } from "lucide-react";
 // State model types
 // ---------------------------------------------------------------------------
 
-export type ViewState = "defaultNav" | "promptMode";
+export type ViewState = "defaultNav" | "promptMode" | "quickActionOnly";
 export type SmartMenuMode = "be" | "earn" | "play" | "make" | "share";
 export type SubmenuType = "quickActions" | "cartridgeSelector" | "codexSelector";
 export type QuickActionVisibility = "visibleAuto" | "hiddenAutoIdle" | "hiddenUserToggle";
