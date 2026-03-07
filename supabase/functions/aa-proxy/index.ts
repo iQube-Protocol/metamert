@@ -113,6 +113,39 @@ const DEFAULT_SHELL_CONFIG = {
       },
     },
   },
+  cartridges: {
+    active: "qriptopian",
+    active_codex: "qriptopian-codex",
+    available: [
+      {
+        id: "metame-runtime",
+        label: "MetaMe Runtime",
+        icon: "cpu",
+        default_codex_id: "metame-core",
+        codexes: [{ id: "metame-core", label: "Runtime Core" }],
+        agents: ["metame-agent"],
+      },
+      {
+        id: "qriptopian",
+        label: "Qriptopian",
+        icon: "book-open",
+        default_codex_id: "qriptopian-codex",
+        codexes: [
+          { id: "qriptopian-codex", label: "Qriptopian" },
+          { id: "knyt-codex", label: "KNYT" },
+        ],
+        agents: ["moneypenny", "know1"],
+      },
+      {
+        id: "knyt",
+        label: "KNYT",
+        icon: "sword",
+        default_codex_id: "knyt-codex",
+        codexes: [{ id: "knyt-codex", label: "KNYT" }],
+        agents: ["moneypenny", "know1", "nakamoto"],
+      },
+    ],
+  },
   iframe: {
     url: "https://dev-beta.aigentz.me/metame/runtime?embed=1&shell=thin",
     handoff_token: "dev-placeholder-token",

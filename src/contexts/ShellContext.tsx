@@ -20,6 +20,17 @@ import {
 } from "@/lib/shell-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
 import { toast } from "sonner";
+import {
+  type SmartMenuMode,
+  type ViewState,
+  type SubmenuType,
+  type QuickActionVisibility,
+  type InteractionState,
+  type CartridgeState,
+  MODE_CONFIGS,
+  DEFAULT_CARTRIDGES,
+  IDLE_TIMEOUT_MS,
+} from "@/lib/smart-menu-config";
 
 // ---------------------------------------------------------------------------
 // Context shape
@@ -37,6 +48,16 @@ interface ShellContextValue {
   inferring: boolean;
   overlayTrigger: number;
   resetKey: number;
+
+  // Smart Menu state
+  viewState: ViewState;
+  activeMode: SmartMenuMode | null;
+  submenuType: SubmenuType | null;
+  submenuVisibility: QuickActionVisibility;
+  interactionState: InteractionState;
+  cartridgeState: CartridgeState;
+
+  // Actions
   toggleQuickLinks: () => void;
   hydrate: () => Promise<void>;
   selectAigent: (id: string) => Promise<void>;
@@ -46,6 +67,16 @@ interface ShellContextValue {
   resetToWelcome: () => void;
   updateTrust: (trust: { level: string; signals: string[]; scores?: Record<string, number> }) => void;
   iframeRef: React.RefObject<HTMLIFrameElement>;
+
+  // Smart Menu actions
+  activateMode: (mode: SmartMenuMode) => void;
+  deactivateMode: () => void;
+  setSubmenuType: (type: SubmenuType | null) => void;
+  toggleSubmenu: () => void;
+  selectCartridge: (cartridgeId: string) => void;
+  selectCodex: (codexId: string) => void;
+  resetIdleTimer: (reason?: string) => void;
+  setInteractionState: (state: InteractionState) => void;
 }
 
 const ShellCtx = createContext<ShellContextValue | null>(null);
@@ -60,12 +91,10 @@ export function useShell(): ShellContextValue {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Use shared origin resolver */
 function getIframeOrigin(config: ShellConfig): string {
   return resolveIframeOrigin(config);
 }
 
-/** Centralized inference lifecycle helpers used by the provider */
 function createInferenceController(
   setInferring: React.Dispatch<React.SetStateAction<boolean>>,
 ) {
@@ -112,13 +141,137 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
 
+  // Smart Menu state
+  const [viewState, setViewState] = useState<ViewState>("defaultNav");
+  const [activeMode, setActiveMode] = useState<SmartMenuMode | null>(null);
+  const [submenuType, setSubmenuTypeState] = useState<SubmenuType | null>(null);
+  const [submenuVisibility, setSubmenuVisibility] = useState<QuickActionVisibility>("visibleAuto");
+  const [interactionState, setInteractionStateRaw] = useState<InteractionState>("idle");
+  const [cartridgeState, setCartridgeState] = useState<CartridgeState>({
+    activeCartridgeId: "qriptopian",
+    activeCodexId: "qriptopian-codex",
+    available: DEFAULT_CARTRIDGES,
+  });
+
+  // Idle timer ref
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Lazily create inference controller
   if (!inferCtrl.current) {
     inferCtrl.current = createInferenceController(setInferring);
   }
 
-  // Clean up timers on unmount
   useEffect(() => () => inferCtrl.current?.cleanup(), []);
+
+  // Idle auto-hide logic
+  const clearIdleTimer = useCallback(() => {
+    if (idleTimerRef.current) { clearTimeout(idleTimerRef.current); idleTimerRef.current = null; }
+  }, []);
+
+  const startIdleTimer = useCallback(() => {
+    clearIdleTimer();
+    idleTimerRef.current = setTimeout(() => {
+      setSubmenuVisibility("hiddenAutoIdle");
+    }, IDLE_TIMEOUT_MS);
+  }, [clearIdleTimer]);
+
+  const resetIdleTimer = useCallback((reason?: string) => {
+    // Carousel swipe does NOT reset idle
+    if (reason === "carouselSwipe" || reason === "carouselDrag") return;
+    if (submenuVisibility === "hiddenUserToggle") return; // respect manual toggle
+    setSubmenuVisibility("visibleAuto");
+    startIdleTimer();
+  }, [startIdleTimer, submenuVisibility]);
+
+  // Clean up idle timer on unmount
+  useEffect(() => () => clearIdleTimer(), [clearIdleTimer]);
+
+  // Smart Menu actions
+  const activateMode = useCallback((mode: SmartMenuMode) => {
+    // If tapping active mode, deactivate (collapse)
+    if (activeMode === mode && viewState === "promptMode") {
+      setViewState("defaultNav");
+      setActiveMode(null);
+      setSubmenuTypeState(null);
+      setSubmenuVisibility("visibleAuto");
+      clearIdleTimer();
+      return;
+    }
+    setViewState("promptMode");
+    setActiveMode(mode);
+    setSubmenuTypeState("quickActions");
+    setSubmenuVisibility("visibleAuto");
+    startIdleTimer();
+  }, [activeMode, viewState, clearIdleTimer, startIdleTimer]);
+
+  const deactivateMode = useCallback(() => {
+    setViewState("defaultNav");
+    setActiveMode(null);
+    setSubmenuTypeState(null);
+    setSubmenuVisibility("visibleAuto");
+    clearIdleTimer();
+  }, [clearIdleTimer]);
+
+  const setSubmenuType = useCallback((type: SubmenuType | null) => {
+    setSubmenuTypeState(type);
+    if (type) {
+      setSubmenuVisibility("visibleAuto");
+      startIdleTimer();
+    }
+  }, [startIdleTimer]);
+
+  const toggleSubmenu = useCallback(() => {
+    setSubmenuVisibility(prev => {
+      if (prev === "hiddenUserToggle" || prev === "hiddenAutoIdle") {
+        startIdleTimer();
+        return "visibleAuto";
+      }
+      clearIdleTimer();
+      return "hiddenUserToggle";
+    });
+  }, [startIdleTimer, clearIdleTimer]);
+
+  const selectCartridge = useCallback((cartridgeId: string) => {
+    setCartridgeState(prev => {
+      const cart = prev.available.find(c => c.id === cartridgeId);
+      if (!cart) return prev;
+      // If current codex is not in the new cartridge, use default
+      const codexValid = cart.codexes.some(c => c.id === prev.activeCodexId);
+      return {
+        ...prev,
+        activeCartridgeId: cartridgeId,
+        activeCodexId: codexValid ? prev.activeCodexId : cart.default_codex_id,
+      };
+    });
+    // Return to quick actions after selecting
+    setSubmenuTypeState("quickActions");
+    startIdleTimer();
+
+    // Notify iframe
+    if (iframeRef.current && config) {
+      postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "cartridge" as any, id: cartridgeId }, getIframeOrigin(config));
+    }
+  }, [config, startIdleTimer]);
+
+  const selectCodex = useCallback((codexId: string) => {
+    setCartridgeState(prev => ({
+      ...prev,
+      activeCodexId: codexId,
+    }));
+    setSubmenuTypeState("quickActions");
+    startIdleTimer();
+
+    if (iframeRef.current && config) {
+      postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "codex" as any, id: codexId }, getIframeOrigin(config));
+    }
+  }, [config, startIdleTimer]);
+
+  const setInteractionState = useCallback((state: InteractionState) => {
+    setInteractionStateRaw(state);
+    if (state !== "idle") {
+      resetIdleTimer(state);
+    }
+  }, [resetIdleTimer]);
 
   // Listen for iframe inference lifecycle signals
   useEffect(() => {
@@ -126,19 +279,15 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     const runtimeOrigin = getIframeOrigin(config);
 
     const handler = (e: MessageEvent) => {
-      // Accept messages from runtime origin OR wildcard if origin is "*"
       if (runtimeOrigin !== "*" && e.origin !== runtimeOrigin) return;
-
       const msg = normalizeInbound(e.data);
       if (!msg) return;
-
       const t = msg.type as string;
 
       if (import.meta.env.DEV) {
         console.log("[Shell:lifecycle]", t, "origin:", e.origin, "state:", msg.state ?? "-");
       }
 
-      // Inference start signals
       if (isInferenceStart(msg)) {
         console.log("[Shell] Inference START signal:", t);
         setShellState("post-welcome");
@@ -147,13 +296,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Check for welcome_inference_completed flag on any message
       const payload = (msg as any).payload ?? msg;
       const welcomeInferenceCompleted =
         payload.welcome_inference_completed === true ||
         payload.welcome_prompt_executed === true;
 
-      // Inference completion signals
       if (isInferenceComplete(msg)) {
         console.log("[Shell] Inference COMPLETE signal:", t, welcomeInferenceCompleted ? "(welcome_inference_completed)" : "");
         setShellState("post-welcome");
@@ -162,52 +309,39 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // WELCOME_COMPLETE — iframe's welcome flow is done; activate prompt box
       if (t === "WELCOME_COMPLETE") {
-        console.log("[Shell] WELCOME_COMPLETE → transitioning to post-welcome", welcomeInferenceCompleted ? "(welcome_inference_completed)" : "");
         setShellState("post-welcome");
         inferCtrl.current?.complete();
         bumpOverlay();
         return;
       }
 
-      // STATE_SYNC with welcome_inference_completed — unlock prompt without menu action
       if (t === "STATE_SYNC" && welcomeInferenceCompleted) {
-        console.log("[Shell] STATE_SYNC welcome_inference_completed → transitioning to post-welcome");
         setShellState("post-welcome");
         inferCtrl.current?.complete();
         bumpOverlay();
         return;
       }
 
-      // Catch-all: any PROMPT_SUBMIT echo or RESPONSE from runtime means
-      // the first prompt was handled inside iframe — transition shell
       if (
         t === "PROMPT_SUBMIT" || t === "PROMPT_RESPONSE" ||
         t === "RESPONSE" || t === "CHAT_RESPONSE" ||
         t === "RESULT" || t === "OUTPUT"
       ) {
-        console.log("[Shell] Prompt lifecycle signal:", t, "→ post-welcome");
         setShellState("post-welcome");
         inferCtrl.current?.complete();
         bumpOverlay();
         return;
       }
 
-      // NAVIGATE with close_codex intent — forward to runtime as MENU_ACTION
       if (t === "NAVIGATE" && (msg as any).action === "close_codex") {
-        console.log("[Shell:inbound] NAVIGATE close_codex from runtime/codex — forwarding MENU_ACTION to runtime");
         if (iframeRef.current && config) {
           postToIframe(iframeRef.current, { type: "MENU_ACTION", action_id: "close_codex" }, getIframeOrigin(config));
         }
         return;
       }
-
-      // RUNTIME_READY is a lifecycle signal — no state change needed.
     };
 
-    // Diagnostic listener: catch METAME_CODEX_CLOSE_LAYER from ANY origin
-    // so WS can confirm the message path through the thin client.
     const codexCloseHandler = (e: MessageEvent) => {
       const raw = e.data;
       const isString = typeof raw === "string";
@@ -217,12 +351,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         (isObj && (raw.type === "METAME_CODEX_CLOSE_LAYER" ||
                    (raw.payload && typeof raw.payload === "object" && (raw.payload as any).type === "METAME_CODEX_CLOSE_LAYER")));
       if (!typeMatch) return;
-      console.log(
-        "[Shell:CODEX_CLOSE_DIAG] METAME_CODEX_CLOSE_LAYER received at thin-client host",
-        { origin: e.origin, dataType: typeof raw, data: raw },
-      );
-      // Thin client does NOT act on this — it is between codex iframe and runtime iframe.
-      // Logged for WS diagnostic confirmation only.
+      console.log("[Shell:CODEX_CLOSE_DIAG] METAME_CODEX_CLOSE_LAYER received", { origin: e.origin });
     };
 
     window.addEventListener("message", handler);
@@ -248,16 +377,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       setConfig(cfg);
     } catch (err) {
       console.error("[Shell] Hydration failed:", err);
-      console.error("[Shell] Hydration failed:", err);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  /** Only apply a shell_config update if it came from live upstream (not hardcoded fallback) */
   const isLiveConfig = useCallback((cfg?: ShellConfig): boolean => {
     if (!cfg) return false;
-    // The fallback config has trust.level "unverified" with signal "Phase-1 dev mode"
     if (cfg.trust?.level === "unverified" && cfg.trust?.signals?.[0] === "Phase-1 dev mode") return false;
     return true;
   }, []);
@@ -272,7 +398,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       setConfig((prev) => {
         if (!prev) return prev;
         const updated = { ...prev, selectors: { ...prev.selectors, aigent: { ...prev.selectors.aigent, current: id } } };
-        // Apply trust scores from selector response if present
         if (result.shell_config?.trust?.scores) {
           updated.trust = { ...updated.trust, ...result.shell_config.trust };
         }
@@ -292,7 +417,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       setConfig((prev) => {
         if (!prev) return prev;
         const updated = { ...prev, selectors: { ...prev.selectors, llm: { ...prev.selectors.llm, current: id } } };
-        // Apply trust scores from selector response if present
         if (result.shell_config?.trust?.scores) {
           updated.trust = { ...updated.trust, ...result.shell_config.trust };
         }
@@ -307,10 +431,10 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }, [config]);
 
   const handleMenuAction = useCallback(async (itemId: string) => {
-    // Handle runtime commands locally
     if (itemId === "refresh" || itemId === "__runtime_refresh__") {
       setShellState("welcome");
       setActiveMenuItem(null);
+      deactivateMode();
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "RESET_WELCOME" }, getIframeOrigin(config));
       }
@@ -321,26 +445,16 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       setShellState("welcome");
       setActiveMenuItem(null);
       setQuickLinksExpanded(true);
-      // Force full iframe remount by bumping resetKey
+      deactivateMode();
       setResetKey((k) => k + 1);
       toast.success("Reset — iframe remounted");
       return;
     }
 
-    // Close Codex — pure client-side, no API call
     if (itemId === "close_codex") {
       const origin = config ? getIframeOrigin(config) : "(no config)";
-      const hasIframe = !!iframeRef.current;
-      const iframeSrc = iframeRef.current?.src ?? "(none)";
-      console.log(
-        "[Shell:close_codex] Dispatching MENU_ACTION close_codex",
-        { target: "runtimeIframeRef (tier 2)", origin, hasIframe, iframeSrc },
-      );
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "MENU_ACTION", action_id: "close_codex" }, origin);
-        console.log("[Shell:close_codex] postToIframe completed → awaiting runtime ack (STATE_SYNC close_codex_handled)");
-      } else {
-        console.warn("[Shell:close_codex] Cannot dispatch — missing iframe or config", { hasIframe, hasConfig: !!config });
       }
       return;
     }
@@ -352,11 +466,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     try {
       const result: MenuActionResult = await menuAction(itemId);
       applyConfigUpdate(result.shell_config);
-      // Forward the API-returned iframe_event directly to the iframe
       if (result.iframe_event && iframeRef.current && config) {
         postRawToIframe(iframeRef.current, result.iframe_event, getIframeOrigin(config));
       } else if (result.menu_event && iframeRef.current && config) {
-        // Fallback: forward menu_event as MENU_ACTION
         postToIframe(
           iframeRef.current,
           { type: "MENU_ACTION", action_id: itemId, prompt: result.menu_event?.prompt, menu_event: result.menu_event },
@@ -364,7 +476,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         );
       }
     } catch {
-      // API unavailable — send a basic MENU_ACTION from local trigger data
       const menuItem = config?.menu?.items?.find((i: any) => i.id === itemId);
       const trigger = (menuItem as any)?.trigger;
       if (iframeRef.current && config) {
@@ -378,34 +489,27 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         );
       }
     }
-    // No toast for regular menu actions
-  }, [config, applyConfigUpdate]);
+  }, [config, applyConfigUpdate, deactivateMode]);
 
   const submitPrompt = useCallback(async (text: string) => {
     if (!text.trim()) return;
-    console.log("[Shell] submitPrompt: transitioning to post-welcome, inferring=true");
     setShellState("post-welcome");
     inferCtrl.current?.start();
     try {
       const result: PromptActionResult = await promptAction(text);
       applyConfigUpdate(result.shell_config);
-
       if (iframeRef.current && config) {
-        // Forward the API-returned iframe_event directly
         if (result.iframe_event) {
           postRawToIframe(iframeRef.current, result.iframe_event, getIframeOrigin(config));
         } else {
-          // Fallback: send PROMPT_SUBMIT
           postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
         }
       }
     } catch {
-      // Fallback: send directly to iframe
       if (iframeRef.current && config) {
         postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
       }
     } finally {
-      // Safety timeout via inferCtrl — wait for iframe completion signals
       inferCtrl.current?.start();
     }
   }, [config, applyConfigUpdate]);
@@ -414,10 +518,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setShellState("welcome");
     setActiveMenuItem(null);
     setQuickLinksExpanded(true);
+    deactivateMode();
     if (iframeRef.current && config) {
       postToIframe(iframeRef.current, { type: "RESET_WELCOME" }, getIframeOrigin(config));
     }
-  }, [config]);
+  }, [config, deactivateMode]);
 
   const toggleQuickLinks = useCallback(() => {
     setQuickLinksExpanded((prev) => !prev);
@@ -442,9 +547,16 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     <ShellCtx.Provider
       value={{
         config, loading, authenticated, shellState,
-        activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey, toggleQuickLinks,
+        activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
+        // Smart Menu state
+        viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState,
+        // Actions
+        toggleQuickLinks,
         hydrate, selectAigent, selectLLM, handleMenuAction,
         submitPrompt, resetToWelcome, updateTrust, iframeRef,
+        // Smart Menu actions
+        activateMode, deactivateMode, setSubmenuType, toggleSubmenu,
+        selectCartridge, selectCodex, resetIdleTimer, setInteractionState,
       }}
     >
       {children}

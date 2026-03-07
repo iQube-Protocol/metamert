@@ -7,6 +7,10 @@ import {
   Coins, PlayCircle, Pencil, Users, Share2,
   Bot, Cpu, MessageSquare, Sparkles, Zap,
   Eye, Headphones, BookOpen, Search, RefreshCw, RotateCcw, XCircle,
+  Lock, User, Shield, Fingerprint, Radio,
+  Target, CheckSquare, Star, Tag, Compass, Wallet,
+  PenLine, Palette, Hammer, Shuffle, Upload,
+  Send, Download, Link, Truck, Box, Library,
 } from "lucide-react";
 
 /** Default icon map keyed by well-known item IDs */
@@ -37,6 +41,32 @@ const DEFAULTS: Record<string, LucideIcon> = {
   reset: RotateCcw,
   "close-codex": XCircle,
   "close_codex": XCircle,
+  // Smart Menu quick action defaults
+  vault: Lock,
+  persona: User,
+  memory: Sparkles,
+  policy: Shield,
+  identity: Fingerprint,
+  presence: Radio,
+  goal: Target,
+  task: CheckSquare,
+  reward: Star,
+  offer: Tag,
+  opportunity: Compass,
+  wallet: Wallet,
+  write: PenLine,
+  design: Palette,
+  build: Hammer,
+  edit: Pencil,
+  remix: Shuffle,
+  publish: Upload,
+  send: Send,
+  export: Download,
+  connect: Link,
+  collaborate: Users,
+  deliver: Truck,
+  cartridge: Box,
+  codex: Library,
 };
 
 /**
