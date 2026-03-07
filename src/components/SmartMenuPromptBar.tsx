@@ -58,7 +58,8 @@ export default function SmartMenuPromptBar() {
 
   return (
     <div
-      className="flex items-center border-t border-border bg-card px-2 py-1.5 gap-1"
+      className="flex items-center border-t border-border bg-card px-2 gap-1"
+      style={{ height: '3.25rem' }}
       onPointerEnter={() => resetIdleTimer("hover")}
     >
       {/* Mode indicator pill */}
