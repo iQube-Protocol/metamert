@@ -72,8 +72,16 @@ function QuickActionsCarousel() {
     handleMenuAction(action.id);
   }, [handleMenuAction, setSubmenuType, resetIdleTimer]);
 
-  // Find the index of the first visible fold item to scroll to it
-  const foldIds = modeConfig.mobileVisibleFold;
+  // Find the first fold item's index to auto-scroll there on mount
+  const firstFoldIndex = modeConfig.quickActions.findIndex(a => foldIds.includes(a.id));
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || firstFoldIndex <= 0) return;
+    // Each item has a fixed width; scroll so fold items are in view
+    const itemWidth = el.scrollWidth / modeConfig.quickActions.length;
+    el.scrollLeft = firstFoldIndex * itemWidth;
+  }, [firstFoldIndex, modeConfig.quickActions.length]);
 
   return (
     <div
@@ -82,23 +90,21 @@ function QuickActionsCarousel() {
     >
       <div
         ref={scrollRef}
-        className="flex items-center overflow-x-auto px-2 py-1.5 scrollbar-hide"
-        style={{ scrollSnapType: "x mandatory" }}
+        className="flex items-center overflow-x-auto px-0 py-1.5 scrollbar-hide"
+        style={{ scrollSnapType: "x mandatory", scrollBehavior: "auto" }}
       >
         {modeConfig.quickActions.map((action) => {
           const Icon = resolveSmartIcon(action.icon, action.id);
           const isFocal = action.id === modeConfig.defaultCenteredQuickActionId;
-          const isInFold = foldIds.includes(action.id);
 
           return (
             <button
               key={action.id}
               onClick={() => handleAction(action)}
-              className={`flex flex-col items-center justify-center gap-0.5 rounded-lg px-2.5 py-1.5 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95 shrink-0
-                ${isInFold ? "flex-1 min-w-0" : ""}
-              `}
+              className="flex flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95 shrink-0"
               style={{
                 scrollSnapAlign: "center",
+                width: "20%", // 5 items visible = 20% each
                 ...(isFocal ? { color: accent } : {}),
               }}
               title={action.label}
