@@ -6,7 +6,7 @@
  * Quick-action-only mode: floating submenu without prompt bar (mobile touch).
  * Spec animations: mode pop, color wash, calm collapse.
  */
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
@@ -63,18 +63,20 @@ export default function SmartMenu() {
   const modeActivatedAt = useRef<number>(0);
   const prevViewState = useRef(viewState);
 
-  // Clear stale hover state on any view-state transition
-  if (viewState !== prevViewState.current) {
-    if (viewState === "promptMode" || viewState === "quickActionOnly") {
-      if (hoverPreviewMode !== null) setHoverPreviewMode(null);
-      modeActivatedAt.current = Date.now();
+  // Clear stale hover state on view-state transitions (in useEffect to avoid render-phase setState flicker)
+  useEffect(() => {
+    if (viewState !== prevViewState.current) {
+      if (viewState === "promptMode" || viewState === "quickActionOnly") {
+        setHoverPreviewMode(null);
+        modeActivatedAt.current = Date.now();
+      }
+      if (viewState === "defaultNav" && prevViewState.current !== "defaultNav") {
+        setHoverPreviewMode(null);
+        navRestoredAt.current = Date.now();
+      }
+      prevViewState.current = viewState;
     }
-    if (viewState === "defaultNav" && prevViewState.current !== "defaultNav") {
-      if (hoverPreviewMode !== null) setHoverPreviewMode(null);
-      navRestoredAt.current = Date.now();
-    }
-    prevViewState.current = viewState;
-  }
+  }, [viewState]);
 
   const handleNavHoverEnter = useCallback((mode: SmartMenuMode) => {
     if (Date.now() - navRestoredAt.current < 400) return;
@@ -128,12 +130,13 @@ export default function SmartMenu() {
   if (viewState === "promptMode" && activeMode) {
     return (
       <div
-        className="flex flex-col animate-in fade-in duration-200"
+        className="flex flex-col animate-in fade-in duration-350"
+        style={{ animationDuration: '350ms' }}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={resumeIdleTimer}
       >
         {submenuVisibility === "visibleAuto" && (
-          <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2" style={{ animationDuration: '350ms' }}>
             <SmartMenuSubmenu />
           </div>
         )}
@@ -146,22 +149,25 @@ export default function SmartMenu() {
   if (viewState === "quickActionOnly" && activeMode) {
     return (
       <div
-        className="flex flex-col animate-in fade-in duration-200"
+        className="flex flex-col animate-in fade-in"
+        style={{ animationDuration: '350ms' }}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={resumeIdleTimer}
         onTouchStart={handleNavTouchStart}
         onTouchEnd={handleNavSwipeEnd}
       >
         {submenuVisibility === "visibleAuto" && (
-          <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2" style={{ animationDuration: '350ms' }}>
             <SmartMenuSubmenu />
           </div>
         )}
         <nav
-          className="flex items-stretch border-t px-2 pt-1.5 animate-in fade-in duration-200"
+          className="flex items-stretch border-t px-2 pt-1.5 animate-in fade-in transition-all"
           style={{
+            animationDuration: '350ms',
             height: '3.5625rem',
-            borderTopColor: MODE_ACCENT[activeMode],
+            borderTopColor: submenuVisibility === "visibleAuto" ? MODE_ACCENT[activeMode] : 'transparent',
+            transitionDuration: '300ms',
           }}
           onPointerUp={handleNavAreaPointerUp}
         >
@@ -187,7 +193,8 @@ export default function SmartMenu() {
       <div className="flex flex-col">
         {hoverPreviewMode && (
           <div
-            className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2 duration-150"
+          className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2"
+          style={{ animationDuration: '300ms' }}
             onPointerEnter={() => handleNavHoverEnter(hoverPreviewMode)}
             onPointerLeave={handleNavHoverLeave}
           >
@@ -195,8 +202,8 @@ export default function SmartMenu() {
           </div>
         )}
         <nav
-          className="flex items-stretch border-t border-border bg-card px-2 pt-1.5 animate-in fade-in duration-200"
-          style={{ height: '3.5625rem' }}
+          className="flex items-stretch border-t border-border bg-card px-2 pt-1.5 animate-in fade-in"
+          style={{ height: '3.5625rem', animationDuration: '350ms' }}
           onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">

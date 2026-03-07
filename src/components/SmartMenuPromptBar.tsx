@@ -86,10 +86,11 @@ export default function SmartMenuPromptBar() {
   return (
     <div
       ref={barRef}
-      className="flex items-center bg-card px-2 gap-1 transition-colors duration-300"
+      className="flex items-center bg-card px-2 gap-1 transition-all animate-in fade-in"
       style={{
+        animationDuration: '300ms',
+        transitionDuration: '300ms',
         height: '3.5625rem',
-        // Accent trim: top border in mode color (spec: accent piping/trim)
         borderTop: `1px solid ${accent}`,
       }}
       onTouchStart={handleTouchStart}
