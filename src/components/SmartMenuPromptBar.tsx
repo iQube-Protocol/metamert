@@ -20,6 +20,8 @@ export default function SmartMenuPromptBar() {
     toggleSubmenu,
     submenuVisibility,
     resetIdleTimer,
+    pauseIdleTimer,
+    resumeIdleTimer,
     setInteractionState,
     deactivateMode,
     setPromptHasText,
