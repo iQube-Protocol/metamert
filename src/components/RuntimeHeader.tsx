@@ -146,20 +146,15 @@ export default function RuntimeHeader() {
           </Popover>
         </div>
 
-        {/* Center: Active Cartridge + Codex badge */}
+        {/* Center: Active Cartridge icon */}
         <Tooltip>
           <TooltipTrigger asChild>
-             <div className="flex items-center gap-0 rounded-md px-1 py-1 cursor-default">
-               <Box className="h-3.5 w-3.5 text-muted-foreground" />
-               {activeCodex && (
-                 <span className="rounded-full glass-float pl-1.5 pr-2 py-0.5 text-[11px] font-medium text-foreground/65">
-                   {activeCodex.label}
-                 </span>
-               )}
+            <div className="flex items-center rounded-md px-1 py-1 cursor-default">
+              <Box className="h-[18px] w-[18px] text-muted-foreground" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            <p className="text-xs">Active cartridge · codex is cartridge-local</p>
+            <p className="text-xs">{activeCodex?.label ?? activeCart?.label ?? "No cartridge"}</p>
           </TooltipContent>
         </Tooltip>
 
