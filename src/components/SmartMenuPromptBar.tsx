@@ -87,7 +87,6 @@ export default function SmartMenuPromptBar() {
         borderTop: `1px solid ${accent}`,
       }}
       onTouchStart={handleTouchStart}
-      onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
       {/* Mode indicator pill — slight pop animation */}
