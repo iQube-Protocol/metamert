@@ -53,6 +53,8 @@ export default function SmartMenu() {
   // Hover preview: show quick actions on rollover without entering prompt mode
   const [hoverPreviewMode, setHoverPreviewMode] = useState<SmartMenuMode | null>(null);
   const hoverTimeout = useRef<ReturnType<typeof setTimeout>>();
+  // Shared double-tap tracker — survives view-state re-renders
+  const sharedLastTouchTap = useRef<number>(0);
 
   // No longer needed — using PointerEvent.pointerType directly
 
