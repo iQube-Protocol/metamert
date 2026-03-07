@@ -130,12 +130,13 @@ export default function SmartMenu() {
   if (viewState === "promptMode" && activeMode) {
     return (
       <div
-        className="flex flex-col animate-in fade-in duration-200"
+        className="flex flex-col animate-in fade-in duration-350"
+        style={{ animationDuration: '350ms' }}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={resumeIdleTimer}
       >
         {submenuVisibility === "visibleAuto" && (
-          <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2" style={{ animationDuration: '350ms' }}>
             <SmartMenuSubmenu />
           </div>
         )}
