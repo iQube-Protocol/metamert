@@ -200,6 +200,17 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     startIdleTimer();
   }, [startIdleTimer, submenuVisibility]);
 
+  // Pause idle timer (pointer hovering over interactive area)
+  const pauseIdleTimer = useCallback(() => {
+    clearIdleTimer();
+  }, [clearIdleTimer]);
+
+  // Resume idle timer (pointer left interactive area)
+  const resumeIdleTimer = useCallback(() => {
+    if (submenuVisibility === "hiddenUserToggle") return;
+    startIdleTimer();
+  }, [startIdleTimer, submenuVisibility]);
+
   // Expose prompt text tracking for idle logic
   const setPromptHasText = useCallback((hasText: boolean) => {
     promptHasTextRef.current = hasText;
