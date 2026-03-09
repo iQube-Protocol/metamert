@@ -110,6 +110,15 @@ export default function SmartMenu() {
     }
   }, [activateQuickActions]);
 
+  // Hover on empty nav bar space → enter prompt mode without inference
+  const handleNavBarHoverEnter = useCallback((e: React.PointerEvent) => {
+    // Only trigger on the nav bar itself (empty space), not on buttons
+    if (e.target !== e.currentTarget) return;
+    if (Date.now() - navRestoredAt.current < 400) return;
+    // Activate prompt mode for Play (default) without triggering any action/inference
+    activateMode("play");
+  }, [activateMode]);
+
   // Swipe-up on nav bar to enter prompt mode from quickActionOnly
   const touchStartY = useRef<number | null>(null);
   const handleNavTouchStart = useCallback((e: React.TouchEvent) => {
