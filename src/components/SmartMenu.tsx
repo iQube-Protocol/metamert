@@ -187,11 +187,21 @@ export default function SmartMenu() {
           <div className="flex items-stretch">
             <NavButton item={NAV_ITEMS[0]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
           </div>
-          <div className="flex flex-1 items-stretch justify-center gap-0">
+          <div
+            className="flex-1 min-w-[8px]"
+            onPointerEnter={handleGapPointerEnter}
+            onPointerUp={handleGapPointerUp}
+          />
+          <div className="flex shrink-0 items-stretch justify-center gap-0">
             {NAV_ITEMS.slice(1, 4).map(item => (
               <NavButton key={item.id} item={item} isCenter activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
             ))}
           </div>
+          <div
+            className="flex-1 min-w-[8px]"
+            onPointerEnter={handleGapPointerEnter}
+            onPointerUp={handleGapPointerUp}
+          />
           <div className="flex items-stretch">
             <NavButton item={NAV_ITEMS[4]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
           </div>
