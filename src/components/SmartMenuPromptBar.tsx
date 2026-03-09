@@ -98,28 +98,7 @@ export default function SmartMenuPromptBar() {
     resumeIdleTimer();
   };
 
-  // Click/tap outside the prompt bar → immediate close
-  useEffect(() => {
-    if (viewState !== "promptMode") return;
-
-    const handlePointerDown = (e: PointerEvent) => {
-      if (barRef.current && !barRef.current.contains(e.target as Node)) {
-        // Clicked outside the prompt bar — close immediately
-        promptInputFocused = false;
-        deactivateMode();
-      }
-    };
-
-    // Use a short delay so the listener doesn't fire on the same event that opened prompt mode
-    const id = setTimeout(() => {
-      document.addEventListener("pointerdown", handlePointerDown, true);
-    }, 50);
-
-    return () => {
-      clearTimeout(id);
-      document.removeEventListener("pointerdown", handlePointerDown, true);
-    };
-  }, [viewState, deactivateMode]);
+  // Outside-click dismissal is handled by the dismiss overlay in Index.tsx
 
   const submenuHidden = submenuVisibility !== "visibleAuto";
 
