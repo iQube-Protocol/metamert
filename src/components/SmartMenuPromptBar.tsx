@@ -103,7 +103,6 @@ export default function SmartMenuPromptBar() {
     if (viewState !== "promptMode") return;
 
     const handlePointerDown = (e: PointerEvent) => {
-      if (!promptInputFocused) return; // only when input was focused
       if (barRef.current && !barRef.current.contains(e.target as Node)) {
         // Clicked outside the prompt bar — close immediately
         promptInputFocused = false;

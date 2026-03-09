@@ -31,7 +31,7 @@ function ShellLayout() {
 
   // Tap-outside-to-collapse: click on runtime area collapses prompt mode
   const handleRuntimeClick = useCallback(() => {
-    if (viewState === "promptMode") deactivateMode();
+    if (viewState === "promptMode" || viewState === "quickActionOnly") deactivateMode();
   }, [viewState, deactivateMode]);
 
   if (loading || !config) {

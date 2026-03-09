@@ -110,14 +110,18 @@ export default function SmartMenu() {
     }
   }, [activateQuickActions]);
 
-  // Hover on empty nav bar space → enter prompt mode without inference
-  const handleNavBarHoverEnter = useCallback((e: React.PointerEvent) => {
-    // Only trigger on empty space -- not on buttons
-    if ((e.target as HTMLElement).closest("button")) return;
+  // Gap trigger handlers for invisible zones between button groups
+  const handleGapPointerEnter = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === "touch") return;
     if (Date.now() - navRestoredAt.current < 400) return;
     activateMode("play");
   }, [activateMode]);
+
+  const handleGapPointerUp = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType === "touch") {
+      activateQuickActions("play");
+    }
+  }, [activateQuickActions]);
 
   // Swipe-up on nav bar to enter prompt mode from quickActionOnly
   const touchStartY = useRef<number | null>(null);
@@ -183,11 +187,21 @@ export default function SmartMenu() {
           <div className="flex items-stretch">
             <NavButton item={NAV_ITEMS[0]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
           </div>
-          <div className="flex flex-1 items-stretch justify-center gap-0">
+          <div
+            className="flex-1 min-w-[8px]"
+            onPointerEnter={handleGapPointerEnter}
+            onPointerUp={handleGapPointerUp}
+          />
+          <div className="flex shrink-0 items-stretch justify-center gap-0">
             {NAV_ITEMS.slice(1, 4).map(item => (
               <NavButton key={item.id} item={item} isCenter activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
             ))}
           </div>
+          <div
+            className="flex-1 min-w-[8px]"
+            onPointerEnter={handleGapPointerEnter}
+            onPointerUp={handleGapPointerUp}
+          />
           <div className="flex items-stretch">
             <NavButton item={NAV_ITEMS[4]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
           </div>
@@ -214,16 +228,25 @@ export default function SmartMenu() {
           className="flex items-stretch border-t border-border bg-card px-2 pt-1.5"
           style={{ height: '3.5625rem' }}
           onPointerUp={handleNavAreaPointerUp}
-          onPointerEnter={handleNavBarHoverEnter}
         >
           <div className="flex items-stretch">
             <NavButton item={NAV_ITEMS[0]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
           </div>
-          <div className="flex flex-1 items-stretch justify-center gap-0">
+          <div
+            className="flex-1 min-w-[8px]"
+            onPointerEnter={handleGapPointerEnter}
+            onPointerUp={handleGapPointerUp}
+          />
+          <div className="flex shrink-0 items-stretch justify-center gap-0">
             {NAV_ITEMS.slice(1, 4).map(item => (
               <NavButton key={item.id} item={item} isCenter onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
             ))}
           </div>
+          <div
+            className="flex-1 min-w-[8px]"
+            onPointerEnter={handleGapPointerEnter}
+            onPointerUp={handleGapPointerUp}
+          />
           <div className="flex items-stretch">
             <NavButton item={NAV_ITEMS[4]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
           </div>
