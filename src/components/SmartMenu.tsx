@@ -112,10 +112,10 @@ export default function SmartMenu() {
 
   // Hover on empty nav bar space → enter prompt mode without inference
   const handleNavBarHoverEnter = useCallback((e: React.PointerEvent) => {
-    // Only trigger on the nav bar itself (empty space), not on buttons
-    if (e.target !== e.currentTarget) return;
+    // Only trigger on empty space -- not on buttons
+    if ((e.target as HTMLElement).closest("button")) return;
+    if (e.pointerType === "touch") return;
     if (Date.now() - navRestoredAt.current < 400) return;
-    // Activate prompt mode for Play (default) without triggering any action/inference
     activateMode("play");
   }, [activateMode]);
 
