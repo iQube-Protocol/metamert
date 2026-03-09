@@ -110,14 +110,18 @@ export default function SmartMenu() {
     }
   }, [activateQuickActions]);
 
-  // Hover on empty nav bar space → enter prompt mode without inference
-  const handleNavBarHoverEnter = useCallback((e: React.PointerEvent) => {
-    // Only trigger on empty space -- not on buttons
-    if ((e.target as HTMLElement).closest("button")) return;
+  // Gap trigger handlers for invisible zones between button groups
+  const handleGapPointerEnter = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === "touch") return;
     if (Date.now() - navRestoredAt.current < 400) return;
     activateMode("play");
   }, [activateMode]);
+
+  const handleGapPointerUp = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType === "touch") {
+      activateQuickActions("play");
+    }
+  }, [activateQuickActions]);
 
   // Swipe-up on nav bar to enter prompt mode from quickActionOnly
   const touchStartY = useRef<number | null>(null);
