@@ -104,18 +104,24 @@ export default function SmartMenu() {
 
   // Empty nav area tap: show Play quick actions (touch only)
   const handleNavAreaPointerUp = useCallback((e: React.PointerEvent) => {
-    if (e.target !== e.currentTarget) return;
+    if ((e.target as HTMLElement).closest("button")) return;
     if (e.pointerType === "touch") {
       activateQuickActions("play");
     }
   }, [activateQuickActions]);
 
-  // Gap trigger handlers for invisible zones between button groups
+  // Gap trigger handlers with hover-intent delay to avoid accidental activation
+  const gapIntentTimer = useRef<ReturnType<typeof setTimeout>>();
   const handleGapPointerEnter = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === "touch") return;
     if (Date.now() - navRestoredAt.current < 400) return;
-    activateMode("play");
+    if (gapIntentTimer.current) clearTimeout(gapIntentTimer.current);
+    gapIntentTimer.current = setTimeout(() => activateMode("play"), 220);
   }, [activateMode]);
+
+  const handleGapPointerLeave = useCallback(() => {
+    if (gapIntentTimer.current) clearTimeout(gapIntentTimer.current);
+  }, []);
 
   const handleGapPointerUp = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === "touch") {
@@ -190,6 +196,7 @@ export default function SmartMenu() {
           <div
             className="flex-1 min-w-[8px]"
             onPointerEnter={handleGapPointerEnter}
+            onPointerLeave={handleGapPointerLeave}
             onPointerUp={handleGapPointerUp}
           />
           <div className="flex shrink-0 items-stretch justify-center gap-0">
@@ -200,6 +207,7 @@ export default function SmartMenu() {
           <div
             className="flex-1 min-w-[8px]"
             onPointerEnter={handleGapPointerEnter}
+            onPointerLeave={handleGapPointerLeave}
             onPointerUp={handleGapPointerUp}
           />
           <div className="flex items-stretch">
@@ -235,6 +243,7 @@ export default function SmartMenu() {
           <div
             className="flex-1 min-w-[8px]"
             onPointerEnter={handleGapPointerEnter}
+            onPointerLeave={handleGapPointerLeave}
             onPointerUp={handleGapPointerUp}
           />
           <div className="flex shrink-0 items-stretch justify-center gap-0">
@@ -245,6 +254,7 @@ export default function SmartMenu() {
           <div
             className="flex-1 min-w-[8px]"
             onPointerEnter={handleGapPointerEnter}
+            onPointerLeave={handleGapPointerLeave}
             onPointerUp={handleGapPointerUp}
           />
           <div className="flex items-stretch">
