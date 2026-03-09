@@ -43,10 +43,18 @@ function ShellLayout() {
     );
   }
 
+  const menuActive = viewState === "promptMode" || viewState === "quickActionOnly";
+
   return (
     <div className="flex h-dvh flex-col bg-background">
       <RuntimeHeader />
-      <div className="relative flex-1 overflow-hidden" onClick={handleRuntimeClick}>
+      <div className="relative flex-1 overflow-hidden">
+        {menuActive && (
+          <div
+            className="absolute inset-0 z-40"
+            onClick={deactivateMode}
+          />
+        )}
         <RuntimeFrame key={resetKey} />
       </div>
       <SmartMenu />

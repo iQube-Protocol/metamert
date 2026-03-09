@@ -254,6 +254,7 @@ export default function SmartMenu() {
           <div
             className="flex-1 min-w-[8px]"
             onPointerEnter={handleGapPointerEnter}
+            onPointerLeave={handleGapPointerLeave}
             onPointerUp={handleGapPointerUp}
           />
           <div className="flex items-stretch">
