@@ -104,7 +104,7 @@ export default function SmartMenu() {
 
   // Empty nav area tap: show Play quick actions (touch only)
   const handleNavAreaPointerUp = useCallback((e: React.PointerEvent) => {
-    if (e.target !== e.currentTarget) return;
+    if ((e.target as HTMLElement).closest("button")) return;
     if (e.pointerType === "touch") {
       activateQuickActions("play");
     }
