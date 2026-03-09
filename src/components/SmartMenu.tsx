@@ -31,9 +31,9 @@ const MODE_ACCENT: Record<SmartMenuMode, string> = {
 
 const NAV_ITEMS: { id: SmartMenuMode; label: string; icon: string }[] = [
   { id: "be", label: "Be", icon: "users" },
-  { id: "earn", label: "Earn", icon: "coins" },
-  { id: "play", label: "Play", icon: "play" },
   { id: "make", label: "Make", icon: "pencil" },
+  { id: "play", label: "Play", icon: "play" },
+  { id: "earn", label: "Earn", icon: "coins" },
   { id: "share", label: "Share", icon: "share-2" },
 ];
 
