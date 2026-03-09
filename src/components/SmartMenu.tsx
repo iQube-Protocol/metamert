@@ -214,6 +214,7 @@ export default function SmartMenu() {
           className="flex items-stretch border-t border-border bg-card px-2 pt-1.5"
           style={{ height: '3.5625rem' }}
           onPointerUp={handleNavAreaPointerUp}
+          onPointerEnter={handleNavBarHoverEnter}
         >
           <div className="flex items-stretch">
             <NavButton item={NAV_ITEMS[0]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
