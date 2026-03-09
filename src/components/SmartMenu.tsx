@@ -110,12 +110,18 @@ export default function SmartMenu() {
     }
   }, [activateQuickActions]);
 
-  // Gap trigger handlers for invisible zones between button groups
+  // Gap trigger handlers with hover-intent delay to avoid accidental activation
+  const gapIntentTimer = useRef<ReturnType<typeof setTimeout>>();
   const handleGapPointerEnter = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === "touch") return;
     if (Date.now() - navRestoredAt.current < 400) return;
-    activateMode("play");
+    if (gapIntentTimer.current) clearTimeout(gapIntentTimer.current);
+    gapIntentTimer.current = setTimeout(() => activateMode("play"), 220);
   }, [activateMode]);
+
+  const handleGapPointerLeave = useCallback(() => {
+    if (gapIntentTimer.current) clearTimeout(gapIntentTimer.current);
+  }, []);
 
   const handleGapPointerUp = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === "touch") {
