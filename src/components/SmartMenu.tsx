@@ -318,7 +318,7 @@ function NavButton({
       onPointerUp={handlePointerUp}
       onPointerEnter={() => { setHovered(true); onHoverEnter(item.id); }}
       onPointerLeave={() => { setHovered(false); onHoverLeave(); }}
-      className={`flex flex-col items-center justify-center gap-0.5 rounded-md py-1.5 text-[11px] transition-all duration-200
+      className={`flex flex-col items-center justify-center gap-0.5 rounded-md py-0.5 text-[11px] transition-all duration-200
         ${isCenter ? "min-w-[3.5rem] px-1" : "w-14 shrink-0"}
         active:scale-110
       `}
