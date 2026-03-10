@@ -125,9 +125,9 @@ export default function SmartMenu() {
 
   const handleGapPointerUp = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === "touch") {
-      activateQuickActions("play");
+      activateMode("play");
     }
-  }, [activateQuickActions]);
+  }, [activateMode]);
 
   // Swipe-up on nav bar to enter prompt mode from quickActionOnly
   const touchStartY = useRef<number | null>(null);
