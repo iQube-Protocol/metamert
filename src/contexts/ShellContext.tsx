@@ -1,3 +1,4 @@
+/* HMR boundary — ShellProvider */
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
 import {
   type ShellConfig,
