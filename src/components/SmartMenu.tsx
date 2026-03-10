@@ -151,50 +151,60 @@ export default function SmartMenu() {
 
   if (!config) return null;
 
-  // Prompt mode: show prompt bar + floating submenu with animations
-  if (viewState === "promptMode" && activeMode) {
-    return (
-      <div
-        className="flex flex-col"
-        onPointerEnter={handlePointerEnter}
-        onPointerLeave={resumeIdleTimer}
-      >
-        {submenuVisibility === "visibleAuto" && (
-          <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2" style={{ animationDuration: '350ms' }}>
-            <SmartMenuSubmenu />
-          </div>
-        )}
-        <SmartMenuPromptBar />
-      </div>
-    );
-  }
+  const isPromptMode = viewState === "promptMode" && !!activeMode;
+  const isActiveMode = !!activeMode && (viewState === "promptMode" || viewState === "quickActionOnly");
 
-  // Quick-action-only mode: floating submenu + nav bar (no prompt, no keyboard)
-  if (viewState === "quickActionOnly" && activeMode) {
-    return (
+  // Submenu: show for hover preview, quickActionOnly, or promptMode
+  const showSubmenu =
+    (isActiveMode && submenuVisibility === "visibleAuto") ||
+    (!isActiveMode && !!hoverPreviewMode);
+
+  const submenuPreviewMode = isActiveMode ? undefined : hoverPreviewMode ?? undefined;
+
+  // Nav border accent when in an active mode with submenu visible
+  const navBorderColor = isActiveMode && submenuVisibility === "visibleAuto" && activeMode
+    ? MODE_ACCENT[activeMode]
+    : 'hsl(var(--border))';
+
+  return (
+    <TooltipProvider delayDuration={300}>
       <div
         className="flex flex-col"
-        onPointerEnter={handlePointerEnter}
-        onPointerLeave={resumeIdleTimer}
-        onTouchStart={handleNavTouchStart}
-        onTouchEnd={handleNavSwipeEnd}
+        onPointerEnter={isActiveMode ? handlePointerEnter : undefined}
+        onPointerLeave={isActiveMode ? resumeIdleTimer : undefined}
+        onTouchStart={viewState === "quickActionOnly" ? handleNavTouchStart : undefined}
+        onTouchEnd={viewState === "quickActionOnly" ? handleNavSwipeEnd : undefined}
       >
-        {submenuVisibility === "visibleAuto" && (
-          <div className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2" style={{ animationDuration: '350ms' }}>
-            <SmartMenuSubmenu />
+        {/* Submenu — single slot for all states */}
+        {showSubmenu && (
+          <div
+            className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2"
+            style={{ animationDuration: '300ms' }}
+            onPointerEnter={hoverPreviewMode ? () => handleNavHoverEnter(hoverPreviewMode) : undefined}
+            onPointerLeave={hoverPreviewMode ? handleNavHoverLeave : undefined}
+          >
+            <SmartMenuSubmenu previewMode={submenuPreviewMode} />
           </div>
         )}
+
+        {/* Prompt bar — always in DOM, hidden via display when not in prompt mode */}
+        <div style={{ display: isPromptMode ? 'flex' : 'none' }}>
+          <SmartMenuPromptBar />
+        </div>
+
+        {/* Nav bar — always in DOM, hidden via display when in prompt mode */}
         <nav
-          className="flex items-stretch border-t px-2 pt-3 pb-2 transition-all"
+          className="flex items-stretch border-t bg-card px-2 pt-3 pb-2 transition-all"
           style={{
+            display: isPromptMode ? 'none' : 'flex',
             height: '4.25rem',
-            borderTopColor: submenuVisibility === "visibleAuto" ? MODE_ACCENT[activeMode] : 'hsl(var(--border))',
+            borderTopColor: navBorderColor,
             transitionDuration: '300ms',
           }}
           onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[0]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            <NavButton item={NAV_ITEMS[0]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
           <div
             className="flex-1 min-w-[8px]"
@@ -204,7 +214,7 @@ export default function SmartMenu() {
           />
           <div className="flex shrink-0 items-stretch justify-center gap-0">
             {NAV_ITEMS.slice(1, 4).map(item => (
-              <NavButton key={item.id} item={item} isCenter activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+              <NavButton key={item.id} item={item} isCenter activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
             ))}
           </div>
           <div
@@ -214,54 +224,7 @@ export default function SmartMenu() {
             onPointerUp={handleGapPointerUp}
           />
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[4]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
-          </div>
-        </nav>
-      </div>
-    );
-  }
-
-  // Default nav
-  return (
-    <TooltipProvider delayDuration={300}>
-      <div className="flex flex-col">
-        {hoverPreviewMode && (
-          <div
-          className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2"
-          style={{ animationDuration: '300ms' }}
-            onPointerEnter={() => handleNavHoverEnter(hoverPreviewMode)}
-            onPointerLeave={handleNavHoverLeave}
-          >
-            <SmartMenuSubmenu previewMode={hoverPreviewMode} />
-          </div>
-        )}
-        <nav
-          className="flex items-stretch border-t border-border bg-card px-2 pt-3 pb-2"
-          style={{ height: '4.25rem' }}
-          onPointerUp={handleNavAreaPointerUp}
-        >
-          <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[0]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
-          </div>
-          <div
-            className="flex-1 min-w-[8px]"
-            onPointerEnter={handleGapPointerEnter}
-            onPointerLeave={handleGapPointerLeave}
-            onPointerUp={handleGapPointerUp}
-          />
-          <div className="flex shrink-0 items-stretch justify-center gap-0">
-            {NAV_ITEMS.slice(1, 4).map(item => (
-              <NavButton key={item.id} item={item} isCenter onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
-            ))}
-          </div>
-          <div
-            className="flex-1 min-w-[8px]"
-            onPointerEnter={handleGapPointerEnter}
-            onPointerLeave={handleGapPointerLeave}
-            onPointerUp={handleGapPointerUp}
-          />
-          <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[4]} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            <NavButton item={NAV_ITEMS[4]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
         </nav>
       </div>
