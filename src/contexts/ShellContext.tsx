@@ -235,7 +235,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   // Smart Menu actions
   const activateMode = useCallback((mode: SmartMenuMode) => {
     // If tapping active mode, deactivate (collapse)
-    if (activeMode === mode && (viewState === "promptMode" || viewState === "quickActionOnly")) {
+    if (activeMode === mode && viewState === "promptMode") {
       setViewState("defaultNav");
       setActiveMode(null);
       setSubmenuTypeState(null);
