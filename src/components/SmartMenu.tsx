@@ -211,7 +211,7 @@ export default function SmartMenu() {
             onPointerUp={handleGapPointerUp}
           />
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[4]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
+            <NavButton item={NAV_ITEMS[4]} activeQAMode={activeMode} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
         </nav>
       </div>
