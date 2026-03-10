@@ -300,24 +300,10 @@ function NavButton({
   const iconFilter = !isEdge && hovered && !isActiveQA ? "brightness(1.4) drop-shadow(0 0 4px currentColor)" : "none";
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    e.stopPropagation(); // prevent nav area handler
-
+    e.stopPropagation();
     if (e.pointerType === "touch") {
-      const now = Date.now();
-      const delta = now - sharedTapRef.current;
-      sharedTapRef.current = now;
-
-      if (delta < 350) {
-        // Double-tap on touch: enter prompt mode + trigger action (like desktop click)
-        sharedTapRef.current = 0;
-        onAction(item.id);
-        onPointerTap(item.id, "mouse"); // force prompt mode path
-      } else {
-        // Single tap on touch: quick actions only, NO inference
-        onPointerTap(item.id, "touch");
-      }
+      onPointerTap(item.id, "touch");
     } else {
-      // Desktop click: original behavior — action + prompt mode
       onAction(item.id);
       onPointerTap(item.id, e.pointerType);
     }
