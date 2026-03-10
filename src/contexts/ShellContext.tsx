@@ -27,8 +27,10 @@ import {
   type QuickActionVisibility,
   type InteractionState,
   type CartridgeState,
+  type PersonaState,
   MODE_CONFIGS,
   DEFAULT_CARTRIDGES,
+  DEFAULT_PERSONAS,
   IDLE_TIMEOUT_MS,
 } from "@/lib/smart-menu-config";
 
