@@ -274,7 +274,6 @@ function NavButton({
   onAction,
   onHoverEnter,
   onHoverLeave,
-  sharedTapRef,
 }: {
   item: { id: SmartMenuMode; label: string; icon: string };
   isCenter?: boolean;
@@ -283,7 +282,6 @@ function NavButton({
   onAction: (id: string) => Promise<void>;
   onHoverEnter: (mode: SmartMenuMode) => void;
   onHoverLeave: () => void;
-  sharedTapRef: React.MutableRefObject<number>;
 }) {
   const [hovered, setHovered] = useState(false);
   const Icon = resolveIcon(item.icon, item.id);
