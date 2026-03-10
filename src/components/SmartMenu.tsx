@@ -239,8 +239,8 @@ export default function SmartMenu() {
           </div>
         )}
         <nav
-          className="flex items-stretch border-t border-border bg-card px-2 pt-1.5"
-          style={{ height: '3.5625rem' }}
+          className="flex items-stretch border-t border-border bg-card px-2 pt-3 pb-2"
+          style={{ height: '4.25rem' }}
           onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">
