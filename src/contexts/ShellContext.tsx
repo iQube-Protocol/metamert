@@ -79,6 +79,7 @@ interface ShellContextValue {
   toggleSubmenu: () => void;
   selectCartridge: (cartridgeId: string) => void;
   selectCodex: (codexId: string) => void;
+  selectPersona: (personaId: string) => void;
   resetIdleTimer: (reason?: string) => void;
   pauseIdleTimer: () => void;
   resumeIdleTimer: () => void;
