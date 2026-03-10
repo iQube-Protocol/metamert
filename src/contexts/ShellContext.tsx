@@ -639,14 +639,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         config, loading, authenticated, shellState,
         activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
         // Smart Menu state
-        viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState,
+        viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
         // Actions
         toggleQuickLinks,
         hydrate, selectAigent, selectLLM, handleMenuAction,
         submitPrompt, resetToWelcome, updateTrust, iframeRef,
         // Smart Menu actions
         activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-        selectCartridge, selectCodex, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+        selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
       }}
     >
       {children}

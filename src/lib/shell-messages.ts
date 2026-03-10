@@ -14,7 +14,7 @@ export type ShellOutbound =
   | { type: "SHELL_READY"; hide_chrome?: boolean }
   | { type: "HANDOFF"; handoff_token: string; context?: Record<string, unknown> }
   | { type: "MENU_ACTION"; action_id: string; prompt?: string; menu_event?: MenuEvent }
-  | { type: "SELECTOR_CHANGE"; selector_type: "aigent" | "llm"; id: string }
+  | { type: "SELECTOR_CHANGE"; selector_type: "aigent" | "llm" | "cartridge" | "codex" | "persona"; id: string; iqube_id?: string }
   | { type: "CONTEXT_UPDATE"; payload: Record<string, unknown> }
   | { type: "PROMPT_SUBMIT"; text: string }
   | { type: "RESET_WELCOME" }
