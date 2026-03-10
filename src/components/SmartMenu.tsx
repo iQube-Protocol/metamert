@@ -248,7 +248,7 @@ export default function SmartMenu() {
           />
           <div className="flex shrink-0 items-stretch justify-center gap-0">
             {NAV_ITEMS.slice(1, 4).map(item => (
-              <NavButton key={item.id} item={item} isCenter onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} sharedTapRef={sharedLastTouchTap} />
+              <NavButton key={item.id} item={item} isCenter onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
             ))}
           </div>
           <div
