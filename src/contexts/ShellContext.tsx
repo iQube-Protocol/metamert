@@ -160,6 +160,10 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     activeCodexId: "qriptopian-codex",
     available: DEFAULT_CARTRIDGES,
   });
+  const [personaState, setPersonaState] = useState<PersonaState>({
+    activePersonaId: "metame-persona",
+    available: DEFAULT_PERSONAS,
+  });
 
   // Idle timer refs — split: 3s for quick action layer, 4s for full collapse
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
