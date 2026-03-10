@@ -155,8 +155,7 @@ export default function SmartMenu() {
   if (viewState === "promptMode" && activeMode) {
     return (
       <div
-        className="flex flex-col animate-in fade-in duration-350"
-        style={{ animationDuration: '350ms' }}
+        className="flex flex-col"
         onPointerEnter={handlePointerEnter}
         onPointerLeave={resumeIdleTimer}
       >
