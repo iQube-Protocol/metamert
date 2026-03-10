@@ -105,7 +105,7 @@ export default function SmartMenuPromptBar() {
   return (
     <div
       ref={barRef}
-      className="flex items-center bg-card px-2 pt-3 pb-2 gap-1 transition-all animate-in fade-in"
+      className="flex items-center bg-card px-2 pt-3 pb-2 gap-1 transition-all animate-in fade-in slide-in-from-bottom-2"
       style={{
         animationDuration: '300ms',
         transitionDuration: '300ms',
