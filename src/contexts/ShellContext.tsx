@@ -27,8 +27,10 @@ import {
   type QuickActionVisibility,
   type InteractionState,
   type CartridgeState,
+  type PersonaState,
   MODE_CONFIGS,
   DEFAULT_CARTRIDGES,
+  DEFAULT_PERSONAS,
   IDLE_TIMEOUT_MS,
 } from "@/lib/smart-menu-config";
 
@@ -56,6 +58,7 @@ interface ShellContextValue {
   submenuVisibility: QuickActionVisibility;
   interactionState: InteractionState;
   cartridgeState: CartridgeState;
+  personaState: PersonaState;
 
   // Actions
   toggleQuickLinks: () => void;
@@ -76,6 +79,7 @@ interface ShellContextValue {
   toggleSubmenu: () => void;
   selectCartridge: (cartridgeId: string) => void;
   selectCodex: (codexId: string) => void;
+  selectPersona: (personaId: string) => void;
   resetIdleTimer: (reason?: string) => void;
   pauseIdleTimer: () => void;
   resumeIdleTimer: () => void;
@@ -155,6 +159,10 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     activeCartridgeId: "qriptopian",
     activeCodexId: "qriptopian-codex",
     available: DEFAULT_CARTRIDGES,
+  });
+  const [personaState, setPersonaState] = useState<PersonaState>({
+    activePersonaId: "metame-persona",
+    available: DEFAULT_PERSONAS,
   });
 
   // Idle timer refs — split: 3s for quick action layer, 4s for full collapse
@@ -329,6 +337,24 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "codex" as any, id: codexId }, getIframeOrigin(config));
     }
   }, [config, startIdleTimer]);
+
+  const selectPersona = useCallback((personaId: string) => {
+    const persona = personaState.available.find(p => p.id === personaId);
+    if (!persona) return;
+    setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
+    setSubmenuTypeState("quickActions");
+    startIdleTimer();
+
+    // Notify iframe to load the persona's iQube
+    if (iframeRef.current && config) {
+      postToIframe(iframeRef.current, {
+        type: "SELECTOR_CHANGE",
+        selector_type: "persona" as any,
+        id: personaId,
+        iqube_id: persona.iqubeId,
+      }, getIframeOrigin(config));
+    }
+  }, [config, startIdleTimer, personaState.available]);
 
   const setInteractionState = useCallback((state: InteractionState) => {
     setInteractionStateRaw(state);
@@ -613,14 +639,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         config, loading, authenticated, shellState,
         activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
         // Smart Menu state
-        viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState,
+        viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
         // Actions
         toggleQuickLinks,
         hydrate, selectAigent, selectLLM, handleMenuAction,
         submitPrompt, resetToWelcome, updateTrust, iframeRef,
         // Smart Menu actions
         activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-        selectCartridge, selectCodex, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+        selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
       }}
     >
       {children}

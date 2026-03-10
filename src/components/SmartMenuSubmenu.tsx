@@ -34,6 +34,8 @@ export default function SmartMenuSubmenu({ previewMode }: SmartMenuSubmenuProps 
     cartridgeState,
     selectCartridge,
     selectCodex,
+    personaState,
+    selectPersona,
   } = useShell();
 
   // Hover preview mode: always show quick actions for the given mode
@@ -49,6 +51,9 @@ export default function SmartMenuSubmenu({ previewMode }: SmartMenuSubmenuProps 
   }
   if (submenuType === "codexSelector") {
     return <CodexSelector />;
+  }
+  if (submenuType === "personaSelector") {
+    return <PersonaSelector />;
   }
 
   return <QuickActionsCarousel />;
@@ -89,6 +94,11 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
 
     if (action.id === "cartridge") {
       setSubmenuType("cartridgeSelector");
+      return;
+    }
+
+    if (action.id === "persona") {
+      setSubmenuType("personaSelector");
       return;
     }
 
@@ -272,6 +282,52 @@ function CodexSelector() {
             >
               <span className="font-medium whitespace-nowrap">{cdx.label}</span>
               {isActive && <Check className="h-3 w-3" />}
+            </CartridgePill>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Persona Selector
+// ---------------------------------------------------------------------------
+
+function PersonaSelector() {
+  const { personaState, selectPersona, setSubmenuType, pauseIdleTimer } = useShell();
+
+  return (
+    <div
+      className="glass-float rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 p-2"
+      style={{ animationDuration: '350ms' }}
+      onPointerEnter={pauseIdleTimer}
+    >
+      <div className="flex items-center gap-1 mb-1.5 px-1">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Persona</span>
+        <button
+          onClick={() => setSubmenuType("quickActions")}
+          className="ml-auto text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          ← Back
+        </button>
+      </div>
+      <div className="flex gap-1.5 justify-center">
+        {personaState.available.map(persona => {
+          const isActive = persona.id === personaState.activePersonaId;
+          const Icon = resolveSmartIcon(persona.icon, persona.id);
+          return (
+            <CartridgePill
+              key={persona.id}
+              isActive={isActive}
+              accent={persona.accentHex}
+              onClick={() => selectPersona(persona.id)}
+            >
+              <div className="flex items-center gap-1">
+                {Icon && <Icon className="h-3.5 w-3.5" />}
+                <span className="font-medium whitespace-nowrap">{persona.label}</span>
+                {isActive && <Check className="h-3 w-3" />}
+              </div>
             </CartridgePill>
           );
         })}

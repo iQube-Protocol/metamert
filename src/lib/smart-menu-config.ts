@@ -11,7 +11,7 @@ import type { LucideIcon } from "lucide-react";
 
 export type ViewState = "defaultNav" | "promptMode" | "quickActionOnly";
 export type SmartMenuMode = "be" | "earn" | "play" | "make" | "share";
-export type SubmenuType = "quickActions" | "cartridgeSelector" | "codexSelector";
+export type SubmenuType = "quickActions" | "cartridgeSelector" | "codexSelector" | "personaSelector";
 export type QuickActionVisibility = "visibleAuto" | "hiddenAutoIdle" | "hiddenUserToggle";
 export type InteractionState = "idle" | "focused" | "typing" | "voiceReady" | "recording" | "quickActionActive";
 
@@ -50,6 +50,48 @@ export interface CartridgeState {
   activeCodexId: string;
   available: CartridgeDef[];
 }
+
+// ---------------------------------------------------------------------------
+// Persona
+// ---------------------------------------------------------------------------
+
+export interface PersonaDef {
+  id: string;
+  label: string;
+  icon?: string;
+  accentHex?: string;
+  /** iQube ID to load when this persona is selected */
+  iqubeId?: string;
+}
+
+export interface PersonaState {
+  activePersonaId: string;
+  available: PersonaDef[];
+}
+
+export const DEFAULT_PERSONAS: PersonaDef[] = [
+  {
+    id: "metame-persona",
+    label: "metaMe",
+    icon: "user",
+    accentHex: "#FF6B6B",
+    iqubeId: "iqube-metame-persona",
+  },
+  {
+    id: "qripto-persona",
+    label: "Qripto",
+    icon: "user",
+    accentHex: "#00D5FF",
+    iqubeId: "iqube-qripto-persona",
+  },
+  {
+    id: "knyt-persona",
+    label: "KNYT",
+    icon: "user",
+    accentHex: "#F59E0B",
+    iqubeId: "iqube-knyt-persona",
+  },
+];
 
 // ---------------------------------------------------------------------------
 // Quick action config
@@ -130,7 +172,7 @@ const PLAY_ACTIONS: QuickActionDef[] = [
 
 const BE_ACTIONS: QuickActionDef[] = [
   { id: "vault",     label: "Vault",     icon: "lock",       kind: "llm+menu",    triggersInference: true },
-  { id: "persona",   label: "Persona",   icon: "user",       kind: "llm+menu",    triggersInference: true },
+  { id: "persona",   label: "Persona",   icon: "user",       kind: "system-only", triggersInference: false },
   { id: "memory",    label: "Memory",    icon: "sparkles",   kind: "llm+menu",    triggersInference: true },
   { id: "policy",    label: "Policy",    icon: "shield",     kind: "llm+menu",    triggersInference: true },
   { id: "identity",  label: "Identity",  icon: "fingerprint", kind: "llm+menu",   triggersInference: true },
