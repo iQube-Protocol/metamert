@@ -58,6 +58,7 @@ interface ShellContextValue {
   submenuVisibility: QuickActionVisibility;
   interactionState: InteractionState;
   cartridgeState: CartridgeState;
+  personaState: PersonaState;
 
   // Actions
   toggleQuickLinks: () => void;
