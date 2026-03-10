@@ -34,6 +34,8 @@ export default function SmartMenuSubmenu({ previewMode }: SmartMenuSubmenuProps 
     cartridgeState,
     selectCartridge,
     selectCodex,
+    personaState,
+    selectPersona,
   } = useShell();
 
   // Hover preview mode: always show quick actions for the given mode
