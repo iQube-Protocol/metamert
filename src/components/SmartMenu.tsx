@@ -96,11 +96,16 @@ export default function SmartMenu() {
   // Nav button tap handler using pointerType for reliable touch detection
   const handleNavPointerUp = useCallback((mode: SmartMenuMode, pointerType: string) => {
     if (pointerType === "touch") {
-      activateQuickActions(mode);
+      // If already in quickActionOnly for this mode, upgrade to prompt mode
+      if (viewState === "quickActionOnly" && activeMode === mode) {
+        activateMode(mode);
+      } else {
+        activateQuickActions(mode);
+      }
     } else {
       activateMode(mode);
     }
-  }, [activateMode, activateQuickActions]);
+  }, [activateMode, activateQuickActions, viewState, activeMode]);
 
   // Empty nav area tap: show Play quick actions (touch only)
   const handleNavAreaPointerUp = useCallback((e: React.PointerEvent) => {
