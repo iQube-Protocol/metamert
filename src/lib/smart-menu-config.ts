@@ -52,6 +52,48 @@ export interface CartridgeState {
 }
 
 // ---------------------------------------------------------------------------
+// Persona
+// ---------------------------------------------------------------------------
+
+export interface PersonaDef {
+  id: string;
+  label: string;
+  icon?: string;
+  accentHex?: string;
+  /** iQube ID to load when this persona is selected */
+  iqubeId?: string;
+}
+
+export interface PersonaState {
+  activePersonaId: string;
+  available: PersonaDef[];
+}
+
+export const DEFAULT_PERSONAS: PersonaDef[] = [
+  {
+    id: "metame-persona",
+    label: "metaMe",
+    icon: "user",
+    accentHex: "#FF6B6B",
+    iqubeId: "iqube-metame-persona",
+  },
+  {
+    id: "qripto-persona",
+    label: "Qripto",
+    icon: "user",
+    accentHex: "#00D5FF",
+    iqubeId: "iqube-qripto-persona",
+  },
+  {
+    id: "knyt-persona",
+    label: "KNYT",
+    icon: "user",
+    accentHex: "#F59E0B",
+    iqubeId: "iqube-knyt-persona",
+  },
+];
+
+// ---------------------------------------------------------------------------
 // Quick action config
 // ---------------------------------------------------------------------------
 
