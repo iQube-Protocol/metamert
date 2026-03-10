@@ -185,9 +185,8 @@ export default function SmartMenu() {
           </div>
         )}
         <nav
-          className="flex items-stretch border-t px-2 pt-3 pb-2 animate-in fade-in transition-all"
+          className="flex items-stretch border-t px-2 pt-3 pb-2 transition-all"
           style={{
-            animationDuration: '350ms',
             height: '4.25rem',
             borderTopColor: submenuVisibility === "visibleAuto" ? MODE_ACCENT[activeMode] : 'hsl(var(--border))',
             transitionDuration: '300ms',
