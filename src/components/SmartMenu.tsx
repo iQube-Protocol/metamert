@@ -187,10 +187,10 @@ export default function SmartMenu() {
           </div>
         )}
         <nav
-          className="flex items-stretch border-t px-2 pt-1.5 animate-in fade-in transition-all"
+          className="flex items-stretch border-t px-2 pt-3 pb-2 animate-in fade-in transition-all"
           style={{
             animationDuration: '350ms',
-            height: '3.5625rem',
+            height: '4.25rem',
             borderTopColor: submenuVisibility === "visibleAuto" ? MODE_ACCENT[activeMode] : 'hsl(var(--border))',
             transitionDuration: '300ms',
           }}
@@ -239,8 +239,8 @@ export default function SmartMenu() {
           </div>
         )}
         <nav
-          className="flex items-stretch border-t border-border bg-card px-2 pt-1.5"
-          style={{ height: '3.5625rem' }}
+          className="flex items-stretch border-t border-border bg-card px-2 pt-3 pb-2"
+          style={{ height: '4.25rem' }}
           onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">
@@ -318,7 +318,7 @@ function NavButton({
       onPointerUp={handlePointerUp}
       onPointerEnter={() => { setHovered(true); onHoverEnter(item.id); }}
       onPointerLeave={() => { setHovered(false); onHoverLeave(); }}
-      className={`flex flex-col items-center justify-center gap-0.5 rounded-md py-1.5 text-[11px] transition-all duration-200
+      className={`flex flex-col items-center justify-center gap-0.5 rounded-md py-0.5 text-[11px] transition-all duration-200
         ${isCenter ? "min-w-[3.5rem] px-1" : "w-14 shrink-0"}
         active:scale-110
       `}
