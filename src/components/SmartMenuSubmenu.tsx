@@ -97,6 +97,11 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
+    if (action.id === "persona") {
+      setSubmenuType("personaSelector");
+      return;
+    }
+
     handleMenuAction(action.id);
   }, [handleMenuAction, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode]);
 
