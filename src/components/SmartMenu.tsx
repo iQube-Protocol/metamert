@@ -124,6 +124,7 @@ export default function SmartMenu() {
   }, []);
 
   const handleGapPointerUp = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation();
     if (e.pointerType === "touch") {
       activateMode("play");
     }
