@@ -338,6 +338,24 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [config, startIdleTimer]);
 
+  const selectPersona = useCallback((personaId: string) => {
+    const persona = personaState.available.find(p => p.id === personaId);
+    if (!persona) return;
+    setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
+    setSubmenuTypeState("quickActions");
+    startIdleTimer();
+
+    // Notify iframe to load the persona's iQube
+    if (iframeRef.current && config) {
+      postToIframe(iframeRef.current, {
+        type: "SELECTOR_CHANGE",
+        selector_type: "persona" as any,
+        id: personaId,
+        iqube_id: persona.iqubeId,
+      }, getIframeOrigin(config));
+    }
+  }, [config, startIdleTimer, personaState.available]);
+
   const setInteractionState = useCallback((state: InteractionState) => {
     setInteractionStateRaw(state);
     if (state !== "idle") {
