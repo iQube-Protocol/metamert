@@ -188,7 +188,7 @@ export default function SmartMenu() {
         )}
 
         {/* Prompt bar — always in DOM, hidden via display when not in prompt mode */}
-        <div style={{ display: isPromptMode ? 'flex' : 'none' }}>
+        <div style={{ display: isPromptMode ? 'block' : 'none' }}>
           <SmartMenuPromptBar />
         </div>
 
