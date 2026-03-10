@@ -172,7 +172,7 @@ const PLAY_ACTIONS: QuickActionDef[] = [
 
 const BE_ACTIONS: QuickActionDef[] = [
   { id: "vault",     label: "Vault",     icon: "lock",       kind: "llm+menu",    triggersInference: true },
-  { id: "persona",   label: "Persona",   icon: "user",       kind: "llm+menu",    triggersInference: true },
+  { id: "persona",   label: "Persona",   icon: "user",       kind: "system-only", triggersInference: false },
   { id: "memory",    label: "Memory",    icon: "sparkles",   kind: "llm+menu",    triggersInference: true },
   { id: "policy",    label: "Policy",    icon: "shield",     kind: "llm+menu",    triggersInference: true },
   { id: "identity",  label: "Identity",  icon: "fingerprint", kind: "llm+menu",   triggersInference: true },
