@@ -334,6 +334,7 @@ function PersonaSelector() {
       </div>
     </div>
   );
+}
 
 // ---------------------------------------------------------------------------
 // Shared pill button for cartridge/codex selectors
