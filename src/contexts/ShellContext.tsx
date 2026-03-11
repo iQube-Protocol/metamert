@@ -90,10 +90,15 @@ interface ShellContextValue {
 
 const ShellCtx = createContext<ShellContextValue | null>(null);
 
+// Stable module-level ref survives HMR — context value is written here by the provider
+let __shellSingleton: ShellContextValue | null = null;
+
 export function useShell(): ShellContextValue {
+  // Prefer React context; fall back to module singleton during HMR transitions
   const ctx = useContext(ShellCtx);
-  if (!ctx) throw new Error("useShell must be used inside ShellProvider");
-  return ctx;
+  const value = ctx ?? __shellSingleton;
+  if (!value) throw new Error("useShell must be used inside ShellProvider");
+  return value;
 }
 
 // ---------------------------------------------------------------------------
