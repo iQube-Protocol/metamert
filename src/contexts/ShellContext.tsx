@@ -554,33 +554,75 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setActiveMenuItem(itemId);
     inferCtrl.current?.start();
 
+    // Helper: resolve rich trigger metadata from shell-config for quicklink actions
+    const resolveEnrichedEvent = (itemId: string) => {
+      // 1. Check quick_links for a per-action prompt
+      const qlPrefix = `quick-${itemId}`;
+      const quickLink = (config?.menu as any)?.policy?.quick_links?.find(
+        (ql: any) => ql.id === qlPrefix || ql.id === itemId
+      );
+      // 2. Check parent mode's menu item for surface_plan + copilot instructions
+      const parentItem = activeMode
+        ? config?.menu?.items?.find((i: any) => i.id === activeMode)
+        : null;
+      const parentTrigger = (parentItem as any)?.trigger;
+      // 3. Check direct menu item match
+      const directItem = config?.menu?.items?.find((i: any) => i.id === itemId);
+      const directTrigger = (directItem as any)?.trigger;
+
+      const prompt = quickLink?.prompt ?? directTrigger?.prompt ?? parentTrigger?.prompt ?? `Launching ${itemId}…`;
+      const intent = directTrigger?.intent ?? parentTrigger?.intent ?? itemId;
+      const surface_plan_instruction = directTrigger?.surface_plan_instruction ?? parentTrigger?.surface_plan_instruction;
+      const copilot_instruction = directTrigger?.copilot_instruction ?? parentTrigger?.copilot_instruction;
+
+      return { prompt, intent, surface_plan_instruction, copilot_instruction };
+    };
+
     try {
       const result: MenuActionResult = await menuAction(itemId);
       applyConfigUpdate(result.shell_config);
-      if (result.iframe_event && iframeRef.current && config) {
-        postRawToIframe(iframeRef.current, result.iframe_event, getIframeOrigin(config));
-      } else if (result.menu_event && iframeRef.current && config) {
-        postToIframe(
-          iframeRef.current,
-          { type: "MENU_ACTION", action_id: itemId, prompt: result.menu_event?.prompt, menu_event: result.menu_event },
-          getIframeOrigin(config),
-        );
+      if (iframeRef.current && config) {
+        // Check if the API result has rich metadata or needs enrichment
+        const hasRichMetadata = result.iframe_event?.surface_plan_instruction ||
+          result.menu_event?.surface_plan_instruction;
+
+        if (hasRichMetadata && result.iframe_event) {
+          postRawToIframe(iframeRef.current, result.iframe_event, getIframeOrigin(config));
+        } else {
+          // Enrich with shell-config trigger data
+          const enriched = resolveEnrichedEvent(itemId);
+          const menuEvent = {
+            action_id: itemId,
+            prompt: enriched.prompt,
+            intent: enriched.intent,
+            surface_plan_instruction: enriched.surface_plan_instruction,
+            copilot_instruction: enriched.copilot_instruction,
+          };
+          postToIframe(
+            iframeRef.current,
+            { type: "MENU_ACTION", action_id: itemId, prompt: enriched.prompt, menu_event: menuEvent },
+            getIframeOrigin(config),
+          );
+        }
       }
     } catch {
-      const menuItem = config?.menu?.items?.find((i: any) => i.id === itemId);
-      const trigger = (menuItem as any)?.trigger;
       if (iframeRef.current && config) {
-        const menuEvent = trigger
-          ? { action_id: itemId, prompt: trigger.prompt, intent: trigger.intent }
-          : { action_id: itemId, intent: itemId };
+        const enriched = resolveEnrichedEvent(itemId);
+        const menuEvent = {
+          action_id: itemId,
+          prompt: enriched.prompt,
+          intent: enriched.intent,
+          surface_plan_instruction: enriched.surface_plan_instruction,
+          copilot_instruction: enriched.copilot_instruction,
+        };
         postToIframe(
           iframeRef.current,
-          { type: "MENU_ACTION", action_id: itemId, prompt: menuEvent.prompt, menu_event: menuEvent },
+          { type: "MENU_ACTION", action_id: itemId, prompt: enriched.prompt, menu_event: menuEvent },
           getIframeOrigin(config),
         );
       }
     }
-  }, [config, applyConfigUpdate, deactivateMode]);
+  }, [config, applyConfigUpdate, deactivateMode, activeMode]);
 
   const submitPrompt = useCallback(async (text: string) => {
     if (!text.trim()) return;
