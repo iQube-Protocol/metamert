@@ -206,13 +206,13 @@ const MAKE_ACTIONS: QuickActionDef[] = [
 ];
 
 const SHARE_ACTIONS: QuickActionDef[] = [
-  { id: "send",        label: "Send",        icon: "send",       kind: "llm+menu",    triggersInference: true },
-  { id: "publish",     label: "Publish",     icon: "upload",     kind: "llm+menu",    triggersInference: true },
-  { id: "export",      label: "Export",      icon: "download",   kind: "llm+menu",    triggersInference: true },
-  { id: "connect",     label: "Connect",     icon: "link",       kind: "llm+menu",    triggersInference: true },
-  { id: "collaborate", label: "Collaborate", icon: "users",      kind: "llm+menu",    triggersInference: true },
-  { id: "deliver",     label: "Deliver",     icon: "truck",      kind: "llm+menu",    triggersInference: true },
-  { id: "be",          label: "Be",          icon: "user",       kind: "llm+menu",    triggersInference: true },
+  { id: "send",        label: "Send",        icon: "send",       kind: "llm+menu",    triggersInference: true,  prompt: "Send a message for me" },
+  { id: "publish",     label: "Publish",     icon: "upload",     kind: "llm+menu",    triggersInference: true,  prompt: "Publish and share my content" },
+  { id: "export",      label: "Export",      icon: "download",   kind: "llm+menu",    triggersInference: true,  prompt: "Export my data and content" },
+  { id: "connect",     label: "Connect",     icon: "link",       kind: "llm+menu",    triggersInference: true,  prompt: "Connect me with someone" },
+  { id: "collaborate", label: "Collaborate", icon: "users",      kind: "llm+menu",    triggersInference: true,  prompt: "Start a collaboration session" },
+  { id: "deliver",     label: "Deliver",     icon: "truck",      kind: "llm+menu",    triggersInference: true,  prompt: "Deliver my content to its destination" },
+  { id: "be",          label: "Be",          icon: "user",       kind: "llm+menu",    triggersInference: true,  prompt: "Show me who I can be" },
   { id: "reset",       label: "Reset",       icon: "rotate-ccw", kind: "system-only", triggersInference: false },
 ];
 
