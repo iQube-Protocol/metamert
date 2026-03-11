@@ -1,77 +1,100 @@
 
+Goal: make the header R/T indicators animate in lockstep with real iframe inference (including welcome-state inference initiated inside the iframe), and stop only when inference/render is actually complete.
 
-## Root Cause: QuickLink Actions Missing Trigger Metadata
+What I found in the current code
+1) Animation styling is present
+- `RuntimeHeader.tsx` correctly uses:
+  - `animate-dot-wave` when `inferring === true`
+  - staggered `animationDelay` (`i * 150ms`)
+- `tailwind.config.ts` still defines `dot-wave` keyframes and animation.
 
-When a quicklink like "Watch" (id: `watch`) is tapped, `handleMenuAction("watch")` fires. Here's the chain:
+2) The main issue is inference state signaling, not CSS
+- `inferring` is only set to `true` in shell-owned actions:
+  - `submitPrompt()`
+  - `handleMenuAction()`
+- During iframe-owned welcome prompt flow (spinner appears inside iframe), shell often never sets `inferring=true`.
 
-1. **API call**: `menuAction("watch")` hits aa-proxy with `item_id: "watch"`
-2. **Upstream unavailable**: aa-proxy returns a bare fallback:
-   ```json
-   {
-     "iframe_event": { "type": "MENU_ACTION", "item_id": "watch", "intent": "watch" },
-     "menu_event": { "action_id": "watch", "intent": "watch", "prompt": "Launching watch…" }
-   }
-   ```
-3. **ShellContext line 560**: `result.iframe_event` exists, so `postRawToIframe` sends the raw event — which has **no prompt, no surface_plan_instruction, no copilot_instruction**
-4. **Runtime receives**: `{ type: "MENU_ACTION", payload: { item_id: "watch", intent: "watch" } }` — too bare for the runtime to trigger content inference
+3) Completion handling is currently too aggressive
+- In `ShellContext.tsx`, any `STATE_SYNC` is treated like inference completion and schedules `inferring=false` after 2s.
+- This can desync the indicators from the iframe spinner if `STATE_SYNC` is sent during processing.
 
-The fallback `iframe_event` takes priority over `menu_event` (line 560 vs 562), so the slightly richer `menu_event` path never fires. But even that path only has `"Launching watch…"` as the prompt — not the real trigger data.
+4) Message parsing is fragile
+- Current listeners read `e.data.type` directly and do not robustly normalize envelope-style payloads.
+- `ShellContext` completion listener also lacks strict runtime-origin filtering, so it can react to unrelated window messages.
 
-Meanwhile, the **shell-config** has the real trigger data on the parent menu item `play`:
-```json
-{
-  "id": "play",
-  "trigger": {
-    "prompt": "I'd like to play experiences.",
-    "intent": "play",
-    "surface_plan_instruction": "prioritize play/watch modules and interactive capsules",
-    "copilot_instruction": "set intent to play and surface interactive experiences first"
-  }
-}
-```
+Implementation plan
+1) Make iframe message handling inference-aware (start + complete), not completion-only
+- File: `src/contexts/ShellContext.tsx`
+- Replace current “`STATE_SYNC` always means complete” logic with a lifecycle parser:
+  - Start inference (`setInferring(true)`) on:
+    - explicit start-like message types (e.g. `INFERENCE_START`, `RENDER_START`, `PROCESSING_START` if present)
+    - `STATE_SYNC` indicating processing/busy=true in payload/state
+  - Complete inference (2s grace, existing behavior) on:
+    - explicit completion types (`INFERENCE_COMPLETE`, `RENDER_COMPLETE`)
+    - `STATE_SYNC` indicating processing/busy=false
+- Keep existing 30s safety timeout.
+- Keep existing shell-owned start triggers (`submitPrompt`, `handleMenuAction`) unchanged.
 
-And the quick_links in policy have per-action prompts:
-```json
-{ "id": "quick-watch", "prompt": "I'd like to watch experiences." }
-```
+2) Normalize inbound message shapes before interpreting
+- File: `src/lib/shell-messages.ts`
+- Add a small helper to normalize iframe inbound events from either form:
+  - direct: `{ type, ... }`
+  - envelope/payload style: `{ type, payload: {...} }` and safely expose merged fields for consumers.
+- This avoids missing state flags when runtime sends data under `payload`.
 
-But `handleMenuAction("watch")` looks up neither — it only checks `config.menu.items` for an exact id match (`"watch"` !== `"play"`).
+3) Apply strict origin guard for inference lifecycle listener
+- File: `src/contexts/ShellContext.tsx`
+- Use runtime origin derived from current config (same safe origin logic already used elsewhere) and ignore non-runtime `postMessage` events.
+- This prevents accidental `inferring` toggles from unrelated messages.
 
-## Fix
+4) Keep RuntimeFrame and ShellContext in sync on message interpretation
+- File: `src/components/RuntimeFrame.tsx`
+- Use the same normalization helper for inbound events, so `TRUST_UPDATE` and `STATE_SYNC` parsing are consistent.
+- Preserve current toast suppression behavior.
 
-**File: `src/contexts/ShellContext.tsx` — `handleMenuAction` (lines 557-582)**
+Technical details (implementation-level)
+- New inference lifecycle behavior:
+  - `onInferenceStart()`:
+    - clear any pending completion timer
+    - set `inferring=true`
+    - refresh 30s safety timer
+  - `onInferenceComplete()`:
+    - clear safety timer
+    - start 2s grace timer
+    - then set `inferring=false`
+- `STATE_SYNC` handling:
+  - no longer treated as unconditional completion
+  - evaluated by payload state flags (processing/busy/inferring booleans)
+- Envelope compatibility:
+  - read fields from both top-level and `payload` to support protocol variants without regressions.
 
-Enrich the message sent to the runtime by looking up trigger data from multiple sources when the API fallback lacks it:
+Why this addresses your exact complaint
+- Right now, iframe spinner can run while shell indicators stay static because shell never receives/uses a start signal path for iframe-owned inference.
+- This plan makes indicators start when iframe reports processing and only stop when iframe reports completion/rendered state (plus the existing 2s grace).
 
-1. **In the success path (line 560-568)**: When `result.iframe_event` exists but lacks `surface_plan_instruction`, enrich it with trigger data from the shell-config before sending. Specifically:
-   - Look up `config.menu.policy.quick_links` for a matching quicklink (map `"watch"` → `"quick-watch"`) to get the proper `prompt`
-   - Look up the parent mode's menu item (e.g., `"play"`) to get `surface_plan_instruction` and `copilot_instruction`
-   - Merge this into the iframe_event before posting
+Validation plan (end-to-end)
+1) Welcome flow (iframe-owned prompt)
+- Trigger inference using the iframe’s own prompt input.
+- Expected: R/T dots begin wave animation as spinner appears.
+- Expected: animation continues during processing and through render, then stops after grace period.
 
-2. **In the catch path (lines 569-582)**: Same enrichment — when `menuItem` is not found by exact id, also search quick_links and derive the parent mode's trigger.
+2) Post-welcome flow (shell-owned prompt)
+- Submit via shell `PromptBox`.
+- Expected: same synchronized behavior.
 
-The lookup logic:
-```typescript
-// Find quicklink prompt
-const qlPrefix = `quick-${itemId}`;
-const quickLink = config?.menu?.policy?.quick_links?.find(
-  (ql: any) => ql.id === qlPrefix || ql.id === itemId
-);
+3) Menu-triggered inference
+- Tap `Earn/Play/Make`.
+- Expected: indicators animate immediately and stay synced to runtime completion.
 
-// Find parent mode's trigger (activeMode maps to a menu item)
-const parentItem = activeMode 
-  ? config?.menu?.items?.find((i: any) => i.id === activeMode) 
-  : null;
-const parentTrigger = (parentItem as any)?.trigger;
+4) Idle behavior
+- No spinner / no processing:
+- Expected: indicators remain static, no phantom animation.
 
-// Build enriched menu event
-const prompt = quickLink?.prompt ?? parentTrigger?.prompt ?? `Launching ${itemId}…`;
-const intent = parentTrigger?.intent ?? itemId;
-const surface_plan_instruction = parentTrigger?.surface_plan_instruction;
-const copilot_instruction = parentTrigger?.copilot_instruction;
-```
+5) Mobile and desktop check
+- Verify same synchronization behavior on both viewport classes.
 
-Then always send via `postToIframe` with the full structured envelope instead of `postRawToIframe` when we detect the event lacks rich metadata.
-
-**Single file change**: `src/contexts/ShellContext.tsx`, modifying the try/catch block of `handleMenuAction` (~lines 557-582). Add `activeMode` to the dependency array of the `useCallback`.
-
+Acceptance criteria
+- Indicators animate whenever runtime spinner indicates active inference (including iframe-initiated inference).
+- Indicators do not stop early while iframe is still processing.
+- Indicators stop shortly after render completes (current grace behavior retained).
+- No regressions to refresh/reset toast policy or menu/header layout.
