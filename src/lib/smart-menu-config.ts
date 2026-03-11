@@ -162,11 +162,11 @@ export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
 // ---------------------------------------------------------------------------
 
 const PLAY_ACTIONS: QuickActionDef[] = [
-  { id: "be",        label: "Be",        icon: "users",      kind: "llm+menu",    triggersInference: true },
-  { id: "find",      label: "Find",      icon: "search",     kind: "llm+menu",    triggersInference: true },
-  { id: "listen",    label: "Listen",    icon: "headphones", kind: "llm+menu",    triggersInference: true },
-  { id: "watch",     label: "Watch",     icon: "eye",        kind: "llm+menu",    triggersInference: true },
-  { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true },
+  { id: "be",        label: "Be",        icon: "users",      kind: "llm+menu",    triggersInference: true,  prompt: "Show me who I can be" },
+  { id: "find",      label: "Find",      icon: "search",     kind: "llm+menu",    triggersInference: true,  prompt: "Search and discover something new for me" },
+  { id: "listen",    label: "Listen",    icon: "headphones", kind: "llm+menu",    triggersInference: true,  prompt: "Play something for me to listen to" },
+  { id: "watch",     label: "Watch",     icon: "eye",        kind: "llm+menu",    triggersInference: true,  prompt: "Show me something interesting to watch" },
+  { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true,  prompt: "Find me something good to read" },
   { id: "cartridge", label: "Cartridge", icon: "box",        kind: "system-only", triggersInference: false },
   { id: "share",     label: "Share",     icon: "share-2",    kind: "llm+menu",    triggersInference: true },
   { id: "reset",     label: "Reset",     icon: "rotate-ccw", kind: "system-only", triggersInference: false },
