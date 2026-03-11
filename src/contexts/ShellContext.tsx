@@ -90,10 +90,15 @@ interface ShellContextValue {
 
 const ShellCtx = createContext<ShellContextValue | null>(null);
 
+// Stable module-level ref survives HMR — context value is written here by the provider
+let __shellSingleton: ShellContextValue | null = null;
+
 export function useShell(): ShellContextValue {
+  // Prefer React context; fall back to module singleton during HMR transitions
   const ctx = useContext(ShellCtx);
-  if (!ctx) throw new Error("useShell must be used inside ShellProvider");
-  return ctx;
+  const value = ctx ?? __shellSingleton;
+  if (!value) throw new Error("useShell must be used inside ShellProvider");
+  return value;
 }
 
 // ---------------------------------------------------------------------------
@@ -634,22 +639,25 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const ctxValue: ShellContextValue = {
+    config, loading, authenticated, shellState,
+    activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
+    // Smart Menu state
+    viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
+    // Actions
+    toggleQuickLinks,
+    hydrate, selectAigent, selectLLM, handleMenuAction,
+    submitPrompt, resetToWelcome, updateTrust, iframeRef,
+    // Smart Menu actions
+    activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
+    selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+  };
+
+  // Publish to module singleton so HMR-stale consumers can still read it
+  __shellSingleton = ctxValue;
+
   return (
-    <ShellCtx.Provider
-      value={{
-        config, loading, authenticated, shellState,
-        activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
-        // Smart Menu state
-        viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
-        // Actions
-        toggleQuickLinks,
-        hydrate, selectAigent, selectLLM, handleMenuAction,
-        submitPrompt, resetToWelcome, updateTrust, iframeRef,
-        // Smart Menu actions
-        activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-        selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
-      }}
-    >
+    <ShellCtx.Provider value={ctxValue}>
       {children}
     </ShellCtx.Provider>
   );
