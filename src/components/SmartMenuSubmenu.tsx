@@ -168,19 +168,19 @@ function QuickActionButton({
   action,
   accent,
   Icon,
+  isActivated,
   onAction,
 }: {
   action: QuickActionDef;
   accent: string;
   Icon: LucideIcon | undefined;
+  isActivated: boolean;
   onAction: (a: QuickActionDef) => void;
 }) {
   const [hovered, setHovered] = useState(false);
-  const [activated, setActivated] = useState(false);
-  const color = hovered || activated ? accent : undefined;
+  const color = hovered || isActivated ? accent : undefined;
 
   const handleClick = () => {
-    setActivated(true);
     onAction(action);
   };
 
