@@ -69,6 +69,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     viewState,
     activateMode,
     handleMenuAction,
+    submitPrompt,
     setSubmenuType,
     pauseIdleTimer,
   } = useShell();
