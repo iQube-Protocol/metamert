@@ -105,6 +105,8 @@ export interface QuickActionDef {
   icon?: string;
   kind: QuickActionKind;
   triggersInference: boolean;
+  /** Rich contextual prompt sent via PROMPT_SUBMIT to trigger inference */
+  prompt?: string;
 }
 
 export interface ModeConfig {
