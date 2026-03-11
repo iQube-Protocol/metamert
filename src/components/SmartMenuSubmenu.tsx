@@ -72,6 +72,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     submitPrompt,
     setSubmenuType,
     pauseIdleTimer,
+    resumeIdleTimer,
   } = useShell();
   const scrollRef = useRef<HTMLDivElement>(null);
 
