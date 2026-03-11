@@ -147,6 +147,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
               action={action}
               accent={accent}
               Icon={Icon}
+              isActivated={activatedId === action.id}
               onAction={handleAction}
             />
           );
