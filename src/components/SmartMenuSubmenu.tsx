@@ -72,6 +72,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     submitPrompt,
     setSubmenuType,
     pauseIdleTimer,
+    resetIdleTimer,
   } = useShell();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -98,9 +99,10 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
-    // Rich contextual prompt: send directly without opening prompt box
+    // Rich contextual prompt: send directly, then start 4s idle countdown
     if (action.prompt) {
       submitPrompt(action.prompt);
+      resetIdleTimer("quickAction");
       return;
     }
 
