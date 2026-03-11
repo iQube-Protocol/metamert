@@ -134,7 +134,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       <div
         ref={scrollRef}
         className="flex items-center overflow-x-auto px-0 py-1.5 scrollbar-hide"
-        style={{ scrollSnapType: "x mandatory", scrollBehavior: "auto" }}
+        style={{ scrollSnapType: "x mandatory", scrollBehavior: "auto", touchAction: "pan-x" }}
       >
         {modeConfig.quickActions.map((action) => {
           const Icon = resolveSmartIcon(action.icon, action.id);
