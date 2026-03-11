@@ -105,6 +105,8 @@ export interface QuickActionDef {
   icon?: string;
   kind: QuickActionKind;
   triggersInference: boolean;
+  /** Rich contextual prompt sent via PROMPT_SUBMIT to trigger inference */
+  prompt?: string;
 }
 
 export interface ModeConfig {
@@ -160,57 +162,57 @@ export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
 // ---------------------------------------------------------------------------
 
 const PLAY_ACTIONS: QuickActionDef[] = [
-  { id: "be",        label: "Be",        icon: "users",      kind: "llm+menu",    triggersInference: true },
-  { id: "find",      label: "Find",      icon: "search",     kind: "llm+menu",    triggersInference: true },
-  { id: "listen",    label: "Listen",    icon: "headphones", kind: "llm+menu",    triggersInference: true },
-  { id: "watch",     label: "Watch",     icon: "eye",        kind: "llm+menu",    triggersInference: true },
-  { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true },
+  { id: "be",        label: "Be",        icon: "users",      kind: "llm+menu",    triggersInference: true,  prompt: "Show me who I can be" },
+  { id: "find",      label: "Find",      icon: "search",     kind: "llm+menu",    triggersInference: true,  prompt: "Search and discover something new for me" },
+  { id: "listen",    label: "Listen",    icon: "headphones", kind: "llm+menu",    triggersInference: true,  prompt: "Play something for me to listen to" },
+  { id: "watch",     label: "Watch",     icon: "eye",        kind: "llm+menu",    triggersInference: true,  prompt: "Show me something interesting to watch" },
+  { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true,  prompt: "Find me something good to read" },
   { id: "cartridge", label: "Cartridge", icon: "box",        kind: "system-only", triggersInference: false },
   { id: "share",     label: "Share",     icon: "share-2",    kind: "llm+menu",    triggersInference: true },
   { id: "reset",     label: "Reset",     icon: "rotate-ccw", kind: "system-only", triggersInference: false },
 ];
 
 const BE_ACTIONS: QuickActionDef[] = [
-  { id: "vault",     label: "Vault",     icon: "lock",       kind: "llm+menu",    triggersInference: true },
+  { id: "vault",     label: "Vault",     icon: "lock",       kind: "llm+menu",    triggersInference: true,  prompt: "Open my secure vault" },
   { id: "persona",   label: "Persona",   icon: "user",       kind: "system-only", triggersInference: false },
-  { id: "memory",    label: "Memory",    icon: "sparkles",   kind: "llm+menu",    triggersInference: true },
-  { id: "policy",    label: "Policy",    icon: "shield",     kind: "llm+menu",    triggersInference: true },
-  { id: "identity",  label: "Identity",  icon: "fingerprint", kind: "llm+menu",   triggersInference: true },
-  { id: "presence",  label: "Presence",  icon: "radio",      kind: "llm+menu",    triggersInference: true },
+  { id: "memory",    label: "Memory",    icon: "sparkles",   kind: "llm+menu",    triggersInference: true,  prompt: "Show my memory and context history" },
+  { id: "policy",    label: "Policy",    icon: "shield",     kind: "llm+menu",    triggersInference: true,  prompt: "Review my current policies and settings" },
+  { id: "identity",  label: "Identity",  icon: "fingerprint", kind: "llm+menu",   triggersInference: true,  prompt: "Show my identity and credentials" },
+  { id: "presence",  label: "Presence",  icon: "radio",      kind: "llm+menu",    triggersInference: true,  prompt: "Show my presence and availability status" },
   { id: "share",     label: "Share",     icon: "share-2",    kind: "llm+menu",    triggersInference: true },
   { id: "reset",     label: "Reset",     icon: "rotate-ccw", kind: "system-only", triggersInference: false },
 ];
 
 const EARN_ACTIONS: QuickActionDef[] = [
-  { id: "goal",        label: "Goal",        icon: "target",     kind: "llm+menu",    triggersInference: true },
-  { id: "task",        label: "Task",        icon: "check-square", kind: "llm+menu",  triggersInference: true },
-  { id: "reward",      label: "Reward",      icon: "star",       kind: "llm+menu",    triggersInference: true },
-  { id: "offer",       label: "Offer",       icon: "tag",        kind: "llm+menu",    triggersInference: true },
-  { id: "opportunity", label: "Opportunity", icon: "compass",    kind: "llm+menu",    triggersInference: true },
-  { id: "wallet",      label: "Wallet",      icon: "wallet",     kind: "llm+menu",    triggersInference: true },
+  { id: "goal",        label: "Goal",        icon: "target",     kind: "llm+menu",    triggersInference: true,  prompt: "Show my current goals and progress" },
+  { id: "task",        label: "Task",        icon: "check-square", kind: "llm+menu",  triggersInference: true,  prompt: "What tasks should I work on next?" },
+  { id: "reward",      label: "Reward",      icon: "star",       kind: "llm+menu",    triggersInference: true,  prompt: "Show my rewards and achievements" },
+  { id: "offer",       label: "Offer",       icon: "tag",        kind: "llm+menu",    triggersInference: true,  prompt: "Find offers and deals available to me" },
+  { id: "opportunity", label: "Opportunity", icon: "compass",    kind: "llm+menu",    triggersInference: true,  prompt: "Discover new opportunities for me" },
+  { id: "wallet",      label: "Wallet",      icon: "wallet",     kind: "llm+menu",    triggersInference: true,  prompt: "Show my wallet balances and recent transactions" },
   { id: "share",       label: "Share",       icon: "share-2",    kind: "llm+menu",    triggersInference: true },
   { id: "reset",       label: "Reset",       icon: "rotate-ccw", kind: "system-only", triggersInference: false },
 ];
 
 const MAKE_ACTIONS: QuickActionDef[] = [
-  { id: "write",   label: "Write",   icon: "pen-line",   kind: "llm+menu",    triggersInference: true },
-  { id: "design",  label: "Design",  icon: "palette",    kind: "llm+menu",    triggersInference: true },
-  { id: "build",   label: "Build",   icon: "hammer",     kind: "llm+menu",    triggersInference: true },
-  { id: "edit",    label: "Edit",    icon: "pencil",     kind: "llm+menu",    triggersInference: true },
-  { id: "remix",   label: "Remix",   icon: "shuffle",    kind: "llm+menu",    triggersInference: true },
-  { id: "publish", label: "Publish", icon: "upload",     kind: "llm+menu",    triggersInference: true },
+  { id: "write",   label: "Write",   icon: "pen-line",   kind: "llm+menu",    triggersInference: true,  prompt: "Help me write something" },
+  { id: "design",  label: "Design",  icon: "palette",    kind: "llm+menu",    triggersInference: true,  prompt: "Help me design something creative" },
+  { id: "build",   label: "Build",   icon: "hammer",     kind: "llm+menu",    triggersInference: true,  prompt: "Help me build something new" },
+  { id: "edit",    label: "Edit",    icon: "pencil",     kind: "llm+menu",    triggersInference: true,  prompt: "Help me edit and refine my work" },
+  { id: "remix",   label: "Remix",   icon: "shuffle",    kind: "llm+menu",    triggersInference: true,  prompt: "Remix something creative for me" },
+  { id: "publish", label: "Publish", icon: "upload",     kind: "llm+menu",    triggersInference: true,  prompt: "Help me publish my work" },
   { id: "share",   label: "Share",   icon: "share-2",    kind: "llm+menu",    triggersInference: true },
   { id: "reset",   label: "Reset",   icon: "rotate-ccw", kind: "system-only", triggersInference: false },
 ];
 
 const SHARE_ACTIONS: QuickActionDef[] = [
-  { id: "send",        label: "Send",        icon: "send",       kind: "llm+menu",    triggersInference: true },
-  { id: "publish",     label: "Publish",     icon: "upload",     kind: "llm+menu",    triggersInference: true },
-  { id: "export",      label: "Export",      icon: "download",   kind: "llm+menu",    triggersInference: true },
-  { id: "connect",     label: "Connect",     icon: "link",       kind: "llm+menu",    triggersInference: true },
-  { id: "collaborate", label: "Collaborate", icon: "users",      kind: "llm+menu",    triggersInference: true },
-  { id: "deliver",     label: "Deliver",     icon: "truck",      kind: "llm+menu",    triggersInference: true },
-  { id: "be",          label: "Be",          icon: "user",       kind: "llm+menu",    triggersInference: true },
+  { id: "send",        label: "Send",        icon: "send",       kind: "llm+menu",    triggersInference: true,  prompt: "Send a message for me" },
+  { id: "publish",     label: "Publish",     icon: "upload",     kind: "llm+menu",    triggersInference: true,  prompt: "Publish and share my content" },
+  { id: "export",      label: "Export",      icon: "download",   kind: "llm+menu",    triggersInference: true,  prompt: "Export my data and content" },
+  { id: "connect",     label: "Connect",     icon: "link",       kind: "llm+menu",    triggersInference: true,  prompt: "Connect me with someone" },
+  { id: "collaborate", label: "Collaborate", icon: "users",      kind: "llm+menu",    triggersInference: true,  prompt: "Start a collaboration session" },
+  { id: "deliver",     label: "Deliver",     icon: "truck",      kind: "llm+menu",    triggersInference: true,  prompt: "Deliver my content to its destination" },
+  { id: "be",          label: "Be",          icon: "user",       kind: "llm+menu",    triggersInference: true,  prompt: "Show me who I can be" },
   { id: "reset",       label: "Reset",       icon: "rotate-ccw", kind: "system-only", triggersInference: false },
 ];
 
