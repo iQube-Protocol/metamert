@@ -639,22 +639,25 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const ctxValue: ShellContextValue = {
+    config, loading, authenticated, shellState,
+    activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
+    // Smart Menu state
+    viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
+    // Actions
+    toggleQuickLinks,
+    hydrate, selectAigent, selectLLM, handleMenuAction,
+    submitPrompt, resetToWelcome, updateTrust, iframeRef,
+    // Smart Menu actions
+    activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
+    selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+  };
+
+  // Publish to module singleton so HMR-stale consumers can still read it
+  __shellSingleton = ctxValue;
+
   return (
-    <ShellCtx.Provider
-      value={{
-        config, loading, authenticated, shellState,
-        activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
-        // Smart Menu state
-        viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
-        // Actions
-        toggleQuickLinks,
-        hydrate, selectAigent, selectLLM, handleMenuAction,
-        submitPrompt, resetToWelcome, updateTrust, iframeRef,
-        // Smart Menu actions
-        activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-        selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
-      }}
-    >
+    <ShellCtx.Provider value={ctxValue}>
       {children}
     </ShellCtx.Provider>
   );
