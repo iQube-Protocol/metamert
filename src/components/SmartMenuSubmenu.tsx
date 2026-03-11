@@ -75,6 +75,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     resetIdleTimer,
   } = useShell();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [activatedId, setActivatedId] = useState<string | null>(null);
 
   const effectiveMode = overrideMode ?? activeMode;
   if (!effectiveMode) return null;
@@ -82,6 +83,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
   const accent = modeConfig.accentHex;
 
   const handleAction = useCallback((action: QuickActionDef) => {
+    setActivatedId(action.id);
     pauseIdleTimer();
 
     // If in hover preview, activate the mode first so prompt mode engages
