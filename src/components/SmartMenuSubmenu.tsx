@@ -112,7 +112,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
 
     pauseIdleTimer();
     handleMenuAction(action.id);
-  }, [handleMenuAction, setSubmenuType, pauseIdleTimer, resumeIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, submitPrompt]);
+  }, [handleMenuAction, setSubmenuType, pauseIdleTimer, resumeIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode]);
 
   const foldIds = modeConfig.mobileVisibleFold;
   // Find the first fold item's index to auto-scroll there on mount
