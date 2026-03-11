@@ -184,12 +184,12 @@ const BE_ACTIONS: QuickActionDef[] = [
 ];
 
 const EARN_ACTIONS: QuickActionDef[] = [
-  { id: "goal",        label: "Goal",        icon: "target",     kind: "llm+menu",    triggersInference: true },
-  { id: "task",        label: "Task",        icon: "check-square", kind: "llm+menu",  triggersInference: true },
-  { id: "reward",      label: "Reward",      icon: "star",       kind: "llm+menu",    triggersInference: true },
-  { id: "offer",       label: "Offer",       icon: "tag",        kind: "llm+menu",    triggersInference: true },
-  { id: "opportunity", label: "Opportunity", icon: "compass",    kind: "llm+menu",    triggersInference: true },
-  { id: "wallet",      label: "Wallet",      icon: "wallet",     kind: "llm+menu",    triggersInference: true },
+  { id: "goal",        label: "Goal",        icon: "target",     kind: "llm+menu",    triggersInference: true,  prompt: "Show my current goals and progress" },
+  { id: "task",        label: "Task",        icon: "check-square", kind: "llm+menu",  triggersInference: true,  prompt: "What tasks should I work on next?" },
+  { id: "reward",      label: "Reward",      icon: "star",       kind: "llm+menu",    triggersInference: true,  prompt: "Show my rewards and achievements" },
+  { id: "offer",       label: "Offer",       icon: "tag",        kind: "llm+menu",    triggersInference: true,  prompt: "Find offers and deals available to me" },
+  { id: "opportunity", label: "Opportunity", icon: "compass",    kind: "llm+menu",    triggersInference: true,  prompt: "Discover new opportunities for me" },
+  { id: "wallet",      label: "Wallet",      icon: "wallet",     kind: "llm+menu",    triggersInference: true,  prompt: "Show my wallet balances and recent transactions" },
   { id: "share",       label: "Share",       icon: "share-2",    kind: "llm+menu",    triggersInference: true },
   { id: "reset",       label: "Reset",       icon: "rotate-ccw", kind: "system-only", triggersInference: false },
 ];
