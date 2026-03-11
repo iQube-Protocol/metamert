@@ -88,11 +88,6 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       activateMode(overrideMode);
     }
 
-    // If in quickActionOnly and action triggers inference, transition to prompt mode
-    if (viewState === "quickActionOnly" && action.triggersInference) {
-      activateMode(effectiveMode);
-    }
-
     if (action.id === "cartridge") {
       setSubmenuType("cartridgeSelector");
       return;
@@ -103,10 +98,15 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
-    // Rich contextual prompt: send via PROMPT_SUBMIT for inference-driven features
+    // Rich contextual prompt: send directly without opening prompt box
     if (action.prompt) {
       submitPrompt(action.prompt);
       return;
+    }
+
+    // Only transition to promptMode for non-prompt actions that need complex input
+    if (viewState === "quickActionOnly" && action.triggersInference) {
+      activateMode(effectiveMode);
     }
 
     handleMenuAction(action.id);
