@@ -81,19 +81,20 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
   const accent = modeConfig.accentHex;
 
   const handleAction = useCallback((action: QuickActionDef) => {
-    pauseIdleTimer();
-
     // If in hover preview, activate the mode first so prompt mode engages
     if (overrideMode && overrideMode !== activeMode) {
+      pauseIdleTimer();
       activateMode(overrideMode);
     }
 
     if (action.id === "cartridge") {
+      pauseIdleTimer();
       setSubmenuType("cartridgeSelector");
       return;
     }
 
     if (action.id === "persona") {
+      pauseIdleTimer();
       setSubmenuType("personaSelector");
       return;
     }
@@ -103,12 +104,14 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     // listen, read, etc.) with a single tap — tapping the same quicklink
     // again reshuffles that content type.
     if (viewState === "quickActionOnly" && action.kind === "llm+menu") {
-      submitPrompt(action.label);
+      submitPrompt(`Show me ${action.label.toLowerCase()} content`);
+      resumeIdleTimer();
       return;
     }
 
+    pauseIdleTimer();
     handleMenuAction(action.id);
-  }, [handleMenuAction, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, submitPrompt]);
+  }, [handleMenuAction, setSubmenuType, pauseIdleTimer, resumeIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, submitPrompt]);
 
   const foldIds = modeConfig.mobileVisibleFold;
   // Find the first fold item's index to auto-scroll there on mount
