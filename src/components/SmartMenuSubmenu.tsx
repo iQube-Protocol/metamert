@@ -69,10 +69,8 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     viewState,
     activateMode,
     handleMenuAction,
-    submitPrompt,
     setSubmenuType,
     pauseIdleTimer,
-    resumeIdleTimer,
   } = useShell();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -82,37 +80,30 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
   const accent = modeConfig.accentHex;
 
   const handleAction = useCallback((action: QuickActionDef) => {
+    pauseIdleTimer();
+
     // If in hover preview, activate the mode first so prompt mode engages
     if (overrideMode && overrideMode !== activeMode) {
-      pauseIdleTimer();
       activateMode(overrideMode);
     }
 
+    // If in quickActionOnly and action triggers inference, transition to prompt mode
+    if (viewState === "quickActionOnly" && action.triggersInference) {
+      activateMode(effectiveMode);
+    }
+
     if (action.id === "cartridge") {
-      pauseIdleTimer();
       setSubmenuType("cartridgeSelector");
       return;
     }
 
     if (action.id === "persona") {
-      pauseIdleTimer();
       setSubmenuType("personaSelector");
       return;
     }
 
-    // In quickActionOnly: fire quicklink actions directly as prompts without
-    // opening the text prompt bar. This lets users surface content (watch,
-    // listen, read, etc.) with a single tap — tapping the same quicklink
-    // again reshuffles that content type.
-    if (viewState === "quickActionOnly" && action.kind === "llm+menu") {
-      handleMenuAction(action.id);
-      resumeIdleTimer();
-      return;
-    }
-
-    pauseIdleTimer();
     handleMenuAction(action.id);
-  }, [handleMenuAction, setSubmenuType, pauseIdleTimer, resumeIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode]);
+  }, [handleMenuAction, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode]);
 
   const foldIds = modeConfig.mobileVisibleFold;
   // Find the first fold item's index to auto-scroll there on mount
@@ -135,7 +126,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       <div
         ref={scrollRef}
         className="flex items-center overflow-x-auto px-0 py-1.5 scrollbar-hide"
-        style={{ scrollSnapType: "x mandatory", scrollBehavior: "auto", touchAction: "pan-x" }}
+        style={{ scrollSnapType: "x mandatory", scrollBehavior: "auto" }}
       >
         {modeConfig.quickActions.map((action) => {
           const Icon = resolveSmartIcon(action.icon, action.id);
