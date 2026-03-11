@@ -69,6 +69,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     viewState,
     activateMode,
     handleMenuAction,
+    submitPrompt,
     setSubmenuType,
     pauseIdleTimer,
   } = useShell();
@@ -87,11 +88,6 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       activateMode(overrideMode);
     }
 
-    // If in quickActionOnly and action triggers inference, transition to prompt mode
-    if (viewState === "quickActionOnly" && action.triggersInference) {
-      activateMode(effectiveMode);
-    }
-
     if (action.id === "cartridge") {
       setSubmenuType("cartridgeSelector");
       return;
@@ -102,8 +98,17 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
+    // In quickActionOnly: fire quicklink actions directly as prompts without
+    // opening the text prompt bar. This lets users surface content (watch,
+    // listen, read, etc.) with a single tap — tapping the same quicklink
+    // again reshuffles that content type.
+    if (viewState === "quickActionOnly" && action.kind === "llm+menu") {
+      submitPrompt(action.label);
+      return;
+    }
+
     handleMenuAction(action.id);
-  }, [handleMenuAction, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode]);
+  }, [handleMenuAction, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, submitPrompt]);
 
   const foldIds = modeConfig.mobileVisibleFold;
   // Find the first fold item's index to auto-scroll there on mount
