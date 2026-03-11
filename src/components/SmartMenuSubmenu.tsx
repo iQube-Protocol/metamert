@@ -69,6 +69,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     viewState,
     activateMode,
     handleMenuAction,
+    submitPrompt,
     setSubmenuType,
     pauseIdleTimer,
   } = useShell();
@@ -102,8 +103,14 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
+    // Rich contextual prompt: send via PROMPT_SUBMIT for inference-driven features
+    if (action.prompt) {
+      submitPrompt(action.prompt);
+      return;
+    }
+
     handleMenuAction(action.id);
-  }, [handleMenuAction, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode]);
+  }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode]);
 
   const foldIds = modeConfig.mobileVisibleFold;
   // Find the first fold item's index to auto-scroll there on mount
