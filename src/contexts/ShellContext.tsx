@@ -591,24 +591,28 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     if (!text.trim()) return;
     setShellState("post-welcome");
     inferCtrl.current?.start();
+    const ctx = {
+      cartridge_id: cartridgeState.activeCartridgeId,
+      codex_id: cartridgeState.activeCodexId,
+    };
     try {
-      const result: PromptActionResult = await promptAction(text);
+      const result: PromptActionResult = await promptAction(text, ctx);
       applyConfigUpdate(result.shell_config);
       if (iframeRef.current && config) {
         if (result.iframe_event) {
           postRawToIframe(iframeRef.current, result.iframe_event, getIframeOrigin(config));
         } else {
-          postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
+          postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text, ...ctx }, getIframeOrigin(config));
         }
       }
     } catch {
       if (iframeRef.current && config) {
-        postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text }, getIframeOrigin(config));
+        postToIframe(iframeRef.current, { type: "PROMPT_SUBMIT", text, ...ctx }, getIframeOrigin(config));
       }
     } finally {
       inferCtrl.current?.start();
     }
-  }, [config, applyConfigUpdate]);
+  }, [config, applyConfigUpdate, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
 
   const resetToWelcome = useCallback(() => {
     setShellState("welcome");
