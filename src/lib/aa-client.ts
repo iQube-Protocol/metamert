@@ -179,8 +179,11 @@ export async function updateSelector(
 // Menu actions
 // ---------------------------------------------------------------------------
 
-export async function menuAction(itemId: string): Promise<MenuActionResult> {
-  return aaProxy<MenuActionResult>("menu-action", { item_id: itemId });
+export async function menuAction(
+  itemId: string,
+  context?: { cartridge_id?: string; codex_id?: string },
+): Promise<MenuActionResult> {
+  return aaProxy<MenuActionResult>("menu-action", { item_id: itemId, ...context });
 }
 
 // ---------------------------------------------------------------------------
@@ -192,8 +195,11 @@ export interface PromptActionResult {
   shell_config?: ShellConfig;
 }
 
-export async function promptAction(text: string): Promise<PromptActionResult> {
-  return aaProxy<PromptActionResult>("prompt-action", { text });
+export async function promptAction(
+  text: string,
+  context?: { cartridge_id?: string; codex_id?: string },
+): Promise<PromptActionResult> {
+  return aaProxy<PromptActionResult>("prompt-action", { text, ...context });
 }
 
 // ---------------------------------------------------------------------------
