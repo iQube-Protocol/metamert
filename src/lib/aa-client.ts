@@ -195,8 +195,11 @@ export interface PromptActionResult {
   shell_config?: ShellConfig;
 }
 
-export async function promptAction(text: string): Promise<PromptActionResult> {
-  return aaProxy<PromptActionResult>("prompt-action", { text });
+export async function promptAction(
+  text: string,
+  context?: { cartridge_id?: string; codex_id?: string },
+): Promise<PromptActionResult> {
+  return aaProxy<PromptActionResult>("prompt-action", { text, ...context });
 }
 
 // ---------------------------------------------------------------------------

@@ -13,10 +13,10 @@ export interface DeviceContext {
 export type ShellOutbound =
   | { type: "SHELL_READY"; hide_chrome?: boolean }
   | { type: "HANDOFF"; handoff_token: string; context?: Record<string, unknown> }
-  | { type: "MENU_ACTION"; action_id: string; prompt?: string; menu_event?: MenuEvent }
+  | { type: "MENU_ACTION"; action_id: string; prompt?: string; menu_event?: MenuEvent; cartridge_id?: string; codex_id?: string }
   | { type: "SELECTOR_CHANGE"; selector_type: "aigent" | "llm" | "cartridge" | "codex" | "persona"; id: string; iqube_id?: string }
   | { type: "CONTEXT_UPDATE"; payload: Record<string, unknown> }
-  | { type: "PROMPT_SUBMIT"; text: string }
+  | { type: "PROMPT_SUBMIT"; text: string; cartridge_id?: string; codex_id?: string }
   | { type: "RESET_WELCOME" }
   | { type: "DEVICE_CONTEXT_UPDATE"; context: DeviceContext };
 
