@@ -559,15 +559,20 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setActiveMenuItem(itemId);
     inferCtrl.current?.start();
 
+    const ctx = {
+      cartridge_id: cartridgeState.activeCartridgeId,
+      codex_id: cartridgeState.activeCodexId,
+    };
+
     try {
-      const result: MenuActionResult = await menuAction(itemId);
+      const result: MenuActionResult = await menuAction(itemId, ctx);
       applyConfigUpdate(result.shell_config);
       if (result.iframe_event && iframeRef.current && config) {
         postRawToIframe(iframeRef.current, result.iframe_event, getIframeOrigin(config));
       } else if (result.menu_event && iframeRef.current && config) {
         postToIframe(
           iframeRef.current,
-          { type: "MENU_ACTION", action_id: itemId, prompt: result.menu_event?.prompt, menu_event: result.menu_event },
+          { type: "MENU_ACTION", action_id: itemId, prompt: result.menu_event?.prompt, menu_event: result.menu_event, ...ctx },
           getIframeOrigin(config),
         );
       }
@@ -580,12 +585,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           : { action_id: itemId, intent: itemId };
         postToIframe(
           iframeRef.current,
-          { type: "MENU_ACTION", action_id: itemId, prompt: menuEvent.prompt, menu_event: menuEvent },
+          { type: "MENU_ACTION", action_id: itemId, prompt: menuEvent.prompt, menu_event: menuEvent, ...ctx },
           getIframeOrigin(config),
         );
       }
     }
-  }, [config, applyConfigUpdate, deactivateMode]);
+  }, [config, applyConfigUpdate, deactivateMode, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
 
   const submitPrompt = useCallback(async (text: string) => {
     if (!text.trim()) return;
