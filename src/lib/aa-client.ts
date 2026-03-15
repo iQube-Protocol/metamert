@@ -179,8 +179,11 @@ export async function updateSelector(
 // Menu actions
 // ---------------------------------------------------------------------------
 
-export async function menuAction(itemId: string): Promise<MenuActionResult> {
-  return aaProxy<MenuActionResult>("menu-action", { item_id: itemId });
+export async function menuAction(
+  itemId: string,
+  context?: { cartridge_id?: string; codex_id?: string },
+): Promise<MenuActionResult> {
+  return aaProxy<MenuActionResult>("menu-action", { item_id: itemId, ...context });
 }
 
 // ---------------------------------------------------------------------------
