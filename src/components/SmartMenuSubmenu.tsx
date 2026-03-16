@@ -105,6 +105,11 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
+    if (action.id === "browse") {
+      setSubmenuType("browserSelector");
+      return;
+    }
+
     // Rich contextual prompt: send directly, then start 4s idle countdown
     if (action.prompt) {
       submitPrompt(action.prompt);
