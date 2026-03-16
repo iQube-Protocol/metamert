@@ -1,8 +1,10 @@
 import { useEffect, useCallback } from "react";
 import { useShell } from "@/contexts/ShellContext";
+import { useBrowserOptional } from "@/contexts/BrowserContext";
 import EmbedFrame from "@/components/EmbedFrame";
 import { postToIframe, normalizeInbound, type DeviceType } from "@/lib/shell-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
+import type { BrowserMountPayload, BrowserStepState, BrowserBadgeState } from "@/lib/browser-types";
 
 function getDeviceType(): DeviceType {
   const w = window.innerWidth;
