@@ -18,7 +18,16 @@ export type ShellOutbound =
   | { type: "CONTEXT_UPDATE"; payload: Record<string, unknown> }
   | { type: "PROMPT_SUBMIT"; text: string; cartridge_id?: string; codex_id?: string }
   | { type: "RESET_WELCOME" }
-  | { type: "DEVICE_CONTEXT_UPDATE"; context: DeviceContext };
+  | { type: "DEVICE_CONTEXT_UPDATE"; context: DeviceContext }
+  // Browser bridge events (shell → runtime)
+  | { type: "browser.open.request"; payload?: { intent?: string } }
+  | { type: "browser.close.request"; payload: { sessionId: string } }
+  | { type: "browser.minimize.request"; payload: { sessionId: string } }
+  | { type: "browser.expand.request"; payload: { sessionId: string } }
+  | { type: "browser.focus.changed"; payload: { sessionId: string; focused: boolean } }
+  | { type: "browser.takeover.request"; payload: { sessionId: string } }
+  | { type: "browser.resume.request"; payload: { sessionId: string } }
+  | { type: "browser.surface.bounds.changed"; payload: { sessionId: string; bounds: Record<string, number> } };
 
 export interface MenuEvent {
   action_id: string;
