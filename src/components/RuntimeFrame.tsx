@@ -15,6 +15,7 @@ function getDeviceType(): DeviceType {
 
 export default function RuntimeFrame() {
   const { config, iframeRef, updateTrust } = useShell();
+  const browser = useBrowserOptional();
 
   const handleReady = useCallback(() => {
     if (!config || !iframeRef.current) return;
