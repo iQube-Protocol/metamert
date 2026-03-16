@@ -160,7 +160,7 @@ export default function SmartMenuPromptBar() {
         onFocus={handleFocus}
         onBlur={handleBlur}
         onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-        placeholder={modeConfig?.promptPlaceholder ?? "What do you want to do?"}
+        placeholder={browserActive ? "Enter URL or ask about the page…" : (modeConfig?.promptPlaceholder ?? "What do you want to do?")}
         className="min-w-0 flex-1 bg-transparent px-2 py-1 text-white placeholder:text-muted-foreground placeholder:text-center focus:outline-none"
         style={{
           caretColor: accent,
