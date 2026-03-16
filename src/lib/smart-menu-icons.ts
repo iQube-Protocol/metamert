@@ -36,4 +36,5 @@ export const SMART_MENU_ICON_DEFAULTS: Record<string, LucideIcon> = {
   deliver: Truck,
   cartridge: Box,
   codex: Library,
+  browse: Globe,
 };
