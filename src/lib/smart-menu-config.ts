@@ -11,7 +11,7 @@ import type { LucideIcon } from "lucide-react";
 
 export type ViewState = "defaultNav" | "promptMode" | "quickActionOnly";
 export type SmartMenuMode = "be" | "earn" | "play" | "make" | "share";
-export type SubmenuType = "quickActions" | "cartridgeSelector" | "codexSelector" | "personaSelector";
+export type SubmenuType = "quickActions" | "cartridgeSelector" | "codexSelector" | "personaSelector" | "browserSelector";
 export type QuickActionVisibility = "visibleAuto" | "hiddenAutoIdle" | "hiddenUserToggle";
 export type InteractionState = "idle" | "focused" | "typing" | "voiceReady" | "recording" | "quickActionActive";
 
