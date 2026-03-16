@@ -6,7 +6,7 @@ import {
   Lock, User, Sparkles, Shield, Fingerprint, Radio,
   Target, CheckSquare, Star, Tag, Compass, Wallet,
   PenLine, Palette, Hammer, Pencil, Shuffle, Upload,
-  Send, Download, Link, Truck, Box, Library,
+  Send, Download, Link, Truck, Box, Library, Globe,
   type LucideIcon,
 } from "lucide-react";
 
