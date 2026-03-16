@@ -3,11 +3,12 @@
  * Contains: Input | Mic | Send | Chevron
  * Spec: accent border trim, ~15px text, swipe-down collapse, text-prevents-idle-collapse.
  */
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { resolveIcon } from "@/lib/icon-utils";
 import { useShell } from "@/contexts/ShellContext";
+import { useBrowserOptional } from "@/contexts/BrowserContext";
 import { MODE_CONFIGS } from "@/lib/smart-menu-config";
-import { SendHorizonal, Mic, ChevronUp, ChevronDown } from "lucide-react";
+import { SendHorizonal, Mic, ChevronUp, ChevronDown, Globe } from "lucide-react";
 
 /** Track whether the prompt input is focused — used to hold idle timers */
 let promptInputFocused = false;
