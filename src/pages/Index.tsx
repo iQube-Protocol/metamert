@@ -1,8 +1,11 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { ShellProvider, useShell } from "@/contexts/ShellContext";
+import { BrowserProvider } from "@/contexts/BrowserContext";
 import RuntimeHeader from "@/components/RuntimeHeader";
 import SmartMenu from "@/components/SmartMenu";
 import RuntimeFrame from "@/components/RuntimeFrame";
+import BrowserSurfaceHost from "@/components/browser/BrowserSurfaceHost";
+import BrowserMinimizedPill from "@/components/browser/BrowserMinimizedPill";
 import { Loader2 } from "lucide-react";
 
 function ShellLayout() {
