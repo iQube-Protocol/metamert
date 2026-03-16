@@ -56,6 +56,9 @@ export default function SmartMenuSubmenu({ previewMode }: SmartMenuSubmenuProps 
   if (submenuType === "personaSelector") {
     return <PersonaSelector />;
   }
+  if (submenuType === "browserSelector") {
+    return <BrowserSelector />;
+  }
 
   return <QuickActionsCarousel />;
 }
