@@ -1,14 +1,15 @@
 /**
  * SmartMenuSubmenu — floating submenu layer above the prompt bar.
- * Cycles between: quickActions | cartridgeSelector | codexSelector
+ * Cycles between: quickActions | cartridgeSelector | codexSelector | browserSelector
  * NEVER more than one floating layer (strict 2-layer rule).
  */
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useShell } from "@/contexts/ShellContext";
+import { useBrowserOptional } from "@/contexts/BrowserContext";
 import { MODE_CONFIGS, type QuickActionDef, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
 import { SMART_MENU_ICON_DEFAULTS } from "@/lib/smart-menu-icons";
-import { Check } from "lucide-react";
+import { Check, Globe, ArrowRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /** Resolve icon from smart menu defaults or lucide fallback */
