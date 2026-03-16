@@ -138,7 +138,7 @@ export default function RuntimeFrame() {
 
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
-  }, [config, updateTrust]);
+  }, [config, updateTrust, browser]);
 
   if (!config) return null;
 

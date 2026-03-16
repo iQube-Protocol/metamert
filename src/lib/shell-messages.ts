@@ -46,7 +46,15 @@ export type IframeInbound =
   | { type: "OPEN_CAPSULE"; capsule_id: string }
   | { type: "WELCOME_COMPLETE" }
   | { type: "STATE_SYNC"; state: Record<string, unknown> }
-  | { type: "TRUST_UPDATE"; trust: { level: string; signals: string[]; scores?: Record<string, number> } };
+  | { type: "TRUST_UPDATE"; trust: { level: string; signals: string[]; scores?: Record<string, number> } }
+  // Browser bridge events (runtime → shell)
+  | { type: "browser.mount"; payload: Record<string, unknown> }
+  | { type: "browser.unmount"; payload: { sessionId: string } }
+  | { type: "browser.surface.state"; payload: Record<string, unknown> }
+  | { type: "browser.step.update"; payload: Record<string, unknown> }
+  | { type: "browser.takeover.state"; payload: { sessionId: string; active: boolean } }
+  | { type: "browser.badges.update"; payload: Record<string, unknown> }
+  | { type: "browser.error"; payload: { sessionId?: string; message: string; code?: string } };
 
 /**
  * Normalize an inbound iframe message that may arrive as either:
