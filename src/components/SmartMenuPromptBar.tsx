@@ -74,6 +74,18 @@ export default function SmartMenuPromptBar() {
 
   const handleSubmit = () => {
     if (!text.trim()) return;
+
+    // If it looks like a URL and browser context exists, open/navigate browser
+    if (isUrl && browser) {
+      const url = text.trim().startsWith("http") ? text.trim() : `https://${text.trim()}`;
+      browser.requestOpen(url);
+      setText("");
+      setHasSent(true);
+      resetIdleTimer("typing");
+      (document.activeElement as HTMLElement)?.blur();
+      return;
+    }
+
     submitPrompt(text.trim());
     setText("");
     setHasSent(true);
