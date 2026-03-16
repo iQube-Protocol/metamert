@@ -33,9 +33,20 @@ export default function SmartMenuPromptBar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number | null>(null);
+  const browser = useBrowserOptional();
 
   const modeConfig = activeMode ? MODE_CONFIGS[activeMode] : null;
   const accent = modeConfig?.accentHex ?? "#fff";
+
+  // Detect if text looks like a URL
+  const isUrl = useMemo(() => {
+    const t = text.trim();
+    if (!t) return false;
+    return /^https?:\/\//i.test(t) || /^[a-z0-9][-a-z0-9]*\.[a-z]{2,}/i.test(t);
+  }, [text]);
+
+  // Browser is active and mounted
+  const browserActive = browser && browser.surfaceState !== "collapsed" && browser.surfaceState !== "error";
 
   // Auto-focus only when entering prompt mode (not quickActionOnly)
   useEffect(() => {
