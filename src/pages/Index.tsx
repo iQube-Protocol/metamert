@@ -1,13 +1,16 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { ShellProvider, useShell } from "@/contexts/ShellContext";
+import { BrowserProvider } from "@/contexts/BrowserContext";
 import RuntimeHeader from "@/components/RuntimeHeader";
 import SmartMenu from "@/components/SmartMenu";
 import RuntimeFrame from "@/components/RuntimeFrame";
+import BrowserSurfaceHost from "@/components/browser/BrowserSurfaceHost";
+import BrowserMinimizedPill from "@/components/browser/BrowserMinimizedPill";
 import { Loader2 } from "lucide-react";
 
 function ShellLayout() {
   const shell = useShell();
-  const { config, loading, hydrate, resetKey, viewState, deactivateMode } = shell;
+  const { config, loading, hydrate, resetKey, viewState, deactivateMode, iframeRef } = shell;
 
   // Reset scroll when mobile keyboard closes (viewport height increases)
   useEffect(() => {
@@ -47,19 +50,23 @@ function ShellLayout() {
   const menuActive = viewState === "promptMode" || viewState === "quickActionOnly";
 
   return (
-    <div className="flex h-dvh flex-col bg-background">
-      <RuntimeHeader />
-      <div className="relative flex-1 overflow-hidden">
-        {menuActive && (
-          <div
-            className="absolute inset-0 z-40"
-            onClick={deactivateMode}
-          />
-        )}
-        <RuntimeFrame key={resetKey} />
+    <BrowserProvider iframeRef={iframeRef} config={config}>
+      <div className="flex h-dvh flex-col bg-background">
+        <RuntimeHeader />
+        <div className="relative flex-1 overflow-hidden">
+          {menuActive && (
+            <div
+              className="absolute inset-0 z-40"
+              onClick={deactivateMode}
+            />
+          )}
+          <RuntimeFrame key={resetKey} />
+          <BrowserSurfaceHost />
+        </div>
+        <BrowserMinimizedPill />
+        <SmartMenu />
       </div>
-      <SmartMenu />
-    </div>
+    </BrowserProvider>
   );
 }
 

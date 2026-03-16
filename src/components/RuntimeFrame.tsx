@@ -1,8 +1,10 @@
 import { useEffect, useCallback } from "react";
 import { useShell } from "@/contexts/ShellContext";
+import { useBrowserOptional } from "@/contexts/BrowserContext";
 import EmbedFrame from "@/components/EmbedFrame";
 import { postToIframe, normalizeInbound, type DeviceType } from "@/lib/shell-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
+import type { BrowserMountPayload, BrowserStepState, BrowserBadgeState } from "@/lib/browser-types";
 
 function getDeviceType(): DeviceType {
   const w = window.innerWidth;
@@ -13,6 +15,7 @@ function getDeviceType(): DeviceType {
 
 export default function RuntimeFrame() {
   const { config, iframeRef, updateTrust } = useShell();
+  const browser = useBrowserOptional();
 
   const handleReady = useCallback(() => {
     if (!config || !iframeRef.current) return;
@@ -71,6 +74,36 @@ export default function RuntimeFrame() {
       if (!msg) return;
       const t = msg.type as string;
 
+      // Browser bridge events (runtime → shell)
+      if (t.startsWith("browser.") && browser) {
+        const payload = (msg.payload ?? msg) as Record<string, unknown>;
+        switch (t) {
+          case "browser.mount":
+            console.log("[Shell] browser.mount received");
+            browser.handleMount(payload as unknown as BrowserMountPayload);
+            return;
+          case "browser.unmount":
+            console.log("[Shell] browser.unmount received");
+            browser.handleUnmount(payload.sessionId as string);
+            return;
+          case "browser.step.update":
+            browser.handleStepUpdate(payload as unknown as BrowserStepState);
+            return;
+          case "browser.takeover.state":
+            browser.handleTakeoverState(payload.sessionId as string, payload.active as boolean);
+            return;
+          case "browser.badges.update":
+            browser.handleBadgesUpdate(payload as unknown as BrowserBadgeState);
+            return;
+          case "browser.error":
+            browser.handleError(payload.message as string, payload.sessionId as string | undefined);
+            return;
+          case "browser.surface.state":
+            browser.handleSurfaceState(payload);
+            return;
+        }
+      }
+
       switch (t) {
         case "NAVIGATE":
           console.log("[Shell] NAVIGATE →", msg.path);
@@ -105,7 +138,7 @@ export default function RuntimeFrame() {
 
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
-  }, [config, updateTrust]);
+  }, [config, updateTrust, browser]);
 
   if (!config) return null;
 

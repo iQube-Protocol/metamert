@@ -18,7 +18,16 @@ export type ShellOutbound =
   | { type: "CONTEXT_UPDATE"; payload: Record<string, unknown> }
   | { type: "PROMPT_SUBMIT"; text: string; cartridge_id?: string; codex_id?: string }
   | { type: "RESET_WELCOME" }
-  | { type: "DEVICE_CONTEXT_UPDATE"; context: DeviceContext };
+  | { type: "DEVICE_CONTEXT_UPDATE"; context: DeviceContext }
+  // Browser bridge events (shell → runtime)
+  | { type: "browser.open.request"; payload?: { intent?: string } }
+  | { type: "browser.close.request"; payload: { sessionId: string } }
+  | { type: "browser.minimize.request"; payload: { sessionId: string } }
+  | { type: "browser.expand.request"; payload: { sessionId: string } }
+  | { type: "browser.focus.changed"; payload: { sessionId: string; focused: boolean } }
+  | { type: "browser.takeover.request"; payload: { sessionId: string } }
+  | { type: "browser.resume.request"; payload: { sessionId: string } }
+  | { type: "browser.surface.bounds.changed"; payload: { sessionId: string; bounds: Record<string, number> } };
 
 export interface MenuEvent {
   action_id: string;
@@ -37,7 +46,15 @@ export type IframeInbound =
   | { type: "OPEN_CAPSULE"; capsule_id: string }
   | { type: "WELCOME_COMPLETE" }
   | { type: "STATE_SYNC"; state: Record<string, unknown> }
-  | { type: "TRUST_UPDATE"; trust: { level: string; signals: string[]; scores?: Record<string, number> } };
+  | { type: "TRUST_UPDATE"; trust: { level: string; signals: string[]; scores?: Record<string, number> } }
+  // Browser bridge events (runtime → shell)
+  | { type: "browser.mount"; payload: Record<string, unknown> }
+  | { type: "browser.unmount"; payload: { sessionId: string } }
+  | { type: "browser.surface.state"; payload: Record<string, unknown> }
+  | { type: "browser.step.update"; payload: Record<string, unknown> }
+  | { type: "browser.takeover.state"; payload: { sessionId: string; active: boolean } }
+  | { type: "browser.badges.update"; payload: Record<string, unknown> }
+  | { type: "browser.error"; payload: { sessionId?: string; message: string; code?: string } };
 
 /**
  * Normalize an inbound iframe message that may arrive as either:

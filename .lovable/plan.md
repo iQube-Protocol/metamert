@@ -1,156 +1,100 @@
 
+Goal: make the header R/T indicators animate in lockstep with real iframe inference (including welcome-state inference initiated inside the iframe), and stop only when inference/render is actually complete.
 
-# Browser Surface Host — Lovable Shell Implementation Plan
+What I found in the current code
+1) Animation styling is present
+- `RuntimeHeader.tsx` correctly uses:
+  - `animate-dot-wave` when `inferring === true`
+  - staggered `animationDelay` (`i * 150ms`)
+- `tailwind.config.ts` still defines `dot-wave` keyframes and animation.
 
-## Summary
+2) The main issue is inference state signaling, not CSS
+- `inferring` is only set to `true` in shell-owned actions:
+  - `submitPrompt()`
+  - `handleMenuAction()`
+- During iframe-owned welcome prompt flow (spinner appears inside iframe), shell often never sets `inferring=true`.
 
-Implement the shell-side Browser Surface Host: a visual container that mounts/unmounts a remote browser Live View iframe above the runtime, controlled entirely by runtime events. The shell owns only rendering, layering, and user interaction relay — zero browser logic.
+3) Completion handling is currently too aggressive
+- In `ShellContext.tsx`, any `STATE_SYNC` is treated like inference completion and schedules `inferring=false` after 2s.
+- This can desync the indicators from the iframe spinner if `STATE_SYNC` is sent during processing.
 
-## Architecture
+4) Message parsing is fragile
+- Current listeners read `e.data.type` directly and do not robustly normalize envelope-style payloads.
+- `ShellContext` completion listener also lacks strict runtime-origin filtering, so it can react to unrelated window messages.
 
-```text
-ShellRoot (Index.tsx)
-  RuntimeHeader
-  OverlayLayer (relative flex-1)
-    RuntimeFrame (existing iframe)
-    BrowserSurfaceHost (new — conditional overlay)
-      BrowserSurfaceChrome (close/minimize/expand controls + badges)
-      BrowserLiveViewFrame (provider iframe — url from mount payload)
-      BrowserStatusRail (agent step label during agent_active)
-      BrowserTakeoverBanner (during human_takeover)
-    BrowserMinimizedPill (when minimized — floating pill at bottom)
-  SmartMenu
-    BrowserLaunchEntry (new menu item triggering browser.open.request)
-```
+Implementation plan
+1) Make iframe message handling inference-aware (start + complete), not completion-only
+- File: `src/contexts/ShellContext.tsx`
+- Replace current “`STATE_SYNC` always means complete” logic with a lifecycle parser:
+  - Start inference (`setInferring(true)`) on:
+    - explicit start-like message types (e.g. `INFERENCE_START`, `RENDER_START`, `PROCESSING_START` if present)
+    - `STATE_SYNC` indicating processing/busy=true in payload/state
+  - Complete inference (2s grace, existing behavior) on:
+    - explicit completion types (`INFERENCE_COMPLETE`, `RENDER_COMPLETE`)
+    - `STATE_SYNC` indicating processing/busy=false
+- Keep existing 30s safety timeout.
+- Keep existing shell-owned start triggers (`submitPrompt`, `handleMenuAction`) unchanged.
 
-## Implementation Slices
+2) Normalize inbound message shapes before interpreting
+- File: `src/lib/shell-messages.ts`
+- Add a small helper to normalize iframe inbound events from either form:
+  - direct: `{ type, ... }`
+  - envelope/payload style: `{ type, payload: {...} }` and safely expose merged fields for consumers.
+- This avoids missing state flags when runtime sends data under `payload`.
 
-### Slice 1 — Types, State, and Bridge Events
+3) Apply strict origin guard for inference lifecycle listener
+- File: `src/contexts/ShellContext.tsx`
+- Use runtime origin derived from current config (same safe origin logic already used elsewhere) and ignore non-runtime `postMessage` events.
+- This prevents accidental `inferring` toggles from unrelated messages.
 
-**New file: `src/lib/browser-types.ts`**
-- TypeScript types for `BrowserMountPayload`, `BrowserSurfaceState`, `BrowserStepState`, `BrowserBadgeState`, `SurfaceBounds`
-- Shell-to-runtime event types (`browser.open.request`, `browser.close.request`, etc.)
-- Runtime-to-shell event types (`browser.mount`, `browser.unmount`, etc.)
-- Browser surface UI state enum: `collapsed | mounting | mounted | agent_active | human_takeover | minimized | docked | error`
+4) Keep RuntimeFrame and ShellContext in sync on message interpretation
+- File: `src/components/RuntimeFrame.tsx`
+- Use the same normalization helper for inbound events, so `TRUST_UPDATE` and `STATE_SYNC` parsing are consistent.
+- Preserve current toast suppression behavior.
 
-**Update: `src/lib/shell-messages.ts`**
-- Add `browser.*` types to `ShellOutbound` union
-- Add `browser.*` types to `IframeInbound` union
-- Extend `normalizeInbound` to handle `browser.` prefixed message types
+Technical details (implementation-level)
+- New inference lifecycle behavior:
+  - `onInferenceStart()`:
+    - clear any pending completion timer
+    - set `inferring=true`
+    - refresh 30s safety timer
+  - `onInferenceComplete()`:
+    - clear safety timer
+    - start 2s grace timer
+    - then set `inferring=false`
+- `STATE_SYNC` handling:
+  - no longer treated as unconditional completion
+  - evaluated by payload state flags (processing/busy/inferring booleans)
+- Envelope compatibility:
+  - read fields from both top-level and `payload` to support protocol variants without regressions.
 
-**New file: `src/contexts/BrowserContext.tsx`**
-- `BrowserProvider` managing:
-  - `surfaceState`: the UI state enum
-  - `mountPayload`: current `BrowserMountPayload | null`
-  - `stepState`: current agent step info
-  - `takeoverActive`: boolean
-  - `badges`: runtime-provided badge state
-  - `error`: error message if any
-- Actions: `requestOpen`, `requestClose`, `requestMinimize`, `requestExpand`, `requestTakeover`, `requestResume`, `reportBounds`, `reportFocus`
-- All actions post bridge events to runtime iframe via `postToIframe`
-- Separate context from ShellContext to keep concerns isolated
+Why this addresses your exact complaint
+- Right now, iframe spinner can run while shell indicators stay static because shell never receives/uses a start signal path for iframe-owned inference.
+- This plan makes indicators start when iframe reports processing and only stop when iframe reports completion/rendered state (plus the existing 2s grace).
 
-**Update: `src/components/RuntimeFrame.tsx`**
-- Add message handler cases for `browser.mount`, `browser.unmount`, `browser.surface.state`, `browser.step.update`, `browser.takeover.state`, `browser.badges.update`, `browser.error`
-- Each case calls the corresponding BrowserContext dispatch
+Validation plan (end-to-end)
+1) Welcome flow (iframe-owned prompt)
+- Trigger inference using the iframe’s own prompt input.
+- Expected: R/T dots begin wave animation as spinner appears.
+- Expected: animation continues during processing and through render, then stops after grace period.
 
-### Slice 2 — BrowserSurfaceHost + Chrome
+2) Post-welcome flow (shell-owned prompt)
+- Submit via shell `PromptBox`.
+- Expected: same synchronized behavior.
 
-**New file: `src/components/browser/BrowserSurfaceHost.tsx`**
-- Renders when `surfaceState !== 'collapsed'`
-- Overlay positioning: `absolute inset-0 z-50` above runtime iframe
-- During `mounting`: shows a loading spinner
-- During `mounted | agent_active | human_takeover`: renders `BrowserLiveViewFrame` + `BrowserSurfaceChrome`
-- During `error`: shows error panel with retry/dismiss
+3) Menu-triggered inference
+- Tap `Earn/Play/Make`.
+- Expected: indicators animate immediately and stay synced to runtime completion.
 
-**New file: `src/components/browser/BrowserSurfaceChrome.tsx`**
-- Top bar with: close button, minimize button, expand/restore toggle, optional dock
-- Mirrored badges from runtime: active Aigent label, trust mode pill, privacy mode pill, execution mode pill
-- Optional domain/title labels from mount payload
-- Focus indicator (border glow when focused)
+4) Idle behavior
+- No spinner / no processing:
+- Expected: indicators remain static, no phantom animation.
 
-**New file: `src/components/browser/BrowserLiveViewFrame.tsx`**
-- Simple iframe rendering `mountPayload.liveView.url`
-- Listens for `browserbase-disconnected` postMessage from the Live View iframe to trigger disconnect handling
-- Reports focus/blur to BrowserContext
+5) Mobile and desktop check
+- Verify same synchronization behavior on both viewport classes.
 
-### Slice 3 — Status Rail + Takeover Banner
-
-**New file: `src/components/browser/BrowserStatusRail.tsx`**
-- Shown during `agent_active` state
-- Displays: current step label, actor label, status indicator (reading/extracting/navigating/waiting/paused)
-- Takeover CTA button
-- Light animation on step changes
-
-**New file: `src/components/browser/BrowserTakeoverBanner.tsx`**
-- Shown during `human_takeover` state
-- Banner text: "You are driving"
-- Resume button
-- Always visible, suppresses status rail
-
-**New file: `src/components/browser/BrowserMinimizedPill.tsx`**
-- Shown when `surfaceState === 'minimized'`
-- Fixed position pill at bottom of screen (above SmartMenu)
-- Shows session domain/title, tap to restore
-- Badge dot for active agent
-
-### Slice 4 — Menu Integration + Responsive
-
-**Update: `src/lib/smart-menu-config.ts`**
-- Add a `browser` quick action entry to relevant modes (or as a standalone launch affordance)
-
-**New file: `src/components/browser/BrowserLaunchEntry.tsx`**
-- Menu entry component that calls `browserContext.requestOpen()`
-- Can be placed in SmartMenu submenu or as a dedicated nav affordance
-
-**Update: `src/pages/Index.tsx`**
-- Wrap with `BrowserProvider`
-- Add `BrowserSurfaceHost` in the overlay layer
-- Add `BrowserMinimizedPill` 
-
-**Responsive behavior:**
-- Portrait/mobile: full-width overlay sheet, near full-height, minimize to bottom pill
-- Landscape/tablet: support docked right/bottom
-- Desktop: floating overlay or docked pane
-
-### Slice 5 — Error Handling + Polish
-
-- Mount failure: inline error panel with retry + dismiss
-- Live View disconnect: detect `browserbase-disconnected` message, show reconnect banner or clean close
-- Runtime `browser.error`: friendly message, preserve close/minimize
-- Debounce `browser.surface.bounds.changed` events
-- Ignore stale events for non-active session IDs
-- Prevent duplicate mounts
-
-## Key Design Decisions
-
-1. **Separate BrowserContext** — keeps browser state isolated from ShellContext; avoids bloating the already large shell provider
-2. **Bridge events use existing `postToIframe`** — browser events flow through the same runtime iframe channel, wrapped in the standard bridge envelope
-3. **No browser logic in shell** — shell never calls Browserbase, never decides navigation, never stores history
-4. **Mount payload is the rendering contract** — shell renders exactly what runtime tells it to render via `BrowserMountPayload`
-
-## Files Created/Modified
-
-| Action | File |
-|--------|------|
-| Create | `src/lib/browser-types.ts` |
-| Create | `src/contexts/BrowserContext.tsx` |
-| Create | `src/components/browser/BrowserSurfaceHost.tsx` |
-| Create | `src/components/browser/BrowserSurfaceChrome.tsx` |
-| Create | `src/components/browser/BrowserLiveViewFrame.tsx` |
-| Create | `src/components/browser/BrowserStatusRail.tsx` |
-| Create | `src/components/browser/BrowserTakeoverBanner.tsx` |
-| Create | `src/components/browser/BrowserMinimizedPill.tsx` |
-| Create | `src/components/browser/BrowserLaunchEntry.tsx` |
-| Modify | `src/lib/shell-messages.ts` |
-| Modify | `src/components/RuntimeFrame.tsx` |
-| Modify | `src/contexts/ShellContext.tsx` (minimal — expose iframeRef to BrowserContext) |
-| Modify | `src/pages/Index.tsx` |
-| Modify | `src/lib/smart-menu-config.ts` |
-
-## Suggested Build Order
-
-**Sprint 1**: Slices 1 + 2 (types, context, surface host, chrome, basic mount/unmount)
-**Sprint 2**: Slice 3 (status rail, takeover banner, minimized pill)
-**Sprint 3**: Slices 4 + 5 (menu integration, responsive, error handling, polish)
-
+Acceptance criteria
+- Indicators animate whenever runtime spinner indicates active inference (including iframe-initiated inference).
+- Indicators do not stop early while iframe is still processing.
+- Indicators stop shortly after render completes (current grace behavior retained).
+- No regressions to refresh/reset toast policy or menu/header layout.
