@@ -6,7 +6,7 @@ import {
   Lock, User, Sparkles, Shield, Fingerprint, Radio,
   Target, CheckSquare, Star, Tag, Compass, Wallet,
   PenLine, Palette, Hammer, Pencil, Shuffle, Upload,
-  Send, Download, Link, Truck, Box, Library,
+  Send, Download, Link, Truck, Box, Library, Globe,
   type LucideIcon,
 } from "lucide-react";
 
@@ -36,4 +36,5 @@ export const SMART_MENU_ICON_DEFAULTS: Record<string, LucideIcon> = {
   deliver: Truck,
   cartridge: Box,
   codex: Library,
+  browse: Globe,
 };

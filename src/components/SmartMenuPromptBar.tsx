@@ -3,11 +3,12 @@
  * Contains: Input | Mic | Send | Chevron
  * Spec: accent border trim, ~15px text, swipe-down collapse, text-prevents-idle-collapse.
  */
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { resolveIcon } from "@/lib/icon-utils";
 import { useShell } from "@/contexts/ShellContext";
+import { useBrowserOptional } from "@/contexts/BrowserContext";
 import { MODE_CONFIGS } from "@/lib/smart-menu-config";
-import { SendHorizonal, Mic, ChevronUp, ChevronDown } from "lucide-react";
+import { SendHorizonal, Mic, ChevronUp, ChevronDown, Globe } from "lucide-react";
 
 /** Track whether the prompt input is focused — used to hold idle timers */
 let promptInputFocused = false;
@@ -32,9 +33,20 @@ export default function SmartMenuPromptBar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number | null>(null);
+  const browser = useBrowserOptional();
 
   const modeConfig = activeMode ? MODE_CONFIGS[activeMode] : null;
   const accent = modeConfig?.accentHex ?? "#fff";
+
+  // Detect if text looks like a URL
+  const isUrl = useMemo(() => {
+    const t = text.trim();
+    if (!t) return false;
+    return /^https?:\/\//i.test(t) || /^[a-z0-9][-a-z0-9]*\.[a-z]{2,}/i.test(t);
+  }, [text]);
+
+  // Browser is active and mounted
+  const browserActive = browser && browser.surfaceState !== "collapsed" && browser.surfaceState !== "error";
 
   // Auto-focus only when entering prompt mode (not quickActionOnly)
   useEffect(() => {
@@ -62,6 +74,18 @@ export default function SmartMenuPromptBar() {
 
   const handleSubmit = () => {
     if (!text.trim()) return;
+
+    // If it looks like a URL and browser context exists, open/navigate browser
+    if (isUrl && browser) {
+      const url = text.trim().startsWith("http") ? text.trim() : `https://${text.trim()}`;
+      browser.requestOpen(url);
+      setText("");
+      setHasSent(true);
+      resetIdleTimer("typing");
+      (document.activeElement as HTMLElement)?.blur();
+      return;
+    }
+
     submitPrompt(text.trim());
     setText("");
     setHasSent(true);
@@ -136,7 +160,7 @@ export default function SmartMenuPromptBar() {
         onFocus={handleFocus}
         onBlur={handleBlur}
         onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-        placeholder={modeConfig?.promptPlaceholder ?? "What do you want to do?"}
+        placeholder={browserActive ? "Enter URL or ask about the page…" : (modeConfig?.promptPlaceholder ?? "What do you want to do?")}
         className="min-w-0 flex-1 bg-transparent px-2 py-1 text-white placeholder:text-muted-foreground placeholder:text-center focus:outline-none"
         style={{
           caretColor: accent,
@@ -159,9 +183,9 @@ export default function SmartMenuPromptBar() {
           disabled={!text.trim()}
           className="flex h-8 w-8 items-center justify-center rounded-md transition-colors disabled:opacity-30"
           style={{ color: text.trim() ? accent : undefined }}
-          title="Send"
+          title={isUrl ? "Navigate" : "Send"}
         >
-          <SendHorizonal className="h-4 w-4" />
+          {isUrl ? <Globe className="h-4 w-4" /> : <SendHorizonal className="h-4 w-4" />}
         </button>
         <button
           onClick={toggleSubmenu}

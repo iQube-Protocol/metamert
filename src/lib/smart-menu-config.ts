@@ -11,7 +11,7 @@ import type { LucideIcon } from "lucide-react";
 
 export type ViewState = "defaultNav" | "promptMode" | "quickActionOnly";
 export type SmartMenuMode = "be" | "earn" | "play" | "make" | "share";
-export type SubmenuType = "quickActions" | "cartridgeSelector" | "codexSelector" | "personaSelector";
+export type SubmenuType = "quickActions" | "cartridgeSelector" | "codexSelector" | "personaSelector" | "browserSelector";
 export type QuickActionVisibility = "visibleAuto" | "hiddenAutoIdle" | "hiddenUserToggle";
 export type InteractionState = "idle" | "focused" | "typing" | "voiceReady" | "recording" | "quickActionActive";
 
@@ -166,6 +166,7 @@ const PLAY_ACTIONS: QuickActionDef[] = [
   { id: "find",      label: "Find",      icon: "search",     kind: "llm+menu",    triggersInference: true,  prompt: "Search and discover something new for me" },
   { id: "listen",    label: "Listen",    icon: "headphones", kind: "llm+menu",    triggersInference: true,  prompt: "Play something for me to listen to" },
   { id: "watch",     label: "Watch",     icon: "eye",        kind: "llm+menu",    triggersInference: true,  prompt: "Show me something interesting to watch" },
+  { id: "browse",    label: "Browse",    icon: "globe",      kind: "system-only", triggersInference: false },
   { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true,  prompt: "Find me something good to read" },
   { id: "cartridge", label: "Cartridge", icon: "box",        kind: "system-only", triggersInference: false },
   { id: "share",     label: "Share",     icon: "share-2",    kind: "llm+menu",    triggersInference: true },
@@ -248,7 +249,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#00D5FF",
     promptPlaceholder: "Ask, explore, watch, listen, read, or switch context…",
     defaultCenteredQuickActionId: "watch",
-    mobileVisibleFold: ["find", "listen", "watch", "read", "cartridge"],
+    mobileVisibleFold: ["find", "listen", "watch", "browse", "read"],
     quickActions: PLAY_ACTIONS,
   },
   make: {
