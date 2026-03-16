@@ -183,9 +183,9 @@ export default function SmartMenuPromptBar() {
           disabled={!text.trim()}
           className="flex h-8 w-8 items-center justify-center rounded-md transition-colors disabled:opacity-30"
           style={{ color: text.trim() ? accent : undefined }}
-          title="Send"
+          title={isUrl ? "Navigate" : "Send"}
         >
-          <SendHorizonal className="h-4 w-4" />
+          {isUrl ? <Globe className="h-4 w-4" /> : <SendHorizonal className="h-4 w-4" />}
         </button>
         <button
           onClick={toggleSubmenu}
