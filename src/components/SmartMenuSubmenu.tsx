@@ -389,3 +389,76 @@ function CartridgePill({
     </button>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Browser Selector — tertiary submenu for browser actions
+// ---------------------------------------------------------------------------
+
+function BrowserSelector() {
+  const { setSubmenuType, pauseIdleTimer, activeMode, activateMode } = useShell();
+  const browser = useBrowserOptional();
+  const accent = activeMode ? MODE_CONFIGS[activeMode].accentHex : "#00D5FF";
+
+  const handleOpenBrowser = useCallback(() => {
+    if (!browser) return;
+    // Ensure prompt mode is active so user can type URLs
+    if (activeMode) activateMode(activeMode);
+    browser.requestOpen();
+  }, [browser, activeMode, activateMode]);
+
+  const handleOpenWithIntent = useCallback((intent: string) => {
+    if (!browser) return;
+    if (activeMode) activateMode(activeMode);
+    browser.requestOpen(intent);
+  }, [browser, activeMode, activateMode]);
+
+  const isActive = browser && browser.surfaceState !== "collapsed";
+
+  return (
+    <div
+      className="glass-float rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 p-2"
+      style={{ animationDuration: '350ms' }}
+      onPointerEnter={pauseIdleTimer}
+    >
+      <div className="flex items-center gap-1 mb-1.5 px-1">
+        <Globe className="h-3 w-3 text-muted-foreground" />
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Browse</span>
+        <button
+          onClick={() => setSubmenuType("quickActions")}
+          className="ml-auto text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          ← Back
+        </button>
+      </div>
+      <div className="flex gap-1.5 justify-center flex-wrap">
+        <CartridgePill
+          isActive={!!isActive}
+          accent={accent}
+          onClick={handleOpenBrowser}
+        >
+          <div className="flex items-center gap-1">
+            <Globe className="h-3.5 w-3.5" />
+            <span className="font-medium whitespace-nowrap">
+              {isActive ? "Show Browser" : "Open Browser"}
+            </span>
+            <ArrowRight className="h-3 w-3" />
+          </div>
+        </CartridgePill>
+        <CartridgePill
+          isActive={false}
+          accent={accent}
+          onClick={() => handleOpenWithIntent("search")}
+        >
+          <span className="font-medium whitespace-nowrap">Search Web</span>
+        </CartridgePill>
+        <CartridgePill
+          isActive={false}
+          accent={accent}
+          onClick={() => handleOpenWithIntent("research")}
+        >
+          <span className="font-medium whitespace-nowrap">Research</span>
+        </CartridgePill>
+      </div>
+    </div>
+  );
+}
