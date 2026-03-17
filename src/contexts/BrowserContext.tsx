@@ -258,9 +258,31 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
     setActionStatus(status);
     // Auto-refresh drawer on completed actions
     if (status.status === "completed" && mountPayload) {
-      postBrowserEvent("browser.drawer.refresh.request", { payload: { sessionId: mountPayload.sessionId } });
+      postBrowserEvent("browser.drawer.refresh.request", { sessionId: mountPayload.sessionId });
     }
   }, [mountPayload, postBrowserEvent]);
+
+  // Mount timeout: if we stay in "mounting" for 15s without a mount event, show error
+  const mountTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (surfaceState === "mounting") {
+      mountTimeoutRef.current = setTimeout(() => {
+        if (surfaceState === "mounting") {
+          setError("Browser session timed out waiting for runtime to respond.");
+          setSurfaceState("error");
+        }
+      }, 15_000);
+    } else {
+      if (mountTimeoutRef.current) {
+        clearTimeout(mountTimeoutRef.current);
+        mountTimeoutRef.current = null;
+      }
+    }
+    return () => {
+      if (mountTimeoutRef.current) clearTimeout(mountTimeoutRef.current);
+    };
+  }, [surfaceState]);
 
   // Cleanup debounce on unmount
   useEffect(() => () => {
