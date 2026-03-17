@@ -97,14 +97,17 @@ export interface BrowserBadgeState {
 // ---------------------------------------------------------------------------
 
 export type ShellBrowserEvent =
-  | { type: "browser.open.request"; payload?: { intent?: string } }
+  | { type: "browser.open.request"; payload?: { intent?: string; url?: string; query?: string; openMode?: "open" | "search" | "research" } }
   | { type: "browser.close.request"; payload: { sessionId: string } }
   | { type: "browser.minimize.request"; payload: { sessionId: string } }
   | { type: "browser.expand.request"; payload: { sessionId: string } }
   | { type: "browser.focus.changed"; payload: { sessionId: string; focused: boolean } }
   | { type: "browser.takeover.request"; payload: { sessionId: string } }
   | { type: "browser.resume.request"; payload: { sessionId: string } }
-  | { type: "browser.surface.bounds.changed"; payload: { sessionId: string; bounds: SurfaceBounds } };
+  | { type: "browser.surface.bounds.changed"; payload: { sessionId: string; bounds: SurfaceBounds } }
+  | { type: "browser.drawer.refresh.request"; payload: { sessionId: string } }
+  | { type: "browser.extract.request"; payload: { sessionId: string } }
+  | { type: "browser.save.request"; payload: { sessionId: string } };
 
 // ---------------------------------------------------------------------------
 // Runtime → Shell bridge events
