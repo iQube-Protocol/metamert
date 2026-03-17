@@ -243,11 +243,24 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
   }, [mountPayload]);
 
   const handleSurfaceState = useCallback((state: Record<string, unknown>) => {
-    // Runtime can push surface state hints; shell applies what it owns
     if (state.takeoverActive !== undefined) {
       setTakeoverActive(state.takeoverActive as boolean);
     }
   }, []);
+
+  const handleDrawerData = useCallback((data: BrowserDrawerData) => {
+    if (mountPayload && data.sessionId !== mountPayload.sessionId) return;
+    setDrawerData(data);
+  }, [mountPayload]);
+
+  const handleActionStatus = useCallback((status: BrowserActionStatus) => {
+    if (mountPayload && status.sessionId !== mountPayload.sessionId) return;
+    setActionStatus(status);
+    // Auto-refresh drawer on completed actions
+    if (status.status === "completed" && mountPayload) {
+      postBrowserEvent("browser.drawer.refresh.request", { payload: { sessionId: mountPayload.sessionId } });
+    }
+  }, [mountPayload, postBrowserEvent]);
 
   // Cleanup debounce on unmount
   useEffect(() => () => {
