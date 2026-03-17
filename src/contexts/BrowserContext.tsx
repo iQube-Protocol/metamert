@@ -269,10 +269,13 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
 
   const ctxValue: BrowserContextValue = {
     surfaceState, mountPayload, stepState, takeoverActive, badges, error,
+    drawerOpen, drawerData, actionStatus,
     requestOpen, requestClose, requestMinimize, requestExpand,
     requestTakeover, requestResume, reportBounds, reportFocus, dismissError,
+    toggleDrawer, requestDrawerRefresh, requestExtract, requestSave,
     handleMount, handleUnmount, handleStepUpdate, handleTakeoverState,
     handleBadgesUpdate, handleError, handleSurfaceState,
+    handleDrawerData, handleActionStatus,
   };
 
   return (
