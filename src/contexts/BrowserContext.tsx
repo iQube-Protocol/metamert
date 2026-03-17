@@ -165,7 +165,7 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
     setDrawerOpen(prev => {
       if (!prev && mountPayload) {
         // Request fresh data when opening
-        postBrowserEvent("browser.drawer.refresh.request", { payload: { sessionId: mountPayload.sessionId } });
+        postBrowserEvent("browser.drawer.refresh.request", { sessionId: mountPayload.sessionId });
       }
       return !prev;
     });
@@ -173,17 +173,17 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
 
   const requestDrawerRefresh = useCallback(() => {
     if (!mountPayload) return;
-    postBrowserEvent("browser.drawer.refresh.request", { payload: { sessionId: mountPayload.sessionId } });
+    postBrowserEvent("browser.drawer.refresh.request", { sessionId: mountPayload.sessionId });
   }, [postBrowserEvent, mountPayload]);
 
   const requestExtract = useCallback(() => {
     if (!mountPayload) return;
-    postBrowserEvent("browser.extract.request", { payload: { sessionId: mountPayload.sessionId } });
+    postBrowserEvent("browser.extract.request", { sessionId: mountPayload.sessionId });
   }, [postBrowserEvent, mountPayload]);
 
   const requestSave = useCallback(() => {
     if (!mountPayload) return;
-    postBrowserEvent("browser.save.request", { payload: { sessionId: mountPayload.sessionId } });
+    postBrowserEvent("browser.save.request", { sessionId: mountPayload.sessionId });
   }, [postBrowserEvent, mountPayload]);
 
   // --- Runtime → Shell dispatches ---
