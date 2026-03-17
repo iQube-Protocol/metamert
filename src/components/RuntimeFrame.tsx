@@ -4,7 +4,7 @@ import { useBrowserOptional } from "@/contexts/BrowserContext";
 import EmbedFrame from "@/components/EmbedFrame";
 import { postToIframe, normalizeInbound, type DeviceType } from "@/lib/shell-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
-import type { BrowserMountPayload, BrowserStepState, BrowserBadgeState } from "@/lib/browser-types";
+import type { BrowserMountPayload, BrowserStepState, BrowserBadgeState, BrowserDrawerData, BrowserActionStatus } from "@/lib/browser-types";
 
 function getDeviceType(): DeviceType {
   const w = window.innerWidth;
@@ -100,6 +100,14 @@ export default function RuntimeFrame() {
             return;
           case "browser.surface.state":
             browser.handleSurfaceState(payload);
+            return;
+          case "browser.drawer.data":
+            console.log("[Shell] browser.drawer.data received");
+            browser.handleDrawerData(payload as unknown as BrowserDrawerData);
+            return;
+          case "browser.action.status":
+            console.log("[Shell] browser.action.status received", payload);
+            browser.handleActionStatus(payload as unknown as BrowserActionStatus);
             return;
         }
       }

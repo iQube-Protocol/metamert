@@ -27,7 +27,10 @@ export type ShellOutbound =
   | { type: "browser.focus.changed"; payload: { sessionId: string; focused: boolean } }
   | { type: "browser.takeover.request"; payload: { sessionId: string } }
   | { type: "browser.resume.request"; payload: { sessionId: string } }
-  | { type: "browser.surface.bounds.changed"; payload: { sessionId: string; bounds: Record<string, number> } };
+  | { type: "browser.surface.bounds.changed"; payload: { sessionId: string; bounds: Record<string, number> } }
+  | { type: "browser.drawer.refresh.request"; payload: { sessionId: string } }
+  | { type: "browser.extract.request"; payload: { sessionId: string } }
+  | { type: "browser.save.request"; payload: { sessionId: string } };
 
 export interface MenuEvent {
   action_id: string;
@@ -54,7 +57,9 @@ export type IframeInbound =
   | { type: "browser.step.update"; payload: Record<string, unknown> }
   | { type: "browser.takeover.state"; payload: { sessionId: string; active: boolean } }
   | { type: "browser.badges.update"; payload: Record<string, unknown> }
-  | { type: "browser.error"; payload: { sessionId?: string; message: string; code?: string } };
+  | { type: "browser.error"; payload: { sessionId?: string; message: string; code?: string } }
+  | { type: "browser.drawer.data"; payload: Record<string, unknown> }
+  | { type: "browser.action.status"; payload: Record<string, unknown> };
 
 /**
  * Normalize an inbound iframe message that may arrive as either:

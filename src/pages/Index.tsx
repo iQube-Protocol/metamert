@@ -6,6 +6,8 @@ import SmartMenu from "@/components/SmartMenu";
 import RuntimeFrame from "@/components/RuntimeFrame";
 import BrowserSurfaceHost from "@/components/browser/BrowserSurfaceHost";
 import BrowserMinimizedPill from "@/components/browser/BrowserMinimizedPill";
+import BrowserSessionPanel from "@/components/browser/BrowserSessionPanel";
+import BrowserHistoryDrawer from "@/components/browser/BrowserHistoryDrawer";
 import { Loader2 } from "lucide-react";
 
 function ShellLayout() {
@@ -63,6 +65,8 @@ function ShellLayout() {
           <RuntimeFrame key={resetKey} />
           <BrowserSurfaceHost />
         </div>
+        <BrowserSessionPanel />
+        <BrowserHistoryDrawer />
         <BrowserMinimizedPill />
         <SmartMenu />
       </div>

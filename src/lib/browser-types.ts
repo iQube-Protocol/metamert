@@ -97,14 +97,17 @@ export interface BrowserBadgeState {
 // ---------------------------------------------------------------------------
 
 export type ShellBrowserEvent =
-  | { type: "browser.open.request"; payload?: { intent?: string } }
+  | { type: "browser.open.request"; payload?: { intent?: string; url?: string; query?: string; openMode?: "open" | "search" | "research" } }
   | { type: "browser.close.request"; payload: { sessionId: string } }
   | { type: "browser.minimize.request"; payload: { sessionId: string } }
   | { type: "browser.expand.request"; payload: { sessionId: string } }
   | { type: "browser.focus.changed"; payload: { sessionId: string; focused: boolean } }
   | { type: "browser.takeover.request"; payload: { sessionId: string } }
   | { type: "browser.resume.request"; payload: { sessionId: string } }
-  | { type: "browser.surface.bounds.changed"; payload: { sessionId: string; bounds: SurfaceBounds } };
+  | { type: "browser.surface.bounds.changed"; payload: { sessionId: string; bounds: SurfaceBounds } }
+  | { type: "browser.drawer.refresh.request"; payload: { sessionId: string } }
+  | { type: "browser.extract.request"; payload: { sessionId: string } }
+  | { type: "browser.save.request"; payload: { sessionId: string } };
 
 // ---------------------------------------------------------------------------
 // Runtime → Shell bridge events
@@ -117,4 +120,36 @@ export type RuntimeBrowserEvent =
   | { type: "browser.step.update"; payload: BrowserStepState }
   | { type: "browser.takeover.state"; payload: { sessionId: string; active: boolean } }
   | { type: "browser.badges.update"; payload: BrowserBadgeState }
-  | { type: "browser.error"; payload: { sessionId?: string; message: string; code?: string } };
+  | { type: "browser.error"; payload: { sessionId?: string; message: string; code?: string } }
+  | { type: "browser.drawer.data"; payload: BrowserDrawerData }
+  | { type: "browser.action.status"; payload: BrowserActionStatus };
+
+// ---------------------------------------------------------------------------
+// Drawer data — runtime → shell
+// ---------------------------------------------------------------------------
+
+export interface BrowserDrawerItem {
+  id: string;
+  label: string;
+  url?: string;
+  timestamp?: string;
+  meta?: Record<string, unknown>;
+}
+
+export interface BrowserDrawerData {
+  sessionId: string;
+  history: BrowserDrawerItem[];
+  artifacts: BrowserDrawerItem[];
+  receipts: BrowserDrawerItem[];
+}
+
+// ---------------------------------------------------------------------------
+// Action status — runtime → shell
+// ---------------------------------------------------------------------------
+
+export interface BrowserActionStatus {
+  sessionId: string;
+  action: "extract" | "save";
+  status: "running" | "completed" | "error";
+  message?: string;
+}

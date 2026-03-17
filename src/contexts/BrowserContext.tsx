@@ -8,6 +8,8 @@ import type {
   BrowserMountPayload,
   BrowserStepState,
   BrowserBadgeState,
+  BrowserDrawerData,
+  BrowserActionStatus,
   SurfaceBounds,
 } from "@/lib/browser-types";
 import { postToIframe } from "@/lib/shell-messages";
@@ -25,6 +27,9 @@ interface BrowserContextValue {
   takeoverActive: boolean;
   badges: BrowserBadgeState | null;
   error: string | null;
+  drawerOpen: boolean;
+  drawerData: BrowserDrawerData | null;
+  actionStatus: BrowserActionStatus | null;
 
   // Shell → Runtime actions
   requestOpen: (intent?: string) => void;
@@ -36,6 +41,10 @@ interface BrowserContextValue {
   reportBounds: (bounds: SurfaceBounds) => void;
   reportFocus: (focused: boolean) => void;
   dismissError: () => void;
+  toggleDrawer: () => void;
+  requestDrawerRefresh: () => void;
+  requestExtract: () => void;
+  requestSave: () => void;
 
   // Runtime → Shell dispatches (called by RuntimeFrame message handler)
   handleMount: (payload: BrowserMountPayload) => void;
@@ -45,6 +54,8 @@ interface BrowserContextValue {
   handleBadgesUpdate: (badges: BrowserBadgeState) => void;
   handleError: (message: string, sessionId?: string) => void;
   handleSurfaceState: (state: Record<string, unknown>) => void;
+  handleDrawerData: (data: BrowserDrawerData) => void;
+  handleActionStatus: (status: BrowserActionStatus) => void;
 }
 
 const BrowserCtx = createContext<BrowserContextValue | null>(null);
@@ -76,6 +87,9 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
   const [takeoverActive, setTakeoverActive] = useState(false);
   const [badges, setBadges] = useState<BrowserBadgeState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerData, setDrawerData] = useState<BrowserDrawerData | null>(null);
+  const [actionStatus, setActionStatus] = useState<BrowserActionStatus | null>(null);
 
   const boundsDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -147,6 +161,31 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
     setMountPayload(null);
   }, []);
 
+  const toggleDrawer = useCallback(() => {
+    setDrawerOpen(prev => {
+      if (!prev && mountPayload) {
+        // Request fresh data when opening
+        postBrowserEvent("browser.drawer.refresh.request", { payload: { sessionId: mountPayload.sessionId } });
+      }
+      return !prev;
+    });
+  }, [mountPayload, postBrowserEvent]);
+
+  const requestDrawerRefresh = useCallback(() => {
+    if (!mountPayload) return;
+    postBrowserEvent("browser.drawer.refresh.request", { payload: { sessionId: mountPayload.sessionId } });
+  }, [postBrowserEvent, mountPayload]);
+
+  const requestExtract = useCallback(() => {
+    if (!mountPayload) return;
+    postBrowserEvent("browser.extract.request", { payload: { sessionId: mountPayload.sessionId } });
+  }, [postBrowserEvent, mountPayload]);
+
+  const requestSave = useCallback(() => {
+    if (!mountPayload) return;
+    postBrowserEvent("browser.save.request", { payload: { sessionId: mountPayload.sessionId } });
+  }, [postBrowserEvent, mountPayload]);
+
   // --- Runtime → Shell dispatches ---
 
   const handleMount = useCallback((payload: BrowserMountPayload) => {
@@ -162,13 +201,16 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
   }, [mountPayload, surfaceState]);
 
   const handleUnmount = useCallback((sessionId: string) => {
-    if (mountPayload?.sessionId !== sessionId) return; // Ignore stale
+    if (mountPayload?.sessionId !== sessionId) return;
     setSurfaceState("collapsed");
     setMountPayload(null);
     setStepState(null);
     setTakeoverActive(false);
     setBadges(null);
     setError(null);
+    setDrawerOpen(false);
+    setDrawerData(null);
+    setActionStatus(null);
   }, [mountPayload]);
 
   const handleStepUpdate = useCallback((step: BrowserStepState) => {
@@ -201,11 +243,24 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
   }, [mountPayload]);
 
   const handleSurfaceState = useCallback((state: Record<string, unknown>) => {
-    // Runtime can push surface state hints; shell applies what it owns
     if (state.takeoverActive !== undefined) {
       setTakeoverActive(state.takeoverActive as boolean);
     }
   }, []);
+
+  const handleDrawerData = useCallback((data: BrowserDrawerData) => {
+    if (mountPayload && data.sessionId !== mountPayload.sessionId) return;
+    setDrawerData(data);
+  }, [mountPayload]);
+
+  const handleActionStatus = useCallback((status: BrowserActionStatus) => {
+    if (mountPayload && status.sessionId !== mountPayload.sessionId) return;
+    setActionStatus(status);
+    // Auto-refresh drawer on completed actions
+    if (status.status === "completed" && mountPayload) {
+      postBrowserEvent("browser.drawer.refresh.request", { payload: { sessionId: mountPayload.sessionId } });
+    }
+  }, [mountPayload, postBrowserEvent]);
 
   // Cleanup debounce on unmount
   useEffect(() => () => {
@@ -214,10 +269,13 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
 
   const ctxValue: BrowserContextValue = {
     surfaceState, mountPayload, stepState, takeoverActive, badges, error,
+    drawerOpen, drawerData, actionStatus,
     requestOpen, requestClose, requestMinimize, requestExpand,
     requestTakeover, requestResume, reportBounds, reportFocus, dismissError,
+    toggleDrawer, requestDrawerRefresh, requestExtract, requestSave,
     handleMount, handleUnmount, handleStepUpdate, handleTakeoverState,
     handleBadgesUpdate, handleError, handleSurfaceState,
+    handleDrawerData, handleActionStatus,
   };
 
   return (
