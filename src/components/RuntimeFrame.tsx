@@ -4,6 +4,7 @@ import { useBrowserOptional } from "@/contexts/BrowserContext";
 import EmbedFrame from "@/components/EmbedFrame";
 import { postToIframe, normalizeInbound, type DeviceType } from "@/lib/shell-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
+import { getToken } from "@/lib/aa-client";
 import type { BrowserMountPayload, BrowserStepState, BrowserBadgeState, BrowserDrawerData, BrowserActionStatus } from "@/lib/browser-types";
 
 function getDeviceType(): DeviceType {
@@ -24,11 +25,19 @@ export default function RuntimeFrame() {
     // Step 1: SHELL_READY
     postToIframe(iframeRef.current, { type: "SHELL_READY", hide_chrome: true }, origin);
 
-    // Step 2: HANDOFF with token
+    // Step 2: HANDOFF with token + AA credentials for runtime AA client
     if (config.iframe.handoff_token) {
+      const aaBaseUrl = import.meta.env.VITE_AIGENT_Z_AA_BASE || "https://aa.dev-beta.aigentz.me/aa/v1";
+      const aaToken = getToken();
       postToIframe(
         iframeRef.current,
-        { type: "HANDOFF", handoff_token: config.iframe.handoff_token },
+        {
+          type: "HANDOFF",
+          handoff_token: config.iframe.handoff_token,
+          aa_api_base_url: aaBaseUrl,
+          aa_api_token: aaToken ?? undefined,
+          context: config.iframe.bootstrap?.context ?? {},
+        },
         origin
       );
     }
