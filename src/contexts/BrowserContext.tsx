@@ -110,35 +110,35 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
   const requestOpen = useCallback((intent?: string) => {
     setSurfaceState("mounting");
     setError(null);
-    postBrowserEvent("browser.open.request", { payload: { intent } });
+    postBrowserEvent("browser.open.request", intent ? { intent } : {});
   }, [postBrowserEvent]);
 
   const requestClose = useCallback(() => {
     if (!mountPayload) return;
-    postBrowserEvent("browser.close.request", { payload: { sessionId: mountPayload.sessionId } });
+    postBrowserEvent("browser.close.request", { sessionId: mountPayload.sessionId });
   }, [postBrowserEvent, mountPayload]);
 
   const requestMinimize = useCallback(() => {
     if (!mountPayload) return;
     setSurfaceState("minimized");
-    postBrowserEvent("browser.minimize.request", { payload: { sessionId: mountPayload.sessionId } });
+    postBrowserEvent("browser.minimize.request", { sessionId: mountPayload.sessionId });
   }, [postBrowserEvent, mountPayload]);
 
   const requestExpand = useCallback(() => {
     if (!mountPayload) return;
     // Restore to previous active state
     setSurfaceState(takeoverActive ? "human_takeover" : stepState ? "agent_active" : "mounted");
-    postBrowserEvent("browser.expand.request", { payload: { sessionId: mountPayload.sessionId } });
+    postBrowserEvent("browser.expand.request", { sessionId: mountPayload.sessionId });
   }, [postBrowserEvent, mountPayload, takeoverActive, stepState]);
 
   const requestTakeover = useCallback(() => {
     if (!mountPayload) return;
-    postBrowserEvent("browser.takeover.request", { payload: { sessionId: mountPayload.sessionId } });
+    postBrowserEvent("browser.takeover.request", { sessionId: mountPayload.sessionId });
   }, [postBrowserEvent, mountPayload]);
 
   const requestResume = useCallback(() => {
     if (!mountPayload) return;
-    postBrowserEvent("browser.resume.request", { payload: { sessionId: mountPayload.sessionId } });
+    postBrowserEvent("browser.resume.request", { sessionId: mountPayload.sessionId });
   }, [postBrowserEvent, mountPayload]);
 
   const reportBounds = useCallback((bounds: SurfaceBounds) => {
@@ -146,13 +146,13 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
     // Debounce bounds changes
     if (boundsDebounceRef.current) clearTimeout(boundsDebounceRef.current);
     boundsDebounceRef.current = setTimeout(() => {
-      postBrowserEvent("browser.surface.bounds.changed", { payload: { sessionId: mountPayload.sessionId, bounds } });
+      postBrowserEvent("browser.surface.bounds.changed", { sessionId: mountPayload.sessionId, bounds });
     }, 200);
   }, [postBrowserEvent, mountPayload]);
 
   const reportFocus = useCallback((focused: boolean) => {
     if (!mountPayload) return;
-    postBrowserEvent("browser.focus.changed", { payload: { sessionId: mountPayload.sessionId, focused } });
+    postBrowserEvent("browser.focus.changed", { sessionId: mountPayload.sessionId, focused });
   }, [postBrowserEvent, mountPayload]);
 
   const dismissError = useCallback(() => {
@@ -165,7 +165,7 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
     setDrawerOpen(prev => {
       if (!prev && mountPayload) {
         // Request fresh data when opening
-        postBrowserEvent("browser.drawer.refresh.request", { payload: { sessionId: mountPayload.sessionId } });
+        postBrowserEvent("browser.drawer.refresh.request", { sessionId: mountPayload.sessionId });
       }
       return !prev;
     });
@@ -173,17 +173,17 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
 
   const requestDrawerRefresh = useCallback(() => {
     if (!mountPayload) return;
-    postBrowserEvent("browser.drawer.refresh.request", { payload: { sessionId: mountPayload.sessionId } });
+    postBrowserEvent("browser.drawer.refresh.request", { sessionId: mountPayload.sessionId });
   }, [postBrowserEvent, mountPayload]);
 
   const requestExtract = useCallback(() => {
     if (!mountPayload) return;
-    postBrowserEvent("browser.extract.request", { payload: { sessionId: mountPayload.sessionId } });
+    postBrowserEvent("browser.extract.request", { sessionId: mountPayload.sessionId });
   }, [postBrowserEvent, mountPayload]);
 
   const requestSave = useCallback(() => {
     if (!mountPayload) return;
-    postBrowserEvent("browser.save.request", { payload: { sessionId: mountPayload.sessionId } });
+    postBrowserEvent("browser.save.request", { sessionId: mountPayload.sessionId });
   }, [postBrowserEvent, mountPayload]);
 
   // --- Runtime → Shell dispatches ---
@@ -258,9 +258,31 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
     setActionStatus(status);
     // Auto-refresh drawer on completed actions
     if (status.status === "completed" && mountPayload) {
-      postBrowserEvent("browser.drawer.refresh.request", { payload: { sessionId: mountPayload.sessionId } });
+      postBrowserEvent("browser.drawer.refresh.request", { sessionId: mountPayload.sessionId });
     }
   }, [mountPayload, postBrowserEvent]);
+
+  // Mount timeout: if we stay in "mounting" for 15s without a mount event, show error
+  const mountTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (surfaceState === "mounting") {
+      mountTimeoutRef.current = setTimeout(() => {
+        if (surfaceState === "mounting") {
+          setError("Browser session timed out waiting for runtime to respond.");
+          setSurfaceState("error");
+        }
+      }, 15_000);
+    } else {
+      if (mountTimeoutRef.current) {
+        clearTimeout(mountTimeoutRef.current);
+        mountTimeoutRef.current = null;
+      }
+    }
+    return () => {
+      if (mountTimeoutRef.current) clearTimeout(mountTimeoutRef.current);
+    };
+  }, [surfaceState]);
 
   // Cleanup debounce on unmount
   useEffect(() => () => {
