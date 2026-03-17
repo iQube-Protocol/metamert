@@ -120,4 +120,36 @@ export type RuntimeBrowserEvent =
   | { type: "browser.step.update"; payload: BrowserStepState }
   | { type: "browser.takeover.state"; payload: { sessionId: string; active: boolean } }
   | { type: "browser.badges.update"; payload: BrowserBadgeState }
-  | { type: "browser.error"; payload: { sessionId?: string; message: string; code?: string } };
+  | { type: "browser.error"; payload: { sessionId?: string; message: string; code?: string } }
+  | { type: "browser.drawer.data"; payload: BrowserDrawerData }
+  | { type: "browser.action.status"; payload: BrowserActionStatus };
+
+// ---------------------------------------------------------------------------
+// Drawer data — runtime → shell
+// ---------------------------------------------------------------------------
+
+export interface BrowserDrawerItem {
+  id: string;
+  label: string;
+  url?: string;
+  timestamp?: string;
+  meta?: Record<string, unknown>;
+}
+
+export interface BrowserDrawerData {
+  sessionId: string;
+  history: BrowserDrawerItem[];
+  artifacts: BrowserDrawerItem[];
+  receipts: BrowserDrawerItem[];
+}
+
+// ---------------------------------------------------------------------------
+// Action status — runtime → shell
+// ---------------------------------------------------------------------------
+
+export interface BrowserActionStatus {
+  sessionId: string;
+  action: "extract" | "save";
+  status: "running" | "completed" | "error";
+  message?: string;
+}
