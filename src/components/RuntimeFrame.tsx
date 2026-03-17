@@ -4,6 +4,7 @@ import { useBrowserOptional } from "@/contexts/BrowserContext";
 import EmbedFrame from "@/components/EmbedFrame";
 import { postToIframe, normalizeInbound, type DeviceType } from "@/lib/shell-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
+import { getToken } from "@/lib/aa-client";
 import type { BrowserMountPayload, BrowserStepState, BrowserBadgeState, BrowserDrawerData, BrowserActionStatus } from "@/lib/browser-types";
 
 function getDeviceType(): DeviceType {
