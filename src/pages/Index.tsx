@@ -65,6 +65,8 @@ function ShellLayout() {
           <RuntimeFrame key={resetKey} />
           <BrowserSurfaceHost />
         </div>
+        <BrowserSessionPanel />
+        <BrowserHistoryDrawer />
         <BrowserMinimizedPill />
         <SmartMenu />
       </div>

@@ -101,6 +101,14 @@ export default function RuntimeFrame() {
           case "browser.surface.state":
             browser.handleSurfaceState(payload);
             return;
+          case "browser.drawer.data":
+            console.log("[Shell] browser.drawer.data received");
+            browser.handleDrawerData(payload as unknown as BrowserDrawerData);
+            return;
+          case "browser.action.status":
+            console.log("[Shell] browser.action.status received", payload);
+            browser.handleActionStatus(payload as unknown as BrowserActionStatus);
+            return;
         }
       }
 
