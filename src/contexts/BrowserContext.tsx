@@ -27,6 +27,9 @@ interface BrowserContextValue {
   takeoverActive: boolean;
   badges: BrowserBadgeState | null;
   error: string | null;
+  drawerOpen: boolean;
+  drawerData: BrowserDrawerData | null;
+  actionStatus: BrowserActionStatus | null;
 
   // Shell → Runtime actions
   requestOpen: (intent?: string) => void;
@@ -38,6 +41,10 @@ interface BrowserContextValue {
   reportBounds: (bounds: SurfaceBounds) => void;
   reportFocus: (focused: boolean) => void;
   dismissError: () => void;
+  toggleDrawer: () => void;
+  requestDrawerRefresh: () => void;
+  requestExtract: () => void;
+  requestSave: () => void;
 
   // Runtime → Shell dispatches (called by RuntimeFrame message handler)
   handleMount: (payload: BrowserMountPayload) => void;
@@ -47,6 +54,8 @@ interface BrowserContextValue {
   handleBadgesUpdate: (badges: BrowserBadgeState) => void;
   handleError: (message: string, sessionId?: string) => void;
   handleSurfaceState: (state: Record<string, unknown>) => void;
+  handleDrawerData: (data: BrowserDrawerData) => void;
+  handleActionStatus: (status: BrowserActionStatus) => void;
 }
 
 const BrowserCtx = createContext<BrowserContextValue | null>(null);
