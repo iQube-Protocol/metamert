@@ -27,7 +27,10 @@ export type ShellOutbound =
   | { type: "browser.focus.changed"; payload: { sessionId: string; focused: boolean } }
   | { type: "browser.takeover.request"; payload: { sessionId: string } }
   | { type: "browser.resume.request"; payload: { sessionId: string } }
-  | { type: "browser.surface.bounds.changed"; payload: { sessionId: string; bounds: Record<string, number> } };
+  | { type: "browser.surface.bounds.changed"; payload: { sessionId: string; bounds: Record<string, number> } }
+  | { type: "browser.drawer.refresh.request"; payload: { sessionId: string } }
+  | { type: "browser.extract.request"; payload: { sessionId: string } }
+  | { type: "browser.save.request"; payload: { sessionId: string } };
 
 export interface MenuEvent {
   action_id: string;
