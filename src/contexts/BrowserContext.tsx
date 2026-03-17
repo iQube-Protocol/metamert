@@ -87,6 +87,9 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
   const [takeoverActive, setTakeoverActive] = useState(false);
   const [badges, setBadges] = useState<BrowserBadgeState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerData, setDrawerData] = useState<BrowserDrawerData | null>(null);
+  const [actionStatus, setActionStatus] = useState<BrowserActionStatus | null>(null);
 
   const boundsDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
