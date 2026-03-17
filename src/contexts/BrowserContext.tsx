@@ -201,13 +201,16 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
   }, [mountPayload, surfaceState]);
 
   const handleUnmount = useCallback((sessionId: string) => {
-    if (mountPayload?.sessionId !== sessionId) return; // Ignore stale
+    if (mountPayload?.sessionId !== sessionId) return;
     setSurfaceState("collapsed");
     setMountPayload(null);
     setStepState(null);
     setTakeoverActive(false);
     setBadges(null);
     setError(null);
+    setDrawerOpen(false);
+    setDrawerData(null);
+    setActionStatus(null);
   }, [mountPayload]);
 
   const handleStepUpdate = useCallback((step: BrowserStepState) => {
