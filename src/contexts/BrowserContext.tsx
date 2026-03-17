@@ -8,6 +8,8 @@ import type {
   BrowserMountPayload,
   BrowserStepState,
   BrowserBadgeState,
+  BrowserDrawerData,
+  BrowserActionStatus,
   SurfaceBounds,
 } from "@/lib/browser-types";
 import { postToIframe } from "@/lib/shell-messages";
