@@ -161,6 +161,31 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
     setMountPayload(null);
   }, []);
 
+  const toggleDrawer = useCallback(() => {
+    setDrawerOpen(prev => {
+      if (!prev && mountPayload) {
+        // Request fresh data when opening
+        postBrowserEvent("browser.drawer.refresh.request", { payload: { sessionId: mountPayload.sessionId } });
+      }
+      return !prev;
+    });
+  }, [mountPayload, postBrowserEvent]);
+
+  const requestDrawerRefresh = useCallback(() => {
+    if (!mountPayload) return;
+    postBrowserEvent("browser.drawer.refresh.request", { payload: { sessionId: mountPayload.sessionId } });
+  }, [postBrowserEvent, mountPayload]);
+
+  const requestExtract = useCallback(() => {
+    if (!mountPayload) return;
+    postBrowserEvent("browser.extract.request", { payload: { sessionId: mountPayload.sessionId } });
+  }, [postBrowserEvent, mountPayload]);
+
+  const requestSave = useCallback(() => {
+    if (!mountPayload) return;
+    postBrowserEvent("browser.save.request", { payload: { sessionId: mountPayload.sessionId } });
+  }, [postBrowserEvent, mountPayload]);
+
   // --- Runtime → Shell dispatches ---
 
   const handleMount = useCallback((payload: BrowserMountPayload) => {
