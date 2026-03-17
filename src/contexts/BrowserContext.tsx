@@ -152,7 +152,7 @@ export function BrowserProvider({ children, iframeRef, config }: BrowserProvider
 
   const reportFocus = useCallback((focused: boolean) => {
     if (!mountPayload) return;
-    postBrowserEvent("browser.focus.changed", { payload: { sessionId: mountPayload.sessionId, focused } });
+    postBrowserEvent("browser.focus.changed", { sessionId: mountPayload.sessionId, focused });
   }, [postBrowserEvent, mountPayload]);
 
   const dismissError = useCallback(() => {
