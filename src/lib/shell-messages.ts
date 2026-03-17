@@ -57,7 +57,9 @@ export type IframeInbound =
   | { type: "browser.step.update"; payload: Record<string, unknown> }
   | { type: "browser.takeover.state"; payload: { sessionId: string; active: boolean } }
   | { type: "browser.badges.update"; payload: Record<string, unknown> }
-  | { type: "browser.error"; payload: { sessionId?: string; message: string; code?: string } };
+  | { type: "browser.error"; payload: { sessionId?: string; message: string; code?: string } }
+  | { type: "browser.drawer.data"; payload: Record<string, unknown> }
+  | { type: "browser.action.status"; payload: Record<string, unknown> };
 
 /**
  * Normalize an inbound iframe message that may arrive as either:
