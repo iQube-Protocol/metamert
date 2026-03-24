@@ -593,6 +593,18 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [config, applyConfigUpdate, deactivateMode, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
 
+  /** Send a MENU_ACTION directly to the iframe without API round-trip */
+  const sendIframeAction = useCallback((actionId: string) => {
+    if (!iframeRef.current || !config) return;
+    const origin = getIframeOrigin(config);
+    postToIframe(iframeRef.current, {
+      type: "MENU_ACTION",
+      action_id: actionId,
+      cartridge_id: cartridgeState.activeCartridgeId,
+      codex_id: cartridgeState.activeCodexId,
+    }, origin);
+  }, [config, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
+
   const submitPrompt = useCallback(async (text: string) => {
     if (!text.trim()) return;
     setShellState("post-welcome");
