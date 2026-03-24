@@ -656,7 +656,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
     // Actions
     toggleQuickLinks,
-    hydrate, selectAigent, selectLLM, handleMenuAction,
+    hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     // Smart Menu actions
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
