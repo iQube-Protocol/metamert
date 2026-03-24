@@ -56,7 +56,7 @@ serve(async (req) => {
       {
         channel_id,
         tenant_id: "agentiq_main",
-        participants: ["lovable-metame", "aigent-z", "chatgpt", "windsurf"],
+        participants: ["lovable-metame", "aigent-z", "chatgpt", "windsurf", "claude-code", "openai-codex"],
       },
       { onConflict: "channel_id", ignoreDuplicates: true },
     );
