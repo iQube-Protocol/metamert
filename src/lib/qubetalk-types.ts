@@ -28,7 +28,7 @@ export type QubeTalkMessageType = "task" | "decision" | "question" | "status" | 
 export type QubeTalkSeverity = "info" | "warn" | "blocker";
 
 /** Authority identifiers for attestations */
-export type QubeTalkAuthority = "aigent_z" | "chatgpt" | "lovable" | "windsurf";
+export type QubeTalkAuthority = "aigent_z" | "chatgpt" | "lovable" | "windsurf" | "claude_code" | "openai_codex";
 
 /** Control block for task tracking */
 export interface QubeTalkControl {
