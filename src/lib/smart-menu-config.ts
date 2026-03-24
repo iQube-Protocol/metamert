@@ -107,6 +107,8 @@ export interface QuickActionDef {
   triggersInference: boolean;
   /** Rich contextual prompt sent via PROMPT_SUBMIT to trigger inference */
   prompt?: string;
+  /** If set, also sends a MENU_ACTION with this action_id to the iframe (dual dispatch) */
+  iframeAction?: string;
 }
 
 export interface ModeConfig {
@@ -190,7 +192,7 @@ const EARN_ACTIONS: QuickActionDef[] = [
   { id: "reward",      label: "Reward",      icon: "star",       kind: "llm+menu",    triggersInference: true,  prompt: "Show my rewards and achievements" },
   { id: "offer",       label: "Offer",       icon: "tag",        kind: "llm+menu",    triggersInference: true,  prompt: "Find offers and deals available to me" },
   { id: "opportunity", label: "Opportunity", icon: "compass",    kind: "llm+menu",    triggersInference: true,  prompt: "Discover new opportunities for me" },
-  { id: "wallet",      label: "Wallet",      icon: "wallet",     kind: "llm+menu",    triggersInference: true,  prompt: "Show my wallet balances and recent transactions" },
+  { id: "wallet",      label: "Wallet",      icon: "wallet",     kind: "llm+menu",    triggersInference: true,  prompt: "What would you like to explore in your wallet?", iframeAction: "wallet" },
   { id: "share",       label: "Share",       icon: "share-2",    kind: "llm+menu",    triggersInference: true },
   { id: "reset",       label: "Reset",       icon: "rotate-ccw", kind: "system-only", triggersInference: false },
 ];

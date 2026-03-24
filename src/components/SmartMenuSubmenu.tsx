@@ -111,7 +111,11 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     // Rich contextual prompt: send directly, then start 4s idle countdown
+    // If action also has an iframeAction, send MENU_ACTION to open the drawer in the runtime
     if (action.prompt) {
+      if (action.iframeAction) {
+        handleMenuAction(action.iframeAction);
+      }
       submitPrompt(action.prompt);
       resetIdleTimer("quickAction");
       return;
