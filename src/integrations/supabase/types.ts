@@ -4849,6 +4849,38 @@ export type Database = {
         }
         Relationships: []
       }
+      iqube_access_list: {
+        Row: {
+          address: string
+          granted_at: string
+          granted_by: string
+          id: number
+          token_id: number
+        }
+        Insert: {
+          address: string
+          granted_at?: string
+          granted_by: string
+          id?: number
+          token_id: number
+        }
+        Update: {
+          address?: string
+          granted_at?: string
+          granted_by?: string
+          id?: number
+          token_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iqube_access_list_token_fk"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "iqubes"
+            referencedColumns: ["token_id"]
+          },
+        ]
+      }
       iqube_capabilities: {
         Row: {
           acl_delta_sig: string | null
@@ -5139,30 +5171,40 @@ export type Database = {
       iqube_wrapped_keys: {
         Row: {
           created_at: string
+          encrypted_key: string | null
           ipfs_hash: string | null
+          key_encryption_iv: string | null
+          key_encryption_scheme: string
           minter_address: string
           token_id: number
-          wrapped_key: string
+          wrapped_key: string | null
         }
         Insert: {
           created_at?: string
+          encrypted_key?: string | null
           ipfs_hash?: string | null
+          key_encryption_iv?: string | null
+          key_encryption_scheme?: string
           minter_address: string
           token_id: number
-          wrapped_key: string
+          wrapped_key?: string | null
         }
         Update: {
           created_at?: string
+          encrypted_key?: string | null
           ipfs_hash?: string | null
+          key_encryption_iv?: string | null
+          key_encryption_scheme?: string
           minter_address?: string
           token_id?: number
-          wrapped_key?: string
+          wrapped_key?: string | null
         }
         Relationships: []
       }
       iqubes: {
         Row: {
           access_policy: string
+          allowed_addresses: Json | null
           business_model: string
           category: string
           created_at: string | null
@@ -5182,6 +5224,7 @@ export type Database = {
         }
         Insert: {
           access_policy?: string
+          allowed_addresses?: Json | null
           business_model?: string
           category: string
           created_at?: string | null
@@ -5201,6 +5244,7 @@ export type Database = {
         }
         Update: {
           access_policy?: string
+          allowed_addresses?: Json | null
           business_model?: string
           category?: string
           created_at?: string | null
