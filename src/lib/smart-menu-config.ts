@@ -107,6 +107,8 @@ export interface QuickActionDef {
   triggersInference: boolean;
   /** Rich contextual prompt sent via PROMPT_SUBMIT to trigger inference */
   prompt?: string;
+  /** If set, also sends a MENU_ACTION with this action_id to the iframe (dual dispatch) */
+  iframeAction?: string;
 }
 
 export interface ModeConfig {
