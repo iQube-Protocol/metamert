@@ -112,9 +112,13 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     // Rich contextual prompt: send directly, then start 4s idle countdown
-    // If action also has an iframeAction, send MENU_ACTION directly to iframe to open drawer
+    // If action also has an apiAction, route through AA-API so runtime can return
+    // the right iframe event for UI rendered inside the iframe. iframeAction remains
+    // available for direct shell → iframe UI triggers.
     if (action.prompt) {
-      if (action.iframeAction) {
+      if (action.apiAction) {
+        void handleMenuAction(action.apiAction);
+      } else if (action.iframeAction) {
         sendIframeAction(action.iframeAction);
       }
       submitPrompt(action.prompt);
