@@ -74,6 +74,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     activateMode,
     handleMenuAction,
     submitPrompt,
+    sendIframeAction,
     setSubmenuType,
     pauseIdleTimer,
     resetIdleTimer,
