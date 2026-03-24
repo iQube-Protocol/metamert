@@ -109,6 +109,8 @@ export interface QuickActionDef {
   prompt?: string;
   /** If set, also sends a MENU_ACTION with this action_id to the iframe (dual dispatch) */
   iframeAction?: string;
+  /** If set, route the action through AA-API menu-action before/while sending the prompt */
+  apiAction?: string;
 }
 
 export interface ModeConfig {
@@ -192,7 +194,7 @@ const EARN_ACTIONS: QuickActionDef[] = [
   { id: "reward",      label: "Reward",      icon: "star",       kind: "llm+menu",    triggersInference: true,  prompt: "Show my rewards and achievements" },
   { id: "offer",       label: "Offer",       icon: "tag",        kind: "llm+menu",    triggersInference: true,  prompt: "Find offers and deals available to me" },
   { id: "opportunity", label: "Opportunity", icon: "compass",    kind: "llm+menu",    triggersInference: true,  prompt: "Discover new opportunities for me" },
-  { id: "wallet",      label: "Wallet",      icon: "wallet",     kind: "llm+menu",    triggersInference: true,  prompt: "What would you like to explore in your wallet?", iframeAction: "wallet" },
+  { id: "wallet",      label: "Wallet",      icon: "wallet",     kind: "llm+menu",    triggersInference: true,  prompt: "What would you like to explore in your wallet?", apiAction: "wallet" },
   { id: "share",       label: "Share",       icon: "share-2",    kind: "llm+menu",    triggersInference: true },
   { id: "reset",       label: "Reset",       icon: "rotate-ccw", kind: "system-only", triggersInference: false },
 ];
