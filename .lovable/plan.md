@@ -71,19 +71,21 @@ Goal: Harden the shell so it can cleanly host journey-aware runtime behavior wit
 
 ---
 
-## Sprint 3 — Stable shell integration for runtime-driven states
+## Sprint 3 — Stable shell integration for runtime-driven states ✅
 
-### LOV-301 — Shell placeholders for runtime-driven states
-- Shell awareness of: active guide, focus mode, deep-link, handoff
-- Only as shell context, not shell content
+### LOV-301 — Shell placeholders for runtime-driven states ✅
+- Added `RuntimeHints` type (activeGuide, focusMode, deepLink, handoff)
+- Extracted from STATE_SYNC and dedicated RUNTIME_HINT inbound signals
+- Shell-context only — no content rendering
 
-### LOV-302 — Iframe transition polish
-- Smoother transitions for cartridge/codex change, handoff, prompt-driven context
-- No shell/content visual conflict
+### LOV-302 — Iframe transition polish ✅
+- Added opacity transition (300ms) on RuntimeFrame container for cartridge/codex switches
+- EmbedFrame reports status changes via onStatusChange callback
 
-### LOV-303 — Shell loading/fallback states
-- Shell remains useful when iframe is loading/unavailable
-- Menu/header stay stable, fallback copy is shell-safe
+### LOV-303 — Shell loading/fallback states ✅
+- EmbedFrame already handles probing/loading/error/blocked states with stable fallback UI
+- Added `IframeReadiness` type exported from ShellContext
+- Status propagated from EmbedFrame → RuntimeFrame → shell logging
 
 ---
 
