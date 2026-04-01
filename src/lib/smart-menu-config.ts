@@ -170,6 +170,7 @@ const PLAY_ACTIONS: QuickActionDef[] = [
   { id: "find",      label: "Find",      icon: "search",     kind: "llm+menu",    triggersInference: true,  prompt: "Search and discover something new for me" },
   { id: "listen",    label: "Listen",    icon: "headphones", kind: "llm+menu",    triggersInference: true,  prompt: "Play something for me to listen to" },
   { id: "watch",     label: "Watch",     icon: "eye",        kind: "llm+menu",    triggersInference: true,  prompt: "Show me something interesting to watch" },
+  { id: "knyt",      label: "KNYT",      icon: "zap",        kind: "llm+menu",    triggersInference: true,  prompt: "Start my KNYT journey — show onboarding or continue where I left off", apiAction: "knyt-entry", iframeAction: "knyt_entry" },
   { id: "browse",    label: "Browse",    icon: "globe",      kind: "system-only", triggersInference: false },
   { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true,  prompt: "Find me something good to read" },
   { id: "cartridge", label: "Cartridge", icon: "box",        kind: "system-only", triggersInference: false },
