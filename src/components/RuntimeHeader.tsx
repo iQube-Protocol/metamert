@@ -22,16 +22,24 @@ function scoreToDots(score: number | undefined, fallback: number): number {
 
 function trustDotColor(score: number | undefined): string {
   const v = score ?? 5;
-  if (v <= 3) return "bg-red-500";
+  if (v <= 3) return "bg-destructive";
   if (v <= 6) return "bg-yellow-500";
   return "bg-green-500";
 }
 
 function reliabilityDotColor(score: number | undefined): string {
   const v = score ?? 5;
-  if (v <= 3) return "bg-red-500";
+  if (v <= 3) return "bg-destructive";
   if (v <= 6) return "bg-yellow-500";
-  return "bg-purple-500";
+  return "bg-primary";
+}
+
+/** Returns "up", "down", or null for score direction */
+function scoreDirection(prev: number | undefined, curr: number | undefined): "up" | "down" | null {
+  if (prev == null || curr == null) return null;
+  if (curr > prev) return "up";
+  if (curr < prev) return "down";
+  return null;
 }
 
 export default function RuntimeHeader() {
