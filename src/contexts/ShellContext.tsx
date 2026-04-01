@@ -76,6 +76,9 @@ interface ShellContextValue {
   // Iframe readiness (LOV-303)
   iframeReadiness: IframeReadiness;
 
+  // LOV-401: KNYT onboarding active flag
+  knytOnboarding: boolean;
+
   // Smart Menu state
   viewState: ViewState;
   activeMode: SmartMenuMode | null;
