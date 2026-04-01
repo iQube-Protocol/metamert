@@ -781,6 +781,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const ctxValue: ShellContextValue = {
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
+    runtimeHints, iframeReadiness,
     // Smart Menu state
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
     // Actions
