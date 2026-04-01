@@ -94,37 +94,83 @@ function ThreadPanel({ thread }: { thread: QubeTalkThread }) {
   );
 }
 
+const ADMIN_KEY = "dev-diag-auth";
+
+function AdminGate({ children }: { children: React.ReactNode }) {
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem(ADMIN_KEY) === "1");
+  const [code, setCode] = useState("");
+
+  if (authed) return <>{children}</>;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (code === "metame-dev-2026") {
+      sessionStorage.setItem(ADMIN_KEY, "1");
+      setAuthed(true);
+    } else {
+      toast.error("Invalid access code");
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <Card className="w-80">
+        <CardHeader>
+          <CardTitle className="text-lg">Admin Access Required</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <input
+              type="password"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Access code"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              autoFocus
+            />
+            <Button type="submit" className="w-full" size="sm">
+              Enter
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function DevDiagnostics() {
   const [activeThread, setActiveThread] = useState<QubeTalkThread>("ui-shell");
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="mx-auto max-w-4xl space-y-4">
-        <div>
-          <h1 className="text-2xl font-bold">QubeTalk Diagnostics</h1>
-          <p className="text-sm text-muted-foreground">
-            Channel: <code>metame-runtime-thinclient</code>
-          </p>
-        </div>
+    <AdminGate>
+      <div className="min-h-screen bg-background p-4 md:p-8">
+        <div className="mx-auto max-w-4xl space-y-4">
+          <div>
+            <h1 className="text-2xl font-bold">QubeTalk Diagnostics</h1>
+            <p className="text-sm text-muted-foreground">
+              Channel: <code>metame-runtime-thinclient</code>
+            </p>
+          </div>
 
-        <Tabs
-          value={activeThread}
-          onValueChange={(v) => setActiveThread(v as QubeTalkThread)}
-        >
-          <TabsList className="w-full">
+          <Tabs
+            value={activeThread}
+            onValueChange={(v) => setActiveThread(v as QubeTalkThread)}
+          >
+            <TabsList className="w-full">
+              {THREADS.map((t) => (
+                <TabsTrigger key={t} value={t} className="flex-1 text-xs">
+                  #{t}
+                </TabsTrigger>
+              ))}
+            </TabsList>
             {THREADS.map((t) => (
-              <TabsTrigger key={t} value={t} className="flex-1 text-xs">
-                #{t}
-              </TabsTrigger>
+              <TabsContent key={t} value={t}>
+                <ThreadPanel thread={t} />
+              </TabsContent>
             ))}
-          </TabsList>
-          {THREADS.map((t) => (
-            <TabsContent key={t} value={t}>
-              <ThreadPanel thread={t} />
-            </TabsContent>
-          ))}
-        </Tabs>
+          </Tabs>
+        </div>
       </div>
-    </div>
+    </AdminGate>
   );
 }
