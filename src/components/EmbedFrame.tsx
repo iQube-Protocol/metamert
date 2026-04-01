@@ -15,7 +15,7 @@ type FrameStatus = "probing" | "loading" | "ready" | "error" | "blocked";
 export type { FrameStatus };
 
 const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
-  ({ url, origin, className = "", onReady }, ref) => {
+  ({ url, origin, className = "", onReady, onStatusChange }, ref) => {
     const [status, setStatus] = useState<FrameStatus>("probing");
     const [src, setSrc] = useState<string>("");
 
