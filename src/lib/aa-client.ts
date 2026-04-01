@@ -203,6 +203,23 @@ export async function promptAction(
 }
 
 // ---------------------------------------------------------------------------
+// Admin check
+// ---------------------------------------------------------------------------
+
+export interface AdminCheckResult {
+  is_admin: boolean;
+  role?: string | null;
+  did?: string;
+  source?: string;
+}
+
+export async function checkAdminStatus(did?: string | null): Promise<AdminCheckResult> {
+  const effectiveDid = did ?? cachedDid;
+  if (!effectiveDid) return { is_admin: false };
+  return aaProxy<AdminCheckResult>("admin-check", { did: effectiveDid });
+}
+
+// ---------------------------------------------------------------------------
 // Accessors
 // ---------------------------------------------------------------------------
 

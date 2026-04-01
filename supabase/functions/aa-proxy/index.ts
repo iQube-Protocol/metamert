@@ -454,6 +454,49 @@ serve(async (req) => {
       });
     }
 
+    // ---- ADMIN CHECK ----
+    if (action === "admin-check") {
+      const did = reqBody?.did;
+      if (!did) {
+        return new Response(JSON.stringify({ is_admin: false, reason: "no_did" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Try upstream persona/admin endpoint
+      try {
+        const res = await upstreamFetch("/identity/persona/admin-status", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ did }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return new Response(JSON.stringify({
+            is_admin: data.is_admin === true || data.role === "admin" || data.role === "owner",
+            role: data.role ?? null,
+            did,
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch { /* upstream unavailable */ }
+
+      // Fallback: check against known admin DIDs from env or hardcoded list
+      const ADMIN_DIDS = (Deno.env.get("ADMIN_DIDS") ?? "").split(",").map(d => d.trim()).filter(Boolean);
+      const isKnownAdmin = ADMIN_DIDS.includes(did);
+
+      console.log("[aa-proxy] admin-check fallback for", did, "known:", isKnownAdmin);
+      return new Response(JSON.stringify({
+        is_admin: isKnownAdmin,
+        role: isKnownAdmin ? "admin" : null,
+        did,
+        source: "fallback",
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(
       JSON.stringify({ error: `Unknown action: ${action}` }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
