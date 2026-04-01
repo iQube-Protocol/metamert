@@ -255,7 +255,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#00D5FF",
     promptPlaceholder: "Ask, explore, watch, listen, read, or switch context…",
     defaultCenteredQuickActionId: "watch",
-    mobileVisibleFold: ["find", "listen", "watch", "browse", "read"],
+    mobileVisibleFold: ["find", "listen", "watch", "knyt", "browse"],
     quickActions: PLAY_ACTIONS,
   },
   make: {
