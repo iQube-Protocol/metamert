@@ -9,14 +9,17 @@ interface EmbedFrameProps {
   className?: string;
   onReady?: () => void;
   onStatusChange?: (status: FrameStatus) => void;
+  /** Max probe retries before showing error (default 2) */
+  maxRetries?: number;
 }
 
 type FrameStatus = "probing" | "loading" | "ready" | "error" | "blocked";
 export type { FrameStatus };
 
 const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
-  ({ url, origin, className = "", onReady, onStatusChange }, ref) => {
+  ({ url, origin, className = "", onReady, onStatusChange, maxRetries = 2 }, ref) => {
     const [status, setStatusRaw] = useState<FrameStatus>("probing");
+    const [retryCount, setRetryCount] = useState(0);
     const setStatus = (s: FrameStatus | ((prev: FrameStatus) => FrameStatus)) => {
       setStatusRaw(prev => {
         const next = typeof s === "function" ? s(prev) : s;
@@ -26,7 +29,7 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
     };
     const [src, setSrc] = useState<string>("");
 
-    // Probe then load
+    // Probe then load — with retry support
     useEffect(() => {
       let cancelled = false;
       setStatus("probing");
@@ -38,13 +41,18 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
         if (reachable) {
           setSrc(withCacheBust(url));
           setStatus("loading");
+        } else if (retryCount < maxRetries) {
+          // Auto-retry after delay
+          setTimeout(() => {
+            if (!cancelled) setRetryCount(c => c + 1);
+          }, 2000 * (retryCount + 1));
         } else {
           setStatus("error");
         }
       })();
 
       return () => { cancelled = true; };
-    }, [url]);
+    }, [url, retryCount, maxRetries]);
 
     // Listen for RUNTIME_READY from iframe
     useEffect(() => {
@@ -104,12 +112,17 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
               ? "The runtime is blocked by content security policy."
               : "Unable to reach the runtime endpoint."}
           </p>
-          <Button variant="outline" asChild>
-            <a href={url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Open in New Tab
-            </a>
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => { setRetryCount(0); }}>
+              Retry
+            </Button>
+            <Button variant="outline" asChild>
+              <a href={url} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Open in New Tab
+              </a>
+            </Button>
+          </div>
         </div>
       );
     }

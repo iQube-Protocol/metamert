@@ -109,14 +109,22 @@ Goal: Harden the shell so it can cleanly host journey-aware runtime behavior wit
 
 ---
 
-## Sprint 5–6 — Hardening & polish
+## Sprint 5 — Hardening & polish ✅
 
-- Performance polish
-- Shell parity refinement
-- Trust/header refinements
-- Iframe wrapper resilience
-- Shell analytics hooks if needed
-- Regression testing
+### LOV-501 — Performance polish ✅
+- Memoized ShellContext value with `useMemo` to prevent unnecessary consumer re-renders
+
+### LOV-502 — Shell parity refinement ✅
+- focusMode hint hides RuntimeHeader when runtime requests minimal chrome
+- Layout adapts dynamically across breakpoints
+
+### LOV-503 — Iframe wrapper resilience ✅
+- EmbedFrame auto-retries probe up to 2x with exponential backoff
+- Added manual "Retry" button alongside "Open in New Tab" on error states
+
+### LOV-504 — Regression tests ✅
+- 11 tests covering normalizeInbound, isInferenceStart, isInferenceComplete
+- Covers direct, enveloped, stringified, and payload-lifted message formats
 
 ---
 

@@ -12,7 +12,7 @@ import { Loader2 } from "lucide-react";
 
 function ShellLayout() {
   const shell = useShell();
-  const { config, loading, hydrate, resetKey, viewState, deactivateMode, iframeRef } = shell;
+  const { config, loading, hydrate, resetKey, viewState, deactivateMode, iframeRef, runtimeHints } = shell;
 
   // Reset scroll when mobile keyboard closes (viewport height increases)
   useEffect(() => {
@@ -51,10 +51,13 @@ function ShellLayout() {
 
   const menuActive = viewState === "promptMode" || viewState === "quickActionOnly";
 
+  // LOV-502: focusMode reduces chrome — hide header when runtime requests it
+  const showHeader = !runtimeHints.focusMode;
+
   return (
     <BrowserProvider iframeRef={iframeRef} config={config}>
       <div className="flex h-dvh flex-col bg-background">
-        <RuntimeHeader />
+        {showHeader && <RuntimeHeader />}
         <div className="relative flex-1 overflow-hidden">
           {menuActive && (
             <div

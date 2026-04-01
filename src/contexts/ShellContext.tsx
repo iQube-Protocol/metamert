@@ -1,5 +1,5 @@
 /* HMR boundary — ShellProvider */
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
   type ShellConfig,
   type MenuActionResult,
@@ -786,7 +786,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
-  const ctxValue: ShellContextValue = {
+  const ctxValue: ShellContextValue = useMemo(() => ({
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
     runtimeHints, iframeReadiness, knytOnboarding,
@@ -799,7 +799,16 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     // Smart Menu actions
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
     selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
-  };
+  }), [
+    config, loading, authenticated, shellState,
+    activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
+    runtimeHints, iframeReadiness, knytOnboarding,
+    viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
+    toggleQuickLinks, hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
+    submitPrompt, resetToWelcome, updateTrust, iframeRef,
+    activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
+    selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+  ]);
 
   // Publish to module singleton so HMR-stale consumers can still read it
   __shellSingleton = ctxValue;
