@@ -64,6 +64,19 @@ export default function RuntimeHeader() {
   const rColor = reliabilityDotColor(trustScores.reliability);
   const tColor = trustDotColor(trustScores.trust);
 
+  // Flash animation when trust scores change
+  const [trustFlash, setTrustFlash] = useState(false);
+  const prevScoresRef = useRef(trustScores);
+  useEffect(() => {
+    const prev = prevScoresRef.current;
+    if (prev.trust !== trustScores.trust || prev.reliability !== trustScores.reliability) {
+      setTrustFlash(true);
+      const timer = setTimeout(() => setTrustFlash(false), 800);
+      prevScoresRef.current = trustScores;
+      return () => clearTimeout(timer);
+    }
+  }, [trustScores.trust, trustScores.reliability]);
+
   const renderDots = (filled: number, activeColor: string) =>
     [...Array(5)].map((_, i) => (
       <span
