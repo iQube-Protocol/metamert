@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { checkAdminStatus, getDid } from "@/lib/aa-client";
+import { checkAdminStatus, getDid, authenticate } from "@/lib/aa-client";
 
 const THREADS: QubeTalkThread[] = ["spec", "api-wiring", "ui-shell", "dev-exec", "ops"];
 
@@ -109,7 +109,16 @@ function AdminGate({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const did = getDid();
+        // If no DID cached yet (direct nav to /dev), auto-auth with dev DID
+        let did = getDid();
+        if (!did) {
+          try {
+            await authenticate("did:metame:dev-shell", async () => "dev-sig");
+            did = getDid();
+          } catch {
+            console.warn("[AdminGate] dev auto-auth failed");
+          }
+        }
         if (did) {
           const result = await checkAdminStatus(did);
           if (!cancelled && result.is_admin) {

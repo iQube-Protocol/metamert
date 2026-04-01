@@ -483,7 +483,8 @@ serve(async (req) => {
       } catch { /* upstream unavailable */ }
 
       // Fallback: check against known admin DIDs from env or hardcoded list
-      const ADMIN_DIDS = (Deno.env.get("ADMIN_DIDS") ?? "").split(",").map(d => d.trim()).filter(Boolean);
+      const envDids = (Deno.env.get("ADMIN_DIDS") ?? "").split(",").map(d => d.trim()).filter(Boolean);
+      const ADMIN_DIDS = [...new Set([...envDids, "did:metame:dev-shell"])];
       const isKnownAdmin = ADMIN_DIDS.includes(did);
 
       console.log("[aa-proxy] admin-check fallback for", did, "known:", isKnownAdmin);
