@@ -202,10 +202,12 @@ export default function RuntimeHeader() {
               <div className="flex items-center gap-0.5">
                 <span className="font-medium mr-1">R</span>
                 {renderDots(rScore, rColor)}
+                {reliabilityDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${reliabilityDir === "up" ? "text-green-500" : "text-destructive"}`}>{reliabilityDir === "up" ? "▲" : "▼"}</span>}
               </div>
               <div className="flex items-center gap-0.5">
                 <span className="font-medium mr-1">T</span>
                 {renderDots(tScore, tColor)}
+                {trustDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${trustDir === "up" ? "text-green-500" : "text-destructive"}`}>{trustDir === "up" ? "▲" : "▼"}</span>}
               </div>
             </div>
           </TooltipTrigger>
