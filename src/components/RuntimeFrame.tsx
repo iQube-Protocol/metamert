@@ -1,5 +1,5 @@
-import { useEffect, useCallback } from "react";
-import { useShell } from "@/contexts/ShellContext";
+import { useEffect, useCallback, useState } from "react";
+import { useShell, type IframeReadiness } from "@/contexts/ShellContext";
 import { useBrowserOptional } from "@/contexts/BrowserContext";
 import EmbedFrame from "@/components/EmbedFrame";
 import { postToIframe, normalizeInbound, type DeviceType } from "@/lib/shell-messages";
@@ -15,8 +15,16 @@ function getDeviceType(): DeviceType {
 }
 
 export default function RuntimeFrame() {
-  const { config, iframeRef, updateTrust } = useShell();
+  const { config, iframeRef, updateTrust, cartridgeState } = useShell();
   const browser = useBrowserOptional();
+
+  // LOV-302: Transition class for smooth cartridge/codex switches
+  const [transitioning, setTransitioning] = useState(false);
+
+  // LOV-303: Report iframe readiness to shell
+  const handleStatusChange = useCallback((status: IframeReadiness) => {
+    console.log("[Shell] iframe readiness:", status);
+  }, []);
 
   const handleReady = useCallback(() => {
     if (!config || !iframeRef.current) return;
@@ -160,12 +168,15 @@ export default function RuntimeFrame() {
   if (!config) return null;
 
   return (
-    <EmbedFrame
-      ref={iframeRef}
-      url={config.iframe.url}
-      origin={config.iframe.origin}
-      className="absolute inset-0 h-full w-full"
-      onReady={handleReady}
-    />
+    <div className={`absolute inset-0 transition-opacity duration-300 ${transitioning ? "opacity-80" : "opacity-100"}`}>
+      <EmbedFrame
+        ref={iframeRef}
+        url={config.iframe.url}
+        origin={config.iframe.origin}
+        className="absolute inset-0 h-full w-full"
+        onReady={handleReady}
+        onStatusChange={handleStatusChange}
+      />
+    </div>
   );
 }
