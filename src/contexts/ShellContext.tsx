@@ -476,6 +476,10 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           deepLink: typeof state.deep_link === "string" ? state.deep_link : prev.deepLink,
           handoff: typeof state.handoff === "boolean" ? state.handoff : prev.handoff,
         }));
+        // LOV-401: Track KNYT onboarding state from runtime
+        if (typeof state.knyt_onboarding === "boolean") {
+          setKnytOnboarding(state.knyt_onboarding);
+        }
       }
 
       // LOV-301: Handle dedicated RUNTIME_HINT signals
