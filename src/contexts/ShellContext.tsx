@@ -178,6 +178,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [resetKey, setResetKey] = useState(0);
   const [runtimeHints, setRuntimeHints] = useState<RuntimeHints>(INITIAL_HINTS);
   const [iframeReadiness, setIframeReadiness] = useState<IframeReadiness>("probing");
+  const [knytOnboarding, setKnytOnboarding] = useState(false);
   const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
