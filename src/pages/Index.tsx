@@ -12,7 +12,7 @@ import { Loader2 } from "lucide-react";
 
 function ShellLayout() {
   const shell = useShell();
-  const { config, loading, hydrate, resetKey, viewState, deactivateMode, iframeRef } = shell;
+  const { config, loading, hydrate, resetKey, viewState, deactivateMode, iframeRef, runtimeHints } = shell;
 
   // Reset scroll when mobile keyboard closes (viewport height increases)
   useEffect(() => {
