@@ -247,6 +247,18 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   // Clean up idle timer on unmount
   useEffect(() => () => clearIdleTimer(), [clearIdleTimer]);
 
+  // Notify iframe of mode change
+  const notifyModeChanged = useCallback((mode: SmartMenuMode | null, vs: ViewState) => {
+    if (!iframeRef.current || !config) return;
+    postToIframe(iframeRef.current, {
+      type: "MODE_CHANGED",
+      mode,
+      view_state: vs,
+      cartridge_id: cartridgeState.activeCartridgeId,
+      codex_id: cartridgeState.activeCodexId,
+    }, getIframeOrigin(config));
+  }, [config, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
+
   // Smart Menu actions
   const activateMode = useCallback((mode: SmartMenuMode) => {
     // If tapping active mode, deactivate (collapse)
@@ -256,6 +268,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       setSubmenuTypeState(null);
       setSubmenuVisibility("visibleAuto");
       clearIdleTimer();
+      notifyModeChanged(null, "defaultNav");
       return;
     }
     setViewState("promptMode");
@@ -263,7 +276,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setSubmenuTypeState("quickActions");
     setSubmenuVisibility("visibleAuto");
     startIdleTimer();
-  }, [activeMode, viewState, clearIdleTimer, startIdleTimer]);
+    notifyModeChanged(mode, "promptMode");
+  }, [activeMode, viewState, clearIdleTimer, startIdleTimer, notifyModeChanged]);
 
   // Quick-action-only mode: show submenu without prompt bar (no keyboard on mobile)
   const activateQuickActions = useCallback((mode: SmartMenuMode) => {
@@ -274,6 +288,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       setSubmenuTypeState(null);
       setSubmenuVisibility("visibleAuto");
       clearIdleTimer();
+      notifyModeChanged(null, "defaultNav");
       return;
     }
     setViewState("quickActionOnly");
@@ -281,7 +296,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setSubmenuTypeState("quickActions");
     setSubmenuVisibility("visibleAuto");
     startIdleTimer();
-  }, [activeMode, viewState, clearIdleTimer, startIdleTimer]);
+    notifyModeChanged(mode, "quickActionOnly");
+  }, [activeMode, viewState, clearIdleTimer, startIdleTimer, notifyModeChanged]);
 
   const deactivateMode = useCallback(() => {
     setViewState("defaultNav");
@@ -289,7 +305,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setSubmenuTypeState(null);
     setSubmenuVisibility("visibleAuto");
     clearIdleTimer();
-  }, [clearIdleTimer]);
+    notifyModeChanged(null, "defaultNav");
+  }, [clearIdleTimer, notifyModeChanged]);
 
   const setSubmenuType = useCallback((type: SubmenuType | null) => {
     setSubmenuTypeState(type);
