@@ -9,6 +9,8 @@ interface EmbedFrameProps {
   className?: string;
   onReady?: () => void;
   onStatusChange?: (status: FrameStatus) => void;
+  /** Max probe retries before showing error (default 2) */
+  maxRetries?: number;
 }
 
 type FrameStatus = "probing" | "loading" | "ready" | "error" | "blocked";
