@@ -13,12 +13,13 @@ export interface DeviceContext {
 export type ShellOutbound =
   | { type: "SHELL_READY"; hide_chrome?: boolean }
   | { type: "HANDOFF"; handoff_token: string; aa_api_base_url?: string; aa_api_token?: string; context?: Record<string, unknown> }
-  | { type: "MENU_ACTION"; action_id: string; prompt?: string; menu_event?: MenuEvent; cartridge_id?: string; codex_id?: string }
+  | { type: "MENU_ACTION"; action_id: string; prompt?: string; menu_event?: MenuEvent; cartridge_id?: string; codex_id?: string; mode?: string }
   | { type: "SELECTOR_CHANGE"; selector_type: "aigent" | "llm" | "cartridge" | "codex" | "persona"; id: string; iqube_id?: string }
   | { type: "CONTEXT_UPDATE"; payload: Record<string, unknown> }
-  | { type: "PROMPT_SUBMIT"; text: string; cartridge_id?: string; codex_id?: string }
+  | { type: "PROMPT_SUBMIT"; text: string; cartridge_id?: string; codex_id?: string; mode?: string }
   | { type: "RESET_WELCOME" }
   | { type: "DEVICE_CONTEXT_UPDATE"; context: DeviceContext }
+  | { type: "MODE_CHANGED"; mode: string | null; view_state: string; cartridge_id?: string; codex_id?: string }
   // Browser bridge events (shell → runtime)
   | { type: "browser.open.request"; payload?: { intent?: string } }
   | { type: "browser.close.request"; payload: { sessionId: string } }
