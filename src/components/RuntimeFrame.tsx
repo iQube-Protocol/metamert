@@ -1,5 +1,5 @@
-import { useEffect, useCallback } from "react";
-import { useShell } from "@/contexts/ShellContext";
+import { useEffect, useCallback, useState } from "react";
+import { useShell, type IframeReadiness } from "@/contexts/ShellContext";
 import { useBrowserOptional } from "@/contexts/BrowserContext";
 import EmbedFrame from "@/components/EmbedFrame";
 import { postToIframe, normalizeInbound, type DeviceType } from "@/lib/shell-messages";
