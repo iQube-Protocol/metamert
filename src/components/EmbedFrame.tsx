@@ -112,12 +112,17 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
               ? "The runtime is blocked by content security policy."
               : "Unable to reach the runtime endpoint."}
           </p>
-          <Button variant="outline" asChild>
-            <a href={url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Open in New Tab
-            </a>
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => { setRetryCount(0); }}>
+              Retry
+            </Button>
+            <Button variant="outline" asChild>
+              <a href={url} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Open in New Tab
+              </a>
+            </Button>
+          </div>
         </div>
       );
     }
