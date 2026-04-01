@@ -116,8 +116,8 @@ export default function RuntimeHeader() {
   // Cartridge/Codex info for header center
   const activeCart = cartridgeState.available.find(c => c.id === cartridgeState.activeCartridgeId);
   const activeCodex = activeCart?.codexes.find(c => c.id === cartridgeState.activeCodexId);
-
-  const cartridgeColor = activeCart?.accentHex;
+  // LOV-401: Show KNYT accent on cartridge icon during onboarding
+  const cartridgeColor = knytOnboarding ? "#F59E0B" : activeCart?.accentHex;
 
   return (
     <TooltipProvider delayDuration={300}>
