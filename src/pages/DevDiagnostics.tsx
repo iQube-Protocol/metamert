@@ -99,9 +99,42 @@ const ADMIN_KEY = "dev-diag-auth";
 
 function AdminGate({ children }: { children: React.ReactNode }) {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem(ADMIN_KEY) === "1");
+  const [checking, setChecking] = useState(true);
   const [code, setCode] = useState("");
 
+  // Auto-check admin status via AA-API persona/DID on mount
+  useEffect(() => {
+    if (authed) { setChecking(false); return; }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const did = getDid();
+        if (did) {
+          const result = await checkAdminStatus(did);
+          if (!cancelled && result.is_admin) {
+            sessionStorage.setItem(ADMIN_KEY, "1");
+            setAuthed(true);
+          }
+        }
+      } catch (err) {
+        console.warn("[AdminGate] admin-check failed, falling back to code:", err);
+      } finally {
+        if (!cancelled) setChecking(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [authed]);
+
   if (authed) return <>{children}</>;
+
+  if (checking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground">Checking admin status…</p>
+      </div>
+    );
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +151,9 @@ function AdminGate({ children }: { children: React.ReactNode }) {
       <Card className="w-80">
         <CardHeader>
           <CardTitle className="text-lg">Admin Access Required</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Sign in with an admin persona, or enter an access code.
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-3">
