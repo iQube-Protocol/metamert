@@ -58,9 +58,10 @@ All outbound messages are wrapped in a bridge envelope: `{ type, msg_id, timesta
 | `RUNTIME_READY` | Iframe loaded and ready | Triggers `onReady` (sends SHELL_READY + HANDOFF) |
 | `INFERENCE_START` / `PROCESSING_START` / `RENDER_START` | Inference began | `inferring = true`, R/T dots animate |
 | `INFERENCE_COMPLETE` / `RENDER_COMPLETE` | Inference done | 2s grace → `inferring = false` |
-| `STATE_SYNC` | Runtime state update | Evaluated for processing flags; welcome_inference_completed triggers post-welcome |
+| `STATE_SYNC` | Runtime state update | Evaluated for processing flags; welcome_inference_completed triggers post-welcome; runtime hints extracted (active_guide, focus_mode, deep_link, handoff) |
 | `WELCOME_COMPLETE` | Welcome flow finished | `shellState = "post-welcome"` |
-| `TRUST_UPDATE` | Trust scores changed | Updates `config.trust` |
+| `TRUST_UPDATE` | Trust scores changed | Updates `config.trust`; header flash |
+| `RUNTIME_HINT` | Discrete runtime hint | Updates `runtimeHints` (active_guide, focus_mode, deep_link, handoff) |
 | `NAVIGATE` | Runtime requests navigation | Logged; `close_codex` action forwarded back |
 | `TOAST` | Runtime wants toast | Suppressed (shell policy) |
 | `OPEN_CAPSULE` | Runtime opens capsule | Logged |
