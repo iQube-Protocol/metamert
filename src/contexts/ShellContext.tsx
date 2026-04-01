@@ -41,6 +41,24 @@ import {
 
 export type ShellState = "welcome" | "post-welcome";
 
+// Runtime-driven hints the shell can reflect without rendering content (LOV-301)
+export interface RuntimeHints {
+  activeGuide: boolean;      // runtime has an active guide session
+  focusMode: boolean;        // runtime requests minimal shell chrome
+  deepLink: string | null;   // runtime signalled a deep-link path
+  handoff: boolean;          // runtime is in a handoff state
+}
+
+const INITIAL_HINTS: RuntimeHints = {
+  activeGuide: false,
+  focusMode: false,
+  deepLink: null,
+  handoff: false,
+};
+
+// Iframe readiness state (LOV-303)
+export type IframeReadiness = "probing" | "loading" | "ready" | "error" | "blocked";
+
 interface ShellContextValue {
   config: ShellConfig | null;
   loading: boolean;
@@ -51,6 +69,12 @@ interface ShellContextValue {
   inferring: boolean;
   overlayTrigger: number;
   resetKey: number;
+
+  // Runtime-driven state awareness (LOV-301)
+  runtimeHints: RuntimeHints;
+
+  // Iframe readiness (LOV-303)
+  iframeReadiness: IframeReadiness;
 
   // Smart Menu state
   viewState: ViewState;

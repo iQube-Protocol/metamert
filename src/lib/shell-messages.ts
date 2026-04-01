@@ -52,6 +52,7 @@ export type IframeInbound =
   | { type: "STATE_SYNC"; state: Record<string, unknown> }
   | { type: "TRUST_UPDATE"; trust: { level: string; signals: string[]; scores?: Record<string, number> } }
   | { type: "SHELL_RESET" }
+  | { type: "RUNTIME_HINT"; hint: string; value: unknown }
   // Browser bridge events (runtime → shell)
   | { type: "browser.mount"; payload: Record<string, unknown> }
   | { type: "browser.unmount"; payload: { sessionId: string } }
