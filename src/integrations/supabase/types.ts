@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_requests: {
+        Row: {
+          created_at: string
+          id: number
+          owner_address: string
+          requester_address: string
+          status: string
+          token_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          owner_address: string
+          requester_address: string
+          status?: string
+          token_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          owner_address?: string
+          requester_address?: string
+          status?: string
+          token_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_requests_token_fk"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "iqubes"
+            referencedColumns: ["token_id"]
+          },
+        ]
+      }
       agent_keys: {
         Row: {
           agent_id: string
@@ -2166,6 +2204,95 @@ export type Database = {
           },
         ]
       }
+      crm_auth_profile_emails: {
+        Row: {
+          auth_profile_id: string
+          created_at: string
+          email: string
+          email_normalized: string
+          id: string
+          is_primary: boolean
+          is_verified: boolean
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          auth_profile_id: string
+          created_at?: string
+          email: string
+          email_normalized: string
+          id?: string
+          is_primary?: boolean
+          is_verified?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          auth_profile_id?: string
+          created_at?: string
+          email?: string
+          email_normalized?: string
+          id?: string
+          is_primary?: boolean
+          is_verified?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_auth_profile_emails_auth_profile_id_fkey"
+            columns: ["auth_profile_id"]
+            isOneToOne: false
+            referencedRelation: "crm_auth_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_auth_profile_links: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          linked_auth_profile_id: string
+          owner_auth_profile_id: string
+          relationship_mode: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          linked_auth_profile_id: string
+          owner_auth_profile_id: string
+          relationship_mode?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          linked_auth_profile_id?: string
+          owner_auth_profile_id?: string
+          relationship_mode?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_auth_profile_links_linked_auth_profile_id_fkey"
+            columns: ["linked_auth_profile_id"]
+            isOneToOne: false
+            referencedRelation: "crm_auth_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_auth_profile_links_owner_auth_profile_id_fkey"
+            columns: ["owner_auth_profile_id"]
+            isOneToOne: false
+            referencedRelation: "crm_auth_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_auth_profile_personas: {
         Row: {
           alias: string | null
@@ -2713,6 +2840,45 @@ export type Database = {
             columns: ["parent_tag_id"]
             isOneToOne: false
             referencedRelation: "crm_interest_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_persona_access_preferences: {
+        Row: {
+          access_mode: string
+          created_at: string | null
+          id: string
+          owner_auth_profile_id: string
+          persona_id: string
+        }
+        Insert: {
+          access_mode: string
+          created_at?: string | null
+          id?: string
+          owner_auth_profile_id: string
+          persona_id: string
+        }
+        Update: {
+          access_mode?: string
+          created_at?: string | null
+          id?: string
+          owner_auth_profile_id?: string
+          persona_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_persona_access_preferences_owner_auth_profile_id_fkey"
+            columns: ["owner_auth_profile_id"]
+            isOneToOne: false
+            referencedRelation: "crm_auth_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_persona_access_preferences_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
             referencedColumns: ["id"]
           },
         ]
@@ -3641,6 +3807,7 @@ export type Database = {
           is_compute_pillar: boolean | null
           is_knowledge_pillar: boolean | null
           max_claims: number | null
+          metadata: Json | null
           rep_weight_community: number | null
           rep_weight_creative: number | null
           rep_weight_data_arch: number | null
@@ -3649,6 +3816,7 @@ export type Database = {
           reward_knyt: number | null
           reward_qct: number | null
           reward_qoyn: number | null
+          schema_json: Json | null
           slug: string
           tenant_id: string
           title: string
@@ -3673,6 +3841,7 @@ export type Database = {
           is_compute_pillar?: boolean | null
           is_knowledge_pillar?: boolean | null
           max_claims?: number | null
+          metadata?: Json | null
           rep_weight_community?: number | null
           rep_weight_creative?: number | null
           rep_weight_data_arch?: number | null
@@ -3681,6 +3850,7 @@ export type Database = {
           reward_knyt?: number | null
           reward_qct?: number | null
           reward_qoyn?: number | null
+          schema_json?: Json | null
           slug: string
           tenant_id: string
           title: string
@@ -3705,6 +3875,7 @@ export type Database = {
           is_compute_pillar?: boolean | null
           is_knowledge_pillar?: boolean | null
           max_claims?: number | null
+          metadata?: Json | null
           rep_weight_community?: number | null
           rep_weight_creative?: number | null
           rep_weight_data_arch?: number | null
@@ -3713,6 +3884,7 @@ export type Database = {
           reward_knyt?: number | null
           reward_qct?: number | null
           reward_qoyn?: number | null
+          schema_json?: Json | null
           slug?: string
           tenant_id?: string
           title?: string
@@ -4381,6 +4553,78 @@ export type Database = {
           tenant_id?: string
         }
         Relationships: []
+      }
+      execution_receipts: {
+        Row: {
+          created_at: string
+          dvn_message_id: string | null
+          dvn_submitted_at: string | null
+          from_agent_id: string | null
+          id: string
+          metadata: Json
+          pipeline_run_id: string | null
+          policy_evaluation: Json
+          receipt_type: string
+          result_data: Json
+          status: string
+          task_completed: string | null
+          tenant_id: string
+          to_agent_id: string | null
+          updated_at: string
+          workflow_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dvn_message_id?: string | null
+          dvn_submitted_at?: string | null
+          from_agent_id?: string | null
+          id?: string
+          metadata?: Json
+          pipeline_run_id?: string | null
+          policy_evaluation?: Json
+          receipt_type?: string
+          result_data?: Json
+          status?: string
+          task_completed?: string | null
+          tenant_id: string
+          to_agent_id?: string | null
+          updated_at?: string
+          workflow_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dvn_message_id?: string | null
+          dvn_submitted_at?: string | null
+          from_agent_id?: string | null
+          id?: string
+          metadata?: Json
+          pipeline_run_id?: string | null
+          policy_evaluation?: Json
+          receipt_type?: string
+          result_data?: Json
+          status?: string
+          task_completed?: string | null
+          tenant_id?: string
+          to_agent_id?: string | null
+          updated_at?: string
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "execution_receipts_pipeline_run_id_fkey"
+            columns: ["pipeline_run_id"]
+            isOneToOne: false
+            referencedRelation: "pipeline_runs"
+            referencedColumns: ["pipeline_run_id"]
+          },
+          {
+            foreignKeyName: "execution_receipts_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       executions: {
         Row: {
@@ -5312,6 +5556,472 @@ export type Database = {
           title?: string
           updated_at?: string | null
           version?: number | null
+        }
+        Relationships: []
+      }
+      knyt_ballots: {
+        Row: {
+          cast_at: string
+          election_id: string
+          id: string
+          persona_id: string
+          proof: string | null
+          reward_knyt: number | null
+          reward_settled: boolean
+          reward_tx: string | null
+          settled_at: string | null
+          voted_for: string[]
+          wallet_task_id: string | null
+        }
+        Insert: {
+          cast_at?: string
+          election_id: string
+          id?: string
+          persona_id: string
+          proof?: string | null
+          reward_knyt?: number | null
+          reward_settled?: boolean
+          reward_tx?: string | null
+          settled_at?: string | null
+          voted_for: string[]
+          wallet_task_id?: string | null
+        }
+        Update: {
+          cast_at?: string
+          election_id?: string
+          id?: string
+          persona_id?: string
+          proof?: string | null
+          reward_knyt?: number | null
+          reward_settled?: boolean
+          reward_tx?: string | null
+          settled_at?: string | null
+          voted_for?: string[]
+          wallet_task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knyt_ballots_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "knyt_elections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knyt_elections: {
+        Row: {
+          autodrive_cid: string | null
+          branch: Database["public"]["Enums"]["knyt_canon_branch"]
+          candidate_ids: string[]
+          closes_at: string
+          created_at: string
+          description: string | null
+          id: string
+          min_reputation_bucket: number
+          opens_at: string
+          per_voter_reward_knyt: number
+          required_entitlements: string[]
+          settled_at: string | null
+          settled_pool_knyt: number | null
+          status: Database["public"]["Enums"]["knyt_election_status"]
+          title: string
+          total_ballots_cast: number
+          updated_at: string
+          votable_type: Database["public"]["Enums"]["knyt_votable_type"]
+          winner_ids: string[] | null
+          world_id: string
+        }
+        Insert: {
+          autodrive_cid?: string | null
+          branch: Database["public"]["Enums"]["knyt_canon_branch"]
+          candidate_ids?: string[]
+          closes_at: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          min_reputation_bucket?: number
+          opens_at: string
+          per_voter_reward_knyt?: number
+          required_entitlements?: string[]
+          settled_at?: string | null
+          settled_pool_knyt?: number | null
+          status?: Database["public"]["Enums"]["knyt_election_status"]
+          title: string
+          total_ballots_cast?: number
+          updated_at?: string
+          votable_type: Database["public"]["Enums"]["knyt_votable_type"]
+          winner_ids?: string[] | null
+          world_id?: string
+        }
+        Update: {
+          autodrive_cid?: string | null
+          branch?: Database["public"]["Enums"]["knyt_canon_branch"]
+          candidate_ids?: string[]
+          closes_at?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          min_reputation_bucket?: number
+          opens_at?: string
+          per_voter_reward_knyt?: number
+          required_entitlements?: string[]
+          settled_at?: string | null
+          settled_pool_knyt?: number | null
+          status?: Database["public"]["Enums"]["knyt_election_status"]
+          title?: string
+          total_ballots_cast?: number
+          updated_at?: string
+          votable_type?: Database["public"]["Enums"]["knyt_votable_type"]
+          winner_ids?: string[] | null
+          world_id?: string
+        }
+        Relationships: []
+      }
+      knyt_order_milestones: {
+        Row: {
+          achieved_at: string
+          autodrive_cid: string | null
+          id: string
+          persona_id: string
+          reward_grant_id: string | null
+          reward_granted: boolean
+          tier: string
+        }
+        Insert: {
+          achieved_at?: string
+          autodrive_cid?: string | null
+          id?: string
+          persona_id: string
+          reward_grant_id?: string | null
+          reward_granted?: boolean
+          tier: string
+        }
+        Update: {
+          achieved_at?: string
+          autodrive_cid?: string | null
+          id?: string
+          persona_id?: string
+          reward_grant_id?: string | null
+          reward_granted?: boolean
+          tier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knyt_order_milestones_reward_grant_id_fkey"
+            columns: ["reward_grant_id"]
+            isOneToOne: false
+            referencedRelation: "knyt_reward_grants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knyt_persona_roles: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          id: string
+          metadata: Json | null
+          persona_id: string
+          revoked_at: string | null
+          role: string
+          world_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          metadata?: Json | null
+          persona_id: string
+          revoked_at?: string | null
+          role: string
+          world_id?: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          metadata?: Json | null
+          persona_id?: string
+          revoked_at?: string | null
+          role?: string
+          world_id?: string
+        }
+        Relationships: []
+      }
+      knyt_publication_state_log: {
+        Row: {
+          actor_persona: string
+          autodrive_cid: string | null
+          created_at: string
+          from_state:
+            | Database["public"]["Enums"]["knyt_publication_state"]
+            | null
+          id: string
+          publication_id: string
+          reason: string | null
+          to_state: Database["public"]["Enums"]["knyt_publication_state"]
+        }
+        Insert: {
+          actor_persona: string
+          autodrive_cid?: string | null
+          created_at?: string
+          from_state?:
+            | Database["public"]["Enums"]["knyt_publication_state"]
+            | null
+          id?: string
+          publication_id: string
+          reason?: string | null
+          to_state: Database["public"]["Enums"]["knyt_publication_state"]
+        }
+        Update: {
+          actor_persona?: string
+          autodrive_cid?: string | null
+          created_at?: string
+          from_state?:
+            | Database["public"]["Enums"]["knyt_publication_state"]
+            | null
+          id?: string
+          publication_id?: string
+          reason?: string | null
+          to_state?: Database["public"]["Enums"]["knyt_publication_state"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knyt_publication_state_log_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "knyt_publication_states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knyt_publication_states: {
+        Row: {
+          autodrive_cid: string | null
+          autodrive_tx: string | null
+          branch: Database["public"]["Enums"]["knyt_canon_branch"]
+          created_at: string
+          elevated_at: string | null
+          elevated_by: string | null
+          id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          state: Database["public"]["Enums"]["knyt_publication_state"]
+          subject_id: string
+          subject_type: string
+          updated_at: string
+        }
+        Insert: {
+          autodrive_cid?: string | null
+          autodrive_tx?: string | null
+          branch?: Database["public"]["Enums"]["knyt_canon_branch"]
+          created_at?: string
+          elevated_at?: string | null
+          elevated_by?: string | null
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: Database["public"]["Enums"]["knyt_publication_state"]
+          subject_id: string
+          subject_type: string
+          updated_at?: string
+        }
+        Update: {
+          autodrive_cid?: string | null
+          autodrive_tx?: string | null
+          branch?: Database["public"]["Enums"]["knyt_canon_branch"]
+          created_at?: string
+          elevated_at?: string | null
+          elevated_by?: string | null
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: Database["public"]["Enums"]["knyt_publication_state"]
+          subject_id?: string
+          subject_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      knyt_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          persona_id: string
+          publication_id: string
+          reaction_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          persona_id: string
+          publication_id: string
+          reaction_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          persona_id?: string
+          publication_id?: string
+          reaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knyt_reactions_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "knyt_publication_states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knyt_reward_grants: {
+        Row: {
+          amount_knyt: number
+          base_amount_knyt: number
+          created_at: string
+          id: string
+          metadata: Json | null
+          persona_id: string
+          rep_multiplier: number
+          settled: boolean
+          settled_at: string | null
+          source_event_id: string | null
+          task_type: string
+          tx_hash: string | null
+        }
+        Insert: {
+          amount_knyt?: number
+          base_amount_knyt?: number
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          persona_id: string
+          rep_multiplier?: number
+          settled?: boolean
+          settled_at?: string | null
+          source_event_id?: string | null
+          task_type: string
+          tx_hash?: string | null
+        }
+        Update: {
+          amount_knyt?: number
+          base_amount_knyt?: number
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          persona_id?: string
+          rep_multiplier?: number
+          settled?: boolean
+          settled_at?: string | null
+          source_event_id?: string | null
+          task_type?: string
+          tx_hash?: string | null
+        }
+        Relationships: []
+      }
+      knyt_treasury_ledger: {
+        Row: {
+          amount_knyt: number
+          autodrive_cid: string | null
+          balance_after: number
+          created_at: string
+          direction: string
+          event_type: string
+          id: string
+          namespace_id: string
+          notes: string | null
+          persona_id: string | null
+          settled: boolean
+          settled_at: string | null
+          source_id: string | null
+          source_type: string | null
+        }
+        Insert: {
+          amount_knyt: number
+          autodrive_cid?: string | null
+          balance_after: number
+          created_at?: string
+          direction: string
+          event_type: string
+          id?: string
+          namespace_id: string
+          notes?: string | null
+          persona_id?: string | null
+          settled?: boolean
+          settled_at?: string | null
+          source_id?: string | null
+          source_type?: string | null
+        }
+        Update: {
+          amount_knyt?: number
+          autodrive_cid?: string | null
+          balance_after?: number
+          created_at?: string
+          direction?: string
+          event_type?: string
+          id?: string
+          namespace_id?: string
+          notes?: string | null
+          persona_id?: string | null
+          settled?: boolean
+          settled_at?: string | null
+          source_id?: string | null
+          source_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knyt_treasury_ledger_namespace_id_fkey"
+            columns: ["namespace_id"]
+            isOneToOne: false
+            referencedRelation: "knyt_treasury_namespaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knyt_treasury_namespaces: {
+        Row: {
+          active: boolean
+          asset_code: string
+          autodrive_cid: string | null
+          balance: number
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+          world_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          asset_code?: string
+          autodrive_cid?: string | null
+          balance?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+          world_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          asset_code?: string
+          autodrive_cid?: string | null
+          balance?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+          world_id?: string | null
         }
         Relationships: []
       }
@@ -7750,6 +8460,95 @@ export type Database = {
           },
         ]
       }
+      pipeline_run_events: {
+        Row: {
+          data: Json | null
+          event_type: string
+          id: string
+          run_id: string
+          stage: string | null
+          ts: string
+        }
+        Insert: {
+          data?: Json | null
+          event_type: string
+          id?: string
+          run_id: string
+          stage?: string | null
+          ts?: string
+        }
+        Update: {
+          data?: Json | null
+          event_type?: string
+          id?: string
+          run_id?: string
+          stage?: string | null
+          ts?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_run_events_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "pipeline_runs"
+            referencedColumns: ["pipeline_run_id"]
+          },
+        ]
+      }
+      pipeline_runs: {
+        Row: {
+          completed_at: string | null
+          current_stage: string
+          failure_reason: string | null
+          identity_envelope: Json
+          initiated_by: string
+          initiated_via: string
+          pipeline_run_id: string
+          receipt_refs: Json
+          stage_history: Json
+          started_at: string
+          status: string
+          template_ref: string | null
+          tenant_id: string
+          updated_at: string
+          workflow_ref: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          current_stage: string
+          failure_reason?: string | null
+          identity_envelope?: Json
+          initiated_by: string
+          initiated_via: string
+          pipeline_run_id: string
+          receipt_refs?: Json
+          stage_history?: Json
+          started_at?: string
+          status?: string
+          template_ref?: string | null
+          tenant_id: string
+          updated_at?: string
+          workflow_ref?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          current_stage?: string
+          failure_reason?: string | null
+          identity_envelope?: Json
+          initiated_by?: string
+          initiated_via?: string
+          pipeline_run_id?: string
+          receipt_refs?: Json
+          stage_history?: Json
+          started_at?: string
+          status?: string
+          template_ref?: string | null
+          tenant_id?: string
+          updated_at?: string
+          workflow_ref?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           asset_ids: string[] | null
@@ -7864,6 +8663,47 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "persona_with_reputation"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_records: {
+        Row: {
+          amount: string | null
+          business_model: string
+          buyer_address: string
+          created_at: string
+          id: number
+          seller_address: string
+          token_id: number
+          tx_hash: string | null
+        }
+        Insert: {
+          amount?: string | null
+          business_model: string
+          buyer_address: string
+          created_at?: string
+          id?: number
+          seller_address: string
+          token_id: number
+          tx_hash?: string | null
+        }
+        Update: {
+          amount?: string | null
+          business_model?: string
+          buyer_address?: string
+          created_at?: string
+          id?: number
+          seller_address?: string
+          token_id?: number
+          tx_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_records_token_fk"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "iqubes"
+            referencedColumns: ["token_id"]
           },
         ]
       }
@@ -9949,6 +10789,371 @@ export type Database = {
           },
         ]
       }
+      workflow_bindings: {
+        Row: {
+          created_at: string
+          id: string
+          persona_id: string
+          role: string
+          tenant_id: string
+          workflow_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          persona_id: string
+          role?: string
+          tenant_id: string
+          workflow_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          persona_id?: string
+          role?: string
+          tenant_id?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_bindings_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_channel_qubes: {
+        Row: {
+          active: boolean
+          channel_name: string
+          created_at: string
+          created_by: string
+          id: string
+          participating_agents: string[]
+          policy_ref: string | null
+          tenant_id: string
+          thread: string
+          updated_at: string
+          workflow_id: string
+        }
+        Insert: {
+          active?: boolean
+          channel_name: string
+          created_at?: string
+          created_by: string
+          id?: string
+          participating_agents?: string[]
+          policy_ref?: string | null
+          tenant_id: string
+          thread?: string
+          updated_at?: string
+          workflow_id: string
+        }
+        Update: {
+          active?: boolean
+          channel_name?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          participating_agents?: string[]
+          policy_ref?: string | null
+          tenant_id?: string
+          thread?: string
+          updated_at?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_channel_qubes_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: true
+            referencedRelation: "workflow_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_definitions: {
+        Row: {
+          adapter: string
+          config: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          adapter: string
+          config?: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          adapter?: string
+          config?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      workflow_engine_bindings: {
+        Row: {
+          backend_ids: Json
+          compiled_artifact_ref: string | null
+          created_at: string
+          created_by: string
+          credential_policy: Json
+          deployment_mode: string
+          engine: string
+          health_state: string
+          id: string
+          last_health_checked_at: string | null
+          last_validated_at: string | null
+          tenant_id: string
+          updated_at: string
+          validation_status: string
+          workflow_id: string
+        }
+        Insert: {
+          backend_ids?: Json
+          compiled_artifact_ref?: string | null
+          created_at?: string
+          created_by: string
+          credential_policy?: Json
+          deployment_mode?: string
+          engine: string
+          health_state?: string
+          id?: string
+          last_health_checked_at?: string | null
+          last_validated_at?: string | null
+          tenant_id: string
+          updated_at?: string
+          validation_status?: string
+          workflow_id: string
+        }
+        Update: {
+          backend_ids?: Json
+          compiled_artifact_ref?: string | null
+          created_at?: string
+          created_by?: string
+          credential_policy?: Json
+          deployment_mode?: string
+          engine?: string
+          health_state?: string
+          id?: string
+          last_health_checked_at?: string | null
+          last_validated_at?: string | null
+          tenant_id?: string
+          updated_at?: string
+          validation_status?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_engine_bindings_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_input_manifests: {
+        Row: {
+          created_at: string
+          created_by: string
+          fields: Json
+          id: string
+          is_active: boolean
+          tenant_id: string
+          updated_at: string
+          version: number
+          workflow_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          tenant_id: string
+          updated_at?: string
+          version?: number
+          workflow_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          tenant_id?: string
+          updated_at?: string
+          version?: number
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_input_manifests_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_output_manifests: {
+        Row: {
+          created_at: string
+          created_by: string
+          fields: Json
+          id: string
+          is_active: boolean
+          success_criteria: Json
+          tenant_id: string
+          updated_at: string
+          version: number
+          workflow_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          success_criteria?: Json
+          tenant_id: string
+          updated_at?: string
+          version?: number
+          workflow_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          success_criteria?: Json
+          tenant_id?: string
+          updated_at?: string
+          version?: number
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_output_manifests_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_run_events: {
+        Row: {
+          data: Json | null
+          event_type: string
+          id: string
+          run_id: string
+          step_name: string | null
+          ts: string
+        }
+        Insert: {
+          data?: Json | null
+          event_type: string
+          id?: string
+          run_id: string
+          step_name?: string | null
+          ts?: string
+        }
+        Update: {
+          data?: Json | null
+          event_type?: string
+          id?: string
+          run_id?: string
+          step_name?: string | null
+          ts?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_run_events_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          execution_id: string | null
+          id: string
+          input: Json | null
+          output: Json | null
+          started_at: string | null
+          status: string
+          tenant_id: string
+          triggered_by: string
+          workflow_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          execution_id?: string | null
+          id?: string
+          input?: Json | null
+          output?: Json | null
+          started_at?: string | null
+          status?: string
+          tenant_id: string
+          triggered_by: string
+          workflow_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          execution_id?: string | null
+          id?: string
+          input?: Json | null
+          output?: Json | null
+          started_at?: string | null
+          status?: string
+          tenant_id?: string
+          triggered_by?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_runs_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       x402_messages: {
         Row: {
           bridge_message_id: string | null
@@ -11027,6 +12232,25 @@ export type Database = {
         | "timeLimited"
         | "usageLimited"
       identity_state: "anonymous" | "pseudo" | "semi" | "full"
+      knyt_canon_branch: "canon" | "community" | "correspondent"
+      knyt_election_status: "draft" | "open" | "closed" | "settled"
+      knyt_publication_state:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "archived"
+        | "canon_eligible"
+        | "canon"
+      knyt_votable_type:
+        | "community_submission"
+        | "correspondent_candidate"
+        | "branch_continuation"
+        | "article_candidate"
+        | "theory_thread"
+        | "scene_extension"
+        | "canon_elevation_candidate"
       master_content_type: "episode_still" | "episode_motion" | "episode_print"
       order_tier: "NONE" | "KETA" | "KEJI" | "FIRST" | "ZERO" | "SAT"
       payment_currency:
@@ -11252,6 +12476,27 @@ export const Constants = {
         "usageLimited",
       ],
       identity_state: ["anonymous", "pseudo", "semi", "full"],
+      knyt_canon_branch: ["canon", "community", "correspondent"],
+      knyt_election_status: ["draft", "open", "closed", "settled"],
+      knyt_publication_state: [
+        "draft",
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+        "archived",
+        "canon_eligible",
+        "canon",
+      ],
+      knyt_votable_type: [
+        "community_submission",
+        "correspondent_candidate",
+        "branch_continuation",
+        "article_candidate",
+        "theory_thread",
+        "scene_extension",
+        "canon_elevation_candidate",
+      ],
       master_content_type: ["episode_still", "episode_motion", "episode_print"],
       order_tier: ["NONE", "KETA", "KEJI", "FIRST", "ZERO", "SAT"],
       payment_currency: ["QCT", "QOYN", "KNYT", "USDC", "ETH", "BTC", "sats"],
