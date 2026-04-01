@@ -486,6 +486,43 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     };
   }, [config]);
 
+  // Send DEVICE_CONTEXT_UPDATE to iframe on viewport resize
+  useEffect(() => {
+    if (!config) return;
+    const origin = getIframeOrigin(config);
+
+    function getDeviceType(w: number): "mobile" | "tablet" | "desktop" {
+      if (w < 768) return "mobile";
+      if (w < 1024) return "tablet";
+      return "desktop";
+    }
+
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const sendUpdate = () => {
+      if (!iframeRef.current) return;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      postToIframe(iframeRef.current, {
+        type: "DEVICE_CONTEXT_UPDATE",
+        context: { device: getDeviceType(w), viewport: { width: w, height: h } },
+      }, origin);
+    };
+
+    const onResize = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(sendUpdate, 250);
+    };
+
+    // Send initial context after iframe loads
+    const initialTimer = setTimeout(sendUpdate, 1000);
+    window.addEventListener("resize", onResize);
+    return () => {
+      clearTimeout(initialTimer);
+      if (debounceTimer) clearTimeout(debounceTimer);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [config]);
+
   const hydrate = useCallback(async () => {
     setLoading(true);
     try {
