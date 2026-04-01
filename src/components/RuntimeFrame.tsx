@@ -167,17 +167,6 @@ export default function RuntimeFrame() {
 
   if (!config) return null;
 
-  // LOV-302: Transition class for smooth cartridge/codex switches
-  const [transitioning, setTransitioning] = useState(false);
-  const prevCartridge = useShell().cartridgeState.activeCartridgeId;
-
-  // LOV-303: Report iframe readiness to shell
-  const handleStatusChange = useCallback((status: IframeReadiness) => {
-    // We can't call setIframeReadiness directly since it's not exposed;
-    // but we track it in context via the shell's own state
-    console.log("[Shell] iframe readiness:", status);
-  }, []);
-
   return (
     <div className={`absolute inset-0 transition-opacity duration-300 ${transitioning ? "opacity-80" : "opacity-100"}`}>
       <EmbedFrame
