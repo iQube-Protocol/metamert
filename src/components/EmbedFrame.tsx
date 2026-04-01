@@ -8,9 +8,11 @@ interface EmbedFrameProps {
   origin?: string;
   className?: string;
   onReady?: () => void;
+  onStatusChange?: (status: FrameStatus) => void;
 }
 
 type FrameStatus = "probing" | "loading" | "ready" | "error" | "blocked";
+export type { FrameStatus };
 
 const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
   ({ url, origin, className = "", onReady }, ref) => {
