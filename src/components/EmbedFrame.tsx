@@ -16,7 +16,14 @@ export type { FrameStatus };
 
 const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
   ({ url, origin, className = "", onReady, onStatusChange }, ref) => {
-    const [status, setStatus] = useState<FrameStatus>("probing");
+    const [status, setStatusRaw] = useState<FrameStatus>("probing");
+    const setStatus = (s: FrameStatus | ((prev: FrameStatus) => FrameStatus)) => {
+      setStatusRaw(prev => {
+        const next = typeof s === "function" ? s(prev) : s;
+        if (next !== prev) onStatusChange?.(next);
+        return next;
+      });
+    };
     const [src, setSrc] = useState<string>("");
 
     // Probe then load
