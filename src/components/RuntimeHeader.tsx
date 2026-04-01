@@ -180,7 +180,7 @@ export default function RuntimeHeader() {
         {/* Right: trust dots */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex items-center gap-4 bg-muted/20 rounded-lg px-3 py-2 text-xs text-muted-foreground cursor-default">
+            <div className={`flex items-center gap-4 bg-muted/20 rounded-lg px-3 py-2 text-xs text-muted-foreground cursor-default transition-all duration-300 ${trustFlash ? "ring-1 ring-primary/40 scale-105" : ""}`}>
               <div className="flex items-center gap-0.5">
                 <span className="font-medium mr-1">R</span>
                 {renderDots(rScore, rColor)}
