@@ -448,6 +448,16 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // TRUST_UPDATE from runtime — update shell trust state
+      if (t === "TRUST_UPDATE") {
+        const trustPayload = (msg as any).trust ?? msg;
+        if (trustPayload.level) {
+          updateTrust(trustPayload);
+          console.log("[Shell] Trust updated from runtime:", trustPayload);
+        }
+        return;
+      }
+
       if (t === "NAVIGATE" && (msg as any).action === "close_codex") {
         if (iframeRef.current && config) {
           postToIframe(iframeRef.current, { type: "MENU_ACTION", action_id: "close_codex" }, getIframeOrigin(config));
