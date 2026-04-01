@@ -22,20 +22,28 @@ function scoreToDots(score: number | undefined, fallback: number): number {
 
 function trustDotColor(score: number | undefined): string {
   const v = score ?? 5;
-  if (v <= 3) return "bg-red-500";
+  if (v <= 3) return "bg-destructive";
   if (v <= 6) return "bg-yellow-500";
   return "bg-green-500";
 }
 
 function reliabilityDotColor(score: number | undefined): string {
   const v = score ?? 5;
-  if (v <= 3) return "bg-red-500";
+  if (v <= 3) return "bg-destructive";
   if (v <= 6) return "bg-yellow-500";
-  return "bg-purple-500";
+  return "bg-primary";
+}
+
+/** Returns "up", "down", or null for score direction */
+function scoreDirection(prev: number | undefined, curr: number | undefined): "up" | "down" | null {
+  if (prev == null || curr == null) return null;
+  if (curr > prev) return "up";
+  if (curr < prev) return "down";
+  return null;
 }
 
 export default function RuntimeHeader() {
-  const { config, selectAigent, selectLLM, inferring, cartridgeState } = useShell();
+  const { config, selectAigent, selectLLM, inferring, cartridgeState, knytOnboarding } = useShell();
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
   const [trustFlash, setTrustFlash] = useState(false);
@@ -59,13 +67,23 @@ export default function RuntimeHeader() {
 
   const trustScores = config?.trust?.scores ?? {};
 
-  // Flash animation when trust scores change
+  // LOV-403: Track score direction for live flow feedback
+  const [trustDir, setTrustDir] = useState<"up" | "down" | null>(null);
+  const [reliabilityDir, setReliabilityDir] = useState<"up" | "down" | null>(null);
+
+  // Flash animation + direction indicators when trust scores change
   useEffect(() => {
     const prev = prevScoresRef.current;
     if (prev.trust !== trustScores.trust || prev.reliability !== trustScores.reliability) {
       if (prev.trust !== undefined || prev.reliability !== undefined) {
         setTrustFlash(true);
-        const timer = setTimeout(() => setTrustFlash(false), 800);
+        setTrustDir(scoreDirection(prev.trust, trustScores.trust));
+        setReliabilityDir(scoreDirection(prev.reliability, trustScores.reliability));
+        const timer = setTimeout(() => {
+          setTrustFlash(false);
+          setTrustDir(null);
+          setReliabilityDir(null);
+        }, 1200);
         prevScoresRef.current = trustScores;
         return () => clearTimeout(timer);
       }
@@ -98,8 +116,8 @@ export default function RuntimeHeader() {
   // Cartridge/Codex info for header center
   const activeCart = cartridgeState.available.find(c => c.id === cartridgeState.activeCartridgeId);
   const activeCodex = activeCart?.codexes.find(c => c.id === cartridgeState.activeCodexId);
-
-  const cartridgeColor = activeCart?.accentHex;
+  // LOV-401: Show KNYT accent on cartridge icon during onboarding
+  const cartridgeColor = knytOnboarding ? "#F59E0B" : activeCart?.accentHex;
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -184,10 +202,12 @@ export default function RuntimeHeader() {
               <div className="flex items-center gap-0.5">
                 <span className="font-medium mr-1">R</span>
                 {renderDots(rScore, rColor)}
+                {reliabilityDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${reliabilityDir === "up" ? "text-green-500" : "text-destructive"}`}>{reliabilityDir === "up" ? "▲" : "▼"}</span>}
               </div>
               <div className="flex items-center gap-0.5">
                 <span className="font-medium mr-1">T</span>
                 {renderDots(tScore, tColor)}
+                {trustDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${trustDir === "up" ? "text-green-500" : "text-destructive"}`}>{trustDir === "up" ? "▲" : "▼"}</span>}
               </div>
             </div>
           </TooltipTrigger>

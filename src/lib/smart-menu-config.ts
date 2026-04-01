@@ -170,6 +170,7 @@ const PLAY_ACTIONS: QuickActionDef[] = [
   { id: "find",      label: "Find",      icon: "search",     kind: "llm+menu",    triggersInference: true,  prompt: "Search and discover something new for me" },
   { id: "listen",    label: "Listen",    icon: "headphones", kind: "llm+menu",    triggersInference: true,  prompt: "Play something for me to listen to" },
   { id: "watch",     label: "Watch",     icon: "eye",        kind: "llm+menu",    triggersInference: true,  prompt: "Show me something interesting to watch" },
+  { id: "knyt",      label: "KNYT",      icon: "zap",        kind: "llm+menu",    triggersInference: true,  prompt: "Start my KNYT journey — show onboarding or continue where I left off", apiAction: "knyt-entry", iframeAction: "knyt_entry" },
   { id: "browse",    label: "Browse",    icon: "globe",      kind: "system-only", triggersInference: false },
   { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true,  prompt: "Find me something good to read" },
   { id: "cartridge", label: "Cartridge", icon: "box",        kind: "system-only", triggersInference: false },
@@ -189,6 +190,7 @@ const BE_ACTIONS: QuickActionDef[] = [
 ];
 
 const EARN_ACTIONS: QuickActionDef[] = [
+  { id: "knyt-progress", label: "Progress", icon: "trending-up", kind: "llm+menu", triggersInference: true, prompt: "Show my KNYT progression status and next milestones", apiAction: "knyt-progress", iframeAction: "knyt_progress" },
   { id: "goal",        label: "Goal",        icon: "target",     kind: "llm+menu",    triggersInference: true,  prompt: "Show my current goals and progress" },
   { id: "task",        label: "Task",        icon: "check-square", kind: "llm+menu",  triggersInference: true,  prompt: "What tasks should I work on next?" },
   { id: "reward",      label: "Reward",      icon: "star",       kind: "llm+menu",    triggersInference: true,  prompt: "Show my rewards and achievements" },
@@ -243,7 +245,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#22C55E",
     promptPlaceholder: "Ask about rewards, tasks, offers, value, or opportunities…",
     defaultCenteredQuickActionId: "offer",
-    mobileVisibleFold: ["task", "reward", "offer", "opportunity", "wallet"],
+    mobileVisibleFold: ["knyt-progress", "task", "reward", "offer", "wallet"],
     quickActions: EARN_ACTIONS,
   },
   play: {
@@ -253,7 +255,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#00D5FF",
     promptPlaceholder: "Ask, explore, watch, listen, read, or switch context…",
     defaultCenteredQuickActionId: "watch",
-    mobileVisibleFold: ["find", "listen", "watch", "browse", "read"],
+    mobileVisibleFold: ["find", "listen", "watch", "knyt", "browse"],
     quickActions: PLAY_ACTIONS,
   },
   make: {

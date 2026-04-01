@@ -89,11 +89,23 @@ Goal: Harden the shell so it can cleanly host journey-aware runtime behavior wit
 
 ---
 
-## Sprint 4 — KNYT proving flows
+## Sprint 4 — KNYT proving flows ✅
 
-### LOV-401 — Validate shell during KNYT onboarding/progression
-### LOV-402 — Tune quick actions for KNYT entry points
-### LOV-403 — Tune header trust display for live flows
+### LOV-401 — Validate shell during KNYT onboarding/progression ✅
+- Added `knytOnboarding` state tracked from `STATE_SYNC` runtime signals
+- Shell auto-switches cartridge icon accent to KNYT amber during onboarding
+- focusMode hint already wired from Sprint 3
+
+### LOV-402 — Tune quick actions for KNYT entry points ✅
+- Added "KNYT" quick action to Play mode (zap icon, triggers onboarding/continuation)
+- Added "Progress" quick action to Earn mode (trending-up icon, shows KNYT milestones)
+- Updated mobileVisibleFold for both modes to surface KNYT actions above the fold
+
+### LOV-403 — Tune header trust display for live flows ✅
+- Trust dot colors use semantic tokens (bg-destructive, bg-primary)
+- Added score direction indicators (▲/▼) on trust score changes
+- Extended flash duration to 1.2s for better visibility during live progression
+- Direction arrows fade after flash period
 
 ---
 

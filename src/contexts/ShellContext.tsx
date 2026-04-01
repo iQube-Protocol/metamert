@@ -76,6 +76,9 @@ interface ShellContextValue {
   // Iframe readiness (LOV-303)
   iframeReadiness: IframeReadiness;
 
+  // LOV-401: KNYT onboarding active flag
+  knytOnboarding: boolean;
+
   // Smart Menu state
   viewState: ViewState;
   activeMode: SmartMenuMode | null;
@@ -178,6 +181,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [resetKey, setResetKey] = useState(0);
   const [runtimeHints, setRuntimeHints] = useState<RuntimeHints>(INITIAL_HINTS);
   const [iframeReadiness, setIframeReadiness] = useState<IframeReadiness>("probing");
+  const [knytOnboarding, setKnytOnboarding] = useState(false);
   const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
@@ -472,6 +476,10 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           deepLink: typeof state.deep_link === "string" ? state.deep_link : prev.deepLink,
           handoff: typeof state.handoff === "boolean" ? state.handoff : prev.handoff,
         }));
+        // LOV-401: Track KNYT onboarding state from runtime
+        if (typeof state.knyt_onboarding === "boolean") {
+          setKnytOnboarding(state.knyt_onboarding);
+        }
       }
 
       // LOV-301: Handle dedicated RUNTIME_HINT signals
@@ -781,7 +789,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const ctxValue: ShellContextValue = {
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
-    runtimeHints, iframeReadiness,
+    runtimeHints, iframeReadiness, knytOnboarding,
     // Smart Menu state
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
     // Actions
