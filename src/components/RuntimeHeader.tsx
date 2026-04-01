@@ -38,6 +38,8 @@ export default function RuntimeHeader() {
   const { config, selectAigent, selectLLM, inferring, cartridgeState } = useShell();
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
+  const [trustFlash, setTrustFlash] = useState(false);
+  const prevScoresRef = useRef<Record<string, number | undefined>>({});
 
   const llmGroups = useMemo(() => {
     if (!config) return [];
@@ -55,27 +57,29 @@ export default function RuntimeHeader() {
     return groups;
   }, [config]);
 
+  const trustScores = config?.trust?.scores ?? {};
+
+  // Flash animation when trust scores change
+  useEffect(() => {
+    const prev = prevScoresRef.current;
+    if (prev.trust !== trustScores.trust || prev.reliability !== trustScores.reliability) {
+      if (prev.trust !== undefined || prev.reliability !== undefined) {
+        setTrustFlash(true);
+        const timer = setTimeout(() => setTrustFlash(false), 800);
+        prevScoresRef.current = trustScores;
+        return () => clearTimeout(timer);
+      }
+      prevScoresRef.current = trustScores;
+    }
+  }, [trustScores.trust, trustScores.reliability]);
+
   if (!config) return null;
 
   const trust = config.trust ?? { level: "unverified", signals: [], scores: {} };
-  const trustScores = trust.scores ?? {};
   const rScore = scoreToDots(trustScores.reliability, 4);
   const tScore = scoreToDots(trustScores.trust, 3);
   const rColor = reliabilityDotColor(trustScores.reliability);
   const tColor = trustDotColor(trustScores.trust);
-
-  // Flash animation when trust scores change
-  const [trustFlash, setTrustFlash] = useState(false);
-  const prevScoresRef = useRef(trustScores);
-  useEffect(() => {
-    const prev = prevScoresRef.current;
-    if (prev.trust !== trustScores.trust || prev.reliability !== trustScores.reliability) {
-      setTrustFlash(true);
-      const timer = setTimeout(() => setTrustFlash(false), 800);
-      prevScoresRef.current = trustScores;
-      return () => clearTimeout(timer);
-    }
-  }, [trustScores.trust, trustScores.reliability]);
 
   const renderDots = (filled: number, activeColor: string) =>
     [...Array(5)].map((_, i) => (
