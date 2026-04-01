@@ -627,6 +627,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     const ctx = {
       cartridge_id: cartridgeState.activeCartridgeId,
       codex_id: cartridgeState.activeCodexId,
+      mode: activeMode ?? undefined,
     };
 
     try {
