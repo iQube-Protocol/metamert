@@ -67,13 +67,23 @@ export default function RuntimeHeader() {
 
   const trustScores = config?.trust?.scores ?? {};
 
-  // Flash animation when trust scores change
+  // LOV-403: Track score direction for live flow feedback
+  const [trustDir, setTrustDir] = useState<"up" | "down" | null>(null);
+  const [reliabilityDir, setReliabilityDir] = useState<"up" | "down" | null>(null);
+
+  // Flash animation + direction indicators when trust scores change
   useEffect(() => {
     const prev = prevScoresRef.current;
     if (prev.trust !== trustScores.trust || prev.reliability !== trustScores.reliability) {
       if (prev.trust !== undefined || prev.reliability !== undefined) {
         setTrustFlash(true);
-        const timer = setTimeout(() => setTrustFlash(false), 800);
+        setTrustDir(scoreDirection(prev.trust, trustScores.trust));
+        setReliabilityDir(scoreDirection(prev.reliability, trustScores.reliability));
+        const timer = setTimeout(() => {
+          setTrustFlash(false);
+          setTrustDir(null);
+          setReliabilityDir(null);
+        }, 1200);
         prevScoresRef.current = trustScores;
         return () => clearTimeout(timer);
       }
