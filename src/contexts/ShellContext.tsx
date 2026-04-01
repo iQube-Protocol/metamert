@@ -463,6 +463,31 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // LOV-301: Extract runtime hints from STATE_SYNC
+      if (t === "STATE_SYNC") {
+        const state = (msg as any).state ?? msg;
+        setRuntimeHints(prev => ({
+          activeGuide: typeof state.active_guide === "boolean" ? state.active_guide : prev.activeGuide,
+          focusMode: typeof state.focus_mode === "boolean" ? state.focus_mode : prev.focusMode,
+          deepLink: typeof state.deep_link === "string" ? state.deep_link : prev.deepLink,
+          handoff: typeof state.handoff === "boolean" ? state.handoff : prev.handoff,
+        }));
+      }
+
+      // LOV-301: Handle dedicated RUNTIME_HINT signals
+      if (t === "RUNTIME_HINT") {
+        const hint = (msg as any).hint as string;
+        const value = (msg as any).value;
+        setRuntimeHints(prev => {
+          if (hint === "active_guide" && typeof value === "boolean") return { ...prev, activeGuide: value };
+          if (hint === "focus_mode" && typeof value === "boolean") return { ...prev, focusMode: value };
+          if (hint === "deep_link") return { ...prev, deepLink: value as string | null };
+          if (hint === "handoff" && typeof value === "boolean") return { ...prev, handoff: value };
+          return prev;
+        });
+        return;
+      }
+
       if (
         t === "PROMPT_SUBMIT" || t === "PROMPT_RESPONSE" ||
         t === "RESPONSE" || t === "CHAT_RESPONSE" ||
