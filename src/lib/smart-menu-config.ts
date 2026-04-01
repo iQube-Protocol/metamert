@@ -190,6 +190,7 @@ const BE_ACTIONS: QuickActionDef[] = [
 ];
 
 const EARN_ACTIONS: QuickActionDef[] = [
+  { id: "knyt-progress", label: "Progress", icon: "trending-up", kind: "llm+menu", triggersInference: true, prompt: "Show my KNYT progression status and next milestones", apiAction: "knyt-progress", iframeAction: "knyt_progress" },
   { id: "goal",        label: "Goal",        icon: "target",     kind: "llm+menu",    triggersInference: true,  prompt: "Show my current goals and progress" },
   { id: "task",        label: "Task",        icon: "check-square", kind: "llm+menu",  triggersInference: true,  prompt: "What tasks should I work on next?" },
   { id: "reward",      label: "Reward",      icon: "star",       kind: "llm+menu",    triggersInference: true,  prompt: "Show my rewards and achievements" },
