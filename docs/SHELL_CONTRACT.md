@@ -40,12 +40,13 @@
 |------|------|---------|
 | `SHELL_READY` | Iframe loads | `{ hide_chrome: true }` |
 | `HANDOFF` | After SHELL_READY | `{ handoff_token, aa_api_base_url, aa_api_token, context }` |
-| `MENU_ACTION` | Quick action or menu tap | `{ action_id, prompt?, menu_event?, cartridge_id?, codex_id? }` |
-| `PROMPT_SUBMIT` | User submits prompt text | `{ text, cartridge_id?, codex_id? }` |
+| `MENU_ACTION` | Quick action or menu tap | `{ action_id, prompt?, menu_event?, cartridge_id?, codex_id?, mode? }` |
+| `PROMPT_SUBMIT` | User submits prompt text | `{ text, cartridge_id?, codex_id?, mode? }` |
 | `SELECTOR_CHANGE` | User changes selector | `{ selector_type, id, iqube_id? }` |
+| `MODE_CHANGED` | Shell mode activated/deactivated | `{ mode, view_state, cartridge_id?, codex_id? }` |
 | `CONTEXT_UPDATE` | Arbitrary context push | `{ payload }` |
 | `RESET_WELCOME` | Shell reset action | `{}` |
-| `DEVICE_CONTEXT_UPDATE` | Viewport resize | `{ context: { device, viewport } }` |
+| `DEVICE_CONTEXT_UPDATE` | Viewport resize (debounced 250ms) | `{ context: { device, viewport } }` |
 | `browser.*` | Browser bridge events | Various payloads |
 
 All outbound messages are wrapped in a bridge envelope: `{ type, msg_id, timestamp, source: "shell", payload }`.

@@ -247,6 +247,18 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   // Clean up idle timer on unmount
   useEffect(() => () => clearIdleTimer(), [clearIdleTimer]);
 
+  // Notify iframe of mode change
+  const notifyModeChanged = useCallback((mode: SmartMenuMode | null, vs: ViewState) => {
+    if (!iframeRef.current || !config) return;
+    postToIframe(iframeRef.current, {
+      type: "MODE_CHANGED",
+      mode,
+      view_state: vs,
+      cartridge_id: cartridgeState.activeCartridgeId,
+      codex_id: cartridgeState.activeCodexId,
+    }, getIframeOrigin(config));
+  }, [config, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
+
   // Smart Menu actions
   const activateMode = useCallback((mode: SmartMenuMode) => {
     // If tapping active mode, deactivate (collapse)
@@ -256,6 +268,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       setSubmenuTypeState(null);
       setSubmenuVisibility("visibleAuto");
       clearIdleTimer();
+      notifyModeChanged(null, "defaultNav");
       return;
     }
     setViewState("promptMode");
@@ -263,7 +276,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setSubmenuTypeState("quickActions");
     setSubmenuVisibility("visibleAuto");
     startIdleTimer();
-  }, [activeMode, viewState, clearIdleTimer, startIdleTimer]);
+    notifyModeChanged(mode, "promptMode");
+  }, [activeMode, viewState, clearIdleTimer, startIdleTimer, notifyModeChanged]);
 
   // Quick-action-only mode: show submenu without prompt bar (no keyboard on mobile)
   const activateQuickActions = useCallback((mode: SmartMenuMode) => {
@@ -274,6 +288,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       setSubmenuTypeState(null);
       setSubmenuVisibility("visibleAuto");
       clearIdleTimer();
+      notifyModeChanged(null, "defaultNav");
       return;
     }
     setViewState("quickActionOnly");
@@ -281,7 +296,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setSubmenuTypeState("quickActions");
     setSubmenuVisibility("visibleAuto");
     startIdleTimer();
-  }, [activeMode, viewState, clearIdleTimer, startIdleTimer]);
+    notifyModeChanged(mode, "quickActionOnly");
+  }, [activeMode, viewState, clearIdleTimer, startIdleTimer, notifyModeChanged]);
 
   const deactivateMode = useCallback(() => {
     setViewState("defaultNav");
@@ -289,7 +305,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setSubmenuTypeState(null);
     setSubmenuVisibility("visibleAuto");
     clearIdleTimer();
-  }, [clearIdleTimer]);
+    notifyModeChanged(null, "defaultNav");
+  }, [clearIdleTimer, notifyModeChanged]);
 
   const setSubmenuType = useCallback((type: SubmenuType | null) => {
     setSubmenuTypeState(type);
@@ -431,6 +448,16 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // TRUST_UPDATE from runtime — update shell trust state
+      if (t === "TRUST_UPDATE") {
+        const trustPayload = (msg as any).trust ?? msg;
+        if (trustPayload.level) {
+          updateTrust(trustPayload);
+          console.log("[Shell] Trust updated from runtime:", trustPayload);
+        }
+        return;
+      }
+
       if (t === "NAVIGATE" && (msg as any).action === "close_codex") {
         if (iframeRef.current && config) {
           postToIframe(iframeRef.current, { type: "MENU_ACTION", action_id: "close_codex" }, getIframeOrigin(config));
@@ -456,6 +483,43 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     return () => {
       window.removeEventListener("message", handler);
       window.removeEventListener("message", codexCloseHandler);
+    };
+  }, [config]);
+
+  // Send DEVICE_CONTEXT_UPDATE to iframe on viewport resize
+  useEffect(() => {
+    if (!config) return;
+    const origin = getIframeOrigin(config);
+
+    function getDeviceType(w: number): "mobile" | "tablet" | "desktop" {
+      if (w < 768) return "mobile";
+      if (w < 1024) return "tablet";
+      return "desktop";
+    }
+
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const sendUpdate = () => {
+      if (!iframeRef.current) return;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      postToIframe(iframeRef.current, {
+        type: "DEVICE_CONTEXT_UPDATE",
+        context: { device: getDeviceType(w), viewport: { width: w, height: h } },
+      }, origin);
+    };
+
+    const onResize = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(sendUpdate, 250);
+    };
+
+    // Send initial context after iframe loads
+    const initialTimer = setTimeout(sendUpdate, 1000);
+    window.addEventListener("resize", onResize);
+    return () => {
+      clearTimeout(initialTimer);
+      if (debounceTimer) clearTimeout(debounceTimer);
+      window.removeEventListener("resize", onResize);
     };
   }, [config]);
 
@@ -563,6 +627,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     const ctx = {
       cartridge_id: cartridgeState.activeCartridgeId,
       codex_id: cartridgeState.activeCodexId,
+      mode: activeMode ?? undefined,
     };
 
     try {
@@ -612,6 +677,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     const ctx = {
       cartridge_id: cartridgeState.activeCartridgeId,
       codex_id: cartridgeState.activeCodexId,
+      mode: activeMode ?? undefined,
     };
     try {
       const result: PromptActionResult = await promptAction(text, ctx);

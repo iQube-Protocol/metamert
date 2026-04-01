@@ -12,7 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 
 /** Map a 0-10 score to 0-5 filled dots using ceil(score/2) */
 function scoreToDots(score: number | undefined, fallback: number): number {
@@ -38,6 +38,8 @@ export default function RuntimeHeader() {
   const { config, selectAigent, selectLLM, inferring, cartridgeState } = useShell();
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
+  const [trustFlash, setTrustFlash] = useState(false);
+  const prevScoresRef = useRef<Record<string, number | undefined>>({});
 
   const llmGroups = useMemo(() => {
     if (!config) return [];
@@ -55,10 +57,25 @@ export default function RuntimeHeader() {
     return groups;
   }, [config]);
 
+  const trustScores = config?.trust?.scores ?? {};
+
+  // Flash animation when trust scores change
+  useEffect(() => {
+    const prev = prevScoresRef.current;
+    if (prev.trust !== trustScores.trust || prev.reliability !== trustScores.reliability) {
+      if (prev.trust !== undefined || prev.reliability !== undefined) {
+        setTrustFlash(true);
+        const timer = setTimeout(() => setTrustFlash(false), 800);
+        prevScoresRef.current = trustScores;
+        return () => clearTimeout(timer);
+      }
+      prevScoresRef.current = trustScores;
+    }
+  }, [trustScores.trust, trustScores.reliability]);
+
   if (!config) return null;
 
   const trust = config.trust ?? { level: "unverified", signals: [], scores: {} };
-  const trustScores = trust.scores ?? {};
   const rScore = scoreToDots(trustScores.reliability, 4);
   const tScore = scoreToDots(trustScores.trust, 3);
   const rColor = reliabilityDotColor(trustScores.reliability);
@@ -163,7 +180,7 @@ export default function RuntimeHeader() {
         {/* Right: trust dots */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex items-center gap-4 bg-muted/20 rounded-lg px-3 py-2 text-xs text-muted-foreground cursor-default">
+            <div className={`flex items-center gap-4 bg-muted/20 rounded-lg px-3 py-2 text-xs text-muted-foreground cursor-default transition-all duration-300 ${trustFlash ? "ring-1 ring-primary/40 scale-105" : ""}`}>
               <div className="flex items-center gap-0.5">
                 <span className="font-medium mr-1">R</span>
                 {renderDots(rScore, rColor)}

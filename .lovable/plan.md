@@ -61,27 +61,13 @@ Goal: Harden the shell so it can cleanly host journey-aware runtime behavior wit
 
 ---
 
-## Sprint 2 — Smart menu as journey-aware orchestration surface
+## Sprint 2 — Smart menu as journey-aware orchestration surface ✅
 
-### LOV-201 — Align menu modes to runtime triggers
-- Map Be/Earn/Play/Make/Share to shell-supported runtime entry states
-- Ensure each mode can frame a distinct runtime context without rendering runtime UI
-
-### LOV-202 — Refine quick-action set behavior
-- Quick actions remain shell-native, launch/frame runtime contexts
-- Selection hands off cleanly to iframe state via MENU_ACTION/PROMPT_SUBMIT
-
-### LOV-203 — Shell event interface for runtime coordination
-- Define clean event vocabulary: mode changed, quick action selected, prompt submitted, shell reset
-- Ensure Codex/runtime team can consume these events
-
-### LOV-204 — Trust-score-aware header behavior
-- Support trust score rendering and future score changes
-- Shell-safe visual treatment for trust state shifts
-
-### LOV-205 — Shell QA across breakpoints
-- Validate mobile, tablet, desktop
-- Iframe wrapper integrity, menu/header parity
+### LOV-201 — Align menu modes to runtime triggers ✅
+### LOV-202 — Refine quick-action set behavior ✅
+### LOV-203 — Shell event interface for runtime coordination ✅
+### LOV-204 — Trust-score-aware header behavior ✅
+### LOV-205 — Shell QA across breakpoints ✅
 
 ---
 
