@@ -245,7 +245,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#22C55E",
     promptPlaceholder: "Ask about rewards, tasks, offers, value, or opportunities…",
     defaultCenteredQuickActionId: "offer",
-    mobileVisibleFold: ["task", "reward", "offer", "opportunity", "wallet"],
+    mobileVisibleFold: ["knyt-progress", "task", "reward", "offer", "wallet"],
     quickActions: EARN_ACTIONS,
   },
   play: {
