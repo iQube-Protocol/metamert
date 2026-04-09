@@ -1,137 +1,99 @@
 
-# Lovable Sprint Plan — metaMe Runtime Thin Client Shell
 
-## Ownership Boundary
+## metaMe Light Mode — Parchment Intelligence Shell Theme
 
-Lovable owns ONLY the thin-client shell:
-- Smart menu system (mode switching, quick-action sets, idle/dismiss behavior)
-- Agent header (trust score display, Aigent/LLM selectors, cartridge icon)
-- Shell-level layout/parity (spacing, radii, breakpoints, typography rhythm)
-- Thin-client wrappers around the runtime iframe (EmbedFrame, RuntimeFrame)
-- Shell ↔ iframe postMessage bridge (shell-messages.ts, inference lifecycle)
+### Alignment Status
+Claude Code's brief confirms full alignment on tokens, ownership, and rules. Key additions from Claude's brief vs our original plan:
+- **Glassmorphism DISABLED in light mode** — no `backdrop-blur` anywhere on shell surfaces. The current `glass-float` class must be replaced with opaque parchment surfaces.
+- **`--mm-border-active`** added: `1px solid rgba(79, 140, 152, 0.28)` for active state borders.
+- **Texture spec refined**: SVG fine grain at ~3% opacity + soft radial tonal cloud at ~4%.
+- **Active prompt accent rule**: ONE restrained cue only (left-edge accent line OR inner ring OR wash). Never flood-fill.
 
-Lovable does NOT own:
-- Studio Experience tab UI
-- Parity modal
-- Pipeline visualization
-- Runtime experience cards / analysis cards
-- Goals / matrix / NBE rendering
-- End-user journey cards
-- Active guide / handoff cards
-- Codex/admin CRM-linked experience views
+### Execution — 4 phases, no animation changes
 
-All non-shell UI is rendered inside the iframe / Next.js app and owned by Codex or Claude.
+**Phase 1: Token Foundation** (2 files)
 
-## Agent Division
+`src/index.css`:
+- Add all `--mm-*` CSS custom properties under `:root`
+- Remap existing shadcn variables to parchment values (e.g., `--background` → `216 30% 93%` mapped from `#F1EBDD`, `--foreground` → from `#2E2923`, `--card` → from `#F7F2E8`, `--border` → warm hairline)
+- Add subtle parchment texture on `body` using CSS (fine-grain SVG noise at 3% + radial tonal cloud at 4%) — no heavy imagery
+- Replace `.glass-float` with opaque parchment surface (no `backdrop-filter` in light mode): `background: var(--mm-surface-3)`, warm border, warm shadow
 
-- **Lovable** = shell
-- **Codex** = application surfaces (inside iframe / Next.js)
-- **Claude** = harness, plumbing, policy/hooks/integration scaffolding
+`tailwind.config.ts`:
+- Add `mm` namespace: `mm.canvas.{base,variant,deep}`, `mm.surface.{1,2,3,4}`, `mm.ink.{primary,secondary,muted,faint,inverse}`, `mm.line.{subtle,soft,medium,strong}`, `mm.accent.{runtime,codex,make,earn,share,alert}`
+- Add `borderRadius`: `mm-xs` (10px), `mm-sm` (14px), `mm-md` (18px), `mm-lg` (22px)
+- Add `boxShadow`: `mm-low`, `mm-mid`, `mm-panel`
 
----
+**Phase 2: Shell Surface Updates** (5 files)
 
-## Sprint 1 — Stabilize shell control plane
+`RuntimeHeader.tsx`:
+- `bg-card` → `bg-mm-surface-1`
+- `border-border` → `border-mm-line-subtle` (hairline)
+- Trust dot container: `bg-muted/20` → `bg-mm-canvas-variant`
+- `text-muted-foreground` → `text-mm-ink-muted`
+- Popover backgrounds → `bg-mm-surface-2`
+- Update `MODE_ACCENT` map to use `--mm-accent-*` values
 
-Goal: Harden the shell so it can cleanly host journey-aware runtime behavior without absorbing app logic.
+`SmartMenu.tsx`:
+- Nav bar: `bg-card` → `bg-mm-surface-1`, `border-t` → `border-mm-line-soft`
+- Update `MODE_ACCENT` to parchment accent palette: `be → --mm-accent-share`, `earn → --mm-accent-earn`, `play → --mm-accent-runtime`, `make → --mm-accent-make`, `share → --mm-accent-share`
+- Nav labels: `text-muted-foreground` → `text-mm-ink-muted`
+- Radii: `rounded-md` → `rounded-mm-xs`
 
-### LOV-101 — Shell architecture contract
-- Document shell vs iframe state ownership
-- Document message vocabulary crossing the boundary
-- Deliverable: `docs/SHELL_CONTRACT.md`
+`SmartMenuPromptBar.tsx`:
+- Bar: `bg-card` → `bg-mm-surface-2`
+- `borderTop` accent stays (one restrained cue — matches Claude's rule)
+- Input: `text-white` → `text-mm-ink-primary`
+- Placeholder: → `text-mm-ink-muted`
+- Controls: → `text-mm-ink-muted`
 
-### LOV-102 — Harden smart menu state model
-- Audit state transitions for determinism (defaultNav ↔ quickActionOnly ↔ promptMode)
-- Verify idle timer behavior, collapse guards, prompt-has-text protection
-- Fix any overlapping or broken menu states
+`SmartMenuSubmenu.tsx`:
+- Replace all `glass-float` with `bg-mm-surface-3 border border-mm-line-soft shadow-mm-low` (opaque parchment, no blur)
+- Edge fade gradients: `from-card/80` → `from-mm-surface-1/80`
+- Quick action buttons: → `text-mm-ink-muted`
+- Radii: `rounded-xl` → `rounded-mm-sm`
+- CartridgePill: `rounded-lg` → `rounded-mm-xs`
 
-### LOV-103 — Harden agent header contract
-- Verify trust score rendering (R/T dots, color thresholds, animation sync)
-- Verify selector state (Aigent, LLM, cartridge icon)
-- Ensure header reflects state cleanly across breakpoints
+`QuickLinksBar.tsx`:
+- Replace `glass-float` with same opaque parchment surface treatment
+- Hover: `hover:bg-accent` → `hover:bg-mm-canvas-variant`
+- Labels: → `text-mm-ink-muted`
 
-### LOV-104 — Refine iframe wrapper behavior
-- Verify EmbedFrame loading/error/blocked states
-- Verify resize and breakpoint behavior
-- Ensure RuntimeFrame handshake sequence is robust
-- Verify inference lifecycle listener (start/complete/safety timeout)
+**Phase 3: Layout & Wrapper Continuity** (3 files)
 
-### LOV-105 — Shell parity checklist
-- Document shell-only parity rules (spacing, radii, typography, container behavior)
-- Validate header/menu behavior across mobile/tablet/desktop
+`src/pages/Index.tsx`:
+- Shell container: `bg-background` → `bg-mm-canvas-base`
+- Loading state: match canvas
 
----
+`src/components/RuntimeFrame.tsx`:
+- Wrapper div background: ensure `bg-mm-canvas-base` so iframe boundary is invisible
 
-## Sprint 2 — Smart menu as journey-aware orchestration surface ✅
+`src/components/browser/BrowserSurfaceChrome.tsx`:
+- Chrome bar: `bg-card` → `bg-mm-surface-1`, `border-border` → `border-mm-line-subtle`
+- Badge text: → `text-mm-ink-secondary`
 
-### LOV-201 — Align menu modes to runtime triggers ✅
-### LOV-202 — Refine quick-action set behavior ✅
-### LOV-203 — Shell event interface for runtime coordination ✅
-### LOV-204 — Trust-score-aware header behavior ✅
-### LOV-205 — Shell QA across breakpoints ✅
+**Phase 4: QubeTalk Confirmation**
 
----
+- Create `docs/qubetalk-bridge/outbox/lovable-metame-light-mode-alignment.json` confirming token adoption, listing files touched, and requesting runtime-side parity check
 
-## Sprint 3 — Stable shell integration for runtime-driven states ✅
+### Animation Backlog (NOT implemented now)
+- Structure-first reveal sequencing
+- Ease curves to `--mm-ease-standard` / `--mm-ease-soft`
+- Duration alignment to `--mm-dur-*` tokens
+- Replace `slide-in-from-bottom-2` with calmer reveal
 
-### LOV-301 — Shell placeholders for runtime-driven states ✅
-- Added `RuntimeHints` type (activeGuide, focusMode, deepLink, handoff)
-- Extracted from STATE_SYNC and dedicated RUNTIME_HINT inbound signals
-- Shell-context only — no content rendering
+### Files Touched Summary
+| File | Change |
+|------|--------|
+| `src/index.css` | Token layer, texture, glass-float rework |
+| `tailwind.config.ts` | Semantic mm namespace |
+| `src/components/RuntimeHeader.tsx` | Parchment surfaces, ink colors |
+| `src/components/SmartMenu.tsx` | Parchment nav rail, accent remap |
+| `src/components/SmartMenuPromptBar.tsx` | Parchment prompt surface |
+| `src/components/SmartMenuSubmenu.tsx` | Opaque parchment submenus |
+| `src/components/QuickLinksBar.tsx` | Parchment quick links |
+| `src/pages/Index.tsx` | Canvas base |
+| `src/components/RuntimeFrame.tsx` | Wrapper continuity |
+| `src/components/browser/BrowserSurfaceChrome.tsx` | Browser chrome |
+| `docs/qubetalk-bridge/outbox/...` | Alignment confirmation |
 
-### LOV-302 — Iframe transition polish ✅
-- Added opacity transition (300ms) on RuntimeFrame container for cartridge/codex switches
-- EmbedFrame reports status changes via onStatusChange callback
-
-### LOV-303 — Shell loading/fallback states ✅
-- EmbedFrame already handles probing/loading/error/blocked states with stable fallback UI
-- Added `IframeReadiness` type exported from ShellContext
-- Status propagated from EmbedFrame → RuntimeFrame → shell logging
-
----
-
-## Sprint 4 — KNYT proving flows ✅
-
-### LOV-401 — Validate shell during KNYT onboarding/progression ✅
-- Added `knytOnboarding` state tracked from `STATE_SYNC` runtime signals
-- Shell auto-switches cartridge icon accent to KNYT amber during onboarding
-- focusMode hint already wired from Sprint 3
-
-### LOV-402 — Tune quick actions for KNYT entry points ✅
-- Added "KNYT" quick action to Play mode (zap icon, triggers onboarding/continuation)
-- Added "Progress" quick action to Earn mode (trending-up icon, shows KNYT milestones)
-- Updated mobileVisibleFold for both modes to surface KNYT actions above the fold
-
-### LOV-403 — Tune header trust display for live flows ✅
-- Trust dot colors use semantic tokens (bg-destructive, bg-primary)
-- Added score direction indicators (▲/▼) on trust score changes
-- Extended flash duration to 1.2s for better visibility during live progression
-- Direction arrows fade after flash period
-
----
-
-## Sprint 5 — Hardening & polish ✅
-
-### LOV-501 — Performance polish ✅
-- Memoized ShellContext value with `useMemo` to prevent unnecessary consumer re-renders
-
-### LOV-502 — Shell parity refinement ✅
-- focusMode hint hides RuntimeHeader when runtime requests minimal chrome
-- Layout adapts dynamically across breakpoints
-
-### LOV-503 — Iframe wrapper resilience ✅
-- EmbedFrame auto-retries probe up to 2x with exponential backoff
-- Added manual "Retry" button alongside "Open in New Tab" on error states
-
-### LOV-504 — Regression tests ✅
-- 11 tests covering normalizeInbound, isInferenceStart, isInferenceComplete
-- Covers direct, enveloped, stringified, and payload-lifted message formats
-
----
-
-## Definition of Done
-
-- Smart menu works cleanly as shell orchestrator
-- Agent header with trust scores is stable
-- Iframe wrapper is reliable and parity-safe
-- Shell can launch and frame runtime states without owning runtime UI
-- No Studio or runtime feature UI has leaked into Lovable scope
