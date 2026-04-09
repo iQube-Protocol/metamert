@@ -145,6 +145,36 @@ export type Database = {
           },
         ]
       }
+      analysis_cards: {
+        Row: {
+          card_type: string
+          content: string | null
+          created_at: string | null
+          experience_id: string | null
+          id: string
+          persona_id: string
+          score: number | null
+        }
+        Insert: {
+          card_type: string
+          content?: string | null
+          created_at?: string | null
+          experience_id?: string | null
+          id?: string
+          persona_id: string
+          score?: number | null
+        }
+        Update: {
+          card_type?: string
+          content?: string | null
+          created_at?: string | null
+          experience_id?: string | null
+          id?: string
+          persona_id?: string
+          score?: number | null
+        }
+        Relationships: []
+      }
       asset_policies: {
         Row: {
           asset_id: string
@@ -4676,6 +4706,147 @@ export type Database = {
           },
         ]
       }
+      experience_goals: {
+        Row: {
+          created_at: string | null
+          goal_type: string
+          id: string
+          persona_id: string | null
+          strategy_id: string | null
+          success_status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          goal_type?: string
+          id?: string
+          persona_id?: string | null
+          strategy_id?: string | null
+          success_status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          goal_type?: string
+          id?: string
+          persona_id?: string | null
+          strategy_id?: string | null
+          success_status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experience_goals_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "experience_strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experience_matrices: {
+        Row: {
+          created_at: string | null
+          depth_ladder: string[] | null
+          id: string
+          model_id: string | null
+          stage: string
+        }
+        Insert: {
+          created_at?: string | null
+          depth_ladder?: string[] | null
+          id?: string
+          model_id?: string | null
+          stage: string
+        }
+        Update: {
+          created_at?: string | null
+          depth_ladder?: string[] | null
+          id?: string
+          model_id?: string | null
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experience_matrices_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "experience_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experience_models: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          stages: string[] | null
+          strategy_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          stages?: string[] | null
+          strategy_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          stages?: string[] | null
+          strategy_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experience_models_strategy_id_fkey"
+            columns: ["strategy_id"]
+            isOneToOne: false
+            referencedRelation: "experience_strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experience_strategies: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          target_segments: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          target_segments?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          target_segments?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       financial_aggregates: {
         Row: {
           avg_daily_surplus: number | null
@@ -5505,6 +5676,45 @@ export type Database = {
           token_id?: number
           tx_hash?: string
           visibility?: string
+        }
+        Relationships: []
+      }
+      journey_states: {
+        Row: {
+          active_at: string | null
+          completed_experience_ids: string[] | null
+          created_at: string | null
+          current_experience_id: string | null
+          depth: string
+          id: string
+          persona_id: string
+          stage: string
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active_at?: string | null
+          completed_experience_ids?: string[] | null
+          created_at?: string | null
+          current_experience_id?: string | null
+          depth?: string
+          id?: string
+          persona_id: string
+          stage?: string
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active_at?: string | null
+          completed_experience_ids?: string[] | null
+          created_at?: string | null
+          current_experience_id?: string | null
+          depth?: string
+          id?: string
+          persona_id?: string
+          stage?: string
+          tenant_id?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -8042,6 +8252,81 @@ export type Database = {
         }
         Relationships: []
       }
+      nbe_plans: {
+        Row: {
+          created_at: string | null
+          disposition: string
+          experience_id: string | null
+          expires_at: string | null
+          id: string
+          next_experience_depth: string | null
+          persona_id: string
+          rationale: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          disposition?: string
+          experience_id?: string | null
+          expires_at?: string | null
+          id?: string
+          next_experience_depth?: string | null
+          persona_id: string
+          rationale?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          disposition?: string
+          experience_id?: string | null
+          expires_at?: string | null
+          id?: string
+          next_experience_depth?: string | null
+          persona_id?: string
+          rationale?: string | null
+        }
+        Relationships: []
+      }
+      orchestration_events: {
+        Row: {
+          active_cartridge: string | null
+          created_at: string | null
+          event_id: string
+          event_type: string
+          from_role: string
+          id: string
+          journey_stage: string | null
+          metadata: Json | null
+          reason: string | null
+          receipt_eligible: boolean | null
+          to_role: string
+        }
+        Insert: {
+          active_cartridge?: string | null
+          created_at?: string | null
+          event_id: string
+          event_type: string
+          from_role: string
+          id?: string
+          journey_stage?: string | null
+          metadata?: Json | null
+          reason?: string | null
+          receipt_eligible?: boolean | null
+          to_role: string
+        }
+        Update: {
+          active_cartridge?: string | null
+          created_at?: string | null
+          event_id?: string
+          event_type?: string
+          from_role?: string
+          id?: string
+          journey_stage?: string | null
+          metadata?: Json | null
+          reason?: string | null
+          receipt_eligible?: boolean | null
+          to_role?: string
+        }
+        Relationships: []
+      }
       payment_requests: {
         Row: {
           amount: number
@@ -9076,6 +9361,829 @@ export type Database = {
         }
         Relationships: []
       }
+      registry_asset_tags: {
+        Row: {
+          asset_id: string
+          tag_id: string
+        }
+        Insert: {
+          asset_id: string
+          tag_id: string
+        }
+        Update: {
+          asset_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_asset_tags_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "registry_assets"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "registry_asset_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "registry_tags"
+            referencedColumns: ["tag_id"]
+          },
+        ]
+      }
+      registry_asset_versions: {
+        Row: {
+          asset_id: string
+          changelog: string | null
+          content_hash: string | null
+          created_at: string
+          created_by: string
+          deprecated_at: string | null
+          deprecated_by: string | null
+          interface_schema: Json
+          is_current: boolean
+          version: string
+          version_id: string
+          wrapper_config: Json
+        }
+        Insert: {
+          asset_id: string
+          changelog?: string | null
+          content_hash?: string | null
+          created_at?: string
+          created_by: string
+          deprecated_at?: string | null
+          deprecated_by?: string | null
+          interface_schema?: Json
+          is_current?: boolean
+          version: string
+          version_id: string
+          wrapper_config?: Json
+        }
+        Update: {
+          asset_id?: string
+          changelog?: string | null
+          content_hash?: string | null
+          created_at?: string
+          created_by?: string
+          deprecated_at?: string | null
+          deprecated_by?: string | null
+          interface_schema?: Json
+          is_current?: boolean
+          version?: string
+          version_id?: string
+          wrapper_config?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_asset_versions_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "registry_assets"
+            referencedColumns: ["asset_id"]
+          },
+        ]
+      }
+      registry_assets: {
+        Row: {
+          asset_class: string
+          asset_id: string
+          capabilities: Json
+          created_at: string
+          created_by: string
+          current_version: string
+          description: string | null
+          icon_url: string | null
+          intake_id: string | null
+          interface_schema: Json
+          metadata: Json
+          name: string
+          policy_class: string
+          publication_status: string
+          slug: string
+          source_id: string | null
+          tags: Json
+          tenant_id: string
+          trust_band: string
+          updated_at: string
+          wrapper_strategy: string
+        }
+        Insert: {
+          asset_class: string
+          asset_id: string
+          capabilities?: Json
+          created_at?: string
+          created_by: string
+          current_version?: string
+          description?: string | null
+          icon_url?: string | null
+          intake_id?: string | null
+          interface_schema?: Json
+          metadata?: Json
+          name: string
+          policy_class?: string
+          publication_status?: string
+          slug: string
+          source_id?: string | null
+          tags?: Json
+          tenant_id: string
+          trust_band?: string
+          updated_at?: string
+          wrapper_strategy?: string
+        }
+        Update: {
+          asset_class?: string
+          asset_id?: string
+          capabilities?: Json
+          created_at?: string
+          created_by?: string
+          current_version?: string
+          description?: string | null
+          icon_url?: string | null
+          intake_id?: string | null
+          interface_schema?: Json
+          metadata?: Json
+          name?: string
+          policy_class?: string
+          publication_status?: string
+          slug?: string
+          source_id?: string | null
+          tags?: Json
+          tenant_id?: string
+          trust_band?: string
+          updated_at?: string
+          wrapper_strategy?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_assets_intake_id_fkey"
+            columns: ["intake_id"]
+            isOneToOne: false
+            referencedRelation: "registry_intakes"
+            referencedColumns: ["intake_id"]
+          },
+          {
+            foreignKeyName: "registry_assets_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "registry_sources"
+            referencedColumns: ["source_id"]
+          },
+        ]
+      }
+      registry_dependencies: {
+        Row: {
+          asset_id: string
+          created_at: string
+          dep_id: string
+          dep_ref: string
+          dep_type: string
+          notes: string | null
+          risk_level: string | null
+          version_constraint: string | null
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          dep_id: string
+          dep_ref: string
+          dep_type: string
+          notes?: string | null
+          risk_level?: string | null
+          version_constraint?: string | null
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          dep_id?: string
+          dep_ref?: string
+          dep_type?: string
+          notes?: string | null
+          risk_level?: string | null
+          version_constraint?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_dependencies_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "registry_assets"
+            referencedColumns: ["asset_id"]
+          },
+        ]
+      }
+      registry_intakes: {
+        Row: {
+          asset_id: string | null
+          created_at: string
+          current_stage: string
+          failure_reason: string | null
+          intake_id: string
+          source_payload: Json
+          source_type: string
+          source_uri: string | null
+          stage_history: Json
+          status: string
+          submitted_by: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          asset_id?: string | null
+          created_at?: string
+          current_stage?: string
+          failure_reason?: string | null
+          intake_id: string
+          source_payload?: Json
+          source_type: string
+          source_uri?: string | null
+          stage_history?: Json
+          status?: string
+          submitted_by: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string | null
+          created_at?: string
+          current_stage?: string
+          failure_reason?: string | null
+          intake_id?: string
+          source_payload?: Json
+          source_type?: string
+          source_uri?: string | null
+          stage_history?: Json
+          status?: string
+          submitted_by?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      registry_invocations: {
+        Row: {
+          asset_id: string
+          completed_at: string | null
+          duration_ms: number | null
+          error_message: string | null
+          input_hash: string | null
+          invocation_id: string
+          invoked_at: string
+          invoked_by: string
+          output_hash: string | null
+          policy_class: string
+          receipt_id: string | null
+          status: string
+          tenant_id: string
+          version_id: string | null
+          wrapper_strategy: string
+        }
+        Insert: {
+          asset_id: string
+          completed_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          input_hash?: string | null
+          invocation_id: string
+          invoked_at?: string
+          invoked_by: string
+          output_hash?: string | null
+          policy_class: string
+          receipt_id?: string | null
+          status?: string
+          tenant_id: string
+          version_id?: string | null
+          wrapper_strategy: string
+        }
+        Update: {
+          asset_id?: string
+          completed_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          input_hash?: string | null
+          invocation_id?: string
+          invoked_at?: string
+          invoked_by?: string
+          output_hash?: string | null
+          policy_class?: string
+          receipt_id?: string | null
+          status?: string
+          tenant_id?: string
+          version_id?: string | null
+          wrapper_strategy?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_invocations_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "registry_assets"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "registry_invocations_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "registry_asset_versions"
+            referencedColumns: ["version_id"]
+          },
+        ]
+      }
+      registry_policies: {
+        Row: {
+          allowed_hosts: Json
+          allowed_paths: Json
+          approval_timeout_s: number
+          asset_id: string
+          created_at: string
+          created_by: string
+          custom_rules: Json
+          max_exec_seconds: number
+          max_output_bytes: number
+          policy_class: string
+          policy_id: string
+          requires_human_approval: boolean
+          secret_refs: Json
+          updated_at: string
+        }
+        Insert: {
+          allowed_hosts?: Json
+          allowed_paths?: Json
+          approval_timeout_s?: number
+          asset_id: string
+          created_at?: string
+          created_by: string
+          custom_rules?: Json
+          max_exec_seconds?: number
+          max_output_bytes?: number
+          policy_class: string
+          policy_id: string
+          requires_human_approval?: boolean
+          secret_refs?: Json
+          updated_at?: string
+        }
+        Update: {
+          allowed_hosts?: Json
+          allowed_paths?: Json
+          approval_timeout_s?: number
+          asset_id?: string
+          created_at?: string
+          created_by?: string
+          custom_rules?: Json
+          max_exec_seconds?: number
+          max_output_bytes?: number
+          policy_class?: string
+          policy_id?: string
+          requires_human_approval?: boolean
+          secret_refs?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_policies_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "registry_assets"
+            referencedColumns: ["asset_id"]
+          },
+        ]
+      }
+      registry_publications: {
+        Row: {
+          asset_id: string
+          created_at: string
+          notes: string | null
+          policy_class: string
+          publication_id: string
+          published_at: string | null
+          published_by: string
+          receipt_id: string | null
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          score_id: string | null
+          status: string
+          trust_band: string
+          validation_id: string | null
+          version_id: string | null
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          notes?: string | null
+          policy_class: string
+          publication_id: string
+          published_at?: string | null
+          published_by: string
+          receipt_id?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          score_id?: string | null
+          status?: string
+          trust_band: string
+          validation_id?: string | null
+          version_id?: string | null
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          notes?: string | null
+          policy_class?: string
+          publication_id?: string
+          published_at?: string | null
+          published_by?: string
+          receipt_id?: string | null
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          score_id?: string | null
+          status?: string
+          trust_band?: string
+          validation_id?: string | null
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_publications_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "registry_assets"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "registry_publications_score_id_fkey"
+            columns: ["score_id"]
+            isOneToOne: false
+            referencedRelation: "registry_trust_scores"
+            referencedColumns: ["score_id"]
+          },
+          {
+            foreignKeyName: "registry_publications_validation_id_fkey"
+            columns: ["validation_id"]
+            isOneToOne: false
+            referencedRelation: "registry_validations"
+            referencedColumns: ["validation_id"]
+          },
+          {
+            foreignKeyName: "registry_publications_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "registry_asset_versions"
+            referencedColumns: ["version_id"]
+          },
+        ]
+      }
+      registry_receipts: {
+        Row: {
+          actor_id: string
+          asset_id: string | null
+          content_hash: string | null
+          created_at: string
+          dvn_message_id: string | null
+          dvn_submitted_at: string | null
+          event_type: string
+          intake_id: string | null
+          invocation_id: string | null
+          payload: Json
+          receipt_id: string
+          tenant_id: string
+        }
+        Insert: {
+          actor_id: string
+          asset_id?: string | null
+          content_hash?: string | null
+          created_at?: string
+          dvn_message_id?: string | null
+          dvn_submitted_at?: string | null
+          event_type: string
+          intake_id?: string | null
+          invocation_id?: string | null
+          payload?: Json
+          receipt_id: string
+          tenant_id: string
+        }
+        Update: {
+          actor_id?: string
+          asset_id?: string | null
+          content_hash?: string | null
+          created_at?: string
+          dvn_message_id?: string | null
+          dvn_submitted_at?: string | null
+          event_type?: string
+          intake_id?: string | null
+          invocation_id?: string | null
+          payload?: Json
+          receipt_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_receipts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "registry_assets"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "registry_receipts_intake_id_fkey"
+            columns: ["intake_id"]
+            isOneToOne: false
+            referencedRelation: "registry_intakes"
+            referencedColumns: ["intake_id"]
+          },
+          {
+            foreignKeyName: "registry_receipts_invocation_id_fkey"
+            columns: ["invocation_id"]
+            isOneToOne: false
+            referencedRelation: "registry_invocations"
+            referencedColumns: ["invocation_id"]
+          },
+        ]
+      }
+      registry_reviews: {
+        Row: {
+          asset_id: string
+          created_at: string
+          decided_at: string | null
+          decision: string | null
+          evidence_refs: Json
+          notes: string | null
+          requested_trust_band: string | null
+          review_id: string
+          reviewer_id: string
+          reviewer_type: string
+          validation_id: string | null
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          decided_at?: string | null
+          decision?: string | null
+          evidence_refs?: Json
+          notes?: string | null
+          requested_trust_band?: string | null
+          review_id: string
+          reviewer_id: string
+          reviewer_type?: string
+          validation_id?: string | null
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decision?: string | null
+          evidence_refs?: Json
+          notes?: string | null
+          requested_trust_band?: string | null
+          review_id?: string
+          reviewer_id?: string
+          reviewer_type?: string
+          validation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_reviews_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "registry_assets"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "registry_reviews_validation_id_fkey"
+            columns: ["validation_id"]
+            isOneToOne: false
+            referencedRelation: "registry_validations"
+            referencedColumns: ["validation_id"]
+          },
+        ]
+      }
+      registry_sources: {
+        Row: {
+          content_hash: string | null
+          content_size: number | null
+          created_at: string
+          fetch_status: string
+          fetched_at: string | null
+          intake_id: string
+          manifest: Json
+          raw_refs: Json
+          source_id: string
+          source_type: string
+          uri: string | null
+        }
+        Insert: {
+          content_hash?: string | null
+          content_size?: number | null
+          created_at?: string
+          fetch_status?: string
+          fetched_at?: string | null
+          intake_id: string
+          manifest?: Json
+          raw_refs?: Json
+          source_id: string
+          source_type: string
+          uri?: string | null
+        }
+        Update: {
+          content_hash?: string | null
+          content_size?: number | null
+          created_at?: string
+          fetch_status?: string
+          fetched_at?: string | null
+          intake_id?: string
+          manifest?: Json
+          raw_refs?: Json
+          source_id?: string
+          source_type?: string
+          uri?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_sources_intake_id_fkey"
+            columns: ["intake_id"]
+            isOneToOne: false
+            referencedRelation: "registry_intakes"
+            referencedColumns: ["intake_id"]
+          },
+        ]
+      }
+      registry_tags: {
+        Row: {
+          category: string | null
+          created_at: string
+          name: string
+          tag_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          name: string
+          tag_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          name?: string
+          tag_id?: string
+        }
+        Relationships: []
+      }
+      registry_trust_scores: {
+        Row: {
+          asset_id: string
+          computed_by: string
+          created_at: string
+          explanation: string | null
+          factors: Json
+          numeric_score: number
+          score_id: string
+          trust_band: string
+          validation_id: string | null
+        }
+        Insert: {
+          asset_id: string
+          computed_by?: string
+          created_at?: string
+          explanation?: string | null
+          factors?: Json
+          numeric_score: number
+          score_id: string
+          trust_band: string
+          validation_id?: string | null
+        }
+        Update: {
+          asset_id?: string
+          computed_by?: string
+          created_at?: string
+          explanation?: string | null
+          factors?: Json
+          numeric_score?: number
+          score_id?: string
+          trust_band?: string
+          validation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_trust_scores_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "registry_assets"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "registry_trust_scores_validation_id_fkey"
+            columns: ["validation_id"]
+            isOneToOne: false
+            referencedRelation: "registry_validations"
+            referencedColumns: ["validation_id"]
+          },
+        ]
+      }
+      registry_validation_artifacts: {
+        Row: {
+          artifact_id: string
+          artifact_type: string
+          cap_trust_band: string | null
+          content: Json
+          content_hash: string | null
+          created_at: string
+          passed: boolean | null
+          stage: string
+          validation_id: string
+        }
+        Insert: {
+          artifact_id: string
+          artifact_type: string
+          cap_trust_band?: string | null
+          content?: Json
+          content_hash?: string | null
+          created_at?: string
+          passed?: boolean | null
+          stage: string
+          validation_id: string
+        }
+        Update: {
+          artifact_id?: string
+          artifact_type?: string
+          cap_trust_band?: string | null
+          content?: Json
+          content_hash?: string | null
+          created_at?: string
+          passed?: boolean | null
+          stage?: string
+          validation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_validation_artifacts_validation_id_fkey"
+            columns: ["validation_id"]
+            isOneToOne: false
+            referencedRelation: "registry_validations"
+            referencedColumns: ["validation_id"]
+          },
+        ]
+      }
+      registry_validations: {
+        Row: {
+          asset_id: string
+          completed_at: string | null
+          created_at: string
+          overall_result: string | null
+          stages_completed: Json
+          started_at: string
+          status: string
+          summary: string | null
+          triggered_by: string
+          trust_band_cap: string | null
+          validation_id: string
+          version_id: string | null
+        }
+        Insert: {
+          asset_id: string
+          completed_at?: string | null
+          created_at?: string
+          overall_result?: string | null
+          stages_completed?: Json
+          started_at?: string
+          status?: string
+          summary?: string | null
+          triggered_by: string
+          trust_band_cap?: string | null
+          validation_id: string
+          version_id?: string | null
+        }
+        Update: {
+          asset_id?: string
+          completed_at?: string | null
+          created_at?: string
+          overall_result?: string | null
+          stages_completed?: Json
+          started_at?: string
+          status?: string
+          summary?: string | null
+          triggered_by?: string
+          trust_band_cap?: string | null
+          validation_id?: string
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_validations_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "registry_assets"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "registry_validations_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "registry_asset_versions"
+            referencedColumns: ["version_id"]
+          },
+        ]
+      }
       relationship_qubes: {
         Row: {
           created_at: string
@@ -9917,6 +11025,87 @@ export type Database = {
           signups?: number | null
         }
         Relationships: []
+      }
+      studio_artifacts: {
+        Row: {
+          applied_at: string | null
+          codex_entry_ids: string[] | null
+          created_at: string | null
+          created_by: string
+          dvn_receipt_ids: string[] | null
+          id: string
+          job_id: string
+          journey_segments_affected: string[] | null
+          package_dependencies: string[] | null
+          parent_artifact_id: string | null
+          rollback_artifact_id: string | null
+          rollback_available: boolean | null
+          source_surface: string
+          status: string
+          target_surfaces: string[] | null
+          ui_surfaces_affected: string[] | null
+          updated_at: string | null
+          validation_errors: string[] | null
+          validation_status: string | null
+        }
+        Insert: {
+          applied_at?: string | null
+          codex_entry_ids?: string[] | null
+          created_at?: string | null
+          created_by: string
+          dvn_receipt_ids?: string[] | null
+          id?: string
+          job_id: string
+          journey_segments_affected?: string[] | null
+          package_dependencies?: string[] | null
+          parent_artifact_id?: string | null
+          rollback_artifact_id?: string | null
+          rollback_available?: boolean | null
+          source_surface: string
+          status?: string
+          target_surfaces?: string[] | null
+          ui_surfaces_affected?: string[] | null
+          updated_at?: string | null
+          validation_errors?: string[] | null
+          validation_status?: string | null
+        }
+        Update: {
+          applied_at?: string | null
+          codex_entry_ids?: string[] | null
+          created_at?: string | null
+          created_by?: string
+          dvn_receipt_ids?: string[] | null
+          id?: string
+          job_id?: string
+          journey_segments_affected?: string[] | null
+          package_dependencies?: string[] | null
+          parent_artifact_id?: string | null
+          rollback_artifact_id?: string | null
+          rollback_available?: boolean | null
+          source_surface?: string
+          status?: string
+          target_surfaces?: string[] | null
+          ui_surfaces_affected?: string[] | null
+          updated_at?: string | null
+          validation_errors?: string[] | null
+          validation_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_artifacts_parent_artifact_id_fkey"
+            columns: ["parent_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "studio_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "studio_artifacts_rollback_artifact_id_fkey"
+            columns: ["rollback_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "studio_artifacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sync_logs: {
         Row: {
