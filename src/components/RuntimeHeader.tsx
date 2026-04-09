@@ -290,6 +290,7 @@ export default function RuntimeHeader() {
             <p className="text-xs">{(trust.signals ?? []).join(" · ") || trust.level}</p>
           </TooltipContent>
         </Tooltip>
+        </div>
       </header>
     </TooltipProvider>
   );
