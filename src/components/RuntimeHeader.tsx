@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Bot, ChevronDown, Check, Box } from "lucide-react";
+import { Bot, ChevronDown, Check, Box, Sun, Moon } from "lucide-react";
 import ProviderIcon from "@/components/ProviderIcon";
 import {
   Popover,
@@ -43,11 +43,25 @@ function scoreDirection(prev: number | undefined, curr: number | undefined): "up
 }
 
 export default function RuntimeHeader() {
-  const { config, selectAigent, selectLLM, inferring, cartridgeState, knytOnboarding } = useShell();
+  const { config, selectAigent, selectLLM, inferring, cartridgeState, knytOnboarding, iframeRef } = useShell();
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
   const [trustFlash, setTrustFlash] = useState(false);
   const prevScoresRef = useRef<Record<string, number | undefined>>({});
+
+  // Theme toggle state — default dark, check URL param
+  const [theme, setTheme] = useState<"light" | "dark">(
+    new URLSearchParams(window.location.search).get("theme") === "light" ? "light" : "dark"
+  );
+
+  const toggleTheme = useCallback(() => {
+    setTheme(t => {
+      const next = t === "light" ? "dark" : "light";
+      // Propagate to runtime iframe via postMessage
+      iframeRef.current?.contentWindow?.postMessage({ type: "SET_THEME", theme: next }, "*");
+      return next;
+    });
+  }, [iframeRef]);
 
   const llmGroups = useMemo(() => {
     if (!config) return [];
