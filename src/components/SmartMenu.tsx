@@ -20,13 +20,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-/** Mode accent colors using HSL values from config */
+/** Mode accent colors — parchment palette */
 const MODE_ACCENT: Record<SmartMenuMode, string> = {
-  be: "#4DA3FF",
-  earn: "#22C55E",
-  play: "#00D5FF",
-  make: "#D946EF",
-  share: "#F59E0B",
+  be: "#5C718B",
+  earn: "#64856D",
+  play: "#4F8C98",
+  make: "#935872",
+  share: "#5C718B",
 };
 
 const NAV_ITEMS: { id: SmartMenuMode; label: string; icon: string }[] = [
@@ -53,17 +53,13 @@ export default function SmartMenu() {
   // Hover preview: show quick actions on rollover without entering prompt mode
   const [hoverPreviewMode, setHoverPreviewMode] = useState<SmartMenuMode | null>(null);
   const hoverTimeout = useRef<ReturnType<typeof setTimeout>>();
-  // Shared double-tap tracker — survives view-state re-renders
-  
-
-  // No longer needed — using PointerEvent.pointerType directly
 
   // Guard: block phantom hover events after nav restoration or mode activation
   const navRestoredAt = useRef<number>(0);
   const modeActivatedAt = useRef<number>(0);
   const prevViewState = useRef(viewState);
 
-  // Clear stale hover state on view-state transitions (in useEffect to avoid render-phase setState flicker)
+  // Clear stale hover state on view-state transitions
   useEffect(() => {
     if (viewState !== prevViewState.current) {
       if (viewState === "promptMode" || viewState === "quickActionOnly") {
@@ -96,7 +92,6 @@ export default function SmartMenu() {
   // Nav button tap handler using pointerType for reliable touch detection
   const handleNavPointerUp = useCallback((mode: SmartMenuMode, pointerType: string) => {
     if (pointerType === "touch") {
-      // If already in quickActionOnly for this mode, upgrade to prompt mode
       if (viewState === "quickActionOnly" && activeMode === mode) {
         activateMode(mode);
       } else {
@@ -115,7 +110,7 @@ export default function SmartMenu() {
     }
   }, [activateQuickActions]);
 
-  // Gap trigger handlers with hover-intent delay to avoid accidental activation
+  // Gap trigger handlers with hover-intent delay
   const gapIntentTimer = useRef<ReturnType<typeof setTimeout>>();
   const handleGapPointerEnter = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === "touch") return;
@@ -144,7 +139,7 @@ export default function SmartMenu() {
     if (touchStartY.current === null) return;
     const dy = touchStartY.current - e.changedTouches[0].clientY;
     if (dy > 40 && activeMode) {
-      activateMode(activeMode); // swipe up → enter prompt mode
+      activateMode(activeMode);
     }
     touchStartY.current = null;
   }, [activeMode, activateMode]);
@@ -154,7 +149,6 @@ export default function SmartMenu() {
   const isPromptMode = viewState === "promptMode" && !!activeMode;
   const isActiveMode = !!activeMode && (viewState === "promptMode" || viewState === "quickActionOnly");
 
-  // Submenu: show for hover preview, quickActionOnly, or promptMode
   const showSubmenu =
     (isActiveMode && submenuVisibility === "visibleAuto") ||
     (!isActiveMode && !!hoverPreviewMode);
@@ -164,7 +158,7 @@ export default function SmartMenu() {
   // Nav border accent when in an active mode with submenu visible
   const navBorderColor = isActiveMode && submenuVisibility === "visibleAuto" && activeMode
     ? MODE_ACCENT[activeMode]
-    : 'hsl(var(--border))';
+    : 'var(--mm-line-soft)';
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -192,13 +186,14 @@ export default function SmartMenu() {
           <SmartMenuPromptBar />
         </div>
 
-        {/* Nav bar — always in DOM, hidden via display when in prompt mode */}
+        {/* Nav bar — parchment surface with hairline top */}
         <nav
-          className="flex items-stretch border-t bg-card px-2 pt-3 pb-2 transition-all"
+          className="flex items-stretch px-2 pt-3 pb-2 transition-all"
           style={{
             display: isPromptMode ? 'none' : 'flex',
             height: '4.25rem',
-            borderTopColor: navBorderColor,
+            backgroundColor: 'var(--mm-surface-1)',
+            borderTop: `1px solid ${navBorderColor}`,
             transitionDuration: '300ms',
           }}
           onPointerUp={handleNavAreaPointerUp}
@@ -255,11 +250,10 @@ function NavButton({
   const isEdge = item.id === "be" || item.id === "share";
   const isActiveQA = activeQAMode === item.id;
 
-  // In quickActionOnly mode, highlight the active mode
   const iconColor = isActiveQA
     ? accent
     : isEdge
-      ? (hovered ? accent : "hsl(var(--muted-foreground))")
+      ? (hovered ? accent : "var(--mm-ink-muted)")
       : accent;
   const iconFilter = !isEdge && hovered && !isActiveQA ? "brightness(1.4) drop-shadow(0 0 4px currentColor)" : "none";
 
@@ -278,10 +272,11 @@ function NavButton({
       onPointerUp={handlePointerUp}
       onPointerEnter={() => { setHovered(true); onHoverEnter(item.id); }}
       onPointerLeave={() => { setHovered(false); onHoverLeave(); }}
-      className={`flex flex-col items-center justify-center gap-0.5 rounded-md py-0.5 text-[11px] transition-all duration-200
+      className={`flex flex-col items-center justify-center gap-0.5 py-0.5 text-[11px] transition-all duration-200
         ${isCenter ? "min-w-[3.5rem] px-1" : "w-14 shrink-0"}
         active:scale-110
       `}
+      style={{ borderRadius: 'var(--mm-radius-xs)' }}
     >
       <span
         className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200"
@@ -289,7 +284,7 @@ function NavButton({
       >
         {Icon ? <Icon className={item.id === "play" ? "h-6 w-6" : "h-5 w-5"} /> : <span className="h-5 w-5" />}
       </span>
-      <span className="text-muted-foreground">{item.label}</span>
+      <span style={{ color: 'var(--mm-ink-muted)' }}>{item.label}</span>
     </button>
   );
 }

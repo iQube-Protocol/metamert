@@ -40,7 +40,12 @@ export default function QuickLinksBar() {
             handleMenuAction(ql.action ?? ql.id);
           }
         }}
-        className="flex flex-col items-center justify-center gap-0.5 rounded-lg px-2 py-1 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95"
+        className="flex flex-col items-center justify-center gap-0.5 py-1 transition-all duration-150 active:scale-95"
+        style={{
+          borderRadius: 'var(--mm-radius-xs)',
+          color: 'var(--mm-ink-muted)',
+          padding: '0.25rem 0.5rem',
+        }}
         title={ql.label}
       >
         {Icon ? <Icon className="h-4 w-4" /> : <span className="text-xs font-medium">{ql.label.charAt(0)}</span>}
@@ -50,7 +55,10 @@ export default function QuickLinksBar() {
   };
 
   return (
-    <div className="glass-float flex w-full items-center justify-between rounded-xl px-2 py-1.5 shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200">
+    <div
+      className="glass-float flex w-full items-center justify-between px-2 py-1.5 shadow-mm-low animate-in fade-in slide-in-from-bottom-2 duration-200"
+      style={{ borderRadius: 'var(--mm-radius-sm)' }}
+    >
       {ordered.map(renderButton)}
     </div>
   );
