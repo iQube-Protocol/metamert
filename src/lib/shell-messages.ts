@@ -12,6 +12,7 @@ export interface DeviceContext {
 
 export type ShellOutbound =
   | { type: "SHELL_READY"; hide_chrome?: boolean }
+  | { type: "SET_THEME"; theme: "light" | "dark" }
   | { type: "HANDOFF"; handoff_token: string; aa_api_base_url?: string; aa_api_token?: string; context?: Record<string, unknown> }
   | { type: "MENU_ACTION"; action_id: string; prompt?: string; menu_event?: MenuEvent; cartridge_id?: string; codex_id?: string; mode?: string }
   | { type: "SELECTOR_CHANGE"; selector_type: "aigent" | "llm" | "cartridge" | "codex" | "persona"; id: string; iqube_id?: string }
