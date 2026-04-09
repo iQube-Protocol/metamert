@@ -91,7 +91,6 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     setActivatedId(action.id);
     pauseIdleTimer();
 
-    // If in hover preview, activate the mode first so prompt mode engages
     if (overrideMode && overrideMode !== activeMode) {
       activateMode(overrideMode);
     }
@@ -111,10 +110,6 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
-    // Rich contextual prompt: send directly, then start 4s idle countdown
-    // If action also has an apiAction, route through AA-API so runtime can return
-    // the right iframe event for UI rendered inside the iframe. iframeAction remains
-    // available for direct shell → iframe UI triggers.
     if (action.prompt) {
       if (action.apiAction) {
         void handleMenuAction(action.apiAction);
@@ -126,7 +121,6 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
-    // Only transition to promptMode for non-prompt actions that need complex input
     if (viewState === "quickActionOnly" && action.triggersInference) {
       activateMode(effectiveMode);
     }
@@ -135,21 +129,19 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
   }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode]);
 
   const foldIds = modeConfig.mobileVisibleFold;
-  // Find the first fold item's index to auto-scroll there on mount
   const firstFoldIndex = modeConfig.quickActions.findIndex(a => foldIds.includes(a.id));
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || firstFoldIndex <= 0) return;
-    // Each item has a fixed width; scroll so fold items are in view
     const itemWidth = el.scrollWidth / modeConfig.quickActions.length;
     el.scrollLeft = firstFoldIndex * itemWidth;
   }, [firstFoldIndex, modeConfig.quickActions.length]);
 
   return (
     <div
-      className="glass-float relative rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2"
-      style={{ animationDuration: '350ms' }}
+      className="glass-float relative shadow-mm-low animate-in fade-in slide-in-from-bottom-2"
+      style={{ animationDuration: '350ms', borderRadius: 'var(--mm-radius-sm)' }}
       onPointerEnter={pauseIdleTimer}
     >
       <div
@@ -171,9 +163,21 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
           );
         })}
       </div>
-      {/* Edge fade indicators */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-card/80 to-transparent rounded-l-xl" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-card/80 to-transparent rounded-r-xl" />
+      {/* Edge fade indicators — parchment tinted */}
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 w-4"
+        style={{
+          background: 'linear-gradient(to right, var(--mm-surface-1), transparent)',
+          borderRadius: 'var(--mm-radius-sm) 0 0 var(--mm-radius-sm)',
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-y-0 right-0 w-4"
+        style={{
+          background: 'linear-gradient(to left, var(--mm-surface-1), transparent)',
+          borderRadius: '0 var(--mm-radius-sm) var(--mm-radius-sm) 0',
+        }}
+      />
     </div>
   );
 }
@@ -207,11 +211,12 @@ function QuickActionButton({
       onClick={handleClick}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
-      className="flex flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-muted-foreground transition-all duration-150 active:scale-95 shrink-0"
+      className="flex flex-col items-center justify-center gap-0.5 py-1.5 transition-all duration-150 active:scale-95 shrink-0"
       style={{
         scrollSnapAlign: "center",
         width: "20%",
-        ...(color ? { color } : {}),
+        borderRadius: 'var(--mm-radius-xs)',
+        color: color ?? 'var(--mm-ink-muted)',
       }}
       title={action.label}
     >
@@ -234,15 +239,16 @@ function CartridgeSelector() {
 
   return (
     <div
-      className="glass-float rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 p-2"
-      style={{ animationDuration: '350ms' }}
+      className="glass-float shadow-mm-low animate-in fade-in slide-in-from-bottom-2 p-2"
+      style={{ animationDuration: '350ms', borderRadius: 'var(--mm-radius-sm)' }}
       onPointerEnter={pauseIdleTimer}
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Cartridge</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--mm-ink-muted)' }}>Cartridge</span>
         <button
           onClick={() => setSubmenuType("quickActions")}
-          className="ml-auto text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          className="ml-auto text-[10px] transition-colors"
+          style={{ color: 'var(--mm-ink-muted)' }}
         >
           ← Back
         </button>
@@ -285,17 +291,18 @@ function CodexSelector() {
 
   return (
     <div
-      className="glass-float rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 p-2"
-      style={{ animationDuration: '350ms' }}
+      className="glass-float shadow-mm-low animate-in fade-in slide-in-from-bottom-2 p-2"
+      style={{ animationDuration: '350ms', borderRadius: 'var(--mm-radius-sm)' }}
       onPointerEnter={pauseIdleTimer}
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--mm-ink-muted)' }}>
           Codex · {activeCart?.label ?? "—"}
         </span>
         <button
           onClick={() => setSubmenuType("quickActions")}
-          className="ml-auto text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          className="ml-auto text-[10px] transition-colors"
+          style={{ color: 'var(--mm-ink-muted)' }}
         >
           ← Back
         </button>
@@ -329,15 +336,16 @@ function PersonaSelector() {
 
   return (
     <div
-      className="glass-float rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 p-2"
-      style={{ animationDuration: '350ms' }}
+      className="glass-float shadow-mm-low animate-in fade-in slide-in-from-bottom-2 p-2"
+      style={{ animationDuration: '350ms', borderRadius: 'var(--mm-radius-sm)' }}
       onPointerEnter={pauseIdleTimer}
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Persona</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--mm-ink-muted)' }}>Persona</span>
         <button
           onClick={() => setSubmenuType("quickActions")}
-          className="ml-auto text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          className="ml-auto text-[10px] transition-colors"
+          style={{ color: 'var(--mm-ink-muted)' }}
         >
           ← Back
         </button>
@@ -389,10 +397,11 @@ function CartridgePill({
       onClick={onClick}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
-      className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs transition-all duration-150 active:scale-95
-        ${isActive ? "" : "text-muted-foreground"}
-      `}
-      style={color ? { color } : undefined}
+      className="flex items-center gap-1 px-3 py-1.5 text-xs transition-all duration-150 active:scale-95"
+      style={{
+        borderRadius: 'var(--mm-radius-xs)',
+        color: color ?? 'var(--mm-ink-muted)',
+      }}
     >
       {children}
     </button>
@@ -406,11 +415,10 @@ function CartridgePill({
 function BrowserSelector() {
   const { setSubmenuType, pauseIdleTimer, activeMode, activateMode } = useShell();
   const browser = useBrowserOptional();
-  const accent = activeMode ? MODE_CONFIGS[activeMode].accentHex : "#00D5FF";
+  const accent = activeMode ? MODE_CONFIGS[activeMode].accentHex : "#4F8C98";
 
   const handleOpenBrowser = useCallback(() => {
     if (!browser) return;
-    // Ensure prompt mode is active so user can type URLs
     if (activeMode) activateMode(activeMode);
     browser.requestOpen();
   }, [browser, activeMode, activateMode]);
@@ -425,16 +433,17 @@ function BrowserSelector() {
 
   return (
     <div
-      className="glass-float rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-2 p-2"
-      style={{ animationDuration: '350ms' }}
+      className="glass-float shadow-mm-low animate-in fade-in slide-in-from-bottom-2 p-2"
+      style={{ animationDuration: '350ms', borderRadius: 'var(--mm-radius-sm)' }}
       onPointerEnter={pauseIdleTimer}
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
-        <Globe className="h-3 w-3 text-muted-foreground" />
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Browse</span>
+        <Globe className="h-3 w-3" style={{ color: 'var(--mm-ink-muted)' }} />
+        <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--mm-ink-muted)' }}>Browse</span>
         <button
           onClick={() => setSubmenuType("quickActions")}
-          className="ml-auto text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          className="ml-auto text-[10px] transition-colors"
+          style={{ color: 'var(--mm-ink-muted)' }}
         >
           ← Back
         </button>

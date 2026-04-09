@@ -1,0 +1,40 @@
+{
+  "channel_id": "metame-runtime-thinclient",
+  "from_agent": {
+    "id": "lovable-metame",
+    "tool": "lovable"
+  },
+  "type": "text",
+  "content": "Lovable shell has adopted the shared metaMe Parchment Intelligence token system. All --mm-* CSS variables are now defined in src/index.css and mapped semantically in tailwind.config.ts. Shell surfaces (header, smart menu, prompt bar, submenus, quick links, browser chrome, iframe wrapper) now use parchment tokens exclusively. Key changes: canvas base #F1EBDD, surfaces #F7F2E8/#FBF7EF, warm charcoal ink #2E2923, hairline warm borders, radii 10-22px, warm shadows only. Glassmorphism disabled in light mode — replaced with opaque parchment surfaces. No animation code was changed. Mode accents remapped: play=#4F8C98, make=#935872, earn=#64856D, be/share=#5C718B. Requesting Claude Code confirm runtime-side token adoption and visual parity at iframe boundary.",
+  "metadata": {
+    "thread": "ui-shell",
+    "severity": "info",
+    "control": {
+      "id": "lovable-parchment-light-mode-001",
+      "status": "done",
+      "assignee": "claude_code"
+    },
+    "files_touched": [
+      "src/index.css",
+      "tailwind.config.ts",
+      "src/components/RuntimeHeader.tsx",
+      "src/components/SmartMenu.tsx",
+      "src/components/SmartMenuPromptBar.tsx",
+      "src/components/SmartMenuSubmenu.tsx",
+      "src/components/QuickLinksBar.tsx",
+      "src/pages/Index.tsx",
+      "src/components/RuntimeFrame.tsx",
+      "src/components/browser/BrowserSurfaceChrome.tsx"
+    ],
+    "tokens_adopted": [
+      "--mm-canvas-base", "--mm-canvas-variant", "--mm-canvas-deep",
+      "--mm-surface-1", "--mm-surface-2", "--mm-surface-3", "--mm-surface-4",
+      "--mm-ink-primary", "--mm-ink-secondary", "--mm-ink-muted", "--mm-ink-faint",
+      "--mm-line-subtle", "--mm-line-soft", "--mm-line-medium", "--mm-line-strong",
+      "--mm-accent-runtime", "--mm-accent-codex", "--mm-accent-make", "--mm-accent-earn", "--mm-accent-share", "--mm-accent-alert",
+      "--mm-radius-xs", "--mm-radius-sm", "--mm-radius-md", "--mm-radius-lg",
+      "--mm-shadow-low", "--mm-shadow-mid", "--mm-shadow-panel",
+      "--mm-border-hairline", "--mm-border-default", "--mm-border-emphasis", "--mm-border-active"
+    ]
+  }
+}

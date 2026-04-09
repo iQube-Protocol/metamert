@@ -42,9 +42,9 @@ function ShellLayout() {
 
   if (loading || !config) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <span className="ml-3 text-muted-foreground">Hydrating shell…</span>
+      <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: 'var(--mm-canvas-base)' }}>
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'var(--mm-ink-muted)' }} />
+        <span className="ml-3" style={{ color: 'var(--mm-ink-muted)' }}>Hydrating shell…</span>
       </div>
     );
   }
@@ -56,7 +56,7 @@ function ShellLayout() {
 
   return (
     <BrowserProvider iframeRef={iframeRef} config={config}>
-      <div className="flex h-dvh flex-col bg-background">
+      <div className="flex h-dvh flex-col" style={{ backgroundColor: 'var(--mm-canvas-base)' }}>
         {showHeader && <RuntimeHeader />}
         <div className="relative flex-1 overflow-hidden">
           {menuActive && (

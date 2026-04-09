@@ -36,7 +36,7 @@ export default function SmartMenuPromptBar() {
   const browser = useBrowserOptional();
 
   const modeConfig = activeMode ? MODE_CONFIGS[activeMode] : null;
-  const accent = modeConfig?.accentHex ?? "#fff";
+  const accent = modeConfig?.accentHex ?? "#7B7266";
 
   // Detect if text looks like a URL
   const isUrl = useMemo(() => {
@@ -68,14 +68,13 @@ export default function SmartMenuPromptBar() {
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (touchStartY.current === null) return;
     const dy = e.changedTouches[0].clientY - touchStartY.current;
-    if (dy > 40) deactivateMode(); // swipe down threshold
+    if (dy > 40) deactivateMode();
     touchStartY.current = null;
   }, [deactivateMode]);
 
   const handleSubmit = () => {
     if (!text.trim()) return;
 
-    // If it looks like a URL and browser context exists, open/navigate browser
     if (isUrl && browser) {
       const url = text.trim().startsWith("http") ? text.trim() : `https://${text.trim()}`;
       browser.requestOpen(url);
@@ -89,7 +88,6 @@ export default function SmartMenuPromptBar() {
     submitPrompt(text.trim());
     setText("");
     setHasSent(true);
-    // Send keeps prompt open (spec requirement)
     resetIdleTimer("typing");
     (document.activeElement as HTMLElement)?.blur();
   };
@@ -103,10 +101,8 @@ export default function SmartMenuPromptBar() {
 
   const handleFocus = () => {
     promptInputFocused = true;
-    pauseIdleTimer(); // hold everything visible while cursor is in the input
+    pauseIdleTimer();
     setInteractionState("focused");
-    // iOS: ensure the prompt bar stays visible when the virtual keyboard opens.
-    // Use a delayed scroll to wait for the keyboard animation to settle.
     const scrollToInput = () => {
       inputRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
     };
@@ -118,23 +114,21 @@ export default function SmartMenuPromptBar() {
   const handleBlur = () => {
     promptInputFocused = false;
     if (!text) setInteractionState("idle");
-    // Start normal idle sequence now that focus left the input
     resumeIdleTimer();
   };
-
-  // Outside-click dismissal is handled by the dismiss overlay in Index.tsx
 
   const submenuHidden = submenuVisibility !== "visibleAuto";
 
   return (
     <div
       ref={barRef}
-      className="flex items-center bg-card px-2 pt-3 pb-2 gap-1 transition-all animate-in fade-in slide-in-from-bottom-2"
+      className="flex items-center px-2 pt-3 pb-2 gap-1 transition-all animate-in fade-in slide-in-from-bottom-2"
       style={{
         animationDuration: '300ms',
         transitionDuration: '300ms',
         height: '4.25rem',
         borderTop: `1px solid ${accent}`,
+        backgroundColor: 'var(--mm-surface-2)',
       }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -151,7 +145,7 @@ export default function SmartMenuPromptBar() {
         })()}
       </button>
 
-      {/* Prompt input — spec: brilliant white, ~1pt larger than text-sm */}
+      {/* Prompt input — parchment ink, not white */}
       <input
         ref={inputRef}
         type="text"
@@ -161,18 +155,20 @@ export default function SmartMenuPromptBar() {
         onBlur={handleBlur}
         onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
         placeholder={browserActive ? "Enter URL or ask about the page…" : (modeConfig?.promptPlaceholder ?? "What do you want to do?")}
-        className="min-w-0 flex-1 bg-transparent px-2 py-1 text-white placeholder:text-muted-foreground placeholder:text-center focus:outline-none"
+        className="min-w-0 flex-1 bg-transparent px-2 py-1 focus:outline-none"
         style={{
           caretColor: accent,
           fontSize: '0.9375rem',
           textAlign: hasSent ? 'left' : 'center',
+          color: 'var(--mm-ink-primary)',
         }}
       />
 
       {/* Controls: Mic | Send | Chevron */}
       <div className="flex shrink-0 items-center gap-0.5">
         <button
-          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+          className="flex h-8 w-8 items-center justify-center transition-colors"
+          style={{ color: 'var(--mm-ink-muted)', borderRadius: 'var(--mm-radius-xs)' }}
           title="Voice input"
           onClick={() => resetIdleTimer("micToggle")}
         >
@@ -181,15 +177,16 @@ export default function SmartMenuPromptBar() {
         <button
           onClick={handleSubmit}
           disabled={!text.trim()}
-          className="flex h-8 w-8 items-center justify-center rounded-md transition-colors disabled:opacity-30"
-          style={{ color: text.trim() ? accent : undefined }}
+          className="flex h-8 w-8 items-center justify-center transition-colors disabled:opacity-30"
+          style={{ color: text.trim() ? accent : 'var(--mm-ink-faint)', borderRadius: 'var(--mm-radius-xs)' }}
           title={isUrl ? "Navigate" : "Send"}
         >
           {isUrl ? <Globe className="h-4 w-4" /> : <SendHorizonal className="h-4 w-4" />}
         </button>
         <button
           onClick={toggleSubmenu}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+          className="flex h-8 w-8 items-center justify-center transition-colors"
+          style={{ color: 'var(--mm-ink-muted)', borderRadius: 'var(--mm-radius-xs)' }}
           aria-label={submenuHidden ? "Show quick actions" : "Hide quick actions"}
         >
           {submenuHidden ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}

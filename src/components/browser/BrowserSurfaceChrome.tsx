@@ -12,14 +12,20 @@ export default function BrowserSurfaceChrome() {
     : mountPayload.chrome;
 
   return (
-    <div className="flex items-center justify-between border-b border-border bg-card px-3 py-2">
+    <div
+      className="flex items-center justify-between px-3 py-2"
+      style={{
+        backgroundColor: 'var(--mm-surface-1)',
+        borderBottom: 'var(--mm-border-hairline)',
+      }}
+    >
       {/* Left: domain + title */}
       <div className="flex items-center gap-2 overflow-hidden">
-        <span className="truncate text-xs font-medium text-foreground">
+        <span className="truncate text-xs font-medium" style={{ color: 'var(--mm-ink-primary)' }}>
           {chrome.title}
         </span>
         {chrome.domain && (
-          <span className="truncate text-xs text-muted-foreground">
+          <span className="truncate text-xs" style={{ color: 'var(--mm-ink-muted)' }}>
             {chrome.domain}
           </span>
         )}
@@ -27,14 +33,14 @@ export default function BrowserSurfaceChrome() {
 
       {/* Center: badges */}
       <div className="hidden items-center gap-1.5 sm:flex">
-        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+        <Badge variant="outline" className="text-[10px] px-1.5 py-0" style={{ color: 'var(--mm-ink-secondary)', borderColor: 'var(--mm-line-soft)' }}>
           {chrome.activeAgentLabel}
         </Badge>
-        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+        <Badge variant="secondary" className="text-[10px] px-1.5 py-0" style={{ color: 'var(--mm-ink-secondary)', backgroundColor: 'var(--mm-canvas-variant)' }}>
           {chrome.trustMode}
         </Badge>
         {chrome.privacyMode !== "standard" && (
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+          <Badge variant="secondary" className="text-[10px] px-1.5 py-0" style={{ color: 'var(--mm-ink-secondary)', backgroundColor: 'var(--mm-canvas-variant)' }}>
             {chrome.privacyMode}
           </Badge>
         )}
@@ -45,7 +51,8 @@ export default function BrowserSurfaceChrome() {
         {mountPayload.capabilities.canMinimize && (
           <button
             onClick={requestMinimize}
-            className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            className="rounded p-1 transition-colors"
+            style={{ color: 'var(--mm-ink-muted)' }}
             aria-label="Minimize browser"
           >
             <Minus className="h-3.5 w-3.5" />
@@ -53,7 +60,8 @@ export default function BrowserSurfaceChrome() {
         )}
         <button
           onClick={requestClose}
-          className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+          className="rounded p-1 transition-colors"
+          style={{ color: 'var(--mm-ink-muted)' }}
           aria-label="Close browser"
         >
           <X className="h-3.5 w-3.5" />
