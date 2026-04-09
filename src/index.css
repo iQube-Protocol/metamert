@@ -137,6 +137,48 @@
   }
 
   .dark {
+    --mm-canvas-base: hsl(220 39% 7%);
+    --mm-canvas-variant: hsl(219 31% 10%);
+    --mm-canvas-deep: hsl(218 27% 13%);
+
+    --mm-surface-1: hsl(218 27% 12%);
+    --mm-surface-2: hsl(218 24% 14%);
+    --mm-surface-3: hsl(218 22% 16% / 0.82);
+    --mm-surface-4: hsl(217 22% 18% / 0.88);
+
+    --mm-ink-primary: hsl(210 40% 98%);
+    --mm-ink-secondary: hsl(214 25% 82%);
+    --mm-ink-muted: hsl(215 20% 65%);
+    --mm-ink-faint: hsl(215 16% 48%);
+    --mm-ink-inverse: hsl(220 39% 7%);
+
+    --mm-line-subtle: hsl(210 40% 98% / 0.08);
+    --mm-line-soft: hsl(210 40% 98% / 0.12);
+    --mm-line-medium: hsl(210 40% 98% / 0.18);
+    --mm-line-strong: hsl(210 40% 98% / 0.24);
+
+    --mm-accent-runtime: hsl(188 65% 55%);
+    --mm-accent-codex: hsl(38 70% 58%);
+    --mm-accent-make: hsl(272 58% 68%);
+    --mm-accent-earn: hsl(155 55% 52%);
+    --mm-accent-share: hsl(214 35% 68%);
+    --mm-accent-alert: hsl(4 68% 58%);
+
+    --mm-accent-runtime-wash: hsl(188 65% 55% / 0.14);
+    --mm-accent-codex-wash: hsl(38 70% 58% / 0.14);
+    --mm-accent-make-wash: hsl(272 58% 68% / 0.14);
+    --mm-accent-earn-wash: hsl(155 55% 52% / 0.14);
+    --mm-accent-share-wash: hsl(214 35% 68% / 0.14);
+
+    --mm-border-hairline: 1px solid hsl(210 40% 98% / 0.08);
+    --mm-border-default: 1px solid hsl(210 40% 98% / 0.12);
+    --mm-border-emphasis: 1px solid hsl(210 40% 98% / 0.18);
+    --mm-border-active: 1px solid hsl(214 80% 56% / 0.32);
+
+    --mm-shadow-low: 0 4px 14px hsl(220 55% 3% / 0.32);
+    --mm-shadow-mid: 0 10px 28px hsl(220 55% 3% / 0.38);
+    --mm-shadow-panel: 0 14px 36px hsl(220 55% 3% / 0.46);
+
     --background: 213 50% 5%;
     --foreground: 210 40% 98%;
 
@@ -191,6 +233,8 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    color-scheme: dark;
   }
 }
 
@@ -210,6 +254,14 @@
       /* Soft radial tonal cloud at ~4% */
       radial-gradient(ellipse at 30% 20%, rgba(68, 57, 41, 0.04) 0%, transparent 60%),
       radial-gradient(ellipse at 70% 80%, rgba(68, 57, 41, 0.03) 0%, transparent 55%);
+  }
+
+  .dark body {
+    background-color: var(--mm-canvas-base);
+    background-image:
+      radial-gradient(ellipse at 18% 0%, hsl(214 80% 56% / 0.16) 0%, transparent 42%),
+      radial-gradient(ellipse at 82% 100%, hsl(188 65% 55% / 0.10) 0%, transparent 38%),
+      linear-gradient(180deg, hsl(218 40% 8%), hsl(222 44% 5%));
   }
 }
 

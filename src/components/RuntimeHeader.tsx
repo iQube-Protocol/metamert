@@ -54,14 +54,18 @@ export default function RuntimeHeader() {
     new URLSearchParams(window.location.search).get("theme") === "light" ? "light" : "dark"
   );
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const isDark = theme === "dark";
+
+    root.classList.toggle("dark", isDark);
+    root.style.colorScheme = isDark ? "dark" : "light";
+    iframeRef.current?.contentWindow?.postMessage({ type: "SET_THEME", theme }, "*");
+  }, [theme, iframeRef]);
+
   const toggleTheme = useCallback(() => {
-    setTheme(t => {
-      const next = t === "light" ? "dark" : "light";
-      // Propagate to runtime iframe via postMessage
-      iframeRef.current?.contentWindow?.postMessage({ type: "SET_THEME", theme: next }, "*");
-      return next;
-    });
-  }, [iframeRef]);
+    setTheme(t => (t === "light" ? "dark" : "light"));
+  }, []);
 
   const llmGroups = useMemo(() => {
     if (!config) return [];
@@ -249,11 +253,8 @@ export default function RuntimeHeader() {
               <button
                 type="button"
                 onClick={toggleTheme}
-                className={`inline-flex items-center justify-center rounded-lg border p-1.5 transition-colors ${
-                  theme === "light"
-                    ? "border-[rgba(68,57,41,0.14)] bg-[#F7F2E8]/80 text-[#595247] hover:bg-[#ECE4D6]"
-                    : "border-white/10 bg-slate-950/80 text-slate-300 hover:bg-white/10 hover:text-white"
-                }`}
+                aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-mm-xs border border-transparent bg-transparent p-0 text-mm-ink-primary transition-colors hover:bg-mm-line-subtle focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
               >
                 {theme === "light" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}

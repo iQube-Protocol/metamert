@@ -29,6 +29,7 @@ export default function RuntimeFrame() {
   const handleReady = useCallback(() => {
     if (!config || !iframeRef.current) return;
     const origin = resolveIframeOrigin(config);
+    const theme = document.documentElement.classList.contains("dark") ? "dark" : "light";
 
     // Step 1: SHELL_READY
     postToIframe(iframeRef.current, { type: "SHELL_READY", hide_chrome: true }, origin);
@@ -49,6 +50,8 @@ export default function RuntimeFrame() {
         origin
       );
     }
+
+    postToIframe(iframeRef.current, { type: "SET_THEME", theme }, origin);
 
     // Step 3: Send initial device context
     postToIframe(iframeRef.current, {
