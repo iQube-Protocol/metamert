@@ -4,68 +4,136 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Shell design system — tokens from Windsurf runtime brief. All HSL. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   metaMe Parchment Intelligence — Shared Token Layer
+   Aligned with Claude Code runtime iframe implementation.
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 @layer base {
   :root {
-    --background: 216 30% 97%;
-    --foreground: 213 50% 10%;
+    /* ── metaMe Parchment Tokens ── */
+    --mm-canvas-base: #F1EBDD;
+    --mm-canvas-variant: #ECE4D6;
+    --mm-canvas-deep: #E4DAC9;
 
-    --card: 0 0% 100%;
-    --card-foreground: 213 50% 10%;
+    --mm-surface-1: #F7F2E8;
+    --mm-surface-2: #FBF7EF;
+    --mm-surface-3: rgba(249, 244, 235, 0.82);
+    --mm-surface-4: rgba(255, 251, 243, 0.88);
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 213 50% 10%;
+    --mm-ink-primary: #2E2923;
+    --mm-ink-secondary: #595247;
+    --mm-ink-muted: #7B7266;
+    --mm-ink-faint: #9A9085;
+    --mm-ink-inverse: #FFFDF8;
 
-    --primary: 214 80% 46%;
-    --primary-foreground: 210 40% 98%;
+    --mm-line-subtle: rgba(68, 57, 41, 0.08);
+    --mm-line-soft: rgba(68, 57, 41, 0.12);
+    --mm-line-medium: rgba(68, 57, 41, 0.18);
+    --mm-line-strong: rgba(68, 57, 41, 0.26);
 
-    --secondary: 214 40% 95%;
-    --secondary-foreground: 213 50% 10%;
+    --mm-accent-runtime: #4F8C98;
+    --mm-accent-codex: #A27A3D;
+    --mm-accent-make: #935872;
+    --mm-accent-earn: #64856D;
+    --mm-accent-share: #5C718B;
+    --mm-accent-alert: #A25A4E;
 
-    --muted: 214 40% 95%;
-    --muted-foreground: 213 18% 38%;
+    --mm-accent-runtime-wash: rgba(79, 140, 152, 0.10);
+    --mm-accent-codex-wash: rgba(162, 122, 61, 0.10);
+    --mm-accent-make-wash: rgba(147, 88, 114, 0.10);
+    --mm-accent-earn-wash: rgba(100, 133, 109, 0.10);
+    --mm-accent-share-wash: rgba(92, 113, 139, 0.10);
 
-    --accent: 214 40% 95%;
-    --accent-foreground: 213 50% 10%;
+    --mm-radius-xs: 10px;
+    --mm-radius-sm: 14px;
+    --mm-radius-md: 18px;
+    --mm-radius-lg: 22px;
 
-    --destructive: 4 72% 40%;
-    --destructive-foreground: 210 40% 98%;
+    --mm-border-hairline: 1px solid rgba(68, 57, 41, 0.10);
+    --mm-border-default: 1px solid rgba(68, 57, 41, 0.14);
+    --mm-border-emphasis: 1px solid rgba(68, 57, 41, 0.20);
+    --mm-border-active: 1px solid rgba(79, 140, 152, 0.28);
 
-    --border: 214 28% 87%;
-    --input: 214 28% 87%;
-    --ring: 214 80% 46%;
+    --mm-shadow-low: 0 4px 14px rgba(57, 42, 24, 0.05);
+    --mm-shadow-mid: 0 10px 28px rgba(57, 42, 24, 0.07);
+    --mm-shadow-panel: 0 14px 36px rgba(57, 42, 24, 0.09);
 
-    --radius: 0.5rem;
+    --mm-dur-fast: 140ms;
+    --mm-dur-base: 200ms;
+    --mm-dur-slow: 280ms;
+    --mm-dur-panel: 320ms;
 
-    /* Shell-specific tokens */
-    --shell-surface: 216 30% 97%;
-    --shell-panel: 0 0% 100%;
-    --shell-panel-soft: 216 40% 96%;
-    --shell-ink: 213 50% 10%;
-    --shell-ink-muted: 213 18% 38%;
-    --shell-stroke: 214 28% 87%;
-    --shell-accent: 214 80% 46%;
-    --shell-accent-soft: 214 80% 92%;
-    --shell-ok: 150 80% 30%;
-    --shell-warn: 36 88% 40%;
-    --shell-fail: 4 72% 40%;
+    --mm-ease-standard: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --mm-ease-soft: cubic-bezier(0.2, 0.7, 0.2, 1);
 
-    /* Menu item accent colors */
-    --menu-be: 213 16% 80%;
-    --menu-earn: 155 70% 66%;
-    --menu-play: 188 75% 69%;
-    --menu-make: 270 80% 82%;
-    --menu-share: 213 16% 80%;
+    /* ── shadcn/ui variables — remapped to parchment palette ── */
+    /* #F1EBDD → HSL ~39 35% 90% */
+    --background: 39 35% 90%;
+    /* #2E2923 → HSL ~25 12% 16% */
+    --foreground: 25 12% 16%;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* #F7F2E8 → HSL ~36 42% 94% */
+    --card: 36 42% 94%;
+    --card-foreground: 25 12% 16%;
+
+    --popover: 36 42% 94%;
+    --popover-foreground: 25 12% 16%;
+
+    /* Runtime accent #4F8C98 → HSL ~190 30% 45% */
+    --primary: 190 30% 45%;
+    --primary-foreground: 40 100% 98%;
+
+    /* #ECE4D6 → HSL ~36 34% 88% */
+    --secondary: 36 34% 88%;
+    --secondary-foreground: 25 12% 16%;
+
+    --muted: 36 34% 88%;
+    /* #7B7266 → HSL ~34 9% 44% */
+    --muted-foreground: 34 9% 44%;
+
+    --accent: 36 34% 88%;
+    --accent-foreground: 25 12% 16%;
+
+    /* Alert #A25A4E → HSL ~8 35% 47% */
+    --destructive: 8 35% 47%;
+    --destructive-foreground: 40 100% 98%;
+
+    /* Warm hairline border from --mm-line-soft */
+    --border: 34 20% 84%;
+    --input: 34 20% 84%;
+    --ring: 190 30% 45%;
+
+    --radius: 0.875rem;
+
+    /* Shell-specific tokens — remapped to parchment */
+    --shell-surface: 39 35% 90%;
+    --shell-panel: 36 42% 94%;
+    --shell-panel-soft: 36 34% 92%;
+    --shell-ink: 25 12% 16%;
+    --shell-ink-muted: 34 9% 44%;
+    --shell-stroke: 34 20% 84%;
+    --shell-accent: 190 30% 45%;
+    --shell-accent-soft: 190 30% 90%;
+    --shell-ok: 150 30% 47%;
+    --shell-warn: 36 50% 48%;
+    --shell-fail: 8 35% 47%;
+
+    /* Menu item accent colors — parchment palette */
+    --menu-be: 216 16% 55%;
+    --menu-earn: 140 17% 47%;
+    --menu-play: 190 30% 45%;
+    --menu-make: 340 28% 46%;
+    --menu-share: 216 21% 45%;
+
+    --sidebar-background: 36 42% 94%;
+    --sidebar-foreground: 25 12% 16%;
+    --sidebar-primary: 190 30% 45%;
+    --sidebar-primary-foreground: 40 100% 98%;
+    --sidebar-accent: 36 34% 88%;
+    --sidebar-accent-foreground: 25 12% 16%;
+    --sidebar-border: 34 20% 84%;
+    --sidebar-ring: 190 30% 45%;
   }
 
   .dark {
@@ -134,6 +202,14 @@
   body {
     @apply bg-background text-foreground;
     font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+    /* Parchment texture — fine grain + soft tonal cloud */
+    background-color: var(--mm-canvas-base);
+    background-image:
+      /* Fine grain noise at ~3% opacity */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"),
+      /* Soft radial tonal cloud at ~4% */
+      radial-gradient(ellipse at 30% 20%, rgba(68, 57, 41, 0.04) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 80%, rgba(68, 57, 41, 0.03) 0%, transparent 55%);
   }
 }
 
@@ -147,8 +223,15 @@
   }
 }
 
-/* Translucent glass effect for floating overlays */
+/* Parchment surface for floating overlays — opaque in light mode, NO backdrop-blur */
 .glass-float {
+  background: var(--mm-surface-3);
+  border: 1px solid var(--mm-line-soft);
+  box-shadow: var(--mm-shadow-low);
+}
+
+/* Dark mode retains glass effect */
+.dark .glass-float {
   background: hsla(var(--card), 0.45);
   backdrop-filter: blur(20px) saturate(1.5);
   -webkit-backdrop-filter: blur(20px) saturate(1.5);
