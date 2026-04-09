@@ -5,14 +5,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Bot, ChevronDown, Check, Box } from "lucide-react";
+import { Bot, ChevronDown, Check, Box, Sun, Moon } from "lucide-react";
 import ProviderIcon from "@/components/ProviderIcon";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 
 /** Map a 0-10 score to 0-5 filled dots using ceil(score/2) */
 function scoreToDots(score: number | undefined, fallback: number): number {
@@ -43,11 +43,25 @@ function scoreDirection(prev: number | undefined, curr: number | undefined): "up
 }
 
 export default function RuntimeHeader() {
-  const { config, selectAigent, selectLLM, inferring, cartridgeState, knytOnboarding } = useShell();
+  const { config, selectAigent, selectLLM, inferring, cartridgeState, knytOnboarding, iframeRef } = useShell();
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
   const [trustFlash, setTrustFlash] = useState(false);
   const prevScoresRef = useRef<Record<string, number | undefined>>({});
+
+  // Theme toggle state — default dark, check URL param
+  const [theme, setTheme] = useState<"light" | "dark">(
+    new URLSearchParams(window.location.search).get("theme") === "light" ? "light" : "dark"
+  );
+
+  const toggleTheme = useCallback(() => {
+    setTheme(t => {
+      const next = t === "light" ? "dark" : "light";
+      // Propagate to runtime iframe via postMessage
+      iframeRef.current?.contentWindow?.postMessage({ type: "SET_THEME", theme: next }, "*");
+      return next;
+    });
+  }, [iframeRef]);
 
   const llmGroups = useMemo(() => {
     if (!config) return [];
@@ -227,7 +241,29 @@ export default function RuntimeHeader() {
           </TooltipContent>
         </Tooltip>
 
-        {/* Right: trust dots */}
+        {/* Right: theme toggle + trust dots */}
+        <div className="flex items-center gap-2">
+          {/* Theme toggle — to the left of trust */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className={`inline-flex items-center justify-center rounded-lg border p-1.5 transition-colors ${
+                  theme === "light"
+                    ? "border-[rgba(68,57,41,0.14)] bg-[#F7F2E8]/80 text-[#595247] hover:bg-[#ECE4D6]"
+                    : "border-white/10 bg-slate-950/80 text-slate-300 hover:bg-white/10 hover:text-white"
+                }`}
+                title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+              >
+                {theme === "light" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-xs">{theme === "light" ? "Switch to dark mode" : "Switch to light mode"}</p>
+            </TooltipContent>
+          </Tooltip>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <div
@@ -254,6 +290,7 @@ export default function RuntimeHeader() {
             <p className="text-xs">{(trust.signals ?? []).join(" · ") || trust.level}</p>
           </TooltipContent>
         </Tooltip>
+        </div>
       </header>
     </TooltipProvider>
   );
