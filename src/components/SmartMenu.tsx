@@ -20,13 +20,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-/** Mode accent colors — parchment palette */
+/** Mode accent colors — rich & vibrant, pulled from MODE_CONFIGS */
 const MODE_ACCENT: Record<SmartMenuMode, string> = {
-  be: "#5C718B",
-  earn: "#64856D",
-  play: "#4F8C98",
-  make: "#935872",
-  share: "#5C718B",
+  be: MODE_CONFIGS.be.accentHex,
+  earn: MODE_CONFIGS.earn.accentHex,
+  play: MODE_CONFIGS.play.accentHex,
+  make: MODE_CONFIGS.make.accentHex,
+  share: MODE_CONFIGS.share.accentHex,
 };
 
 const NAV_ITEMS: { id: SmartMenuMode; label: string; icon: string }[] = [
@@ -255,7 +255,11 @@ function NavButton({
     : isEdge
       ? (hovered ? accent : "var(--mm-ink-muted)")
       : accent;
-  const iconFilter = !isEdge && hovered && !isActiveQA ? "brightness(1.4) drop-shadow(0 0 4px currentColor)" : "none";
+  const iconFilter = !isEdge && hovered && !isActiveQA
+    ? "brightness(1.2) drop-shadow(0 0 6px currentColor)"
+    : isActiveQA
+      ? "drop-shadow(0 0 5px currentColor)"
+      : "none";
 
   const handlePointerUp = (e: React.PointerEvent) => {
     e.stopPropagation();
