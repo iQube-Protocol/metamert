@@ -285,8 +285,8 @@
 
 /* Dark mode retains glass effect */
 .dark .glass-float {
-  background: hsla(var(--card), 0.45);
+  background: hsl(213 50% 7% / 0.45);
   backdrop-filter: blur(20px) saturate(1.5);
   -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  border-color: hsla(var(--border), 0.3);
+  border-color: hsl(217 33% 17% / 0.3);
 }
