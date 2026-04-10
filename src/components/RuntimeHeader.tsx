@@ -233,21 +233,20 @@ export default function RuntimeHeader() {
           </Popover>
         </div>
 
-        {/* Center: Active Cartridge icon — centered with nav below */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="absolute left-1/2 -translate-x-1/2 flex items-center cursor-default">
-              <Box className="h-[18px] w-[18px]" style={cartridgeColor ? { color: cartridgeColor } : { color: 'var(--mm-ink-muted)' }} />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p className="text-xs">{activeCodex?.label ?? activeCart?.label ?? "No cartridge"}</p>
-          </TooltipContent>
-        </Tooltip>
+        {/* Center: Cartridge icon + theme toggle */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center cursor-default">
+                <Box className="h-[18px] w-[18px]" style={cartridgeColor ? { color: cartridgeColor } : { color: 'var(--mm-ink-muted)' }} />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-xs">{activeCodex?.label ?? activeCart?.label ?? "No cartridge"}</p>
+            </TooltipContent>
+          </Tooltip>
 
-        {/* Right: theme toggle + trust dots */}
-        <div className="flex items-center gap-2">
-          {/* Theme toggle — to the left of trust */}
+          {/* Theme toggle */}
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -264,33 +263,35 @@ export default function RuntimeHeader() {
               <p className="text-xs">{theme === "light" ? "Switch to dark mode" : "Switch to light mode"}</p>
             </TooltipContent>
           </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div
-              className={`flex items-center gap-4 px-3 py-2 text-xs cursor-default transition-all duration-300 ${trustFlash ? "ring-1 ring-mm-accent-runtime/40 scale-105" : ""}`}
-              style={{
-                backgroundColor: 'var(--mm-canvas-variant)',
-                borderRadius: 'var(--mm-radius-xs)',
-                color: 'var(--mm-ink-muted)',
-              }}
-            >
-              <div className="flex items-center gap-0.5">
-                <span className="font-medium mr-1" style={{ color: 'var(--mm-ink-secondary)' }}>R</span>
-                {renderDots(rScore, rColor)}
-                {reliabilityDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${reliabilityDir === "up" ? "text-mm-accent-earn" : "text-mm-accent-alert"}`}>{reliabilityDir === "up" ? "▲" : "▼"}</span>}
+        </div>
+        {/* Right: trust dots */}
+        <div className="flex items-center">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className={`flex items-center gap-4 px-3 py-2 text-xs cursor-default transition-all duration-300 ${trustFlash ? "ring-1 ring-mm-accent-runtime/40 scale-105" : ""}`}
+                style={{
+                  backgroundColor: 'var(--mm-canvas-variant)',
+                  borderRadius: 'var(--mm-radius-xs)',
+                  color: 'var(--mm-ink-muted)',
+                }}
+              >
+                <div className="flex items-center gap-0.5">
+                  <span className="font-medium mr-1" style={{ color: 'var(--mm-ink-secondary)' }}>R</span>
+                  {renderDots(rScore, rColor)}
+                  {reliabilityDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${reliabilityDir === "up" ? "text-mm-accent-earn" : "text-mm-accent-alert"}`}>{reliabilityDir === "up" ? "▲" : "▼"}</span>}
+                </div>
+                <div className="flex items-center gap-0.5">
+                  <span className="font-medium mr-1" style={{ color: 'var(--mm-ink-secondary)' }}>T</span>
+                  {renderDots(tScore, tColor)}
+                  {trustDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${trustDir === "up" ? "text-mm-accent-earn" : "text-mm-accent-alert"}`}>{trustDir === "up" ? "▲" : "▼"}</span>}
+                </div>
               </div>
-              <div className="flex items-center gap-0.5">
-                <span className="font-medium mr-1" style={{ color: 'var(--mm-ink-secondary)' }}>T</span>
-                {renderDots(tScore, tColor)}
-                {trustDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${trustDir === "up" ? "text-mm-accent-earn" : "text-mm-accent-alert"}`}>{trustDir === "up" ? "▲" : "▼"}</span>}
-              </div>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p className="text-xs">{(trust.signals ?? []).join(" · ") || trust.level}</p>
-          </TooltipContent>
-        </Tooltip>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-xs">{(trust.signals ?? []).join(" · ") || trust.level}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </header>
     </TooltipProvider>
