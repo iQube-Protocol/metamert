@@ -123,8 +123,11 @@ export default function RuntimeHeader() {
         key={i}
         className={`inline-block h-1.5 w-1.5 rounded-full ${
           inferring ? "animate-pulse duration-700" : "transition-all duration-300"
-        } ${i < filled ? activeColor : "bg-mm-ink-faint/40"}`}
-        style={inferring ? { animationDelay: `${i * 150}ms` } : undefined}
+        } ${i < filled ? activeColor : "bg-mm-ink-faint/30"}`}
+        style={{
+          ...(inferring ? { animationDelay: `${i * 150}ms` } : {}),
+          ...(i < filled ? { opacity: 1, filter: 'saturate(1.5)' } : {}),
+        }}
       />
     ));
 
