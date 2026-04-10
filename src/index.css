@@ -137,14 +137,15 @@
   }
 
   .dark {
-    --mm-canvas-base: hsl(220 39% 7%);
-    --mm-canvas-variant: hsl(219 31% 10%);
-    --mm-canvas-deep: hsl(218 27% 13%);
+    /* Aligned to original KNYT dark palette */
+    --mm-canvas-base: hsl(213 50% 5%);
+    --mm-canvas-variant: hsl(213 44% 8%);
+    --mm-canvas-deep: hsl(213 40% 10%);
 
-    --mm-surface-1: hsl(218 27% 12%);
-    --mm-surface-2: hsl(218 24% 14%);
-    --mm-surface-3: hsl(218 22% 16% / 0.82);
-    --mm-surface-4: hsl(217 22% 18% / 0.88);
+    --mm-surface-1: hsl(213 50% 7%);
+    --mm-surface-2: hsl(213 44% 9%);
+    --mm-surface-3: hsl(213 40% 11% / 0.82);
+    --mm-surface-4: hsl(213 36% 13% / 0.88);
 
     --mm-ink-primary: hsl(210 40% 98%);
     --mm-ink-secondary: hsl(214 25% 82%);
