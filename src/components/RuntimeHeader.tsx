@@ -233,21 +233,20 @@ export default function RuntimeHeader() {
           </Popover>
         </div>
 
-        {/* Center: Active Cartridge icon — centered with nav below */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="absolute left-1/2 -translate-x-1/2 flex items-center cursor-default">
-              <Box className="h-[18px] w-[18px]" style={cartridgeColor ? { color: cartridgeColor } : { color: 'var(--mm-ink-muted)' }} />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p className="text-xs">{activeCodex?.label ?? activeCart?.label ?? "No cartridge"}</p>
-          </TooltipContent>
-        </Tooltip>
+        {/* Center: Cartridge icon + theme toggle */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center cursor-default">
+                <Box className="h-[18px] w-[18px]" style={cartridgeColor ? { color: cartridgeColor } : { color: 'var(--mm-ink-muted)' }} />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-xs">{activeCodex?.label ?? activeCart?.label ?? "No cartridge"}</p>
+            </TooltipContent>
+          </Tooltip>
 
-        {/* Right: theme toggle + trust dots */}
-        <div className="flex items-center gap-2">
-          {/* Theme toggle — to the left of trust */}
+          {/* Theme toggle */}
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -264,6 +263,7 @@ export default function RuntimeHeader() {
               <p className="text-xs">{theme === "light" ? "Switch to dark mode" : "Switch to light mode"}</p>
             </TooltipContent>
           </Tooltip>
+        </div>
 
         <Tooltip>
           <TooltipTrigger asChild>
