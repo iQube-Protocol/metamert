@@ -123,8 +123,11 @@ export default function RuntimeHeader() {
         key={i}
         className={`inline-block h-1.5 w-1.5 rounded-full ${
           inferring ? "animate-pulse duration-700" : "transition-all duration-300"
-        } ${i < filled ? activeColor : "bg-mm-ink-faint/40"}`}
-        style={inferring ? { animationDelay: `${i * 150}ms` } : undefined}
+        } ${i < filled ? activeColor : "bg-mm-ink-faint/30"}`}
+        style={{
+          ...(inferring ? { animationDelay: `${i * 150}ms` } : {}),
+          ...(i < filled ? { opacity: 1, filter: 'saturate(1.5)' } : {}),
+        }}
       />
     ));
 
@@ -155,7 +158,7 @@ export default function RuntimeHeader() {
                 className="flex items-center gap-0.5 px-1.5 h-8 transition-colors"
                 style={{ borderRadius: 'var(--mm-radius-xs)' }}
               >
-                <Bot className="h-5 w-5 shrink-0" style={activeAigent?.color ? { color: activeAigent.color } : { color: 'var(--mm-ink-secondary)' }} />
+                <Bot className="h-5 w-5 shrink-0" style={activeAigent?.color ? { color: activeAigent.color, fill: activeAigent.color } : { color: 'var(--mm-ink-secondary)' }} />
                 <ChevronDown className="h-3 w-3 shrink-0" style={{ color: 'var(--mm-ink-muted)' }} />
               </button>
             </PopoverTrigger>
@@ -176,7 +179,7 @@ export default function RuntimeHeader() {
                   className="flex w-full items-center gap-2 px-2 py-1.5 text-sm transition-colors hover:bg-mm-canvas-variant"
                   style={{ borderRadius: 'var(--mm-radius-xs)' }}
                 >
-                  <Bot className="h-4 w-4 shrink-0" style={o.color ? { color: o.color } : undefined} />
+                  <Bot className="h-4 w-4 shrink-0" style={o.color ? { color: o.color, fill: o.color } : undefined} />
                   <span className="flex-1 text-left text-mm-ink-primary">{o.label}</span>
                   {o.id === config.selectors.aigent.current && <Check className="h-3.5 w-3.5 text-mm-accent-runtime" />}
                 </button>
@@ -238,7 +241,7 @@ export default function RuntimeHeader() {
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center cursor-default">
-                <Box className="h-[18px] w-[18px]" style={cartridgeColor ? { color: cartridgeColor } : { color: 'var(--mm-ink-muted)' }} />
+                <Box className="h-[18px] w-[18px]" style={cartridgeColor ? { color: cartridgeColor, fill: cartridgeColor } : { color: 'var(--mm-ink-muted)' }} />
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">

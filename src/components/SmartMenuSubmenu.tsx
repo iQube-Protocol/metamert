@@ -223,11 +223,7 @@ function QuickActionButton({
       {Icon ? (
         <Icon
           className="h-5 w-5"
-          style={{
-            fill: color ?? 'var(--mm-ink-muted)',
-            stroke: 'var(--mm-ink-inverse)',
-            strokeWidth: 1.5,
-          }}
+          style={{ color: color ?? 'var(--mm-ink-muted)' }}
         />
       ) : (
         <span className="text-sm font-medium">{action.label.charAt(0)}</span>
