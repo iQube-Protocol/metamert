@@ -284,9 +284,18 @@ function NavButton({
     >
       <span
         className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200"
-        style={{ color: iconColor, filter: iconFilter }}
+        style={{
+          color: iconColor,
+          filter: iconFilter,
+          backgroundColor: `color-mix(in srgb, ${accent} 18%, transparent)`,
+        }}
       >
-        {Icon ? <Icon className={item.id === "play" ? "h-6 w-6" : "h-5 w-5"} /> : <span className="h-5 w-5" />}
+        {Icon ? (
+          <Icon
+            className={item.id === "play" ? "h-6 w-6" : "h-5 w-5"}
+            style={{ fill: accent, stroke: 'var(--mm-ink-inverse)', strokeWidth: 1.5 }}
+          />
+        ) : <span className="h-5 w-5" />}
       </span>
       <span style={{ color: 'var(--mm-ink-muted)' }}>{item.label}</span>
     </button>
