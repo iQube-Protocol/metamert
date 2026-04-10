@@ -287,13 +287,11 @@ function NavButton({
         style={{
           color: iconColor,
           filter: iconFilter,
-          backgroundColor: `color-mix(in srgb, ${accent} 18%, transparent)`,
         }}
       >
         {Icon ? (
           <Icon
             className={item.id === "play" ? "h-6 w-6" : "h-5 w-5"}
-            style={{ fill: accent, stroke: 'var(--mm-ink-inverse)', strokeWidth: 1.5 }}
           />
         ) : <span className="h-5 w-5" />}
       </span>
