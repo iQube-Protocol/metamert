@@ -221,11 +221,11 @@ function QuickActionButton({
       title={action.label}
     >
       {Icon ? (
-        <Icon className="h-4 w-4" />
+        <Icon className="h-5 w-5" />
       ) : (
-        <span className="text-xs font-medium">{action.label.charAt(0)}</span>
+        <span className="text-sm font-medium">{action.label.charAt(0)}</span>
       )}
-      <span className="text-[9px] leading-tight whitespace-nowrap">{action.label}</span>
+      <span className="text-[10px] leading-tight whitespace-nowrap">{action.label}</span>
     </button>
   );
 }
