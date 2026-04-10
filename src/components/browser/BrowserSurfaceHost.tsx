@@ -1,4 +1,4 @@
-import { useBrowser } from "@/contexts/BrowserContext";
+import { useBrowserOptional } from "@/contexts/BrowserContext";
 import BrowserSurfaceChrome from "./BrowserSurfaceChrome";
 import BrowserLiveViewFrame from "./BrowserLiveViewFrame";
 import BrowserStatusRail from "./BrowserStatusRail";
@@ -7,7 +7,9 @@ import { Loader2, AlertTriangle, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function BrowserSurfaceHost() {
-  const { surfaceState, mountPayload, error, dismissError, requestOpen, requestClose } = useBrowser();
+  const ctx = useBrowserOptional();
+  if (!ctx) return null;
+  const { surfaceState, mountPayload, error, dismissError, requestOpen, requestClose } = ctx;
 
   if (surfaceState === "collapsed") return null;
 
