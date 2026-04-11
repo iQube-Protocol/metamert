@@ -121,12 +121,12 @@ export default function RuntimeHeader() {
     [...Array(5)].map((_, i) => (
       <span
         key={i}
-        className={`inline-block h-1.5 w-1.5 rounded-full ${
+        className={`inline-block h-2 w-2 rounded-full ${
           inferring ? "animate-pulse duration-700" : "transition-all duration-300"
         } ${i < filled ? activeColor : "bg-mm-ink-faint/30"}`}
         style={{
           ...(inferring ? { animationDelay: `${i * 150}ms` } : {}),
-          ...(i < filled ? { opacity: 1, filter: 'saturate(1.5)' } : {}),
+          ...(i < filled ? { opacity: 1, filter: 'saturate(2) brightness(1.1)' } : {}),
         }}
       />
     ));
@@ -158,7 +158,7 @@ export default function RuntimeHeader() {
                 className="flex items-center gap-0.5 px-1.5 h-8 transition-colors"
                 style={{ borderRadius: 'var(--mm-radius-xs)' }}
               >
-                <Bot className="h-5 w-5 shrink-0" style={activeAigent?.color ? (theme === "light" ? { fill: activeAigent.color, stroke: '#FFFDF7', strokeWidth: 1.5, color: activeAigent.color } : { color: activeAigent.color, fill: activeAigent.color }) : { color: 'var(--mm-ink-secondary)' }} />
+                <Bot className="h-5 w-5 shrink-0" style={activeAigent?.color ? (theme === "light" ? { color: activeAigent.color, stroke: activeAigent.color, fill: 'white', strokeWidth: 1.8 } : { color: activeAigent.color }) : { color: 'var(--mm-ink-secondary)' }} />
                 <ChevronDown className="h-3 w-3 shrink-0" style={{ color: 'var(--mm-ink-muted)' }} />
               </button>
             </PopoverTrigger>
@@ -241,7 +241,7 @@ export default function RuntimeHeader() {
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center cursor-default">
-                <Box className="h-[18px] w-[18px]" style={cartridgeColor ? (theme === "light" ? { fill: cartridgeColor, stroke: '#FFFDF7', strokeWidth: 1.5, color: cartridgeColor } : { color: cartridgeColor, fill: cartridgeColor }) : { color: 'var(--mm-ink-muted)' }} />
+                <Box className="h-[18px] w-[18px]" style={cartridgeColor ? (theme === "light" ? { color: cartridgeColor, stroke: cartridgeColor, fill: 'white', strokeWidth: 1.8 } : { color: cartridgeColor }) : { color: 'var(--mm-ink-muted)' }} />
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">
@@ -274,7 +274,6 @@ export default function RuntimeHeader() {
               <div
                 className={`flex items-center gap-4 px-3 py-2 text-xs cursor-default transition-all duration-300 ${trustFlash ? "ring-1 ring-mm-accent-runtime/40 scale-105" : ""}`}
                 style={{
-                  backgroundColor: 'var(--mm-canvas-variant)',
                   borderRadius: 'var(--mm-radius-xs)',
                   color: 'var(--mm-ink-muted)',
                 }}

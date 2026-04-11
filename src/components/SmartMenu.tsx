@@ -250,16 +250,19 @@ function NavButton({
   const isEdge = item.id === "be" || item.id === "share";
   const isActiveQA = activeQAMode === item.id;
 
+  const isDark = document.documentElement.classList.contains('dark');
   const iconColor = isActiveQA
     ? accent
     : isEdge
       ? (hovered ? accent : "var(--mm-ink-muted)")
       : accent;
-  const iconFilter = !isEdge && hovered && !isActiveQA
-    ? "brightness(1.2) drop-shadow(0 0 6px currentColor)"
-    : isActiveQA
-      ? "drop-shadow(0 0 5px currentColor)"
-      : "none";
+  const iconFilter = isDark
+    ? (!isEdge && hovered && !isActiveQA
+        ? "brightness(1.2) drop-shadow(0 0 6px currentColor)"
+        : isActiveQA
+          ? "drop-shadow(0 0 5px currentColor)"
+          : "none")
+    : "none";
 
   const handlePointerUp = (e: React.PointerEvent) => {
     e.stopPropagation();
