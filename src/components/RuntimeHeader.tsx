@@ -158,7 +158,7 @@ export default function RuntimeHeader() {
                 className="flex items-center gap-0.5 px-1.5 h-8 transition-colors"
                 style={{ borderRadius: 'var(--mm-radius-xs)' }}
               >
-                <Bot className="h-5 w-5 shrink-0" style={activeAigent?.color ? { color: activeAigent.color, fill: activeAigent.color } : { color: 'var(--mm-ink-secondary)' }} />
+                <Bot className="h-5 w-5 shrink-0" style={activeAigent?.color ? (theme === "light" ? { fill: activeAigent.color, stroke: '#FFFDF7', strokeWidth: 1.5, color: activeAigent.color } : { color: activeAigent.color, fill: activeAigent.color }) : { color: 'var(--mm-ink-secondary)' }} />
                 <ChevronDown className="h-3 w-3 shrink-0" style={{ color: 'var(--mm-ink-muted)' }} />
               </button>
             </PopoverTrigger>
@@ -241,7 +241,7 @@ export default function RuntimeHeader() {
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center cursor-default">
-                <Box className="h-[18px] w-[18px]" style={cartridgeColor ? { color: cartridgeColor, fill: cartridgeColor } : { color: 'var(--mm-ink-muted)' }} />
+                <Box className="h-[18px] w-[18px]" style={cartridgeColor ? (theme === "light" ? { fill: cartridgeColor, stroke: '#FFFDF7', strokeWidth: 1.5, color: cartridgeColor } : { color: cartridgeColor, fill: cartridgeColor }) : { color: 'var(--mm-ink-muted)' }} />
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">
