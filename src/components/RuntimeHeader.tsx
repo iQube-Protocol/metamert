@@ -272,18 +272,20 @@ export default function RuntimeHeader() {
           <Tooltip>
             <TooltipTrigger asChild>
               <div
-                className={`flex items-center gap-4 px-3 py-2 text-xs cursor-default transition-all duration-300 ${trustFlash ? "ring-1 ring-mm-accent-runtime/40 scale-105" : ""}`}
+                className={`relative flex items-center gap-4 px-3 py-2 text-xs cursor-default transition-all duration-300 ${trustFlash ? "ring-1 ring-mm-accent-runtime/40 scale-105" : ""}`}
                 style={{
                   borderRadius: 'var(--mm-radius-xs)',
                   color: 'var(--mm-ink-muted)',
                 }}
               >
-                <div className="flex items-center gap-0.5">
+                {/* Background layer behind content so dots stay vivid */}
+                <div className="absolute inset-0 bg-mm-canvas-variant/40" style={{ borderRadius: 'inherit' }} />
+                <div className="relative flex items-center gap-0.5">
                   <span className="font-medium mr-1" style={{ color: 'var(--mm-ink-secondary)' }}>R</span>
                   {renderDots(rScore, rColor)}
                   {reliabilityDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${reliabilityDir === "up" ? "text-mm-accent-earn" : "text-mm-accent-alert"}`}>{reliabilityDir === "up" ? "▲" : "▼"}</span>}
                 </div>
-                <div className="flex items-center gap-0.5">
+                <div className="relative flex items-center gap-0.5">
                   <span className="font-medium mr-1" style={{ color: 'var(--mm-ink-secondary)' }}>T</span>
                   {renderDots(tScore, tColor)}
                   {trustDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${trustDir === "up" ? "text-mm-accent-earn" : "text-mm-accent-alert"}`}>{trustDir === "up" ? "▲" : "▼"}</span>}
