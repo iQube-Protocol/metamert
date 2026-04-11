@@ -171,7 +171,7 @@ export default function RuntimeFrame() {
   if (!config) return null;
 
   return (
-    <div className={`absolute inset-0 transition-opacity duration-300 ${transitioning ? "opacity-80" : "opacity-100"}`} style={{ backgroundColor: 'var(--mm-canvas-base)' }}>
+    <div className={`absolute inset-0 transition-opacity duration-300 ${transitioning ? "opacity-80" : "opacity-100"}`} style={{ backgroundColor: 'var(--mm-canvas-base)', borderRadius: 0 }}>
       <EmbedFrame
         ref={iframeRef}
         url={config.iframe.url}

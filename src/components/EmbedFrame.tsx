@@ -128,7 +128,7 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
     }
 
     return (
-      <div className={`relative ${className}`}>
+      <div className={`relative ${className}`} style={{ borderRadius: 0 }}>
         {status === "loading" && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -138,6 +138,7 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
           ref={ref}
           src={src}
           className="absolute inset-0 h-full w-full border-0"
+          style={{ borderRadius: 0 }}
           allow="clipboard-write; clipboard-read"
           onLoad={handleIframeLoad}
           title="metaMe Runtime"
