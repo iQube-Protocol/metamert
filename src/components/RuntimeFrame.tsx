@@ -180,6 +180,22 @@ export default function RuntimeFrame() {
         onReady={handleReady}
         onStatusChange={handleStatusChange}
       />
+      <div
+        className="pointer-events-none absolute left-0 top-0 z-10"
+        style={{ width: 'var(--mm-radius-lg)', height: 'var(--mm-radius-lg)', backgroundColor: 'var(--mm-surface-1)' }}
+      />
+      <div
+        className="pointer-events-none absolute right-0 top-0 z-10"
+        style={{ width: 'var(--mm-radius-lg)', height: 'var(--mm-radius-lg)', backgroundColor: 'var(--mm-surface-1)' }}
+      />
+      <div
+        className="pointer-events-none absolute bottom-0 left-0 z-10"
+        style={{ width: 'var(--mm-radius-lg)', height: 'var(--mm-radius-lg)', backgroundColor: 'var(--mm-surface-1)' }}
+      />
+      <div
+        className="pointer-events-none absolute bottom-0 right-0 z-10"
+        style={{ width: 'var(--mm-radius-lg)', height: 'var(--mm-radius-lg)', backgroundColor: 'var(--mm-surface-1)' }}
+      />
     </div>
   );
 }
