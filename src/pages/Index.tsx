@@ -58,7 +58,7 @@ function ShellLayout() {
     <BrowserProvider iframeRef={iframeRef} config={config}>
       <div className="flex h-dvh flex-col" style={{ backgroundColor: 'var(--mm-canvas-base)' }}>
         {showHeader && <RuntimeHeader />}
-        <div className="relative flex-1 overflow-hidden" style={{ borderRadius: 0 }}>
+        <div className="relative flex-1 overflow-hidden">
           {menuActive && (
             <div
               className="absolute inset-0 z-40"
