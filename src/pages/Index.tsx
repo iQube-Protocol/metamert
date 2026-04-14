@@ -8,13 +8,13 @@ import BrowserSurfaceHost from "@/components/browser/BrowserSurfaceHost";
 import BrowserMinimizedPill from "@/components/browser/BrowserMinimizedPill";
 import BrowserSessionPanel from "@/components/browser/BrowserSessionPanel";
 import BrowserHistoryDrawer from "@/components/browser/BrowserHistoryDrawer";
-import MetaMeSettingsDrawer from "@/components/metame/MetaMeSettingsDrawer";
+
 import { Loader2 } from "lucide-react";
 
 function ShellLayout() {
   const shell = useShell();
   const { config, loading, hydrate, resetKey, viewState, deactivateMode, iframeRef, runtimeHints } = shell;
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  
 
   // Reset scroll when mobile keyboard closes (viewport height increases)
   useEffect(() => {
@@ -73,8 +73,7 @@ function ShellLayout() {
         <BrowserSessionPanel />
         <BrowserHistoryDrawer />
         <BrowserMinimizedPill />
-        <SmartMenu onOpenSettings={() => setSettingsOpen(true)} />
-        <MetaMeSettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        <SmartMenu />
       </div>
     </BrowserProvider>
   );
