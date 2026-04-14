@@ -236,7 +236,7 @@ function NavButton({
   onAction,
   onHoverEnter,
   onHoverLeave,
-  onOpenSettings,
+  
 }: {
   item: { id: SmartMenuMode; label: string; icon: string };
   isCenter?: boolean;
