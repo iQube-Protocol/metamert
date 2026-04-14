@@ -37,7 +37,7 @@ const NAV_ITEMS: { id: SmartMenuMode; label: string; icon: string }[] = [
   { id: "share", label: "Share", icon: "share-2" },
 ];
 
-export default function SmartMenu() {
+export default function SmartMenu({ onOpenSettings }: { onOpenSettings?: () => void } = {}) {
   const {
     config,
     viewState,
@@ -199,7 +199,7 @@ export default function SmartMenu() {
           onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[0]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            <NavButton item={NAV_ITEMS[0]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} onOpenSettings={onOpenSettings} />
           </div>
           <div
             className="flex-1 min-w-[8px]"
@@ -235,6 +235,7 @@ function NavButton({
   onAction,
   onHoverEnter,
   onHoverLeave,
+  onOpenSettings,
 }: {
   item: { id: SmartMenuMode; label: string; icon: string };
   isCenter?: boolean;
@@ -243,6 +244,7 @@ function NavButton({
   onAction: (id: string) => Promise<void>;
   onHoverEnter: (mode: SmartMenuMode) => void;
   onHoverLeave: () => void;
+  onOpenSettings?: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const Icon = resolveIcon(item.icon, item.id);
