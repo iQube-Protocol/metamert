@@ -5888,6 +5888,69 @@ export type Database = {
         }
         Relationships: []
       }
+      knyt_followup_queue: {
+        Row: {
+          current_state: string | null
+          display_name: string | null
+          email: string | null
+          entity_type: string
+          id: string
+          investor_id: string | null
+          last_computed_at: string
+          partner_id: string | null
+          priority_score: number
+          queue_reason: string | null
+          recommended_channel: string | null
+          recommended_message_angle: string | null
+          recommended_next_action: string | null
+        }
+        Insert: {
+          current_state?: string | null
+          display_name?: string | null
+          email?: string | null
+          entity_type: string
+          id?: string
+          investor_id?: string | null
+          last_computed_at?: string
+          partner_id?: string | null
+          priority_score?: number
+          queue_reason?: string | null
+          recommended_channel?: string | null
+          recommended_message_angle?: string | null
+          recommended_next_action?: string | null
+        }
+        Update: {
+          current_state?: string | null
+          display_name?: string | null
+          email?: string | null
+          entity_type?: string
+          id?: string
+          investor_id?: string | null
+          last_computed_at?: string
+          partner_id?: string | null
+          priority_score?: number
+          queue_reason?: string | null
+          recommended_channel?: string | null
+          recommended_message_angle?: string | null
+          recommended_next_action?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knyt_followup_queue_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "nakamoto_knyt_personas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knyt_followup_queue_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partner_outreach"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knyt_order_milestones: {
         Row: {
           achieved_at: string
@@ -6131,6 +6194,132 @@ export type Database = {
           source_event_id?: string | null
           task_type?: string
           tx_hash?: string | null
+        }
+        Relationships: []
+      }
+      knyt_tracking_click_events: {
+        Row: {
+          clicked_at: string
+          id: string
+          investor_id: string | null
+          ip_address: string | null
+          link_tag: string | null
+          partner_slug: string | null
+          resolved_ks_url: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          clicked_at?: string
+          id?: string
+          investor_id?: string | null
+          ip_address?: string | null
+          link_tag?: string | null
+          partner_slug?: string | null
+          resolved_ks_url?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          clicked_at?: string
+          id?: string
+          investor_id?: string | null
+          ip_address?: string | null
+          link_tag?: string | null
+          partner_slug?: string | null
+          resolved_ks_url?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knyt_tracking_click_events_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "nakamoto_knyt_personas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knyt_tracking_click_events_link_tag_fkey"
+            columns: ["link_tag"]
+            isOneToOne: false
+            referencedRelation: "knyt_tracking_link_registry"
+            referencedColumns: ["tag_name"]
+          },
+        ]
+      }
+      knyt_tracking_link_registry: {
+        Row: {
+          campaign_slug: string
+          channel: string
+          click_count: number
+          created_at: string
+          id: string
+          is_active: boolean
+          kickstarter_ref_tag: string
+          notes: string | null
+          owner_key: string | null
+          owner_name: string | null
+          owner_type: string
+          tag_name: string
+          updated_at: string
+          utm_campaign: string
+          utm_content: string | null
+          utm_medium: string
+          utm_source: string
+          utm_term: string | null
+        }
+        Insert: {
+          campaign_slug?: string
+          channel: string
+          click_count?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kickstarter_ref_tag?: string
+          notes?: string | null
+          owner_key?: string | null
+          owner_name?: string | null
+          owner_type: string
+          tag_name: string
+          updated_at?: string
+          utm_campaign?: string
+          utm_content?: string | null
+          utm_medium?: string
+          utm_source?: string
+          utm_term?: string | null
+        }
+        Update: {
+          campaign_slug?: string
+          channel?: string
+          click_count?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kickstarter_ref_tag?: string
+          notes?: string | null
+          owner_key?: string | null
+          owner_name?: string | null
+          owner_type?: string
+          tag_name?: string
+          updated_at?: string
+          utm_campaign?: string
+          utm_content?: string | null
+          utm_medium?: string
+          utm_source?: string
+          utm_term?: string | null
         }
         Relationships: []
       }
@@ -7315,9 +7504,20 @@ export type Database = {
           Address: string | null
           Age: string | null
           "BTC-Public-Key": string | null
+          campaign_cohort: string | null
+          campaign_notes: string | null
+          campaign_state: string | null
+          campaign_tags: string[] | null
           "Chain-IDs": string[] | null
           "Characters-Owned": string | null
           created_at: string
+          csv_first_committed_date: string | null
+          csv_investment_status: string | null
+          csv_last_disbursed_date: string | null
+          csv_metaknyt_nfts: string | null
+          csv_other_nfts: string | null
+          csv_transaction_count: number | null
+          csv_transfer_methods: string | null
           "Digital-Comics-Owned": string | null
           "Discord-Handle": string | null
           Email: string | null
@@ -7326,23 +7526,36 @@ export type Database = {
           "First-Name": string | null
           id: string
           "Instagram-Handle": string | null
+          investment_amount_band: string | null
+          investor_priority_band: string | null
+          kickstarter_backed_at: string | null
+          kickstarter_clicked_at: string | null
           "KNYT-Cards-Owned": string | null
           "KNYT-COYN-Owned": string | null
           "KNYT-ID": string | null
           "KNYT-Posters-Owned": string | null
+          last_campaign_sent_at: string | null
+          last_campaign_sequence: string | null
           "Last-Name": string | null
           "LinkedIn-ID": string | null
           "LinkedIn-Profile-URL": string | null
           "Local-City": string | null
+          message_angle: string | null
           "Metaiye-Shares-Owned": string | null
           "MetaKeep-Public-Key": string | null
           "Motion-Comics-Owned": string | null
+          offer_fit: string | null
           "OM-Member-Since": string | null
           "OM-Tier-Status": string | null
           "Paper-Comics-Owned": string | null
           "Phone-Number": string | null
+          platform_activated_at: string | null
+          platform_auth_profile_id: string | null
+          preferred_channel_primary: string | null
+          preferred_channel_secondary: string | null
           Profession: string | null
           profile_image_url: string | null
+          reactivation_potential: string | null
           "Telegram-Handle": string | null
           "ThirdWeb-Public-Key": string | null
           "TikTok-Handle": string | null
@@ -7350,7 +7563,7 @@ export type Database = {
           "Total-Invested": string | null
           "Twitter-Handle": string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           "Wallets-of-Interest": string[] | null
           "Web3-Interests": string[] | null
           "YouTube-ID": string | null
@@ -7359,9 +7572,20 @@ export type Database = {
           Address?: string | null
           Age?: string | null
           "BTC-Public-Key"?: string | null
+          campaign_cohort?: string | null
+          campaign_notes?: string | null
+          campaign_state?: string | null
+          campaign_tags?: string[] | null
           "Chain-IDs"?: string[] | null
           "Characters-Owned"?: string | null
           created_at?: string
+          csv_first_committed_date?: string | null
+          csv_investment_status?: string | null
+          csv_last_disbursed_date?: string | null
+          csv_metaknyt_nfts?: string | null
+          csv_other_nfts?: string | null
+          csv_transaction_count?: number | null
+          csv_transfer_methods?: string | null
           "Digital-Comics-Owned"?: string | null
           "Discord-Handle"?: string | null
           Email?: string | null
@@ -7370,23 +7594,36 @@ export type Database = {
           "First-Name"?: string | null
           id?: string
           "Instagram-Handle"?: string | null
+          investment_amount_band?: string | null
+          investor_priority_band?: string | null
+          kickstarter_backed_at?: string | null
+          kickstarter_clicked_at?: string | null
           "KNYT-Cards-Owned"?: string | null
           "KNYT-COYN-Owned"?: string | null
           "KNYT-ID"?: string | null
           "KNYT-Posters-Owned"?: string | null
+          last_campaign_sent_at?: string | null
+          last_campaign_sequence?: string | null
           "Last-Name"?: string | null
           "LinkedIn-ID"?: string | null
           "LinkedIn-Profile-URL"?: string | null
           "Local-City"?: string | null
+          message_angle?: string | null
           "Metaiye-Shares-Owned"?: string | null
           "MetaKeep-Public-Key"?: string | null
           "Motion-Comics-Owned"?: string | null
+          offer_fit?: string | null
           "OM-Member-Since"?: string | null
           "OM-Tier-Status"?: string | null
           "Paper-Comics-Owned"?: string | null
           "Phone-Number"?: string | null
+          platform_activated_at?: string | null
+          platform_auth_profile_id?: string | null
+          preferred_channel_primary?: string | null
+          preferred_channel_secondary?: string | null
           Profession?: string | null
           profile_image_url?: string | null
+          reactivation_potential?: string | null
           "Telegram-Handle"?: string | null
           "ThirdWeb-Public-Key"?: string | null
           "TikTok-Handle"?: string | null
@@ -7394,7 +7631,7 @@ export type Database = {
           "Total-Invested"?: string | null
           "Twitter-Handle"?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           "Wallets-of-Interest"?: string[] | null
           "Web3-Interests"?: string[] | null
           "YouTube-ID"?: string | null
@@ -7403,9 +7640,20 @@ export type Database = {
           Address?: string | null
           Age?: string | null
           "BTC-Public-Key"?: string | null
+          campaign_cohort?: string | null
+          campaign_notes?: string | null
+          campaign_state?: string | null
+          campaign_tags?: string[] | null
           "Chain-IDs"?: string[] | null
           "Characters-Owned"?: string | null
           created_at?: string
+          csv_first_committed_date?: string | null
+          csv_investment_status?: string | null
+          csv_last_disbursed_date?: string | null
+          csv_metaknyt_nfts?: string | null
+          csv_other_nfts?: string | null
+          csv_transaction_count?: number | null
+          csv_transfer_methods?: string | null
           "Digital-Comics-Owned"?: string | null
           "Discord-Handle"?: string | null
           Email?: string | null
@@ -7414,23 +7662,36 @@ export type Database = {
           "First-Name"?: string | null
           id?: string
           "Instagram-Handle"?: string | null
+          investment_amount_band?: string | null
+          investor_priority_band?: string | null
+          kickstarter_backed_at?: string | null
+          kickstarter_clicked_at?: string | null
           "KNYT-Cards-Owned"?: string | null
           "KNYT-COYN-Owned"?: string | null
           "KNYT-ID"?: string | null
           "KNYT-Posters-Owned"?: string | null
+          last_campaign_sent_at?: string | null
+          last_campaign_sequence?: string | null
           "Last-Name"?: string | null
           "LinkedIn-ID"?: string | null
           "LinkedIn-Profile-URL"?: string | null
           "Local-City"?: string | null
+          message_angle?: string | null
           "Metaiye-Shares-Owned"?: string | null
           "MetaKeep-Public-Key"?: string | null
           "Motion-Comics-Owned"?: string | null
+          offer_fit?: string | null
           "OM-Member-Since"?: string | null
           "OM-Tier-Status"?: string | null
           "Paper-Comics-Owned"?: string | null
           "Phone-Number"?: string | null
+          platform_activated_at?: string | null
+          platform_auth_profile_id?: string | null
+          preferred_channel_primary?: string | null
+          preferred_channel_secondary?: string | null
           Profession?: string | null
           profile_image_url?: string | null
+          reactivation_potential?: string | null
           "Telegram-Handle"?: string | null
           "ThirdWeb-Public-Key"?: string | null
           "TikTok-Handle"?: string | null
@@ -7438,7 +7699,7 @@ export type Database = {
           "Total-Invested"?: string | null
           "Twitter-Handle"?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           "Wallets-of-Interest"?: string[] | null
           "Web3-Interests"?: string[] | null
           "YouTube-ID"?: string | null
@@ -8324,6 +8585,60 @@ export type Database = {
           reason?: string | null
           receipt_eligible?: boolean | null
           to_role?: string
+        }
+        Relationships: []
+      }
+      partner_outreach: {
+        Row: {
+          committed: boolean | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string | null
+          first_contact_at: string | null
+          follow_up_at: string | null
+          id: string
+          last_contact_at: string | null
+          notes: string | null
+          outreach_channel: string | null
+          outreach_status: string | null
+          partner_name: string
+          platform: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          committed?: boolean | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          first_contact_at?: string | null
+          follow_up_at?: string | null
+          id?: string
+          last_contact_at?: string | null
+          notes?: string | null
+          outreach_channel?: string | null
+          outreach_status?: string | null
+          partner_name: string
+          platform?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          committed?: boolean | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          first_contact_at?: string | null
+          follow_up_at?: string | null
+          id?: string
+          last_contact_at?: string | null
+          notes?: string | null
+          outreach_channel?: string | null
+          outreach_status?: string | null
+          partner_name?: string
+          platform?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -13253,6 +13568,10 @@ export type Database = {
           similarity: number
           title: string
         }[]
+      }
+      increment_knyt_link_click_count: {
+        Args: { p_tag_name: string }
+        Returns: undefined
       }
       increment_share_count: {
         Args: { content_id: string }
