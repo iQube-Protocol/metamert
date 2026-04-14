@@ -179,6 +179,7 @@ const PLAY_ACTIONS: QuickActionDef[] = [
 ];
 
 const BE_ACTIONS: QuickActionDef[] = [
+  { id: "settings",  label: "Settings",  icon: "settings",   kind: "system-only", triggersInference: false },
   { id: "vault",     label: "Vault",     icon: "lock",       kind: "llm+menu",    triggersInference: true,  prompt: "Open my secure vault" },
   { id: "persona",   label: "Persona",   icon: "user",       kind: "system-only", triggersInference: false },
   { id: "memory",    label: "Memory",    icon: "sparkles",   kind: "llm+menu",    triggersInference: true,  prompt: "Show my memory and context history" },
