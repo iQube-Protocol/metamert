@@ -7,7 +7,7 @@
  * Spec animations: mode pop, color wash, calm collapse.
  */
 import { useState, useRef, useCallback, useEffect } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { } from "lucide-react";
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
