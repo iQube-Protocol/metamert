@@ -7,6 +7,7 @@
  * Spec animations: mode pop, color wash, calm collapse.
  */
 import { useState, useRef, useCallback, useEffect } from "react";
+import { SlidersHorizontal } from "lucide-react";
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
@@ -37,7 +38,7 @@ const NAV_ITEMS: { id: SmartMenuMode; label: string; icon: string }[] = [
   { id: "share", label: "Share", icon: "share-2" },
 ];
 
-export default function SmartMenu() {
+export default function SmartMenu({ onOpenSettings }: { onOpenSettings?: () => void } = {}) {
   const {
     config,
     viewState,
@@ -199,7 +200,7 @@ export default function SmartMenu() {
           onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[0]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            <NavButton item={NAV_ITEMS[0]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} onOpenSettings={onOpenSettings} />
           </div>
           <div
             className="flex-1 min-w-[8px]"
@@ -235,6 +236,7 @@ function NavButton({
   onAction,
   onHoverEnter,
   onHoverLeave,
+  onOpenSettings,
 }: {
   item: { id: SmartMenuMode; label: string; icon: string };
   isCenter?: boolean;
@@ -243,6 +245,7 @@ function NavButton({
   onAction: (id: string) => Promise<void>;
   onHoverEnter: (mode: SmartMenuMode) => void;
   onHoverLeave: () => void;
+  onOpenSettings?: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const Icon = resolveIcon(item.icon, item.id);
@@ -274,31 +277,45 @@ function NavButton({
     }
   };
 
+  const showSettingsButton = item.id === "be" && onOpenSettings;
+
   return (
-    <button
-      onPointerUp={handlePointerUp}
-      onPointerEnter={() => { setHovered(true); onHoverEnter(item.id); }}
-      onPointerLeave={() => { setHovered(false); onHoverLeave(); }}
-      className={`flex flex-col items-center justify-center gap-0.5 py-0.5 text-[11px] transition-all duration-200
-        ${isCenter ? "min-w-[3.5rem] px-1" : "w-14 shrink-0"}
-        active:scale-110
-      `}
-      style={{ borderRadius: 'var(--mm-radius-xs)' }}
-    >
-      <span
-        className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200"
-        style={{
-          color: iconColor,
-          filter: iconFilter,
-        }}
+    <div className="relative flex flex-col items-center">
+      <button
+        onPointerUp={handlePointerUp}
+        onPointerEnter={() => { setHovered(true); onHoverEnter(item.id); }}
+        onPointerLeave={() => { setHovered(false); onHoverLeave(); }}
+        className={`flex flex-col items-center justify-center gap-0.5 py-0.5 text-[11px] transition-all duration-200
+          ${isCenter ? "min-w-[3.5rem] px-1" : "w-14 shrink-0"}
+          active:scale-110
+        `}
+        style={{ borderRadius: 'var(--mm-radius-xs)' }}
       >
-        {Icon ? (
-          <Icon
-            className={item.id === "play" ? "h-6 w-6" : "h-5 w-5"}
-          />
-        ) : <span className="h-5 w-5" />}
-      </span>
-      <span style={{ color: 'var(--mm-ink-muted)' }}>{item.label}</span>
-    </button>
+        <span
+          className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200"
+          style={{
+            color: iconColor,
+            filter: iconFilter,
+          }}
+        >
+          {Icon ? (
+            <Icon
+              className={item.id === "play" ? "h-6 w-6" : "h-5 w-5"}
+            />
+          ) : <span className="h-5 w-5" />}
+        </span>
+        <span style={{ color: 'var(--mm-ink-muted)' }}>{item.label}</span>
+      </button>
+      {showSettingsButton && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onOpenSettings!(); }}
+          className="absolute -top-0.5 -right-1 flex h-4 w-4 items-center justify-center rounded-full transition-opacity hover:opacity-80"
+          style={{ backgroundColor: 'var(--mm-accent-runtime)', color: 'var(--mm-ink-inverse)' }}
+          title="metaMe Settings"
+        >
+          <SlidersHorizontal className="h-2.5 w-2.5" />
+        </button>
+      )}
+    </div>
   );
 }
