@@ -7,7 +7,7 @@
  * Spec animations: mode pop, color wash, calm collapse.
  */
 import { useState, useRef, useCallback, useEffect } from "react";
-import { SlidersHorizontal } from "lucide-react";
+
 import { useShell } from "@/contexts/ShellContext";
 import { MODE_CONFIGS, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
@@ -303,17 +303,6 @@ function NavButton({
         </span>
         <span style={{ color: 'var(--mm-ink-muted)' }}>{item.label}</span>
       </button>
-      {item.id === "be" && (
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onAction("settings"); }}
-          className="absolute -top-0.5 -right-1 flex items-center gap-0.5 rounded px-1 py-0.5 text-[9px] transition hover:opacity-80"
-          style={{ color: 'var(--mm-ink-muted)' }}
-          title="metaMe Settings"
-        >
-          <SlidersHorizontal className="h-2.5 w-2.5" />
-        </button>
-      )}
     </div>
   );
 }

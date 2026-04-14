@@ -179,6 +179,7 @@ const PLAY_ACTIONS: QuickActionDef[] = [
 ];
 
 const BE_ACTIONS: QuickActionDef[] = [
+  { id: "settings",  label: "Settings",  icon: "settings",   kind: "system-only", triggersInference: false },
   { id: "vault",     label: "Vault",     icon: "lock",       kind: "llm+menu",    triggersInference: true,  prompt: "Open my secure vault" },
   { id: "persona",   label: "Persona",   icon: "user",       kind: "system-only", triggersInference: false },
   { id: "memory",    label: "Memory",    icon: "sparkles",   kind: "llm+menu",    triggersInference: true,  prompt: "Show my memory and context history" },
@@ -235,7 +236,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#4DA3FF",
     promptPlaceholder: "Set who you are being, your policy, memory, or identity context…",
     defaultCenteredQuickActionId: "policy",
-    mobileVisibleFold: ["persona", "memory", "policy", "identity", "presence"],
+    mobileVisibleFold: ["settings", "persona", "memory", "policy", "identity", "presence"],
     quickActions: BE_ACTIONS,
   },
   earn: {

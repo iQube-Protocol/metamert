@@ -7,7 +7,7 @@ import {
   Coins, Play, Pencil, Users, Share2,
   Bot, Cpu, MessageSquare, Sparkles, Zap,
   Eye, Headphones, BookOpen, Search, RefreshCw, RotateCcw, XCircle,
-  Lock, User, Shield, Fingerprint, Radio,
+  Lock, User, Shield, Fingerprint, Radio, Settings,
   Target, CheckSquare, Star, Tag, Compass, Wallet,
   PenLine, Palette, Hammer, Shuffle, Upload,
   Send, Download, Link, Truck, Box, Library,
@@ -42,6 +42,7 @@ const DEFAULTS: Record<string, LucideIcon> = {
   "close-codex": XCircle,
   "close_codex": XCircle,
   // Smart Menu quick action defaults
+  settings: Settings,
   vault: Lock,
   persona: User,
   memory: Sparkles,
