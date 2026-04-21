@@ -210,8 +210,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [submenuVisibility, setSubmenuVisibility] = useState<QuickActionVisibility>("visibleAuto");
   const [interactionState, setInteractionStateRaw] = useState<InteractionState>("idle");
   const [cartridgeState, setCartridgeState] = useState<CartridgeState>({
-    activeCartridgeId: "qriptopian",
-    activeCodexId: "qriptopian-codex",
+    activeCartridgeId: "qripto",
+    activeCodexId: "qripto-codex",
     available: DEFAULT_CARTRIDGES,
   });
   const [personaState, setPersonaState] = useState<PersonaState>({
