@@ -78,16 +78,18 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     setSubmenuType,
     pauseIdleTimer,
     resetIdleTimer,
+    runtimeContext,
+    setRuntimeContext,
   } = useShell();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activatedId, setActivatedId] = useState<string | null>(null);
 
   const effectiveMode = overrideMode ?? activeMode;
-  if (!effectiveMode) return null;
-  const modeConfig = MODE_CONFIGS[effectiveMode];
-  const accent = modeConfig.accentHex;
+  const modeConfig = effectiveMode ? MODE_CONFIGS[effectiveMode] : null;
+  const accent = modeConfig?.accentHex;
 
   const handleAction = useCallback((action: QuickActionDef) => {
+    if (!effectiveMode) return;
     setActivatedId(action.id);
     pauseIdleTimer();
 
@@ -110,6 +112,14 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
+    // Runtime context toggle (metaMe ↔ KNYT) lives on the play menu's central slot.
+    if (action.id === "knyt" && effectiveMode === "play") {
+      const next = runtimeContext === "knyt" ? "metame" : "knyt";
+      setRuntimeContext(next);
+      resetIdleTimer("quickAction");
+      return;
+    }
+
     if (action.prompt) {
       if (action.apiAction) {
         void handleMenuAction(action.apiAction);
@@ -126,17 +136,33 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     handleMenuAction(action.id);
-  }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode]);
+  }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, runtimeContext, setRuntimeContext, resetIdleTimer, sendIframeAction]);
 
-  const foldIds = modeConfig.mobileVisibleFold;
-  const firstFoldIndex = modeConfig.quickActions.findIndex(a => foldIds.includes(a.id));
+  const foldIds = modeConfig?.mobileVisibleFold ?? [];
+  const firstFoldIndex = modeConfig
+    ? modeConfig.quickActions.findIndex(a => foldIds.includes(a.id))
+    : -1;
+  const totalActions = modeConfig?.quickActions.length ?? 0;
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el || firstFoldIndex <= 0) return;
-    const itemWidth = el.scrollWidth / modeConfig.quickActions.length;
+    if (!el || firstFoldIndex <= 0 || totalActions === 0) return;
+    const itemWidth = el.scrollWidth / totalActions;
     el.scrollLeft = firstFoldIndex * itemWidth;
-  }, [firstFoldIndex, modeConfig.quickActions.length]);
+  }, [firstFoldIndex, totalActions]);
+
+  if (!effectiveMode || !modeConfig) return null;
+
+  // Resolve the dynamic context-toggle quick action (id "knyt" in PLAY_ACTIONS).
+  // It always shows the *opposite* context — when the runtime is in metaMe
+  // mode the button reads "KNYT" (tap to switch to KNYT), and vice versa.
+  const renderedActions = modeConfig.quickActions.map(a => {
+    if (effectiveMode === "play" && a.id === "knyt") {
+      const isKnyt = runtimeContext === "knyt";
+      return { ...a, label: isKnyt ? "metaMe" : "KNYT" };
+    }
+    return a;
+  });
 
   return (
     <div
@@ -149,7 +175,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
         className="flex items-center overflow-x-auto px-0 py-1.5 scrollbar-hide"
         style={{ scrollSnapType: "x mandatory", scrollBehavior: "auto" }}
       >
-        {modeConfig.quickActions.map((action) => {
+        {renderedActions.map((action) => {
           const Icon = resolveSmartIcon(action.icon, action.id);
           return (
             <QuickActionButton

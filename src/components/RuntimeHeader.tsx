@@ -43,7 +43,7 @@ function scoreDirection(prev: number | undefined, curr: number | undefined): "up
 }
 
 export default function RuntimeHeader() {
-  const { config, selectAigent, selectLLM, inferring, cartridgeState, knytOnboarding, iframeRef } = useShell();
+  const { config, selectAigent, selectLLM, inferring, cartridgeState, knytOnboarding, iframeRef, runtimeContext } = useShell();
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
   const [trustFlash, setTrustFlash] = useState(false);
@@ -134,11 +134,12 @@ export default function RuntimeHeader() {
   const activeAigent = config.selectors.aigent.options.find(o => o.id === config.selectors.aigent.current);
   const activeLLM = config.selectors.llm.options.find(o => o.id === config.selectors.llm.current);
 
-  // Cartridge/Codex info for header center
+  // Cartridge/Codex info for header center (tooltip only — color is now driven by runtimeContext)
   const activeCart = cartridgeState.available.find(c => c.id === cartridgeState.activeCartridgeId);
   const activeCodex = activeCart?.codexes.find(c => c.id === cartridgeState.activeCodexId);
-  // LOV-401: Show KNYT accent on cartridge icon during onboarding
-  const cartridgeColor = knytOnboarding ? "#F59E0B" : activeCart?.accentHex;
+  // Header lightning bolt color reflects the active runtime context, not the cartridge.
+  // KNYT context → amber. metaMe context → muted ink (or KNYT amber if onboarding).
+  const cartridgeColor = runtimeContext === "knyt" || knytOnboarding ? "#F59E0B" : undefined;
 
   return (
     <TooltipProvider delayDuration={300}>
