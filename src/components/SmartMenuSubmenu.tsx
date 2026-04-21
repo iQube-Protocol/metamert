@@ -85,26 +85,11 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
   const [activatedId, setActivatedId] = useState<string | null>(null);
 
   const effectiveMode = overrideMode ?? activeMode;
-  if (!effectiveMode) return null;
-  const modeConfig = MODE_CONFIGS[effectiveMode];
-  const accent = modeConfig.accentHex;
-
-  // Resolve the dynamic context-toggle quick action (id "knyt" in PLAY_ACTIONS).
-  // It always shows the *opposite* context — i.e. when the runtime is in metaMe
-  // mode the button reads "KNYT" (tap to switch to KNYT), and vice versa.
-  const renderedActions = modeConfig.quickActions.map(a => {
-    if (effectiveMode === "play" && a.id === "knyt") {
-      const isKnyt = runtimeContext === "knyt";
-      return {
-        ...a,
-        // Show the target context the user will switch to.
-        label: isKnyt ? "metaMe" : "KNYT",
-      };
-    }
-    return a;
-  });
+  const modeConfig = effectiveMode ? MODE_CONFIGS[effectiveMode] : null;
+  const accent = modeConfig?.accentHex;
 
   const handleAction = useCallback((action: QuickActionDef) => {
+    if (!effectiveMode) return;
     setActivatedId(action.id);
     pauseIdleTimer();
 
@@ -153,15 +138,31 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     handleMenuAction(action.id);
   }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, runtimeContext, setRuntimeContext, resetIdleTimer, sendIframeAction]);
 
-  const foldIds = modeConfig.mobileVisibleFold;
-  const firstFoldIndex = modeConfig.quickActions.findIndex(a => foldIds.includes(a.id));
+  const foldIds = modeConfig?.mobileVisibleFold ?? [];
+  const firstFoldIndex = modeConfig
+    ? modeConfig.quickActions.findIndex(a => foldIds.includes(a.id))
+    : -1;
+  const totalActions = modeConfig?.quickActions.length ?? 0;
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el || firstFoldIndex <= 0) return;
-    const itemWidth = el.scrollWidth / modeConfig.quickActions.length;
+    if (!el || firstFoldIndex <= 0 || totalActions === 0) return;
+    const itemWidth = el.scrollWidth / totalActions;
     el.scrollLeft = firstFoldIndex * itemWidth;
-  }, [firstFoldIndex, modeConfig.quickActions.length]);
+  }, [firstFoldIndex, totalActions]);
+
+  if (!effectiveMode || !modeConfig) return null;
+
+  // Resolve the dynamic context-toggle quick action (id "knyt" in PLAY_ACTIONS).
+  // It always shows the *opposite* context — when the runtime is in metaMe
+  // mode the button reads "KNYT" (tap to switch to KNYT), and vice versa.
+  const renderedActions = modeConfig.quickActions.map(a => {
+    if (effectiveMode === "play" && a.id === "knyt") {
+      const isKnyt = runtimeContext === "knyt";
+      return { ...a, label: isKnyt ? "metaMe" : "KNYT" };
+    }
+    return a;
+  });
 
   return (
     <div
