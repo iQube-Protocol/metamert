@@ -147,9 +147,9 @@ const DEFAULT_SHELL_CONFIG = {
     ],
   },
   iframe: {
-    url: "https://agentiz.com/triad/embed/codex/metame?theme=dark&closable=0&embed=1&shell=thin",
+    url: "https://dev-beta.aigentz.me/metame/runtime?embed=1&shell=thin",
     handoff_token: "dev-placeholder-token",
-    origin: "https://agentiz.com",
+    origin: "https://dev-beta.aigentz.me",
     bootstrap: { context: {} },
   },
 };
