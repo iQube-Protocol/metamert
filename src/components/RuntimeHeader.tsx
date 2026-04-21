@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Bot, ChevronDown, Check, Box, Sun, Moon } from "lucide-react";
+import { Bot, ChevronDown, Check, Zap, Sun, Moon } from "lucide-react";
 import ProviderIcon from "@/components/ProviderIcon";
 import {
   Popover,
@@ -241,7 +241,7 @@ export default function RuntimeHeader() {
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center cursor-default">
-                <Box className="h-[18px] w-[18px]" style={cartridgeColor ? (theme === "light" ? { color: cartridgeColor, stroke: cartridgeColor, fill: 'white', strokeWidth: 1.8 } : { color: cartridgeColor }) : { color: 'var(--mm-ink-muted)' }} />
+                <Zap className="h-[18px] w-[18px]" style={cartridgeColor ? (theme === "light" ? { color: cartridgeColor, stroke: cartridgeColor, fill: 'white', strokeWidth: 1.8 } : { color: cartridgeColor }) : { color: 'var(--mm-ink-muted)' }} />
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">
