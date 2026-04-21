@@ -893,7 +893,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   const pulseInference = useCallback(() => {
     inferCtrl.current?.start();
-    inferCtrl.current?.complete();
+    // Extended grace (4s) so the trust/reliability dot pulse stays visible
+    // long enough to clearly signal that a quick action triggered processing.
+    inferCtrl.current?.complete(4_000);
   }, []);
 
 
