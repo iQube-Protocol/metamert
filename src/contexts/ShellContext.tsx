@@ -385,56 +385,62 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
    */
   const launchCartridge = useCallback((cartridgeId: string) => {
     const cart = cartridgeState.available.find(c => c.id === cartridgeId);
+    const codexId = cart?.default_codex_id;
+
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
-      // New contract (Claude Code handoff): explicit launch signal.
-      postToIframe(iframeRef.current, {
-        type: "LAUNCH_CARTRIDGE",
-        cartridge_id: cartridgeId,
-        codex_id: cart?.default_codex_id,
-      } as any, origin);
-      // Also dispatch a MENU_ACTION so cartridges wired to the menu-action path
-      // (rather than LAUNCH_CARTRIDGE) still mount when picked from the shell menu.
-      postToIframe(iframeRef.current, {
-        type: "MENU_ACTION",
-        action_id: "cartridge.launch",
-        cartridge_id: cartridgeId,
-        codex_id: cart?.default_codex_id,
-      }, origin);
-      // Legacy contract: the runtime's existing cartridge mount path listens for
-      // SELECTOR_CHANGE { selector_type: "cartridge" }. Keep dispatching it as
-      // a fallback so KNYT (and any cartridge wired to the legacy path) still
-      // mounts. The runtime should treat the `id` as a cartridge slug, not a
-      // codex slug — if it raises "Codex not found" it's a runtime resolver bug.
+
+      // 1. Canonical mount message — the documented, working contract.
+      // (Dropped LAUNCH_CARTRIDGE + MENU_ACTION{cartridge.launch} which were
+      // causing "Codex not found" / indeterminate mount state.)
       postToIframe(iframeRef.current, {
         type: "SELECTOR_CHANGE",
         selector_type: "cartridge" as any,
         id: cartridgeId,
       }, origin);
+
+      // 2. Seed an initialisation prompt so the cartridge opens with a
+      //    meaningful first turn instead of an empty surface.
+      const seedPrompts: Record<string, string> = {
+        "metame-runtime": "Open the metaMe cartridge and orient me.",
+        "qriptopian": "Open the Qriptopian cartridge and show me what's available.",
+        "knyt": "Open the KNYT cartridge and walk me through it.",
+      };
+      const seedPrompt =
+        seedPrompts[cartridgeId] ??
+        `Open the ${cart?.label ?? cartridgeId} cartridge.`;
+
+      postToIframe(iframeRef.current, {
+        type: "PROMPT_SUBMIT",
+        text: seedPrompt,
+        cartridge_id: cartridgeId,
+        codex_id: codexId,
+      }, origin);
     }
+
     // Restore local cartridge state so the active checkmark moves, the codex
     // selector follows the new cartridge default, and outbound context
-    // enrichment (PROMPT_SUBMIT / MENU_ACTION / MODE_CHANGED) carries the
-    // correct cartridge_id + codex_id. Header lightning color is NOT affected
-    // because RuntimeHeader reads `runtimeContext`, not `cartridgeState`.
+    // enrichment carries the correct cartridge_id + codex_id. Header lightning
+    // color is NOT affected (RuntimeHeader reads `runtimeContext`).
     setCartridgeState(prev => ({
       ...prev,
       activeCartridgeId: cartridgeId,
-      activeCodexId: cart?.default_codex_id ?? prev.activeCodexId,
+      activeCodexId: codexId ?? prev.activeCodexId,
     }));
+
     // Optimistically show the cartridge overlay indicator (floppy-disk + X)
-    // in the header. The runtime emits CARTRIDGE_OVERLAY_ACTIVE only when the
-    // cartridge is opened from inside the iframe; when launched from the shell
-    // menu, we mirror that state here so the indicator appears immediately.
-    // A subsequent CARTRIDGE_OVERLAY_ACTIVE {active:false} from the runtime
-    // (or closeCartridgeOverlay) will clear it.
+    // in the header so the user gets immediate feedback.
     if (cart) {
       setCartridgeOverlay({ slug: cart.id, title: cart.label ?? cart.id });
     }
+
+    // Pulse trust/reliability dots while the cartridge mounts.
+    pulseInference();
+
     // Return to quick actions after selecting
     setSubmenuTypeState("quickActions");
     startIdleTimer();
-  }, [config, cartridgeState.available, startIdleTimer]);
+  }, [config, cartridgeState.available, startIdleTimer, pulseInference]);
 
   /**
    * Legacy `selectCartridge` — kept for backward compat (e.g. cartridge selector
