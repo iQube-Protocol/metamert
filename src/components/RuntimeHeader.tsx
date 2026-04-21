@@ -268,11 +268,11 @@ export default function RuntimeHeader() {
           </Tooltip>
         </div>
         {/* Right: trust dots */}
-        <div className="flex items-center">
+        <div className="flex items-center justify-end ml-auto">
           <Tooltip>
             <TooltipTrigger asChild>
               <div
-                className={`relative flex items-center gap-4 px-3 py-2 text-xs cursor-default transition-all duration-300 ${trustFlash ? "ring-1 ring-mm-accent-runtime/40 scale-105" : ""}`}
+                className={`relative flex items-center gap-4 px-3 py-2 text-[11px] cursor-default transition-all duration-300 ${trustFlash ? "ring-1 ring-mm-accent-runtime/40 scale-105" : ""}`}
                 style={{
                   borderRadius: 'var(--mm-radius-xs)',
                   color: 'var(--mm-ink-muted)',
