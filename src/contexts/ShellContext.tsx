@@ -387,20 +387,22 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     const cart = cartridgeState.available.find(c => c.id === cartridgeId);
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
-      // New contract (Claude Code handoff): explicit launch signal
+      // New contract (Claude Code handoff): explicit launch signal.
+      // Send ONLY this message — the legacy SELECTOR_CHANGE { selector_type:"cartridge" }
+      // fallback was causing the runtime to attempt to resolve the cartridge id as
+      // a codex slug, producing "Codex not found" for metame-runtime / qriptopian.
       postToIframe(iframeRef.current, {
         type: "LAUNCH_CARTRIDGE",
         cartridge_id: cartridgeId,
         codex_id: cart?.default_codex_id,
       } as any, origin);
-      // Legacy contract: the runtime's existing cartridge mount path listens
-      // for SELECTOR_CHANGE { selector_type: "cartridge" }. Keep dispatching
-      // it so cartridges that aren't yet wired to LAUNCH_CARTRIDGE
-      // (e.g. qriptopian, metame-runtime) still load when picked from the menu.
+      // Also dispatch a MENU_ACTION so cartridges wired to the menu-action path
+      // (rather than LAUNCH_CARTRIDGE) still mount when picked from the shell menu.
       postToIframe(iframeRef.current, {
-        type: "SELECTOR_CHANGE",
-        selector_type: "cartridge" as any,
-        id: cartridgeId,
+        type: "MENU_ACTION",
+        action_id: "cartridge.launch",
+        cartridge_id: cartridgeId,
+        codex_id: cart?.default_codex_id,
       }, origin);
     }
     // Restore local cartridge state so the active checkmark moves, the codex
