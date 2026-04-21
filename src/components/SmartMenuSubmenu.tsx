@@ -144,12 +144,25 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     : -1;
   const totalActions = modeConfig?.quickActions.length ?? 0;
 
+  // Center the default centered quick action (e.g., KNYT in Play mode)
+  const centeredActionId = modeConfig?.defaultCenteredQuickActionId;
+  const centeredIndex = centeredActionId
+    ? modeConfig.quickActions.findIndex(a => a.id === centeredActionId)
+    : -1;
+
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el || firstFoldIndex <= 0 || totalActions === 0) return;
+    if (!el || totalActions === 0) return;
     const itemWidth = el.scrollWidth / totalActions;
-    el.scrollLeft = firstFoldIndex * itemWidth;
-  }, [firstFoldIndex, totalActions]);
+    
+    // Priority: center the default centered action if it exists
+    if (centeredIndex >= 0) {
+      const containerWidth = el.clientWidth;
+      el.scrollLeft = (centeredIndex * itemWidth) - (containerWidth / 2) + (itemWidth / 2);
+    } else if (firstFoldIndex > 0) {
+      el.scrollLeft = firstFoldIndex * itemWidth;
+    }
+  }, [centeredIndex, firstFoldIndex, totalActions]);
 
   if (!effectiveMode || !modeConfig) return null;
 
