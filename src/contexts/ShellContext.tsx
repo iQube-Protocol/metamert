@@ -41,6 +41,9 @@ import {
 
 export type ShellState = "welcome" | "post-welcome";
 
+/** Active runtime context — drives the header lightning bolt color and copilot framing. */
+export type RuntimeContext = "metame" | "knyt";
+
 // Runtime-driven hints the shell can reflect without rendering content (LOV-301)
 export interface RuntimeHints {
   activeGuide: boolean;      // runtime has an active guide session
