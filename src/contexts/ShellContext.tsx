@@ -382,15 +382,25 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
    * driven exclusively by `runtimeContext`).
    */
   const launchCartridge = useCallback((cartridgeId: string) => {
+    const cart = cartridgeState.available.find(c => c.id === cartridgeId);
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
-      const cart = cartridgeState.available.find(c => c.id === cartridgeId);
       postToIframe(iframeRef.current, {
         type: "LAUNCH_CARTRIDGE",
         cartridge_id: cartridgeId,
         codex_id: cart?.default_codex_id,
       } as any, origin);
     }
+    // Restore local cartridge state so the active checkmark moves, the codex
+    // selector follows the new cartridge default, and outbound context
+    // enrichment (PROMPT_SUBMIT / MENU_ACTION / MODE_CHANGED) carries the
+    // correct cartridge_id + codex_id. Header lightning color is NOT affected
+    // because RuntimeHeader reads `runtimeContext`, not `cartridgeState`.
+    setCartridgeState(prev => ({
+      ...prev,
+      activeCartridgeId: cartridgeId,
+      activeCodexId: cart?.default_codex_id ?? prev.activeCodexId,
+    }));
     // Return to quick actions after selecting
     setSubmenuTypeState("quickActions");
     startIdleTimer();
