@@ -1,82 +1,46 @@
 
 
-# metaMe Smart Menu — Lovable Parity Artifacts
+# Restore cartridge activation while keeping header-color decoupling
 
-## Summary
+## What regressed
 
-Generate the complete file set as downloadable artifacts in `/mnt/documents/` so Claude Code can consume them directly in the Next.js runtime app. These files will bring the runtime's menu and header system into alignment with the thin client shell's SmartMenu patterns.
+When we decoupled the header lightning bolt from cartridge selection, `selectCartridge()` was rewired to *only* dispatch `LAUNCH_CARTRIDGE` and stopped updating `cartridgeState`. That broke three things that have nothing to do with the header color:
 
-## What I Can and Cannot Do
+1. The **active checkmark / accent on the cartridge pill** in the Play → Cartridge selector no longer moves to the chosen cartridge.
+2. All outbound iframe and AA-API messages (`PROMPT_SUBMIT`, `MENU_ACTION`, `MODE_CHANGED`, `sendIframeAction`) carry the **stale `cartridge_id` / `codex_id`** ("qriptopian") regardless of what the user picked, so the runtime can't scope inference to the right cartridge.
+3. The **active codex** no longer follows the cartridge default when switching.
 
-**Can do:** Generate all the files listed in the brief as standalone TypeScript/TSX artifacts, using the thin client's proven patterns (token system, icon resolution, quick action configs, mode configs, prompt bar, carousel, selectors, glass-float styling).
+## What we keep
 
-**Cannot do:** Test these inside the Next.js app or verify integration with `MetaMeRuntimeClient.tsx` — that's Claude Code's domain.
+- Header lightning bolt color stays driven exclusively by `runtimeContext` (coral for metaMe, amber for KNYT) — i.e. cartridge selection still does **not** tint the header.
+- The cartridge overlay floppy-disk indicator added for Claude Code still works the same.
+- The `LAUNCH_CARTRIDGE` message is still sent to the iframe so the runtime mounts the requested cartridge.
+- The KNYT central quick-action remains the metaMe ↔ KNYT runtime-context toggle.
 
-## File Set to Generate
+## The fix (one file: `src/contexts/ShellContext.tsx`)
 
-### 1. Type definitions (ground truth)
-- `types/smartMenu.ts` — MenuItem, MenuSection, SmartMenuConfig, MenuState, MenuContext — aligned with thin client's `smart-menu-config.ts` patterns
-- `types/smartDrawer.ts` — DrawerSet, Drawer, DrawerTab, DrawerSlot, DrawerSession, VisibilityRules
-- `ui/smartLayout/types.ts` — DrawerSize (6 variants), MenuMode (4 modes), SmartMenuBehavior
+Update `launchCartridge()` so it does both jobs cleanly:
 
-### 2. Layout shell components
-- `ui/smartLayout/SmartDrawerShell.tsx` — unified drawer container with 6 size variants, using `--mm-*` tokens
-- `ui/smartLayout/SmartMenuRail.tsx` — vertical menu rail mirroring the thin client's nav buttons (Be/Make/Play/Earn/Share), mode accent colors, hover previews
-- `ui/smartLayout/drawerStyles.ts` — CSS class generator per DrawerSize
-- `ui/smartLayout/index.ts` — barrel export
+1. **Dispatch `LAUNCH_CARTRIDGE`** to the iframe (unchanged).
+2. **Update `cartridgeState`**: set `activeCartridgeId` to the new id and set `activeCodexId` to that cartridge's `default_codex_id`. This restores the active checkmark, restores correct outbound context enrichment, and re-aligns the codex selector — without touching the header lightning color (which now reads from `runtimeContext`, not `cartridgeState`).
+3. Keep the existing post-select UX: switch the submenu back to `quickActions` and restart the idle timer.
 
-### 3. Service layer
-- `services/menu/menuService.ts` — visibility filtering, state management, drawer toggle logic
-- `services/menu/fixtures/menuFixtures.ts` — metaKnyts / Qriptopian / MoneyPenny configs (derived from thin client's `DEFAULT_CARTRIDGES` and `MODE_CONFIGS`)
-- `services/drawer/drawerService.ts` — CRUD, validation, session management
-- `services/drawer/fixtures/drawerSetFixtures.ts` — 3 complete drawer configurations
-- `services/drawer/visibilityEvaluator.ts` — persona/device/reputation filtering
-- `services/drawer/slotDataResolver.ts` — content/wallet/DeFi data resolution stubs
-- `services/drawer/cardVariantRegistry.ts` — card variant catalog
-- `services/drawer/modalSelectionService.ts` — AI-driven variant selection stub
-- `services/drawer/smartTriadAdapter.ts` — Smart Triad integration stub
-- `services/drawer/index.ts` — barrel export
+`selectCartridge()` continues to delegate to `launchCartridge()`, so existing call sites (the cartridge pill in `SmartMenuSubmenu.tsx`) just work.
 
-### 4. Drawer rendering components
-- `components/drawer/SmartDrawerRenderer.tsx` — universal drawer renderer using `--mm-*` tokens, glass-float patterns
-- `components/drawer/DrawerTabBar.tsx` — tab bar with icon mapping via `resolveIcon` pattern
-- `components/drawer/SlotRenderer.tsx` — slot content renderer
-- `components/drawer/AgentPanelRenderer.tsx` — copilot/agent panel per tab
+## Why this is safe
 
-### 5. Smart drawer editor (Studio)
-- `components/smartDrawer/DrawerMenuList.tsx`
-- `components/smartDrawer/DrawerDetailEditor.tsx`
-- `components/smartDrawer/LivePreviewPanel.tsx`
-- `components/smartDrawer/DynamicModeSelector.tsx`
-- `components/smartDrawer/CopilotBar.tsx`
-- `components/smartDrawer/ResizableLayout.tsx`
+- `RuntimeHeader.tsx` no longer reads `cartridgeState.activeCartridgeId` for the lightning bolt — confirmed in the current file. So restoring local cartridge state cannot re-tint the header.
+- The cartridge-overlay floppy-disk in the header reads `cartridgeOverlay` (set by the runtime's `CARTRIDGE_OVERLAY_ACTIVE` message), not `cartridgeState`, so its color logic is unaffected.
+- All existing outbound enrichment (already wired to `cartridgeState.activeCartridgeId` / `activeCodexId`) starts working again with no other code changes.
 
-### 6. API routes
-- `app/api/menu/route.ts` — GET menu config
-- `app/api/drawer/resolve/route.ts` — POST visibility filter + slot resolution
-- `app/api/drawer/sets/route.ts` — GET/POST drawer set CRUD
-- `app/api/drawer/sets/[id]/route.ts`
-- `app/api/drawer/variants/route.ts` — card variant registry
-- `app/api/drawer/modal-select/route.ts` — AI variant selection
-- `app/(shell)/copilot/actions/smartmenu.ts` — Phase 1 stubs
+## No changes needed in
 
-## Key Design Decisions
+- `src/components/RuntimeHeader.tsx`
+- `src/components/SmartMenuSubmenu.tsx`
+- `src/lib/smart-menu-config.ts`
+- The Claude Code handoff (the iframe contract — `LAUNCH_CARTRIDGE` + `RUNTIME_CONTEXT_CHANGE` — is unchanged)
 
-1. **Token alignment**: All components use `--mm-*` CSS custom properties from the thin client's token system
-2. **Icon resolution**: Reuse the `resolveIcon()` pattern with the same DEFAULTS map
-3. **Mode configs**: SmartMenuRail uses the same 5-mode system (Be/Make/Play/Earn/Share) with identical accent colors
-4. **MENU_ACTION contract preserved**: `{ type: "MENU_ACTION", payload: { action_id?, item_id?, intent?, action? } }` — DRAWER_ACTION_HANDLERS keys "wallet" and "settings" untouched
-5. **Quick action definitions**: Identical `QuickActionDef` shape with `kind`, `triggersInference`, `prompt`, `iframeAction`, `apiAction`
-6. **Glass-float styling**: Submenu/drawer surfaces use the same backdrop-blur + surface tokens
+## Files touched
 
-## Output
-
-All files written to `/mnt/documents/smart-menu-parity/` preserving the directory structure from the brief. A manifest file at the root will list all files with their purpose.
-
-## Technical Notes
-
-- Files are Next.js/React compatible (TSX with `"use client"` directives where needed)
-- API routes use Next.js App Router conventions (`route.ts` with `GET`/`POST` exports)
-- Service layer is framework-agnostic TypeScript
-- Studio editor components are React client components
+- `src/contexts/ShellContext.tsx` — restore `setCartridgeState({ activeCartridgeId, activeCodexId })` inside `launchCartridge()`.
 
