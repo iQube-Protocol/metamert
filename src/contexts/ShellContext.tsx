@@ -882,6 +882,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setCartridgeOverlay(null);
   }, [config]);
 
+  const pulseInference = useCallback(() => {
+    inferCtrl.current?.start();
+    inferCtrl.current?.complete();
+  }, []);
+
+
   const ctxValue: ShellContextValue = useMemo(() => ({
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
