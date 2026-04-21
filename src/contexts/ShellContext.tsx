@@ -82,6 +82,10 @@ interface ShellContextValue {
   // LOV-401: KNYT onboarding active flag
   knytOnboarding: boolean;
 
+  // Cartridge overlay (driven by runtime CARTRIDGE_OVERLAY_ACTIVE messages)
+  cartridgeOverlay: { slug: string; title: string } | null;
+  closeCartridgeOverlay: () => void;
+
   // Smart Menu state
   viewState: ViewState;
   activeMode: SmartMenuMode | null;
