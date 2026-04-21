@@ -190,29 +190,16 @@ function normalizeShellConfig(raw: any): any {
   }
   if (raw.menu?.policy) raw.menu.policy.quick_links = ql;
 
-  // 5. Fix localhost iframe URL → agentiz triad embed
+  // 5. Fix localhost iframe URL
   if (raw.iframe?.url?.startsWith("http://localhost") || !raw.iframe?.url)
     raw.iframe = { ...(raw.iframe ?? {}), url: DEFAULT_SHELL_CONFIG.iframe.url };
 
-  // 5b. Normalize iframe URL: legacy dev-beta.aigentz.me/metame/runtime → agentiz.com/triad/embed/codex/metame
+  // 5b. Normalize iframe path: /runtime → /metame/runtime?embed=1
   if (raw.iframe?.url) {
     try {
       const u = new URL(raw.iframe.url);
-      const legacyHost = u.hostname === "dev-beta.aigentz.me";
-      const legacyPath =
-        u.pathname === "/metame/runtime" ||
-        u.pathname === "/runtime" ||
-        u.pathname === "/";
-      if (legacyHost && legacyPath) {
-        u.protocol = "https:";
-        u.hostname = "agentiz.com";
-        u.port = "";
-        u.pathname = "/triad/embed/codex/metame";
-      }
-      // Ensure required query params on the agentiz triad embed (preserve tab=)
-      if (u.hostname === "agentiz.com" && u.pathname.startsWith("/triad/embed/codex/")) {
-        if (!u.searchParams.has("theme")) u.searchParams.set("theme", "dark");
-        if (!u.searchParams.has("closable")) u.searchParams.set("closable", "0");
+      if (u.pathname === "/runtime" || u.pathname === "/") {
+        u.pathname = "/metame/runtime";
       }
       if (!u.searchParams.has("embed")) u.searchParams.set("embed", "1");
       if (!u.searchParams.has("shell")) u.searchParams.set("shell", "thin");
