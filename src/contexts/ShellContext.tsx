@@ -128,6 +128,8 @@ interface ShellContextValue {
   resumeIdleTimer: () => void;
   setInteractionState: (state: InteractionState) => void;
   setPromptHasText: (hasText: boolean) => void;
+  /** Briefly animate the trust/reliability score dots to indicate processing. */
+  pulseInference: () => void;
 }
 
 const ShellCtx = createContext<ShellContextValue | null>(null);
