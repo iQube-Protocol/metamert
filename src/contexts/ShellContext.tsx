@@ -91,6 +91,11 @@ interface ShellContextValue {
   cartridgeState: CartridgeState;
   personaState: PersonaState;
 
+  // Runtime context (metaMe ↔ KNYT) — drives the header lightning color
+  // and the play menu's central context-toggle quick action.
+  runtimeContext: RuntimeContext;
+  setRuntimeContext: (next: RuntimeContext) => void;
+
   // Actions
   toggleQuickLinks: () => void;
   hydrate: () => Promise<void>;
@@ -109,6 +114,8 @@ interface ShellContextValue {
   deactivateMode: () => void;
   setSubmenuType: (type: SubmenuType | null) => void;
   toggleSubmenu: () => void;
+  /** Launch a cartridge inside the runtime iframe (does NOT change header color). */
+  launchCartridge: (cartridgeId: string) => void;
   selectCartridge: (cartridgeId: string) => void;
   selectCodex: (codexId: string) => void;
   selectPersona: (personaId: string) => void;
