@@ -130,7 +130,7 @@ export interface ModeConfig {
 
 export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
   {
-    id: "metame",
+    id: "metame-codex",
     label: "metaMe",
     icon: "box",
     accentHex: "#FF6B6B",
@@ -139,7 +139,7 @@ export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
     agents: ["metame-agent"],
   },
   {
-    id: "qripto",
+    id: "qripto-codex",
     label: "Qriptopian",
     icon: "box",
     accentHex: "#00D5FF",

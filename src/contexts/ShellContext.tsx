@@ -210,7 +210,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [submenuVisibility, setSubmenuVisibility] = useState<QuickActionVisibility>("visibleAuto");
   const [interactionState, setInteractionStateRaw] = useState<InteractionState>("idle");
   const [cartridgeState, setCartridgeState] = useState<CartridgeState>({
-    activeCartridgeId: "qripto",
+    activeCartridgeId: "qripto-codex",
     activeCodexId: "qripto-codex",
     available: DEFAULT_CARTRIDGES,
   });
@@ -392,18 +392,19 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
       // Canonical mount message — runtime opens the cartridge overlay
       // (z-axis) and replies with CARTRIDGE_OVERLAY_ACTIVE.
+      // Runtime's MetaMeRuntimeClient handler reads msg.payload.cartridge_id,
+      // so the envelope MUST be nested under `payload`.
       postToIframe(iframeRef.current, {
         type: "LAUNCH_CARTRIDGE",
-        cartridge_id: cartridgeId,
-        codex_id: codexId,
+        payload: { cartridge_id: cartridgeId },
       }, origin);
 
       // Seed an initialisation prompt so the cartridge opens with a
       // meaningful first turn instead of an empty surface.
       const seedPrompts: Record<string, string> = {
-        "metame": "Open the metaMe cartridge and orient me.",
-        "qripto": "Open the Qriptopian cartridge and show me what's available.",
-        "knyt-codex": "Open the KNYT cartridge and walk me through it.",
+        "metame-codex": "Open the metaMe cartridge and orient me.",
+        "qripto-codex": "Open the Qriptopian cartridge and show me what's available.",
+        "knyt-codex":   "Open the KNYT cartridge and walk me through it.",
       };
       const seedPrompt =
         seedPrompts[cartridgeId] ??
