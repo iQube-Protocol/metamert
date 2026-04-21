@@ -170,10 +170,10 @@ function createInferenceController(
     safetyTimer = setTimeout(() => { setInferring(false); safetyTimer = null; }, 30_000);
   }
 
-  function complete() {
+  function complete(graceMs: number = 2_000) {
     if (safetyTimer) { clearTimeout(safetyTimer); safetyTimer = null; }
     if (graceTimer) { clearTimeout(graceTimer); graceTimer = null; }
-    graceTimer = setTimeout(() => { setInferring(false); graceTimer = null; }, 2_000);
+    graceTimer = setTimeout(() => { setInferring(false); graceTimer = null; }, graceMs);
   }
 
   function cleanup() { clearTimers(); }
@@ -388,9 +388,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
       // New contract (Claude Code handoff): explicit launch signal.
-      // Send ONLY this message — the legacy SELECTOR_CHANGE { selector_type:"cartridge" }
-      // fallback was causing the runtime to attempt to resolve the cartridge id as
-      // a codex slug, producing "Codex not found" for metame-runtime / qriptopian.
       postToIframe(iframeRef.current, {
         type: "LAUNCH_CARTRIDGE",
         cartridge_id: cartridgeId,
@@ -403,6 +400,16 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         action_id: "cartridge.launch",
         cartridge_id: cartridgeId,
         codex_id: cart?.default_codex_id,
+      }, origin);
+      // Legacy contract: the runtime's existing cartridge mount path listens for
+      // SELECTOR_CHANGE { selector_type: "cartridge" }. Keep dispatching it as
+      // a fallback so KNYT (and any cartridge wired to the legacy path) still
+      // mounts. The runtime should treat the `id` as a cartridge slug, not a
+      // codex slug — if it raises "Codex not found" it's a runtime resolver bug.
+      postToIframe(iframeRef.current, {
+        type: "SELECTOR_CHANGE",
+        selector_type: "cartridge" as any,
+        id: cartridgeId,
       }, origin);
     }
     // Restore local cartridge state so the active checkmark moves, the codex
@@ -886,7 +893,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   const pulseInference = useCallback(() => {
     inferCtrl.current?.start();
-    inferCtrl.current?.complete();
+    // Extended grace (4s) so the trust/reliability dot pulse stays visible
+    // long enough to clearly signal that a quick action triggered processing.
+    inferCtrl.current?.complete(4_000);
   }, []);
 
 
