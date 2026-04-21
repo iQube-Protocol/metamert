@@ -170,10 +170,10 @@ function createInferenceController(
     safetyTimer = setTimeout(() => { setInferring(false); safetyTimer = null; }, 30_000);
   }
 
-  function complete() {
+  function complete(graceMs: number = 2_000) {
     if (safetyTimer) { clearTimeout(safetyTimer); safetyTimer = null; }
     if (graceTimer) { clearTimeout(graceTimer); graceTimer = null; }
-    graceTimer = setTimeout(() => { setInferring(false); graceTimer = null; }, 2_000);
+    graceTimer = setTimeout(() => { setInferring(false); graceTimer = null; }, graceMs);
   }
 
   function cleanup() { clearTimers(); }
