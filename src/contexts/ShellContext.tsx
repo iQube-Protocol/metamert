@@ -212,6 +212,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     available: DEFAULT_PERSONAS,
   });
 
+  // Runtime context (metaMe ↔ KNYT) — drives header lightning color and copilot framing
+  const [runtimeContext, setRuntimeContextState] = useState<RuntimeContext>("metame");
+
   // Idle timer refs — split: 3s for quick action layer, 4s for full collapse
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const submenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
