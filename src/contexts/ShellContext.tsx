@@ -834,22 +834,25 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     runtimeHints, iframeReadiness, knytOnboarding,
     // Smart Menu state
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
+    // Runtime context
+    runtimeContext, setRuntimeContext,
     // Actions
     toggleQuickLinks,
     hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     // Smart Menu actions
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-    selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    launchCartridge, selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
   }), [
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
     runtimeHints, iframeReadiness, knytOnboarding,
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
+    runtimeContext, setRuntimeContext,
     toggleQuickLinks, hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-    selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    launchCartridge, selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
   ]);
 
   // Publish to module singleton so HMR-stale consumers can still read it
