@@ -435,12 +435,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Pulse trust/reliability dots while the cartridge mounts.
-    pulseInference();
+    inferCtrl.current?.start();
+    inferCtrl.current?.complete(4_000);
 
     // Return to quick actions after selecting
     setSubmenuTypeState("quickActions");
     startIdleTimer();
-  }, [config, cartridgeState.available, startIdleTimer, pulseInference]);
+  }, [config, cartridgeState.available, startIdleTimer]);
 
   /**
    * Legacy `selectCartridge` — kept for backward compat (e.g. cartridge selector
