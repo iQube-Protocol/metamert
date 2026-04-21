@@ -234,22 +234,8 @@ export default function RuntimeHeader() {
               ))}
             </PopoverContent>
           </Popover>
-        </div>
 
-        {/* Center: Cartridge icon + theme toggle */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center cursor-default">
-                <Zap className="h-[18px] w-[18px]" style={cartridgeColor ? (theme === "light" ? { color: cartridgeColor, stroke: cartridgeColor, fill: 'white', strokeWidth: 1.8 } : { color: cartridgeColor }) : { color: 'var(--mm-ink-muted)' }} />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p className="text-xs">{activeCodex?.label ?? activeCart?.label ?? "No cartridge"}</p>
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Theme toggle */}
+          {/* Theme toggle (next to LLM dropdown) */}
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -264,6 +250,20 @@ export default function RuntimeHeader() {
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <p className="text-xs">{theme === "light" ? "Switch to dark mode" : "Switch to light mode"}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+
+        {/* Center: Cartridge icon (dead center) */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center cursor-default">
+                <Zap className="h-[18px] w-[18px]" style={cartridgeColor ? (theme === "light" ? { color: cartridgeColor, stroke: cartridgeColor, fill: 'white', strokeWidth: 1.8 } : { color: cartridgeColor }) : { color: 'var(--mm-ink-muted)' }} />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-xs">{activeCodex?.label ?? activeCart?.label ?? "No cartridge"}</p>
             </TooltipContent>
           </Tooltip>
         </div>
