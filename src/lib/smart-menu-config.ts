@@ -130,28 +130,28 @@ export interface ModeConfig {
 
 export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
   {
-    id: "metame-runtime",
+    id: "metame",
     label: "metaMe",
     icon: "box",
     accentHex: "#FF6B6B",
-    default_codex_id: "metame-core",
-    codexes: [{ id: "metame-core", label: "Runtime Core" }],
+    default_codex_id: "metame-codex",
+    codexes: [{ id: "metame-codex", label: "metaMe Codex" }],
     agents: ["metame-agent"],
   },
   {
-    id: "qriptopian",
+    id: "qripto",
     label: "Qriptopian",
     icon: "box",
     accentHex: "#00D5FF",
-    default_codex_id: "qriptopian-codex",
+    default_codex_id: "qripto-codex",
     codexes: [
-      { id: "qriptopian-codex", label: "Qriptopian" },
+      { id: "qripto-codex", label: "Qriptopian" },
       { id: "knyt-codex", label: "KNYT" },
     ],
     agents: ["moneypenny", "know1"],
   },
   {
-    id: "knyt",
+    id: "knyt-codex",
     label: "KNYT",
     icon: "box",
     accentHex: "#F59E0B",
