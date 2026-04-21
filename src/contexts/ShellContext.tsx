@@ -390,12 +390,22 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
 
-      // 1. Canonical mount message — the documented, working contract.
-      // (Dropped LAUNCH_CARTRIDGE + MENU_ACTION{cartridge.launch} which were
-      // causing "Codex not found" / indeterminate mount state.)
+      // 1. Mount via the codex selector — this is the contract the runtime
+      //    actually mounts on (same path the in-runtime cartridge picker uses).
+      //    Cartridge ≡ codex for launch purposes.
+      if (codexId) {
+        postToIframe(iframeRef.current, {
+          type: "SELECTOR_CHANGE",
+          selector_type: "codex",
+          id: codexId,
+        }, origin);
+      }
+
+      // 2. Secondary cartridge hint so the runtime can label the active
+      //    cartridge pill. Mount no longer depends on this.
       postToIframe(iframeRef.current, {
         type: "SELECTOR_CHANGE",
-        selector_type: "cartridge" as any,
+        selector_type: "cartridge",
         id: cartridgeId,
       }, origin);
 
