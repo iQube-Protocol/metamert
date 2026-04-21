@@ -138,8 +138,17 @@ export default function RuntimeHeader() {
   const activeCart = cartridgeState.available.find(c => c.id === cartridgeState.activeCartridgeId);
   const activeCodex = activeCart?.codexes.find(c => c.id === cartridgeState.activeCodexId);
   // Header lightning bolt color reflects the active runtime context, not the cartridge.
-  // KNYT context → amber. metaMe context → muted ink (or KNYT amber if onboarding).
-  const cartridgeColor = runtimeContext === "knyt" || knytOnboarding ? "#F59E0B" : undefined;
+  // KNYT context → amber; metaMe context → coral. Onboarding forces KNYT amber.
+  const KNYT_AMBER = "#F59E0B";
+  const METAME_CORAL = "#FF6B6B";
+  const cartridgeColor = (runtimeContext === "knyt" || knytOnboarding) ? KNYT_AMBER : METAME_CORAL;
+  // Cartridge overlay chip accent — tinted with the active cartridge's accentHex
+  // so the floppy disk indicator matches the quick-actions cartridge color
+  // (KNYT amber, Qriptopian cyan, metaMe coral).
+  const overlayCart = cartridgeOverlay
+    ? cartridgeState.available.find(c => c.id === cartridgeOverlay.slug)
+    : null;
+  const overlayAccent = overlayCart?.accentHex ?? 'var(--mm-ink-secondary)';
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -260,7 +269,7 @@ export default function RuntimeHeader() {
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center cursor-default">
-                <Zap className="h-[18px] w-[18px]" style={cartridgeColor ? (theme === "light" ? { color: cartridgeColor, stroke: cartridgeColor, fill: 'white', strokeWidth: 1.8 } : { color: cartridgeColor }) : { color: 'var(--mm-ink-muted)' }} />
+                <Zap className="h-[19px] w-[19px]" style={theme === "light" ? { color: cartridgeColor, stroke: cartridgeColor, fill: 'white', strokeWidth: 1.8 } : { color: cartridgeColor }} />
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">
@@ -281,7 +290,7 @@ export default function RuntimeHeader() {
                     border: 'var(--mm-border-hairline)',
                   }}
                 >
-                  <Save className="h-3.5 w-3.5" style={{ color: 'var(--mm-ink-secondary)' }} />
+                  <Save className="h-3.5 w-3.5" style={{ color: overlayAccent }} />
                   <button
                     type="button"
                     onClick={closeCartridgeOverlay}

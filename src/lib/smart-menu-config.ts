@@ -179,7 +179,7 @@ const PLAY_ACTIONS: QuickActionDef[] = [
   { id: "watch",     label: "Watch",     icon: "eye",        kind: "llm+menu",    triggersInference: true,  prompt: "Show me something interesting to watch" },
   { id: "browse",    label: "Browse",    icon: "globe",      kind: "system-only", triggersInference: false },
   { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true,  prompt: "Find me something good to read" },
-  { id: "cartridge", label: "Cartridge", icon: "box",        kind: "system-only", triggersInference: false },
+  { id: "cartridge", label: "Cartridge", icon: "save",       kind: "system-only", triggersInference: false },
   { id: "share",     label: "Share",     icon: "share-2",    kind: "llm+menu",    triggersInference: true },
   { id: "reset",     label: "Reset",     icon: "rotate-ccw", kind: "system-only", triggersInference: false },
 ];

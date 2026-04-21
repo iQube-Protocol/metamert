@@ -10,7 +10,7 @@ import {
   Lock, User, Shield, Fingerprint, Radio, Settings,
   Target, CheckSquare, Star, Tag, Compass, Wallet,
   PenLine, Palette, Hammer, Shuffle, Upload,
-  Send, Download, Link, Truck, Box, Library,
+  Send, Download, Link, Truck, Box, Library, Save,
 } from "lucide-react";
 
 /** Default icon map keyed by well-known item IDs */
@@ -66,7 +66,7 @@ const DEFAULTS: Record<string, LucideIcon> = {
   connect: Link,
   collaborate: Users,
   deliver: Truck,
-  cartridge: Box,
+  cartridge: Save,
   codex: Library,
 };
 
