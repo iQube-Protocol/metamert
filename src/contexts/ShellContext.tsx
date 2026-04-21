@@ -570,6 +570,17 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         }
         return;
       }
+
+      // Cartridge overlay state from runtime
+      if (t === "CARTRIDGE_OVERLAY_ACTIVE") {
+        const p = (msg as any) as { active?: boolean; slug?: string; title?: string };
+        if (p.active && p.slug) {
+          setCartridgeOverlay({ slug: p.slug, title: p.title ?? p.slug });
+        } else {
+          setCartridgeOverlay(null);
+        }
+        return;
+      }
     };
 
     const codexCloseHandler = (e: MessageEvent) => {
@@ -832,6 +843,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         : prev
     );
   }, []);
+
+  const closeCartridgeOverlay = useCallback(() => {
+    if (iframeRef.current && config) {
+      postToIframe(iframeRef.current, { type: "CARTRIDGE_OVERLAY_CLOSE" } as any, getIframeOrigin(config));
+    }
+    setCartridgeOverlay(null);
+  }, [config]);
 
   const ctxValue: ShellContextValue = useMemo(() => ({
     config, loading, authenticated, shellState,
