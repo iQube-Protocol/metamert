@@ -165,12 +165,18 @@ export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
 // Per-mode quick action configs
 // ---------------------------------------------------------------------------
 
+/**
+ * PLAY_ACTIONS — note that the "context-toggle" item (id "knyt") is rendered
+ * dynamically by the SmartMenuSubmenu and toggles between KNYT ↔ metaMe based
+ * on the active runtime context. Its label/icon/color in the menu come from
+ * the runtime context state, not these static fields.
+ */
 const PLAY_ACTIONS: QuickActionDef[] = [
   { id: "be",        label: "Be",        icon: "users",      kind: "llm+menu",    triggersInference: true,  prompt: "Show me who I can be" },
   { id: "find",      label: "Find",      icon: "search",     kind: "llm+menu",    triggersInference: true,  prompt: "Search and discover something new for me" },
   { id: "listen",    label: "Listen",    icon: "headphones", kind: "llm+menu",    triggersInference: true,  prompt: "Play something for me to listen to" },
+  { id: "knyt",      label: "KNYT",      icon: "zap",        kind: "system-only", triggersInference: false },
   { id: "watch",     label: "Watch",     icon: "eye",        kind: "llm+menu",    triggersInference: true,  prompt: "Show me something interesting to watch" },
-  { id: "knyt",      label: "KNYT",      icon: "zap",        kind: "llm+menu",    triggersInference: true,  prompt: "Start my KNYT journey — show onboarding or continue where I left off", apiAction: "knyt-entry", iframeAction: "knyt_entry" },
   { id: "browse",    label: "Browse",    icon: "globe",      kind: "system-only", triggersInference: false },
   { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true,  prompt: "Find me something good to read" },
   { id: "cartridge", label: "Cartridge", icon: "box",        kind: "system-only", triggersInference: false },
@@ -255,8 +261,8 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentColor: "190 100% 50%",
     accentHex: "#00D5FF",
     promptPlaceholder: "Ask, explore, watch, listen, read, or switch context…",
-    defaultCenteredQuickActionId: "watch",
-    mobileVisibleFold: ["find", "listen", "watch", "knyt", "browse"],
+    defaultCenteredQuickActionId: "knyt",
+    mobileVisibleFold: ["find", "listen", "knyt", "watch", "browse"],
     quickActions: PLAY_ACTIONS,
   },
   make: {
