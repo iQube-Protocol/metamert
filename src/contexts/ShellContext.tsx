@@ -855,6 +855,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
     runtimeHints, iframeReadiness, knytOnboarding,
+    cartridgeOverlay, closeCartridgeOverlay,
     // Smart Menu state
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
     // Runtime context
@@ -870,6 +871,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
     runtimeHints, iframeReadiness, knytOnboarding,
+    cartridgeOverlay, closeCartridgeOverlay,
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
     runtimeContext, setRuntimeContext,
     toggleQuickLinks, hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
