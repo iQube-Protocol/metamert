@@ -1,46 +1,54 @@
 
 
-# Restore cartridge activation while keeping header-color decoupling
+# Fix cartridge launching + add cartridge launch seed prompt
 
-## What regressed
+## Diagnosis (why nothing launches)
 
-When we decoupled the header lightning bolt from cartridge selection, `selectCartridge()` was rewired to *only* dispatch `LAUNCH_CARTRIDGE` and stopped updating `cartridgeState`. That broke three things that have nothing to do with the header color:
+`launchCartridge()` currently fires THREE different messages back-to-back to the runtime for a single click:
 
-1. The **active checkmark / accent on the cartridge pill** in the Play → Cartridge selector no longer moves to the chosen cartridge.
-2. All outbound iframe and AA-API messages (`PROMPT_SUBMIT`, `MENU_ACTION`, `MODE_CHANGED`, `sendIframeAction`) carry the **stale `cartridge_id` / `codex_id`** ("qriptopian") regardless of what the user picked, so the runtime can't scope inference to the right cartridge.
-3. The **active codex** no longer follows the cartridge default when switching.
+1. `LAUNCH_CARTRIDGE` (a contract the runtime doesn't actually implement yet)
+2. `MENU_ACTION { action_id: "cartridge.launch", codex_id }` (the runtime treats `codex_id` as a slug → "Codex not found" for metaMe / Qriptopian)
+3. `SELECTOR_CHANGE { selector_type: "cartridge", id }` (the **documented, working** contract — see `docs/RUNTIME_THINCLIENT_REFERENCE.md` §7)
 
-## What we keep
+The runtime is receiving three conflicting intents in the same tick. Earlier the `MENU_ACTION` path was raising "Codex not found" for non-KNYT cartridges (because the runtime's menu-action handler resolves `codex_id` as a codex slug — and `metame-core` / `qriptopian-codex` aren't valid lookup keys on that path). Stacking three messages now leaves the runtime in an indeterminate state where the cartridge mount aborts.
 
-- Header lightning bolt color stays driven exclusively by `runtimeContext` (coral for metaMe, amber for KNYT) — i.e. cartridge selection still does **not** tint the header.
-- The cartridge overlay floppy-disk indicator added for Claude Code still works the same.
-- The `LAUNCH_CARTRIDGE` message is still sent to the iframe so the runtime mounts the requested cartridge.
-- The KNYT central quick-action remains the metaMe ↔ KNYT runtime-context toggle.
+Adding to that: the user instruction from earlier ("selecting a cartridge from the menu should also be sent to the iframe so that it initialises it as the first prompt") was never actually implemented — there is no `PROMPT_SUBMIT` seeded when a cartridge is launched from the menu.
 
-## The fix (one file: `src/contexts/ShellContext.tsx`)
+## Fix
 
-Update `launchCartridge()` so it does both jobs cleanly:
+Rewrite `launchCartridge()` in `src/contexts/ShellContext.tsx` so it:
 
-1. **Dispatch `LAUNCH_CARTRIDGE`** to the iframe (unchanged).
-2. **Update `cartridgeState`**: set `activeCartridgeId` to the new id and set `activeCodexId` to that cartridge's `default_codex_id`. This restores the active checkmark, restores correct outbound context enrichment, and re-aligns the codex selector — without touching the header lightning color (which now reads from `runtimeContext`, not `cartridgeState`).
-3. Keep the existing post-select UX: switch the submenu back to `quickActions` and restart the idle timer.
+1. **Sends a single, canonical mount message** — `SELECTOR_CHANGE { selector_type: "cartridge", id: cartridgeId }` (the contract the runtime documents and already implements). Drop both `LAUNCH_CARTRIDGE` and `MENU_ACTION { cartridge.launch }` — they were the source of the "Codex not found" error and the current launch failure.
 
-`selectCartridge()` continues to delegate to `launchCartridge()`, so existing call sites (the cartridge pill in `SmartMenuSubmenu.tsx`) just work.
+2. **Seeds an initialisation prompt** — immediately after the `SELECTOR_CHANGE`, send a `PROMPT_SUBMIT` with a per-cartridge greeting so the runtime opens the cartridge with a meaningful first turn instead of an empty surface. Mapping:
+   - `metame-runtime` → `"Open the metaMe cartridge and orient me."`
+   - `qriptopian` → `"Open the Qriptopian cartridge and show me what's available."`
+   - `knyt` → `"Open the KNYT cartridge and walk me through it."`
+   - Fallback for any future cartridge → `"Open the {label} cartridge."`
 
-## Why this is safe
+   The seed prompt is sent with the new `cartridge_id` + `codex_id` already in context so the runtime routes it to the freshly mounted cartridge.
 
-- `RuntimeHeader.tsx` no longer reads `cartridgeState.activeCartridgeId` for the lightning bolt — confirmed in the current file. So restoring local cartridge state cannot re-tint the header.
-- The cartridge-overlay floppy-disk in the header reads `cartridgeOverlay` (set by the runtime's `CARTRIDGE_OVERLAY_ACTIVE` message), not `cartridgeState`, so its color logic is unaffected.
-- All existing outbound enrichment (already wired to `cartridgeState.activeCartridgeId` / `activeCodexId`) starts working again with no other code changes.
+3. **Keeps existing local state behaviour** — still updates `cartridgeState.activeCartridgeId` / `activeCodexId`, still optimistically shows the cartridge overlay (floppy + X) in the header, still pulses inference dots so the user gets visual feedback while the cartridge mounts.
 
-## No changes needed in
+4. **Header lightning bolt remains untouched** — driven only by `runtimeContext`, not by `cartridgeState` (existing rule preserved).
 
-- `src/components/RuntimeHeader.tsx`
-- `src/components/SmartMenuSubmenu.tsx`
-- `src/lib/smart-menu-config.ts`
-- The Claude Code handoff (the iframe contract — `LAUNCH_CARTRIDGE` + `RUNTIME_CONTEXT_CHANGE` — is unchanged)
+## Result
+
+| Cartridge | Before (current) | After |
+|---|---|---|
+| metaMe | "Codex not found" / nothing | Mounts + seeded with intro prompt |
+| Qriptopian | "Codex not found" / nothing | Mounts + seeded with intro prompt |
+| KNYT | Nothing (broken by triple-message) | Mounts + seeded with intro prompt |
+
+Header cartridge icon + ✕ close button continue to appear immediately on launch (already wired via the optimistic `setCartridgeOverlay` call, which the rewrite preserves).
 
 ## Files touched
 
-- `src/contexts/ShellContext.tsx` — restore `setCartridgeState({ activeCartridgeId, activeCodexId })` inside `launchCartridge()`.
+- `src/contexts/ShellContext.tsx` — rewrite the body of `launchCartridge()` to send only `SELECTOR_CHANGE` + a per-cartridge seed `PROMPT_SUBMIT`.
+
+## Files NOT touched
+
+- `src/components/SmartMenuSubmenu.tsx` (already calls `selectCartridge` → `launchCartridge`)
+- `src/lib/smart-menu-config.ts` (cartridge defs already carry `label` + `default_codex_id`, which is all the seed-prompt mapper needs)
+- `src/components/RuntimeHeader.tsx` (overlay icon already reads `cartridgeOverlay`)
 
