@@ -210,8 +210,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [submenuVisibility, setSubmenuVisibility] = useState<QuickActionVisibility>("visibleAuto");
   const [interactionState, setInteractionStateRaw] = useState<InteractionState>("idle");
   const [cartridgeState, setCartridgeState] = useState<CartridgeState>({
-    activeCartridgeId: "qriptopian",
-    activeCodexId: "qriptopian-codex",
+    activeCartridgeId: "qripto",
+    activeCodexId: "qripto-codex",
     available: DEFAULT_CARTRIDGES,
   });
   const [personaState, setPersonaState] = useState<PersonaState>({
@@ -390,31 +390,20 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
 
-      // 1. Mount via the codex selector — this is the contract the runtime
-      //    actually mounts on (same path the in-runtime cartridge picker uses).
-      //    Cartridge ≡ codex for launch purposes.
-      if (codexId) {
-        postToIframe(iframeRef.current, {
-          type: "SELECTOR_CHANGE",
-          selector_type: "codex",
-          id: codexId,
-        }, origin);
-      }
-
-      // 2. Secondary cartridge hint so the runtime can label the active
-      //    cartridge pill. Mount no longer depends on this.
+      // Canonical mount message — runtime opens the cartridge overlay
+      // (z-axis) and replies with CARTRIDGE_OVERLAY_ACTIVE.
       postToIframe(iframeRef.current, {
-        type: "SELECTOR_CHANGE",
-        selector_type: "cartridge",
-        id: cartridgeId,
+        type: "LAUNCH_CARTRIDGE",
+        cartridge_id: cartridgeId,
+        codex_id: codexId,
       }, origin);
 
-      // 2. Seed an initialisation prompt so the cartridge opens with a
-      //    meaningful first turn instead of an empty surface.
+      // Seed an initialisation prompt so the cartridge opens with a
+      // meaningful first turn instead of an empty surface.
       const seedPrompts: Record<string, string> = {
-        "metame-runtime": "Open the metaMe cartridge and orient me.",
-        "qriptopian": "Open the Qriptopian cartridge and show me what's available.",
-        "knyt": "Open the KNYT cartridge and walk me through it.",
+        "metame": "Open the metaMe cartridge and orient me.",
+        "qripto": "Open the Qriptopian cartridge and show me what's available.",
+        "knyt-codex": "Open the KNYT cartridge and walk me through it.",
       };
       const seedPrompt =
         seedPrompts[cartridgeId] ??
