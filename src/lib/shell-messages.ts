@@ -15,7 +15,7 @@ export type ShellOutbound =
   | { type: "SET_THEME"; theme: "light" | "dark" }
   | { type: "HANDOFF"; handoff_token: string; aa_api_base_url?: string; aa_api_token?: string; context?: Record<string, unknown> }
   | { type: "MENU_ACTION"; action_id: string; prompt?: string; menu_event?: MenuEvent; cartridge_id?: string; codex_id?: string; mode?: string }
-  | { type: "LAUNCH_CARTRIDGE"; cartridge_id: string; codex_id?: string; tab?: string }
+  | { type: "LAUNCH_CARTRIDGE"; payload: { cartridge_id: string; codex_id?: string; tab?: string } }
   | { type: "SELECTOR_CHANGE"; selector_type: "aigent" | "llm" | "cartridge" | "codex" | "persona"; id: string; iqube_id?: string }
   | { type: "CONTEXT_UPDATE"; payload: Record<string, unknown> }
   | { type: "PROMPT_SUBMIT"; text: string; cartridge_id?: string; codex_id?: string; mode?: string }
