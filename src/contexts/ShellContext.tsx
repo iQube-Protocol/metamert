@@ -370,27 +370,56 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     });
   }, [startIdleTimer, clearIdleTimer]);
 
-  const selectCartridge = useCallback((cartridgeId: string) => {
-    setCartridgeState(prev => {
-      const cart = prev.available.find(c => c.id === cartridgeId);
-      if (!cart) return prev;
-      // If current codex is not in the new cartridge, use default
-      const codexValid = cart.codexes.some(c => c.id === prev.activeCodexId);
-      return {
-        ...prev,
-        activeCartridgeId: cartridgeId,
-        activeCodexId: codexValid ? prev.activeCodexId : cart.default_codex_id,
-      };
-    });
+  /**
+   * Launch a cartridge inside the runtime iframe.
+   * Sends a LAUNCH_CARTRIDGE message — does NOT mutate cartridgeState
+   * (so the header lightning bolt color is unaffected; that color is now
+   * driven exclusively by `runtimeContext`).
+   */
+  const launchCartridge = useCallback((cartridgeId: string) => {
+    if (iframeRef.current && config) {
+      const origin = getIframeOrigin(config);
+      const cart = cartridgeState.available.find(c => c.id === cartridgeId);
+      postToIframe(iframeRef.current, {
+        type: "LAUNCH_CARTRIDGE",
+        cartridge_id: cartridgeId,
+        codex_id: cart?.default_codex_id,
+      } as any, origin);
+    }
     // Return to quick actions after selecting
     setSubmenuTypeState("quickActions");
     startIdleTimer();
+  }, [config, cartridgeState.available, startIdleTimer]);
 
-    // Notify iframe
+  /**
+   * Legacy `selectCartridge` — kept for backward compat (e.g. cartridge selector
+   * pill click). Now routes through `launchCartridge` so it dispatches to the
+   * iframe instead of mutating header state.
+   */
+  const selectCartridge = useCallback((cartridgeId: string) => {
+    launchCartridge(cartridgeId);
+  }, [launchCartridge]);
+
+  /**
+   * Set the active runtime context (metaMe ↔ KNYT).
+   * Sends RUNTIME_CONTEXT_CHANGE to the iframe + AA-API so the copilot
+   * reframes itself, and updates local state so the header lightning bolt
+   * color updates immediately.
+   */
+  const setRuntimeContext = useCallback((next: RuntimeContext) => {
+    setRuntimeContextState(next);
     if (iframeRef.current && config) {
-      postToIframe(iframeRef.current, { type: "SELECTOR_CHANGE", selector_type: "cartridge" as any, id: cartridgeId }, getIframeOrigin(config));
+      const origin = getIframeOrigin(config);
+      postToIframe(iframeRef.current, {
+        type: "RUNTIME_CONTEXT_CHANGE",
+        context: next,
+      } as any, origin);
     }
-  }, [config, startIdleTimer]);
+    // Best-effort AA-API notification (non-blocking)
+    void menuAction("runtime-context", { runtime_context: next } as any).catch(() => {
+      /* swallow — runtime context is local-first */
+    });
+  }, [config]);
 
   const selectCodex = useCallback((codexId: string) => {
     setCartridgeState(prev => ({
