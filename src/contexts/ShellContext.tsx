@@ -385,11 +385,21 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     const cart = cartridgeState.available.find(c => c.id === cartridgeId);
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
+      // New contract (Claude Code handoff): explicit launch signal
       postToIframe(iframeRef.current, {
         type: "LAUNCH_CARTRIDGE",
         cartridge_id: cartridgeId,
         codex_id: cart?.default_codex_id,
       } as any, origin);
+      // Legacy contract: the runtime's existing cartridge mount path listens
+      // for SELECTOR_CHANGE { selector_type: "cartridge" }. Keep dispatching
+      // it so cartridges that aren't yet wired to LAUNCH_CARTRIDGE
+      // (e.g. qriptopian, metame-runtime) still load when picked from the menu.
+      postToIframe(iframeRef.current, {
+        type: "SELECTOR_CHANGE",
+        selector_type: "cartridge" as any,
+        id: cartridgeId,
+      }, origin);
     }
     // Restore local cartridge state so the active checkmark moves, the codex
     // selector follows the new cartridge default, and outbound context
