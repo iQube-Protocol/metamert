@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Bot, ChevronDown, Check, Zap, Sun, Moon } from "lucide-react";
+import { Bot, ChevronDown, Check, Zap, Sun, Moon, Save, X } from "lucide-react";
 import ProviderIcon from "@/components/ProviderIcon";
 import {
   Popover,
@@ -43,7 +43,7 @@ function scoreDirection(prev: number | undefined, curr: number | undefined): "up
 }
 
 export default function RuntimeHeader() {
-  const { config, selectAigent, selectLLM, inferring, cartridgeState, knytOnboarding, iframeRef, runtimeContext } = useShell();
+  const { config, selectAigent, selectLLM, inferring, cartridgeState, knytOnboarding, iframeRef, runtimeContext, cartridgeOverlay, closeCartridgeOverlay } = useShell();
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
   const [trustFlash, setTrustFlash] = useState(false);
@@ -268,8 +268,35 @@ export default function RuntimeHeader() {
             </TooltipContent>
           </Tooltip>
         </div>
-        {/* Right: trust dots */}
-        <div className="flex items-center justify-end ml-auto">
+        {/* Right: cartridge overlay indicator + trust dots */}
+        <div className="flex items-center justify-end ml-auto gap-2">
+          {cartridgeOverlay && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className="flex items-center gap-1 px-2 py-1"
+                  style={{
+                    borderRadius: 'var(--mm-radius-xs)',
+                    backgroundColor: 'var(--mm-canvas-variant)',
+                    border: 'var(--mm-border-hairline)',
+                  }}
+                >
+                  <Save className="h-3.5 w-3.5" style={{ color: 'var(--mm-ink-secondary)' }} />
+                  <button
+                    type="button"
+                    onClick={closeCartridgeOverlay}
+                    aria-label={`Close ${cartridgeOverlay.title}`}
+                    className="inline-flex h-4 w-4 items-center justify-center rounded-mm-xs text-mm-ink-muted transition-colors hover:bg-mm-line-subtle hover:text-mm-ink-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs">Close {cartridgeOverlay.title}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <div

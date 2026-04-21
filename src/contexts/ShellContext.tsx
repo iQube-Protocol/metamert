@@ -82,6 +82,10 @@ interface ShellContextValue {
   // LOV-401: KNYT onboarding active flag
   knytOnboarding: boolean;
 
+  // Cartridge overlay (driven by runtime CARTRIDGE_OVERLAY_ACTIVE messages)
+  cartridgeOverlay: { slug: string; title: string } | null;
+  closeCartridgeOverlay: () => void;
+
   // Smart Menu state
   viewState: ViewState;
   activeMode: SmartMenuMode | null;
@@ -192,6 +196,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const [runtimeHints, setRuntimeHints] = useState<RuntimeHints>(INITIAL_HINTS);
   const [iframeReadiness, setIframeReadiness] = useState<IframeReadiness>("probing");
   const [knytOnboarding, setKnytOnboarding] = useState(false);
+  const [cartridgeOverlay, setCartridgeOverlay] = useState<{ slug: string; title: string } | null>(null);
   const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
@@ -565,6 +570,17 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         }
         return;
       }
+
+      // Cartridge overlay state from runtime
+      if (t === "CARTRIDGE_OVERLAY_ACTIVE") {
+        const p = (msg as any) as { active?: boolean; slug?: string; title?: string };
+        if (p.active && p.slug) {
+          setCartridgeOverlay({ slug: p.slug, title: p.title ?? p.slug });
+        } else {
+          setCartridgeOverlay(null);
+        }
+        return;
+      }
     };
 
     const codexCloseHandler = (e: MessageEvent) => {
@@ -828,10 +844,18 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const closeCartridgeOverlay = useCallback(() => {
+    if (iframeRef.current && config) {
+      postToIframe(iframeRef.current, { type: "CARTRIDGE_OVERLAY_CLOSE" } as any, getIframeOrigin(config));
+    }
+    setCartridgeOverlay(null);
+  }, [config]);
+
   const ctxValue: ShellContextValue = useMemo(() => ({
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
     runtimeHints, iframeReadiness, knytOnboarding,
+    cartridgeOverlay, closeCartridgeOverlay,
     // Smart Menu state
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
     // Runtime context
@@ -847,6 +871,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
     runtimeHints, iframeReadiness, knytOnboarding,
+    cartridgeOverlay, closeCartridgeOverlay,
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
     runtimeContext, setRuntimeContext,
     toggleQuickLinks, hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,

@@ -32,7 +32,9 @@ export type ShellOutbound =
   | { type: "browser.surface.bounds.changed"; payload: { sessionId: string; bounds: Record<string, number> } }
   | { type: "browser.drawer.refresh.request"; payload: { sessionId: string } }
   | { type: "browser.extract.request"; payload: { sessionId: string } }
-  | { type: "browser.save.request"; payload: { sessionId: string } };
+  | { type: "browser.save.request"; payload: { sessionId: string } }
+  // Cartridge overlay (shell → runtime: request close)
+  | { type: "CARTRIDGE_OVERLAY_CLOSE" };
 
 export interface MenuEvent {
   action_id: string;
