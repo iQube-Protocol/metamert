@@ -78,6 +78,8 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     setSubmenuType,
     pauseIdleTimer,
     resetIdleTimer,
+    runtimeContext,
+    setRuntimeContext,
   } = useShell();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activatedId, setActivatedId] = useState<string | null>(null);
@@ -86,6 +88,21 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
   if (!effectiveMode) return null;
   const modeConfig = MODE_CONFIGS[effectiveMode];
   const accent = modeConfig.accentHex;
+
+  // Resolve the dynamic context-toggle quick action (id "knyt" in PLAY_ACTIONS).
+  // It always shows the *opposite* context — i.e. when the runtime is in metaMe
+  // mode the button reads "KNYT" (tap to switch to KNYT), and vice versa.
+  const renderedActions = modeConfig.quickActions.map(a => {
+    if (effectiveMode === "play" && a.id === "knyt") {
+      const isKnyt = runtimeContext === "knyt";
+      return {
+        ...a,
+        // Show the target context the user will switch to.
+        label: isKnyt ? "metaMe" : "KNYT",
+      };
+    }
+    return a;
+  });
 
   const handleAction = useCallback((action: QuickActionDef) => {
     setActivatedId(action.id);
@@ -110,6 +127,14 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
+    // Runtime context toggle (metaMe ↔ KNYT) lives on the play menu's central slot.
+    if (action.id === "knyt" && effectiveMode === "play") {
+      const next = runtimeContext === "knyt" ? "metame" : "knyt";
+      setRuntimeContext(next);
+      resetIdleTimer("quickAction");
+      return;
+    }
+
     if (action.prompt) {
       if (action.apiAction) {
         void handleMenuAction(action.apiAction);
@@ -126,7 +151,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     handleMenuAction(action.id);
-  }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode]);
+  }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, runtimeContext, setRuntimeContext, resetIdleTimer, sendIframeAction]);
 
   const foldIds = modeConfig.mobileVisibleFold;
   const firstFoldIndex = modeConfig.quickActions.findIndex(a => foldIds.includes(a.id));
