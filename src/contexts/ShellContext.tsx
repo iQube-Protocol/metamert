@@ -401,6 +401,15 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       activeCartridgeId: cartridgeId,
       activeCodexId: cart?.default_codex_id ?? prev.activeCodexId,
     }));
+    // Optimistically show the cartridge overlay indicator (floppy-disk + X)
+    // in the header. The runtime emits CARTRIDGE_OVERLAY_ACTIVE only when the
+    // cartridge is opened from inside the iframe; when launched from the shell
+    // menu, we mirror that state here so the indicator appears immediately.
+    // A subsequent CARTRIDGE_OVERLAY_ACTIVE {active:false} from the runtime
+    // (or closeCartridgeOverlay) will clear it.
+    if (cart) {
+      setCartridgeOverlay({ slug: cart.id, title: cart.label ?? cart.id });
+    }
     // Return to quick actions after selecting
     setSubmenuTypeState("quickActions");
     startIdleTimer();
