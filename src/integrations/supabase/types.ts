@@ -219,6 +219,149 @@ export type Database = {
           },
         ]
       }
+      avl_comms_packs: {
+        Row: {
+          active: boolean
+          audience_type: string
+          comms_type: string
+          created_at: string
+          cta_options: Json | null
+          id: string
+          send_rules: Json | null
+          slug: string
+          subject_lines: Json | null
+          template_markdown: string | null
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          audience_type: string
+          comms_type: string
+          created_at?: string
+          cta_options?: Json | null
+          id?: string
+          send_rules?: Json | null
+          slug: string
+          subject_lines?: Json | null
+          template_markdown?: string | null
+          title: string
+        }
+        Update: {
+          active?: boolean
+          audience_type?: string
+          comms_type?: string
+          created_at?: string
+          cta_options?: Json | null
+          id?: string
+          send_rules?: Json | null
+          slug?: string
+          subject_lines?: Json | null
+          template_markdown?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      avl_partner_contacts: {
+        Row: {
+          assigned_agent: string
+          audience_overlap_notes: string | null
+          bd_stage: string
+          contact_email: string | null
+          contact_name: string | null
+          created_at: string
+          first_contact_at: string | null
+          id: string
+          last_contact_at: string | null
+          name: string
+          next_action: string | null
+          notes: string | null
+          org: string
+          outreach_status: string
+          response_signal: string | null
+          strategic_value_tier: number | null
+          updated_at: string
+          wave: number
+        }
+        Insert: {
+          assigned_agent?: string
+          audience_overlap_notes?: string | null
+          bd_stage?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          first_contact_at?: string | null
+          id?: string
+          last_contact_at?: string | null
+          name: string
+          next_action?: string | null
+          notes?: string | null
+          org: string
+          outreach_status?: string
+          response_signal?: string | null
+          strategic_value_tier?: number | null
+          updated_at?: string
+          wave: number
+        }
+        Update: {
+          assigned_agent?: string
+          audience_overlap_notes?: string | null
+          bd_stage?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          first_contact_at?: string | null
+          id?: string
+          last_contact_at?: string | null
+          name?: string
+          next_action?: string | null
+          notes?: string | null
+          org?: string
+          outreach_status?: string
+          response_signal?: string | null
+          strategic_value_tier?: number | null
+          updated_at?: string
+          wave?: number
+        }
+        Relationships: []
+      }
+      avl_partner_stage_events: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          from_stage: string | null
+          id: string
+          notes: string | null
+          partner_id: string
+          to_stage: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          from_stage?: string | null
+          id?: string
+          notes?: string | null
+          partner_id: string
+          to_stage: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          from_stage?: string | null
+          id?: string
+          notes?: string | null
+          partner_id?: string
+          to_stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avl_partner_stage_events_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "avl_partner_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_statements: {
         Row: {
           closing_balance: number | null
@@ -6197,6 +6340,36 @@ export type Database = {
         }
         Relationships: []
       }
+      knyt_signals: {
+        Row: {
+          content_id: string
+          created_at: string | null
+          id: string
+          note: string | null
+          persona_id: string
+          signal_type: string
+          wallet_task_id: string | null
+        }
+        Insert: {
+          content_id: string
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          persona_id: string
+          signal_type: string
+          wallet_task_id?: string | null
+        }
+        Update: {
+          content_id?: string
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          persona_id?: string
+          signal_type?: string
+          wallet_task_id?: string | null
+        }
+        Relationships: []
+      }
       knyt_tracking_click_events: {
         Row: {
           clicked_at: string
@@ -6424,6 +6597,157 @@ export type Database = {
         }
         Relationships: []
       }
+      ks_backers_staging: {
+        Row: {
+          bounce_count: number
+          campaign_cohort: string | null
+          campaign_id: string
+          campaign_state: string | null
+          canonical_dataset: boolean
+          canonical_persona_id: string | null
+          canonized_at: string | null
+          canonized_by: string | null
+          cohort_id: string
+          crm_persona_id: string | null
+          dedup_status: string
+          deliverability_status: string
+          display_name: string | null
+          email: string
+          engagement_status: string
+          enrichment_status: string
+          fio_handle: string | null
+          first_name: string | null
+          id: string
+          imported_at: string
+          imported_by: string
+          investment_amount_band: string | null
+          knyt_id: string | null
+          ks_backer: boolean | null
+          last_clicked_at: string | null
+          last_event_at: string | null
+          last_name: string | null
+          last_opened_at: string | null
+          last_sent_at: string | null
+          matrix_y_stage: string | null
+          normalized_email: string | null
+          offer_fit: string | null
+          "OM-Tier-Status": string | null
+          order_tier: string | null
+          seed_source: string
+          storage_tier: string
+          suppression_status: string
+          "Total-Invested": number | null
+          unsubscribed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          bounce_count?: number
+          campaign_cohort?: string | null
+          campaign_id?: string
+          campaign_state?: string | null
+          canonical_dataset?: boolean
+          canonical_persona_id?: string | null
+          canonized_at?: string | null
+          canonized_by?: string | null
+          cohort_id?: string
+          crm_persona_id?: string | null
+          dedup_status?: string
+          deliverability_status?: string
+          display_name?: string | null
+          email: string
+          engagement_status?: string
+          enrichment_status?: string
+          fio_handle?: string | null
+          first_name?: string | null
+          id?: string
+          imported_at?: string
+          imported_by?: string
+          investment_amount_band?: string | null
+          knyt_id?: string | null
+          ks_backer?: boolean | null
+          last_clicked_at?: string | null
+          last_event_at?: string | null
+          last_name?: string | null
+          last_opened_at?: string | null
+          last_sent_at?: string | null
+          matrix_y_stage?: string | null
+          normalized_email?: string | null
+          offer_fit?: string | null
+          "OM-Tier-Status"?: string | null
+          order_tier?: string | null
+          seed_source?: string
+          storage_tier?: string
+          suppression_status?: string
+          "Total-Invested"?: number | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bounce_count?: number
+          campaign_cohort?: string | null
+          campaign_id?: string
+          campaign_state?: string | null
+          canonical_dataset?: boolean
+          canonical_persona_id?: string | null
+          canonized_at?: string | null
+          canonized_by?: string | null
+          cohort_id?: string
+          crm_persona_id?: string | null
+          dedup_status?: string
+          deliverability_status?: string
+          display_name?: string | null
+          email?: string
+          engagement_status?: string
+          enrichment_status?: string
+          fio_handle?: string | null
+          first_name?: string | null
+          id?: string
+          imported_at?: string
+          imported_by?: string
+          investment_amount_band?: string | null
+          knyt_id?: string | null
+          ks_backer?: boolean | null
+          last_clicked_at?: string | null
+          last_event_at?: string | null
+          last_name?: string | null
+          last_opened_at?: string | null
+          last_sent_at?: string | null
+          matrix_y_stage?: string | null
+          normalized_email?: string | null
+          offer_fit?: string | null
+          "OM-Tier-Status"?: string | null
+          order_tier?: string | null
+          seed_source?: string
+          storage_tier?: string
+          suppression_status?: string
+          "Total-Invested"?: number | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ks_backers_staging_canonical_persona_id_fkey"
+            columns: ["canonical_persona_id"]
+            isOneToOne: false
+            referencedRelation: "nakamoto_knyt_personas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ks_backers_staging_crm_persona_id_fkey"
+            columns: ["crm_persona_id"]
+            isOneToOne: false
+            referencedRelation: "crm_personas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ks_backers_staging_crm_persona_id_fkey"
+            columns: ["crm_persona_id"]
+            isOneToOne: false
+            referencedRelation: "crm_personas_with_identity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kybe_identity: {
         Row: {
           encrypted_soul_key: string | null
@@ -6450,6 +6774,882 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      launch_audience_segments: {
+        Row: {
+          audience_type: Database["public"]["Enums"]["lo_audience_type"]
+          code: string
+          created_at: string
+          id: string
+          metadata: Json
+          name: string
+          program_id: string
+          size_estimate: number | null
+          updated_at: string
+        }
+        Insert: {
+          audience_type: Database["public"]["Enums"]["lo_audience_type"]
+          code: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          name: string
+          program_id: string
+          size_estimate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          audience_type?: Database["public"]["Enums"]["lo_audience_type"]
+          code?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          name?: string
+          program_id?: string
+          size_estimate?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_audience_segments_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_audience_segments_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_audience_segments_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+        ]
+      }
+      launch_channel_metrics: {
+        Row: {
+          channel_name: Database["public"]["Enums"]["lo_channel_name"]
+          click_rate: number | null
+          created_at: string
+          engaged_comment_count: number
+          follow_count: number
+          growth_rate: number | null
+          id: string
+          open_rate: number | null
+          post_count: number
+          program_id: string
+          reply_rate: number | null
+          report_id: string | null
+          save_count: number
+          sent_count: number
+          share_count: number
+          updated_at: string
+        }
+        Insert: {
+          channel_name: Database["public"]["Enums"]["lo_channel_name"]
+          click_rate?: number | null
+          created_at?: string
+          engaged_comment_count?: number
+          follow_count?: number
+          growth_rate?: number | null
+          id?: string
+          open_rate?: number | null
+          post_count?: number
+          program_id: string
+          reply_rate?: number | null
+          report_id?: string | null
+          save_count?: number
+          sent_count?: number
+          share_count?: number
+          updated_at?: string
+        }
+        Update: {
+          channel_name?: Database["public"]["Enums"]["lo_channel_name"]
+          click_rate?: number | null
+          created_at?: string
+          engaged_comment_count?: number
+          follow_count?: number
+          growth_rate?: number | null
+          id?: string
+          open_rate?: number | null
+          post_count?: number
+          program_id?: string
+          reply_rate?: number | null
+          report_id?: string | null
+          save_count?: number
+          sent_count?: number
+          share_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_channel_metrics_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_channel_metrics_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_channel_metrics_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_channel_metrics_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "launch_weekly_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      launch_channels: {
+        Row: {
+          channel_name: Database["public"]["Enums"]["lo_channel_name"]
+          channel_role: Database["public"]["Enums"]["lo_channel_role"]
+          created_at: string
+          id: string
+          is_active: boolean
+          metadata: Json
+          program_id: string
+          updated_at: string
+        }
+        Insert: {
+          channel_name: Database["public"]["Enums"]["lo_channel_name"]
+          channel_role: Database["public"]["Enums"]["lo_channel_role"]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          program_id: string
+          updated_at?: string
+        }
+        Update: {
+          channel_name?: Database["public"]["Enums"]["lo_channel_name"]
+          channel_role?: Database["public"]["Enums"]["lo_channel_role"]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          program_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_channels_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_channels_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_channels_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+        ]
+      }
+      launch_commercial_metrics: {
+        Row: {
+          aov_cents: number | null
+          conversion_rate: number | null
+          created_at: string
+          id: string
+          offer_id: string | null
+          orders: number
+          program_id: string
+          report_id: string | null
+          revenue_cents: number
+          segment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          aov_cents?: number | null
+          conversion_rate?: number | null
+          created_at?: string
+          id?: string
+          offer_id?: string | null
+          orders?: number
+          program_id: string
+          report_id?: string | null
+          revenue_cents?: number
+          segment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aov_cents?: number | null
+          conversion_rate?: number | null
+          created_at?: string
+          id?: string
+          offer_id?: string | null
+          orders?: number
+          program_id?: string
+          report_id?: string | null
+          revenue_cents?: number
+          segment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_commercial_metrics_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "launch_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_commercial_metrics_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_commercial_metrics_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_commercial_metrics_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_commercial_metrics_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "launch_weekly_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_commercial_metrics_segment_id_fkey"
+            columns: ["segment_id"]
+            isOneToOne: false
+            referencedRelation: "launch_audience_segments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      launch_objectives: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          metadata: Json
+          metric_type: Database["public"]["Enums"]["lo_metric_type"]
+          objective_type: Database["public"]["Enums"]["lo_objective_type"]
+          program_id: string
+          sort_order: number
+          target_type: Database["public"]["Enums"]["lo_target_type"]
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          metric_type: Database["public"]["Enums"]["lo_metric_type"]
+          objective_type: Database["public"]["Enums"]["lo_objective_type"]
+          program_id: string
+          sort_order?: number
+          target_type: Database["public"]["Enums"]["lo_target_type"]
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          metric_type?: Database["public"]["Enums"]["lo_metric_type"]
+          objective_type?: Database["public"]["Enums"]["lo_objective_type"]
+          program_id?: string
+          sort_order?: number
+          target_type?: Database["public"]["Enums"]["lo_target_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_objectives_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_objectives_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_objectives_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+        ]
+      }
+      launch_offers: {
+        Row: {
+          code: string
+          created_at: string
+          goal: Database["public"]["Enums"]["lo_offer_goal"]
+          id: string
+          is_active: boolean
+          metadata: Json
+          name: string
+          offer_type: Database["public"]["Enums"]["lo_offer_type"]
+          price_cents: number | null
+          program_id: string
+          tier: Database["public"]["Enums"]["lo_offer_tier"]
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          goal: Database["public"]["Enums"]["lo_offer_goal"]
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          name: string
+          offer_type: Database["public"]["Enums"]["lo_offer_type"]
+          price_cents?: number | null
+          program_id: string
+          tier: Database["public"]["Enums"]["lo_offer_tier"]
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          goal?: Database["public"]["Enums"]["lo_offer_goal"]
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          name?: string
+          offer_type?: Database["public"]["Enums"]["lo_offer_type"]
+          price_cents?: number | null
+          program_id?: string
+          tier?: Database["public"]["Enums"]["lo_offer_tier"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_offers_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_offers_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_offers_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+        ]
+      }
+      launch_program_members: {
+        Row: {
+          can_write: boolean
+          created_at: string
+          id: string
+          program_id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_write?: boolean
+          created_at?: string
+          id?: string
+          program_id: string
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_write?: boolean
+          created_at?: string
+          id?: string
+          program_id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_program_members_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_program_members_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_program_members_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+        ]
+      }
+      launch_programs: {
+        Row: {
+          created_at: string
+          decision_rule: Database["public"]["Enums"]["lo_decision_rule"]
+          id: string
+          metadata: Json
+          name: string
+          owner: Database["public"]["Enums"]["lo_owner_role"]
+          priority: Database["public"]["Enums"]["lo_priority"]
+          slug: string
+          status: Database["public"]["Enums"]["lo_program_status"]
+          status_color: Database["public"]["Enums"]["lo_status_color"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          decision_rule?: Database["public"]["Enums"]["lo_decision_rule"]
+          id?: string
+          metadata?: Json
+          name: string
+          owner?: Database["public"]["Enums"]["lo_owner_role"]
+          priority?: Database["public"]["Enums"]["lo_priority"]
+          slug: string
+          status?: Database["public"]["Enums"]["lo_program_status"]
+          status_color?: Database["public"]["Enums"]["lo_status_color"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          decision_rule?: Database["public"]["Enums"]["lo_decision_rule"]
+          id?: string
+          metadata?: Json
+          name?: string
+          owner?: Database["public"]["Enums"]["lo_owner_role"]
+          priority?: Database["public"]["Enums"]["lo_priority"]
+          slug?: string
+          status?: Database["public"]["Enums"]["lo_program_status"]
+          status_color?: Database["public"]["Enums"]["lo_status_color"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      launch_proof_assets: {
+        Row: {
+          asset_type: Database["public"]["Enums"]["lo_proof_asset_type"]
+          asset_url: string | null
+          body: string | null
+          created_at: string
+          id: string
+          is_approved: boolean
+          metadata: Json
+          program_id: string
+          source_channel: Database["public"]["Enums"]["lo_channel_name"] | null
+          source_offer_id: string | null
+          source_segment_id: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          asset_type: Database["public"]["Enums"]["lo_proof_asset_type"]
+          asset_url?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          metadata?: Json
+          program_id: string
+          source_channel?: Database["public"]["Enums"]["lo_channel_name"] | null
+          source_offer_id?: string | null
+          source_segment_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          asset_type?: Database["public"]["Enums"]["lo_proof_asset_type"]
+          asset_url?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          metadata?: Json
+          program_id?: string
+          source_channel?: Database["public"]["Enums"]["lo_channel_name"] | null
+          source_offer_id?: string | null
+          source_segment_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_proof_assets_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_proof_assets_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_proof_assets_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_proof_assets_source_offer_id_fkey"
+            columns: ["source_offer_id"]
+            isOneToOne: false
+            referencedRelation: "launch_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_proof_assets_source_segment_id_fkey"
+            columns: ["source_segment_id"]
+            isOneToOne: false
+            referencedRelation: "launch_audience_segments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      launch_readiness_scores: {
+        Row: {
+          bucket: Database["public"]["Enums"]["lo_readiness_bucket"]
+          created_at: string
+          id: string
+          notes: string | null
+          program_id: string
+          report_id: string | null
+          score: Database["public"]["Enums"]["lo_readiness_score"]
+          updated_at: string
+        }
+        Insert: {
+          bucket: Database["public"]["Enums"]["lo_readiness_bucket"]
+          created_at?: string
+          id?: string
+          notes?: string | null
+          program_id: string
+          report_id?: string | null
+          score?: Database["public"]["Enums"]["lo_readiness_score"]
+          updated_at?: string
+        }
+        Update: {
+          bucket?: Database["public"]["Enums"]["lo_readiness_bucket"]
+          created_at?: string
+          id?: string
+          notes?: string | null
+          program_id?: string
+          report_id?: string | null
+          score?: Database["public"]["Enums"]["lo_readiness_score"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_readiness_scores_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_readiness_scores_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_readiness_scores_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_readiness_scores_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "launch_weekly_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      launch_sprint_tasks: {
+        Row: {
+          code: string
+          created_at: string
+          due_date: string | null
+          id: string
+          metadata: Json
+          owner: Database["public"]["Enums"]["lo_owner_role"]
+          priority: Database["public"]["Enums"]["lo_priority"]
+          program_id: string
+          sort_order: number
+          status: Database["public"]["Enums"]["lo_task_status"]
+          status_color: Database["public"]["Enums"]["lo_status_color"]
+          task_type: Database["public"]["Enums"]["lo_task_type"]
+          title: string
+          updated_at: string
+          week_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          metadata?: Json
+          owner: Database["public"]["Enums"]["lo_owner_role"]
+          priority?: Database["public"]["Enums"]["lo_priority"]
+          program_id: string
+          sort_order?: number
+          status?: Database["public"]["Enums"]["lo_task_status"]
+          status_color?: Database["public"]["Enums"]["lo_status_color"]
+          task_type: Database["public"]["Enums"]["lo_task_type"]
+          title: string
+          updated_at?: string
+          week_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          metadata?: Json
+          owner?: Database["public"]["Enums"]["lo_owner_role"]
+          priority?: Database["public"]["Enums"]["lo_priority"]
+          program_id?: string
+          sort_order?: number
+          status?: Database["public"]["Enums"]["lo_task_status"]
+          status_color?: Database["public"]["Enums"]["lo_status_color"]
+          task_type?: Database["public"]["Enums"]["lo_task_type"]
+          title?: string
+          updated_at?: string
+          week_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_sprint_tasks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_sprint_tasks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_sprint_tasks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_sprint_tasks_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "launch_sprint_weeks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_sprint_tasks_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "v_week_progress_summary"
+            referencedColumns: ["week_id"]
+          },
+        ]
+      }
+      launch_sprint_weeks: {
+        Row: {
+          created_at: string
+          goal: string | null
+          id: string
+          label: string
+          program_id: string
+          status: Database["public"]["Enums"]["lo_task_status"]
+          status_color: Database["public"]["Enums"]["lo_status_color"]
+          updated_at: string
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          goal?: string | null
+          id?: string
+          label: string
+          program_id: string
+          status?: Database["public"]["Enums"]["lo_task_status"]
+          status_color?: Database["public"]["Enums"]["lo_status_color"]
+          updated_at?: string
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          goal?: string | null
+          id?: string
+          label?: string
+          program_id?: string
+          status?: Database["public"]["Enums"]["lo_task_status"]
+          status_color?: Database["public"]["Enums"]["lo_status_color"]
+          updated_at?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_sprint_weeks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_sprint_weeks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_sprint_weeks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+        ]
+      }
+      launch_weekly_reports: {
+        Row: {
+          best_messages: Json
+          created_at: string
+          id: string
+          next_week_priorities: Json
+          program_id: string
+          recommendation: Database["public"]["Enums"]["lo_recommendation"]
+          recommendation_reason: string | null
+          status: Database["public"]["Enums"]["lo_task_status"]
+          status_color: Database["public"]["Enums"]["lo_status_color"]
+          summary: string | null
+          top_losses: Json
+          top_objections: Json
+          top_wins: Json
+          updated_at: string
+          week_number: number
+        }
+        Insert: {
+          best_messages?: Json
+          created_at?: string
+          id?: string
+          next_week_priorities?: Json
+          program_id: string
+          recommendation?: Database["public"]["Enums"]["lo_recommendation"]
+          recommendation_reason?: string | null
+          status?: Database["public"]["Enums"]["lo_task_status"]
+          status_color?: Database["public"]["Enums"]["lo_status_color"]
+          summary?: string | null
+          top_losses?: Json
+          top_objections?: Json
+          top_wins?: Json
+          updated_at?: string
+          week_number: number
+        }
+        Update: {
+          best_messages?: Json
+          created_at?: string
+          id?: string
+          next_week_priorities?: Json
+          program_id?: string
+          recommendation?: Database["public"]["Enums"]["lo_recommendation"]
+          recommendation_reason?: string | null
+          status?: Database["public"]["Enums"]["lo_task_status"]
+          status_color?: Database["public"]["Enums"]["lo_status_color"]
+          summary?: string | null
+          top_losses?: Json
+          top_objections?: Json
+          top_wins?: Json
+          updated_at?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_weekly_reports_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_weekly_reports_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_weekly_reports_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+        ]
       }
       mailbox: {
         Row: {
@@ -7510,6 +8710,8 @@ export type Database = {
           campaign_tags: string[] | null
           "Chain-IDs": string[] | null
           "Characters-Owned": string | null
+          community_role: string | null
+          content_contribution_count: number
           created_at: string
           csv_first_committed_date: string | null
           csv_investment_status: string | null
@@ -7528,18 +8730,24 @@ export type Database = {
           "Instagram-Handle": string | null
           investment_amount_band: string | null
           investor_priority_band: string | null
+          is_content_creator: boolean
+          is_franchisee: boolean
+          is_remixer: boolean
+          is_steward: boolean
           kickstarter_backed_at: string | null
           kickstarter_clicked_at: string | null
           "KNYT-Cards-Owned": string | null
           "KNYT-COYN-Owned": string | null
           "KNYT-ID": string | null
           "KNYT-Posters-Owned": string | null
+          ks_backer: boolean
           last_campaign_sent_at: string | null
           last_campaign_sequence: string | null
           "Last-Name": string | null
           "LinkedIn-ID": string | null
           "LinkedIn-Profile-URL": string | null
           "Local-City": string | null
+          matrix_y_stage: string | null
           message_angle: string | null
           "Metaiye-Shares-Owned": string | null
           "MetaKeep-Public-Key": string | null
@@ -7551,11 +8759,13 @@ export type Database = {
           "Phone-Number": string | null
           platform_activated_at: string | null
           platform_auth_profile_id: string | null
+          platform_engagement_score: number
           preferred_channel_primary: string | null
           preferred_channel_secondary: string | null
           Profession: string | null
           profile_image_url: string | null
           reactivation_potential: string | null
+          remix_count: number
           "Telegram-Handle": string | null
           "ThirdWeb-Public-Key": string | null
           "TikTok-Handle": string | null
@@ -7578,6 +8788,8 @@ export type Database = {
           campaign_tags?: string[] | null
           "Chain-IDs"?: string[] | null
           "Characters-Owned"?: string | null
+          community_role?: string | null
+          content_contribution_count?: number
           created_at?: string
           csv_first_committed_date?: string | null
           csv_investment_status?: string | null
@@ -7596,18 +8808,24 @@ export type Database = {
           "Instagram-Handle"?: string | null
           investment_amount_band?: string | null
           investor_priority_band?: string | null
+          is_content_creator?: boolean
+          is_franchisee?: boolean
+          is_remixer?: boolean
+          is_steward?: boolean
           kickstarter_backed_at?: string | null
           kickstarter_clicked_at?: string | null
           "KNYT-Cards-Owned"?: string | null
           "KNYT-COYN-Owned"?: string | null
           "KNYT-ID"?: string | null
           "KNYT-Posters-Owned"?: string | null
+          ks_backer?: boolean
           last_campaign_sent_at?: string | null
           last_campaign_sequence?: string | null
           "Last-Name"?: string | null
           "LinkedIn-ID"?: string | null
           "LinkedIn-Profile-URL"?: string | null
           "Local-City"?: string | null
+          matrix_y_stage?: string | null
           message_angle?: string | null
           "Metaiye-Shares-Owned"?: string | null
           "MetaKeep-Public-Key"?: string | null
@@ -7619,11 +8837,13 @@ export type Database = {
           "Phone-Number"?: string | null
           platform_activated_at?: string | null
           platform_auth_profile_id?: string | null
+          platform_engagement_score?: number
           preferred_channel_primary?: string | null
           preferred_channel_secondary?: string | null
           Profession?: string | null
           profile_image_url?: string | null
           reactivation_potential?: string | null
+          remix_count?: number
           "Telegram-Handle"?: string | null
           "ThirdWeb-Public-Key"?: string | null
           "TikTok-Handle"?: string | null
@@ -7646,6 +8866,8 @@ export type Database = {
           campaign_tags?: string[] | null
           "Chain-IDs"?: string[] | null
           "Characters-Owned"?: string | null
+          community_role?: string | null
+          content_contribution_count?: number
           created_at?: string
           csv_first_committed_date?: string | null
           csv_investment_status?: string | null
@@ -7664,18 +8886,24 @@ export type Database = {
           "Instagram-Handle"?: string | null
           investment_amount_band?: string | null
           investor_priority_band?: string | null
+          is_content_creator?: boolean
+          is_franchisee?: boolean
+          is_remixer?: boolean
+          is_steward?: boolean
           kickstarter_backed_at?: string | null
           kickstarter_clicked_at?: string | null
           "KNYT-Cards-Owned"?: string | null
           "KNYT-COYN-Owned"?: string | null
           "KNYT-ID"?: string | null
           "KNYT-Posters-Owned"?: string | null
+          ks_backer?: boolean
           last_campaign_sent_at?: string | null
           last_campaign_sequence?: string | null
           "Last-Name"?: string | null
           "LinkedIn-ID"?: string | null
           "LinkedIn-Profile-URL"?: string | null
           "Local-City"?: string | null
+          matrix_y_stage?: string | null
           message_angle?: string | null
           "Metaiye-Shares-Owned"?: string | null
           "MetaKeep-Public-Key"?: string | null
@@ -7687,11 +8915,13 @@ export type Database = {
           "Phone-Number"?: string | null
           platform_activated_at?: string | null
           platform_auth_profile_id?: string | null
+          platform_engagement_score?: number
           preferred_channel_primary?: string | null
           preferred_channel_secondary?: string | null
           Profession?: string | null
           profile_image_url?: string | null
           reactivation_potential?: string | null
+          remix_count?: number
           "Telegram-Handle"?: string | null
           "ThirdWeb-Public-Key"?: string | null
           "TikTok-Handle"?: string | null
@@ -8588,6 +9818,63 @@ export type Database = {
         }
         Relationships: []
       }
+      orgqube_policies: {
+        Row: {
+          active: boolean | null
+          allowed_agents: string[] | null
+          allowed_cartridges: string[] | null
+          allowed_skills: string[] | null
+          authority_classes: Json | null
+          created_at: string | null
+          escalation_behavior: Json | null
+          id: string
+          native_asset_exposure: string | null
+          org_id: string
+          policy_name: string | null
+          required_receipts: string[] | null
+          skill_budget_posture: string | null
+          targets: Json | null
+          trust_threshold_min: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          allowed_agents?: string[] | null
+          allowed_cartridges?: string[] | null
+          allowed_skills?: string[] | null
+          authority_classes?: Json | null
+          created_at?: string | null
+          escalation_behavior?: Json | null
+          id?: string
+          native_asset_exposure?: string | null
+          org_id: string
+          policy_name?: string | null
+          required_receipts?: string[] | null
+          skill_budget_posture?: string | null
+          targets?: Json | null
+          trust_threshold_min?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          allowed_agents?: string[] | null
+          allowed_cartridges?: string[] | null
+          allowed_skills?: string[] | null
+          authority_classes?: Json | null
+          created_at?: string | null
+          escalation_behavior?: Json | null
+          id?: string
+          native_asset_exposure?: string | null
+          org_id?: string
+          policy_name?: string | null
+          required_receipts?: string[] | null
+          skill_budget_posture?: string | null
+          targets?: Json | null
+          trust_threshold_min?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       partner_outreach: {
         Row: {
           committed: boolean | null
@@ -8906,6 +10193,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      persona_metame_settings: {
+        Row: {
+          budget_posture: string
+          created_at: string
+          curated_skills_only: boolean
+          explanation_first: boolean
+          guardian_mode: boolean
+          id: string
+          lead_agent: string
+          persona_id: string
+          receipt_visibility: boolean
+          updated_at: string
+        }
+        Insert: {
+          budget_posture?: string
+          created_at?: string
+          curated_skills_only?: boolean
+          explanation_first?: boolean
+          guardian_mode?: boolean
+          id?: string
+          lead_agent?: string
+          persona_id: string
+          receipt_visibility?: boolean
+          updated_at?: string
+        }
+        Update: {
+          budget_posture?: string
+          created_at?: string
+          curated_skills_only?: boolean
+          explanation_first?: boolean
+          guardian_mode?: boolean
+          id?: string
+          lead_agent?: string
+          persona_id?: string
+          receipt_visibility?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       personas: {
         Row: {
@@ -9425,6 +10751,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      qc_events: {
+        Row: {
+          action_type: string
+          amount_qc: number
+          cartridge_id: string | null
+          created_at: string
+          direction: string
+          event_id: string
+          finalized_at: string | null
+          metadata: Json
+          persona_id: string
+          provisional: boolean
+          receipt_id: string | null
+          reward_grant_id: string | null
+          skill_id: string | null
+        }
+        Insert: {
+          action_type: string
+          amount_qc?: number
+          cartridge_id?: string | null
+          created_at?: string
+          direction: string
+          event_id?: string
+          finalized_at?: string | null
+          metadata?: Json
+          persona_id: string
+          provisional?: boolean
+          receipt_id?: string | null
+          reward_grant_id?: string | null
+          skill_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          amount_qc?: number
+          cartridge_id?: string | null
+          created_at?: string
+          direction?: string
+          event_id?: string
+          finalized_at?: string | null
+          metadata?: Json
+          persona_id?: string
+          provisional?: boolean
+          receipt_id?: string | null
+          reward_grant_id?: string | null
+          skill_id?: string | null
+        }
+        Relationships: []
       }
       qubetalk_channels: {
         Row: {
@@ -10155,12 +11529,17 @@ export type Database = {
           asset_id: string | null
           content_hash: string | null
           created_at: string
+          dispute_status: string
           dvn_message_id: string | null
           dvn_submitted_at: string | null
           event_type: string
+          finalized_at: string | null
           intake_id: string | null
           invocation_id: string | null
+          lineage: Json | null
           payload: Json
+          policy_snapshot: Json | null
+          provisional: boolean
           receipt_id: string
           tenant_id: string
         }
@@ -10169,12 +11548,17 @@ export type Database = {
           asset_id?: string | null
           content_hash?: string | null
           created_at?: string
+          dispute_status?: string
           dvn_message_id?: string | null
           dvn_submitted_at?: string | null
           event_type: string
+          finalized_at?: string | null
           intake_id?: string | null
           invocation_id?: string | null
+          lineage?: Json | null
           payload?: Json
+          policy_snapshot?: Json | null
+          provisional?: boolean
           receipt_id: string
           tenant_id: string
         }
@@ -10183,12 +11567,17 @@ export type Database = {
           asset_id?: string | null
           content_hash?: string | null
           created_at?: string
+          dispute_status?: string
           dvn_message_id?: string | null
           dvn_submitted_at?: string | null
           event_type?: string
+          finalized_at?: string | null
           intake_id?: string | null
           invocation_id?: string | null
+          lineage?: Json | null
           payload?: Json
+          policy_snapshot?: Json | null
+          provisional?: boolean
           receipt_id?: string
           tenant_id?: string
         }
@@ -12084,6 +13473,63 @@ export type Database = {
         }
         Relationships: []
       }
+      venture_lab_scorecard: {
+        Row: {
+          council_status: string | null
+          created_at: string | null
+          id: string
+          owner: string
+          payload: Json
+          posture: string
+          priority: string
+          record_id: string
+          review_date: string
+          review_period: string
+          status_color: string
+          updated_at: string | null
+          venture_name: string
+          vertical: string
+          x_score: string
+          y_score: string
+        }
+        Insert: {
+          council_status?: string | null
+          created_at?: string | null
+          id?: string
+          owner: string
+          payload: Json
+          posture: string
+          priority: string
+          record_id: string
+          review_date: string
+          review_period: string
+          status_color: string
+          updated_at?: string | null
+          venture_name: string
+          vertical: string
+          x_score: string
+          y_score: string
+        }
+        Update: {
+          council_status?: string | null
+          created_at?: string | null
+          id?: string
+          owner?: string
+          payload?: Json
+          posture?: string
+          priority?: string
+          record_id?: string
+          review_date?: string
+          review_period?: string
+          status_color?: string
+          updated_at?: string | null
+          venture_name?: string
+          vertical?: string
+          x_score?: string
+          y_score?: string
+        }
+        Relationships: []
+      }
       wallet_balances: {
         Row: {
           asset_code: string
@@ -13253,6 +14699,248 @@ export type Database = {
           },
         ]
       }
+      v_channel_summary: {
+        Row: {
+          avg_click_rate: number | null
+          avg_growth_rate: number | null
+          avg_open_rate: number | null
+          avg_reply_rate: number | null
+          channel_name: Database["public"]["Enums"]["lo_channel_name"] | null
+          program_id: string | null
+          total_engaged_comments: number | null
+          total_follows: number | null
+          total_posts: number | null
+          total_sent: number | null
+          total_shares: number | null
+          weeks_reported: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_channel_metrics_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_channel_metrics_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_channel_metrics_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+        ]
+      }
+      v_commercial_summary: {
+        Row: {
+          avg_conversion_rate: number | null
+          blended_aov_cents: number | null
+          program_id: string | null
+          program_name: string | null
+          program_slug: string | null
+          total_orders: number | null
+          total_revenue_cents: number | null
+          weeks_reported: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_commercial_metrics_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_commercial_metrics_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_commercial_metrics_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+        ]
+      }
+      v_marketa_today: {
+        Row: {
+          all_tasks_total: number | null
+          blocked_tasks: number | null
+          critical_open_tasks: number | null
+          current_week_goal: string | null
+          current_week_label: string | null
+          current_week_number: number | null
+          done_tasks_total: number | null
+          name: string | null
+          program_id: string | null
+          slug: string | null
+          status: Database["public"]["Enums"]["lo_program_status"] | null
+          status_color: Database["public"]["Enums"]["lo_status_color"] | null
+          todays_open_tasks: number | null
+          week_status: Database["public"]["Enums"]["lo_task_status"] | null
+        }
+        Relationships: []
+      }
+      v_program_health: {
+        Row: {
+          approved_proof_assets: number | null
+          blocked_tasks: number | null
+          completion_pct: number | null
+          created_at: string | null
+          doing_tasks: number | null
+          done_tasks: number | null
+          name: string | null
+          owner: Database["public"]["Enums"]["lo_owner_role"] | null
+          priority: Database["public"]["Enums"]["lo_priority"] | null
+          program_id: string | null
+          slug: string | null
+          status: Database["public"]["Enums"]["lo_program_status"] | null
+          status_color: Database["public"]["Enums"]["lo_status_color"] | null
+          todo_tasks: number | null
+          total_proof_assets: number | null
+          total_tasks: number | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
+      v_proof_library: {
+        Row: {
+          asset_type: Database["public"]["Enums"]["lo_proof_asset_type"] | null
+          asset_url: string | null
+          audience_type: Database["public"]["Enums"]["lo_audience_type"] | null
+          body: string | null
+          created_at: string | null
+          id: string | null
+          is_approved: boolean | null
+          metadata: Json | null
+          offer_name: string | null
+          offer_tier: Database["public"]["Enums"]["lo_offer_tier"] | null
+          program_id: string | null
+          segment_name: string | null
+          source_channel: Database["public"]["Enums"]["lo_channel_name"] | null
+          title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_proof_assets_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_proof_assets_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_proof_assets_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+        ]
+      }
+      v_readiness_dashboard: {
+        Row: {
+          audience_score: string | null
+          green_count: number | null
+          offer_score: string | null
+          ops_score: string | null
+          program_id: string | null
+          proof_score: string | null
+          red_count: number | null
+          report_id: string | null
+          story_score: string | null
+          week_number: number | null
+          yellow_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_readiness_scores_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_readiness_scores_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_readiness_scores_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_readiness_scores_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "launch_weekly_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_week_progress_summary: {
+        Row: {
+          blocked_tasks: number | null
+          completion_pct: number | null
+          critical_tasks: number | null
+          doing_tasks: number | null
+          done_tasks: number | null
+          goal: string | null
+          label: string | null
+          program_id: string | null
+          status: Database["public"]["Enums"]["lo_task_status"] | null
+          status_color: Database["public"]["Enums"]["lo_status_color"] | null
+          todo_tasks: number | null
+          total_tasks: number | null
+          week_id: string | null
+          week_number: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_sprint_weeks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "launch_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_sprint_weeks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_marketa_today"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "launch_sprint_weeks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "v_program_health"
+            referencedColumns: ["program_id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_payment_request: {
@@ -13582,6 +15270,8 @@ export type Database = {
         Args: { p_crm_persona_id: string; p_identity_persona_id: string }
         Returns: boolean
       }
+      lo_is_program_member: { Args: { p_program_id: string }; Returns: boolean }
+      lo_program_role: { Args: { p_program_id: string }; Returns: string }
       mark_notifications_read: {
         Args: { p_notification_ids?: string[]; p_recipient_id: string }
         Returns: number
@@ -13597,6 +15287,63 @@ export type Database = {
       reject_payment_request: {
         Args: { p_payer_id: string; p_reason?: string; p_request_id: string }
         Returns: boolean
+      }
+      rpc_capture_proof_asset: {
+        Args: {
+          p_asset_type: Database["public"]["Enums"]["lo_proof_asset_type"]
+          p_asset_url?: string
+          p_body?: string
+          p_is_approved?: boolean
+          p_metadata?: Json
+          p_program_id: string
+          p_source_channel?: Database["public"]["Enums"]["lo_channel_name"]
+          p_source_offer_id?: string
+          p_source_segment_id?: string
+          p_title?: string
+        }
+        Returns: string
+      }
+      rpc_mark_task_status: {
+        Args: {
+          p_color?: Database["public"]["Enums"]["lo_status_color"]
+          p_status: Database["public"]["Enums"]["lo_task_status"]
+          p_task_id: string
+        }
+        Returns: undefined
+      }
+      rpc_program_readiness_verdict: {
+        Args: { p_report_id: string }
+        Returns: boolean
+      }
+      rpc_roll_week_forward: {
+        Args: { p_from_week_no: number; p_program_id: string }
+        Returns: undefined
+      }
+      rpc_upsert_readiness_for_week: {
+        Args: {
+          p_bucket: Database["public"]["Enums"]["lo_readiness_bucket"]
+          p_notes?: string
+          p_program_id: string
+          p_report_id: string
+          p_score: Database["public"]["Enums"]["lo_readiness_score"]
+        }
+        Returns: undefined
+      }
+      rpc_upsert_weekly_report: {
+        Args: {
+          p_best_messages?: Json
+          p_next_week_priorities?: Json
+          p_program_id: string
+          p_recommendation?: Database["public"]["Enums"]["lo_recommendation"]
+          p_recommendation_reason?: string
+          p_status?: Database["public"]["Enums"]["lo_task_status"]
+          p_summary?: string
+          p_top_losses?: Json
+          p_top_objections?: Json
+          p_top_wins?: Json
+          p_week_number: number
+        }
+        Returns: string
       }
       search_kb_chunks: {
         Args: {
@@ -13759,6 +15506,95 @@ export type Database = {
         | "theory_thread"
         | "scene_extension"
         | "canon_elevation_candidate"
+      lo_audience_type:
+        | "investor_top"
+        | "investor_warm"
+        | "investor_dormant"
+        | "community_warm"
+        | "public_cold"
+      lo_channel_name:
+        | "email"
+        | "sms"
+        | "x"
+        | "instagram"
+        | "linkedin"
+        | "kickstarter_prelaunch"
+      lo_channel_role:
+        | "convert"
+        | "nudge"
+        | "signal"
+        | "visual_halo"
+        | "legitimacy"
+        | "follow_capture"
+      lo_decision_rule: "relaunch_on_evidence" | "mostly_green_rule"
+      lo_metric_type:
+        | "orders"
+        | "revenue"
+        | "aov"
+        | "conversion_rate"
+        | "proof_assets"
+        | "engaged_followers"
+        | "kickstarter_follows"
+        | "readiness_score"
+      lo_objective_type:
+        | "direct_sales"
+        | "message_fit"
+        | "proof_build"
+        | "halo_growth"
+        | "launch_readiness"
+      lo_offer_goal:
+        | "fast_conversion"
+        | "high_value_conversion"
+        | "investor_activation"
+      lo_offer_tier: "entry" | "premium" | "founding"
+      lo_offer_type: "digital" | "bundle" | "exclusive"
+      lo_owner_role:
+        | "Marketa"
+        | "Founder"
+        | "Ops"
+        | "Design"
+        | "Dev"
+        | "Community"
+      lo_priority: "low" | "medium" | "high" | "critical"
+      lo_program_status: "draft" | "active" | "paused" | "done" | "archived"
+      lo_proof_asset_type:
+        | "testimonial"
+        | "quote"
+        | "screenshot"
+        | "comment"
+        | "buyer_reaction"
+        | "supporter_post"
+        | "referral_event"
+      lo_readiness_bucket: "offer" | "audience" | "proof" | "ops" | "story"
+      lo_readiness_score: "red" | "yellow" | "green"
+      lo_recommendation:
+        | "continue_validation"
+        | "move_to_prelaunch_concentration"
+        | "prepare_relaunch"
+      lo_status_color: "gray" | "blue" | "yellow" | "green" | "red"
+      lo_target_type: "increase" | "optimize" | "stabilize" | "reach_threshold"
+      lo_task_status: "todo" | "doing" | "blocked" | "done" | "canceled"
+      lo_task_type:
+        | "strategy"
+        | "copy"
+        | "offer_design"
+        | "ops_copy"
+        | "crm"
+        | "analytics"
+        | "content_ops"
+        | "faq"
+        | "creative"
+        | "email"
+        | "direct_outreach"
+        | "sms"
+        | "research"
+        | "community"
+        | "social"
+        | "product"
+        | "growth"
+        | "decision"
+        | "memo"
+        | "proof_build"
       master_content_type: "episode_still" | "episode_motion" | "episode_print"
       order_tier: "NONE" | "KETA" | "KEJI" | "FIRST" | "ZERO" | "SAT"
       payment_currency:
@@ -14004,6 +15840,105 @@ export const Constants = {
         "theory_thread",
         "scene_extension",
         "canon_elevation_candidate",
+      ],
+      lo_audience_type: [
+        "investor_top",
+        "investor_warm",
+        "investor_dormant",
+        "community_warm",
+        "public_cold",
+      ],
+      lo_channel_name: [
+        "email",
+        "sms",
+        "x",
+        "instagram",
+        "linkedin",
+        "kickstarter_prelaunch",
+      ],
+      lo_channel_role: [
+        "convert",
+        "nudge",
+        "signal",
+        "visual_halo",
+        "legitimacy",
+        "follow_capture",
+      ],
+      lo_decision_rule: ["relaunch_on_evidence", "mostly_green_rule"],
+      lo_metric_type: [
+        "orders",
+        "revenue",
+        "aov",
+        "conversion_rate",
+        "proof_assets",
+        "engaged_followers",
+        "kickstarter_follows",
+        "readiness_score",
+      ],
+      lo_objective_type: [
+        "direct_sales",
+        "message_fit",
+        "proof_build",
+        "halo_growth",
+        "launch_readiness",
+      ],
+      lo_offer_goal: [
+        "fast_conversion",
+        "high_value_conversion",
+        "investor_activation",
+      ],
+      lo_offer_tier: ["entry", "premium", "founding"],
+      lo_offer_type: ["digital", "bundle", "exclusive"],
+      lo_owner_role: [
+        "Marketa",
+        "Founder",
+        "Ops",
+        "Design",
+        "Dev",
+        "Community",
+      ],
+      lo_priority: ["low", "medium", "high", "critical"],
+      lo_program_status: ["draft", "active", "paused", "done", "archived"],
+      lo_proof_asset_type: [
+        "testimonial",
+        "quote",
+        "screenshot",
+        "comment",
+        "buyer_reaction",
+        "supporter_post",
+        "referral_event",
+      ],
+      lo_readiness_bucket: ["offer", "audience", "proof", "ops", "story"],
+      lo_readiness_score: ["red", "yellow", "green"],
+      lo_recommendation: [
+        "continue_validation",
+        "move_to_prelaunch_concentration",
+        "prepare_relaunch",
+      ],
+      lo_status_color: ["gray", "blue", "yellow", "green", "red"],
+      lo_target_type: ["increase", "optimize", "stabilize", "reach_threshold"],
+      lo_task_status: ["todo", "doing", "blocked", "done", "canceled"],
+      lo_task_type: [
+        "strategy",
+        "copy",
+        "offer_design",
+        "ops_copy",
+        "crm",
+        "analytics",
+        "content_ops",
+        "faq",
+        "creative",
+        "email",
+        "direct_outreach",
+        "sms",
+        "research",
+        "community",
+        "social",
+        "product",
+        "growth",
+        "decision",
+        "memo",
+        "proof_build",
       ],
       master_content_type: ["episode_still", "episode_motion", "episode_print"],
       order_tier: ["NONE", "KETA", "KEJI", "FIRST", "ZERO", "SAT"],
