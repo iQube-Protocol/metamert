@@ -128,6 +128,8 @@ interface ShellContextValue {
   resumeIdleTimer: () => void;
   setInteractionState: (state: InteractionState) => void;
   setPromptHasText: (hasText: boolean) => void;
+  /** Briefly animate the trust/reliability score dots to indicate processing. */
+  pulseInference: () => void;
 }
 
 const ShellCtx = createContext<ShellContextValue | null>(null);
@@ -880,6 +882,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setCartridgeOverlay(null);
   }, [config]);
 
+  const pulseInference = useCallback(() => {
+    inferCtrl.current?.start();
+    inferCtrl.current?.complete();
+  }, []);
+
+
   const ctxValue: ShellContextValue = useMemo(() => ({
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
@@ -896,6 +904,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     // Smart Menu actions
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
     launchCartridge, selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    pulseInference,
   }), [
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
@@ -907,6 +916,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
     launchCartridge, selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    pulseInference,
   ]);
 
   // Publish to module singleton so HMR-stale consumers can still read it
