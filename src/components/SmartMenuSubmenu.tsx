@@ -96,13 +96,9 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     setActivatedId(action.id);
     pauseIdleTimer();
 
-    // Pulse the trust/reliability score dots to signal processing
-    pulseInference();
-
-    if (overrideMode && overrideMode !== activeMode) {
-      activateMode(overrideMode);
-    }
-
+    // ---- System-only actions: drawer opens / submenu transitions ----
+    // These MUST NOT pulse inference, submit prompts, or fall through to
+    // handleMenuAction. They are pure shell-owned UI/iframe-bridge actions.
     if (action.id === "cartridge") {
       setSubmenuType("cartridgeSelector");
       return;
@@ -117,11 +113,25 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
 
     if (action.id === "identity") {
       // Identity has no sub-sub menu — open the IdentityIQubeDrawer in the
-      // runtime directly (single drawer, no variants). Same dispatch pattern
-      // as persona iQube. We do NOT submit a prompt or change submenuType.
+      // runtime directly (single drawer, no variants). We dispatch BEFORE
+      // any timer/state churn so the postMessage cannot be raced by hover
+      // collapse or submenu reset. No inference pulse, no prompt submit.
       openIdentityIQube();
+      // Restart idle timer only after dispatch is on the wire.
       resetIdleTimer("quickAction");
       return;
+    }
+
+    if (action.id === "browse") {
+      setSubmenuType("browserSelector");
+      return;
+    }
+
+    // ---- Regular quick actions: now we can pulse inference ----
+    pulseInference();
+
+    if (overrideMode && overrideMode !== activeMode) {
+      activateMode(overrideMode);
     }
 
     if (action.id === "browse") {
