@@ -49,7 +49,12 @@ export default function SmartMenu() {
     submenuVisibility,
     pauseIdleTimer,
     resumeIdleTimer,
+    personaState,
   } = useShell();
+
+  // Active persona accent — drives the Be icon tint when a persona is selected.
+  const activePersona = personaState.available.find(p => p.id === personaState.activePersonaId);
+  const personaAccent = activePersona?.accentHex;
 
   // Hover preview: show quick actions on rollover without entering prompt mode
   const [hoverPreviewMode, setHoverPreviewMode] = useState<SmartMenuMode | null>(null);
