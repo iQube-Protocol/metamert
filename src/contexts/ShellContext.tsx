@@ -589,15 +589,18 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }, [stageRuntimeCommand]);
 
   /**
-   * Select a persona pill.
+   * Select a persona pill — mirrors `launchCartridge` exactly.
    *
-   * Canonical flow (per runtime owner contract):
-   *   1. update local activePersonaId
-   *   2. dispatch OPEN_PERSONA_IQUBE with the mapped iqube_type
+   * Three-step flow (identical to cartridge):
+   *   1. Update local activePersonaId (state).
+   *   2. Stage the OPEN_PERSONA_IQUBE overlay command (Phase A immediate
+   *      + Phase B replay on RUNTIME_READY).
+   *   3. Run the shell prompt pipeline via `submitPrompt(...)` so the
+   *      runtime produces a conversational response — same authoritative
+   *      path the prompt bar uses.
    *
-   * We intentionally do NOT also send SELECTOR_CHANGE here — that triggers
-   * a runtime content refresh which can supersede the drawer open. If the
-   * runtime later needs persona sync, do it as an explicit secondary step.
+   * SELECTOR_CHANGE is still NOT sent here (would refresh runtime content
+   * and race the drawer open).
    */
   const selectPersona = useCallback((personaId: string) => {
     const persona = personaState.available.find(p => p.id === personaId);
@@ -612,15 +615,30 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
 
     clearIdleTimer();
+
+    // 1) Local state update (active pill checkmark)
     setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
 
+    // Pulse trust/reliability dots while the persona drawer mounts.
+    inferCtrl.current?.start();
+    inferCtrl.current?.complete(4_000);
+
+    // 2) Staged overlay open (Phase A immediate, Phase B replay on RUNTIME_READY)
     stageRuntimeCommand(() => {
       if (!iframeRef.current || !config) return;
       const origin = getIframeOrigin(config);
       console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
       postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
     }, `${persona.label} iQube`);
-  }, [config, clearIdleTimer, personaState.available, stageRuntimeCommand]);
+
+    // 3) Shell prompt pipeline — generic persona-protocol prompt
+    const seedPrompt = `Tell me about the ${persona.label} persona in the iQube protocol.`;
+    queueMicrotask(() => { void submitPromptRef.current?.(seedPrompt); });
+
+    // Return to quick actions after selecting (mirrors cartridge selector)
+    setSubmenuTypeState("quickActions");
+    startIdleTimer();
+  }, [config, clearIdleTimer, personaState.available, stageRuntimeCommand, startIdleTimer]);
 
   /**
    * Open the Persona iQube drawer in the runtime directly (without changing

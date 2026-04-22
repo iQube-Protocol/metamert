@@ -136,16 +136,10 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
-    if (action.id === "identity") {
-      // Identity has no sub-sub menu — open the IdentityIQubeDrawer in the
-      // runtime directly (single drawer, no variants). We dispatch BEFORE
-      // any timer/state churn so the postMessage cannot be raced by hover
-      // collapse or submenu reset. No inference pulse, no prompt submit.
-      openIdentityIQube();
-      // Restart idle timer only after dispatch is on the wire.
-      resetIdleTimer("quickAction");
-      return;
-    }
+    // NOTE: Identity is intentionally NOT special-cased here. It falls through
+    // to the generic Wallet-style dual-dispatch branch below (apiAction +
+    // iframeAction + submitPrompt) so it mirrors Wallet exactly.
+
 
     if (action.id === "browse") {
       setSubmenuType("browserSelector");
@@ -173,9 +167,13 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     if (action.prompt) {
+      // Dual-dispatch (Wallet pattern): both legs may fire — apiAction hits
+      // the AA-API menu-action path, iframeAction is the immediate iframe
+      // nudge. They are NOT mutually exclusive.
       if (action.apiAction) {
         void handleMenuAction(action.apiAction);
-      } else if (action.iframeAction) {
+      }
+      if (action.iframeAction) {
         sendIframeAction(action.iframeAction);
       }
       submitPrompt(action.prompt);
