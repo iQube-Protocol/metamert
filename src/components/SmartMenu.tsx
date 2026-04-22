@@ -213,39 +213,51 @@ export default function SmartMenu() {
           }}
           onPointerUp={handleNavAreaPointerUp}
         >
+          {/* Be edge button — outer half of left bridge owns its hover zone */}
+          <NavButton item={NAV_ITEMS[0]} accentOverride={personaAccent} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} expandedHitArea />
+
+          {/* Left bridge: split 50/50 between Be (outer half) and Play (inner half) */}
           <div
-            className="flex flex-1 items-stretch justify-start"
-            onPointerEnter={() => handleNavHoverEnter("be")}
-            onPointerLeave={handleNavHoverLeave}
+            className="flex flex-1 items-stretch min-w-0"
           >
-            <NavButton item={NAV_ITEMS[0]} accentOverride={personaAccent} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} expandedHitArea />
+            <div
+              className="flex-1"
+              onPointerEnter={() => handleNavHoverEnter("be")}
+              onPointerLeave={handleNavHoverLeave}
+            />
+            <div
+              className="flex-1"
+              onPointerEnter={handleGapPointerEnter}
+              onPointerLeave={handleGapPointerLeave}
+              onPointerUp={handleGapPointerUp}
+            />
           </div>
-          <div
-            className="shrink-0"
-            style={{ width: '2.5rem' }}
-            onPointerEnter={handleGapPointerEnter}
-            onPointerLeave={handleGapPointerLeave}
-            onPointerUp={handleGapPointerUp}
-          />
+
           <div className="flex shrink-0 items-stretch justify-center gap-0">
             {NAV_ITEMS.slice(1, 4).map(item => (
               <NavButton key={item.id} item={item} isCenter activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
             ))}
           </div>
+
+          {/* Right bridge: split 50/50 between Play (inner half) and Share (outer half) */}
           <div
-            className="shrink-0"
-            style={{ width: '2.5rem' }}
-            onPointerEnter={handleGapPointerEnter}
-            onPointerLeave={handleGapPointerLeave}
-            onPointerUp={handleGapPointerUp}
-          />
-          <div
-            className="flex flex-1 items-stretch justify-end"
-            onPointerEnter={() => handleNavHoverEnter("share")}
-            onPointerLeave={handleNavHoverLeave}
+            className="flex flex-1 items-stretch min-w-0"
           >
-            <NavButton item={NAV_ITEMS[4]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} expandedHitArea />
+            <div
+              className="flex-1"
+              onPointerEnter={handleGapPointerEnter}
+              onPointerLeave={handleGapPointerLeave}
+              onPointerUp={handleGapPointerUp}
+            />
+            <div
+              className="flex-1"
+              onPointerEnter={() => handleNavHoverEnter("share")}
+              onPointerLeave={handleNavHoverLeave}
+            />
           </div>
+
+          {/* Share edge button */}
+          <NavButton item={NAV_ITEMS[4]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} expandedHitArea />
         </nav>
       </div>
     </TooltipProvider>
