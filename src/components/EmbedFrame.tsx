@@ -59,18 +59,11 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
       return () => { cancelled = true; };
     }, [url, retryCount, maxRetries]);
 
-    // Listen for RUNTIME_READY from iframe
-    useEffect(() => {
-      function handler(ev: MessageEvent) {
-        if (origin && ev.origin !== origin) return;
-        if (ev.data?.type === "RUNTIME_READY") {
-          setStatus("ready");
-          onReady?.();
-        }
-      }
-      window.addEventListener("message", handler);
-      return () => window.removeEventListener("message", handler);
-    }, [origin, onReady]);
+    // NOTE: RUNTIME_READY is intentionally NOT handled here. The single
+    // source of truth for true runtime readiness is the normalized message
+    // path in RuntimeFrame/ShellContext, which accepts enveloped and
+    // stringified message shapes. EmbedFrame only reports iframe element
+    // lifecycle: probing → loading → loaded-unconfirmed (or error/blocked).
 
     // Detect iframe load error (X-Frame-Options / CSP block)
     const handleIframeLoad = () => {
@@ -96,15 +89,11 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
 
       // The iframe element is loaded at this point, so the shell can safely
       // send bootstrap messages such as SHELL_READY and HANDOFF.
+      // Mark as loaded-unconfirmed immediately — this enables Phase A
+      // (optimistic) dispatch of runtime commands while we wait for the
+      // true RUNTIME_READY handshake (Phase B replay handled by ShellContext).
+      setStatus("loaded-unconfirmed");
       onFrameLoad?.();
-
-      // If we haven't received RUNTIME_READY within 5s, mark as "loaded-unconfirmed".
-      // This is a UX/visual signal ONLY — runtime-bound commands (drawer opens,
-      // cartridge launches) MUST NOT be flushed against this state. They flush
-      // only on a true RUNTIME_READY handshake.
-      setTimeout(() => {
-        setStatus((s) => (s === "loading" ? "loaded-unconfirmed" : s));
-      }, 5000);
     };
 
     if (status === "probing") {
