@@ -5519,6 +5519,51 @@ export type Database = {
           },
         ]
       }
+      iqube_mint_stubs: {
+        Row: {
+          autonomys_cid: string | null
+          blakqube_ciphertext: string | null
+          blakqube_iv: string | null
+          chain_tx: string | null
+          created_at: string
+          id: string
+          iqube_type: string
+          metaqube_payload: Json | null
+          status: string
+          template_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          autonomys_cid?: string | null
+          blakqube_ciphertext?: string | null
+          blakqube_iv?: string | null
+          chain_tx?: string | null
+          created_at?: string
+          id?: string
+          iqube_type: string
+          metaqube_payload?: Json | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          autonomys_cid?: string | null
+          blakqube_ciphertext?: string | null
+          blakqube_iv?: string | null
+          chain_tx?: string | null
+          created_at?: string
+          id?: string
+          iqube_type?: string
+          metaqube_payload?: Json | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       iqube_shares: {
         Row: {
           access_level: string
@@ -8720,11 +8765,13 @@ export type Database = {
           csv_other_nfts: string | null
           csv_transaction_count: number | null
           csv_transfer_methods: string | null
+          "Digital-Cards-Owned": string | null
           "Digital-Comics-Owned": string | null
           "Discord-Handle": string | null
           Email: string | null
           "EVM-Public-Key": string | null
           "Facebook-ID": string | null
+          fio_handle: string | null
           "First-Name": string | null
           id: string
           "Instagram-Handle": string | null
@@ -8736,8 +8783,10 @@ export type Database = {
           is_steward: boolean
           kickstarter_backed_at: string | null
           kickstarter_clicked_at: string | null
+          knyt_handle: string | null
           "KNYT-Cards-Owned": string | null
           "KNYT-COYN-Owned": string | null
+          "KNYT-COYN-Qripto-Owned": string | null
           "KNYT-ID": string | null
           "KNYT-Posters-Owned": string | null
           ks_backer: boolean
@@ -8751,6 +8800,7 @@ export type Database = {
           message_angle: string | null
           "Metaiye-Shares-Owned": string | null
           "MetaKeep-Public-Key": string | null
+          metaknyts_iqubes_owned: string | null
           "Motion-Comics-Owned": string | null
           offer_fit: string | null
           "OM-Member-Since": string | null
@@ -8762,10 +8812,14 @@ export type Database = {
           platform_engagement_score: number
           preferred_channel_primary: string | null
           preferred_channel_secondary: string | null
+          print_episodes_owned: string | null
+          "Print-Cards-Owned": string | null
+          "Print-Comics-Owned": string | null
           Profession: string | null
           profile_image_url: string | null
           reactivation_potential: string | null
           remix_count: number
+          "Solana-Public-Key": string | null
           "Telegram-Handle": string | null
           "ThirdWeb-Public-Key": string | null
           "TikTok-Handle": string | null
@@ -8798,11 +8852,13 @@ export type Database = {
           csv_other_nfts?: string | null
           csv_transaction_count?: number | null
           csv_transfer_methods?: string | null
+          "Digital-Cards-Owned"?: string | null
           "Digital-Comics-Owned"?: string | null
           "Discord-Handle"?: string | null
           Email?: string | null
           "EVM-Public-Key"?: string | null
           "Facebook-ID"?: string | null
+          fio_handle?: string | null
           "First-Name"?: string | null
           id?: string
           "Instagram-Handle"?: string | null
@@ -8814,8 +8870,10 @@ export type Database = {
           is_steward?: boolean
           kickstarter_backed_at?: string | null
           kickstarter_clicked_at?: string | null
+          knyt_handle?: string | null
           "KNYT-Cards-Owned"?: string | null
           "KNYT-COYN-Owned"?: string | null
+          "KNYT-COYN-Qripto-Owned"?: string | null
           "KNYT-ID"?: string | null
           "KNYT-Posters-Owned"?: string | null
           ks_backer?: boolean
@@ -8829,6 +8887,7 @@ export type Database = {
           message_angle?: string | null
           "Metaiye-Shares-Owned"?: string | null
           "MetaKeep-Public-Key"?: string | null
+          metaknyts_iqubes_owned?: string | null
           "Motion-Comics-Owned"?: string | null
           offer_fit?: string | null
           "OM-Member-Since"?: string | null
@@ -8840,10 +8899,14 @@ export type Database = {
           platform_engagement_score?: number
           preferred_channel_primary?: string | null
           preferred_channel_secondary?: string | null
+          print_episodes_owned?: string | null
+          "Print-Cards-Owned"?: string | null
+          "Print-Comics-Owned"?: string | null
           Profession?: string | null
           profile_image_url?: string | null
           reactivation_potential?: string | null
           remix_count?: number
+          "Solana-Public-Key"?: string | null
           "Telegram-Handle"?: string | null
           "ThirdWeb-Public-Key"?: string | null
           "TikTok-Handle"?: string | null
@@ -8876,11 +8939,13 @@ export type Database = {
           csv_other_nfts?: string | null
           csv_transaction_count?: number | null
           csv_transfer_methods?: string | null
+          "Digital-Cards-Owned"?: string | null
           "Digital-Comics-Owned"?: string | null
           "Discord-Handle"?: string | null
           Email?: string | null
           "EVM-Public-Key"?: string | null
           "Facebook-ID"?: string | null
+          fio_handle?: string | null
           "First-Name"?: string | null
           id?: string
           "Instagram-Handle"?: string | null
@@ -8892,8 +8957,10 @@ export type Database = {
           is_steward?: boolean
           kickstarter_backed_at?: string | null
           kickstarter_clicked_at?: string | null
+          knyt_handle?: string | null
           "KNYT-Cards-Owned"?: string | null
           "KNYT-COYN-Owned"?: string | null
+          "KNYT-COYN-Qripto-Owned"?: string | null
           "KNYT-ID"?: string | null
           "KNYT-Posters-Owned"?: string | null
           ks_backer?: boolean
@@ -8907,6 +8974,7 @@ export type Database = {
           message_angle?: string | null
           "Metaiye-Shares-Owned"?: string | null
           "MetaKeep-Public-Key"?: string | null
+          metaknyts_iqubes_owned?: string | null
           "Motion-Comics-Owned"?: string | null
           offer_fit?: string | null
           "OM-Member-Since"?: string | null
@@ -8918,10 +8986,14 @@ export type Database = {
           platform_engagement_score?: number
           preferred_channel_primary?: string | null
           preferred_channel_secondary?: string | null
+          print_episodes_owned?: string | null
+          "Print-Cards-Owned"?: string | null
+          "Print-Comics-Owned"?: string | null
           Profession?: string | null
           profile_image_url?: string | null
           reactivation_potential?: string | null
           remix_count?: number
+          "Solana-Public-Key"?: string | null
           "Telegram-Handle"?: string | null
           "ThirdWeb-Public-Key"?: string | null
           "TikTok-Handle"?: string | null
@@ -9215,10 +9287,12 @@ export type Database = {
           Email: string | null
           "EVM-Public-Key": string | null
           "Facebook-ID": string | null
+          fio_handle: string | null
           "First-Name": string | null
           "GitHub-Handle": string | null
           id: string
           "Instagram-Handle": string | null
+          knyt_handle: string | null
           "Last-Name": string | null
           "LinkedIn-ID": string | null
           "LinkedIn-Profile-URL": string | null
@@ -9226,6 +9300,7 @@ export type Database = {
           Profession: string | null
           profile_image_url: string | null
           "Qripto-ID": string | null
+          "Solana-Public-Key": string | null
           "Telegram-Handle": string | null
           "TikTok-Handle": string | null
           "Tokens-of-Interest": string[] | null
@@ -9244,10 +9319,12 @@ export type Database = {
           Email?: string | null
           "EVM-Public-Key"?: string | null
           "Facebook-ID"?: string | null
+          fio_handle?: string | null
           "First-Name"?: string | null
           "GitHub-Handle"?: string | null
           id?: string
           "Instagram-Handle"?: string | null
+          knyt_handle?: string | null
           "Last-Name"?: string | null
           "LinkedIn-ID"?: string | null
           "LinkedIn-Profile-URL"?: string | null
@@ -9255,6 +9332,7 @@ export type Database = {
           Profession?: string | null
           profile_image_url?: string | null
           "Qripto-ID"?: string | null
+          "Solana-Public-Key"?: string | null
           "Telegram-Handle"?: string | null
           "TikTok-Handle"?: string | null
           "Tokens-of-Interest"?: string[] | null
@@ -9273,10 +9351,12 @@ export type Database = {
           Email?: string | null
           "EVM-Public-Key"?: string | null
           "Facebook-ID"?: string | null
+          fio_handle?: string | null
           "First-Name"?: string | null
           "GitHub-Handle"?: string | null
           id?: string
           "Instagram-Handle"?: string | null
+          knyt_handle?: string | null
           "Last-Name"?: string | null
           "LinkedIn-ID"?: string | null
           "LinkedIn-Profile-URL"?: string | null
@@ -9284,6 +9364,7 @@ export type Database = {
           Profession?: string | null
           profile_image_url?: string | null
           "Qripto-ID"?: string | null
+          "Solana-Public-Key"?: string | null
           "Telegram-Handle"?: string | null
           "TikTok-Handle"?: string | null
           "Tokens-of-Interest"?: string[] | null
