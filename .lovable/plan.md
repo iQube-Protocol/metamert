@@ -1,128 +1,155 @@
 
-# Fix the iQube drawer regressions end to end
+# Stabilize SmartMenu activation zones and eliminate delayed/lost drawer launches
 
-## Why this is failing now
+## What is actually going wrong
 
-This is no longer a message-shape problem first. The helper contracts for both drawers are already present:
+### 1) Play hover territory was over-reduced
+The current nav layout gives both center gaps a fixed `2.5rem` width while the Be/Share sides each take `flex-1`. That means the edge activation zones now own too much of the space between the center cluster and the edge buttons. This matches your complaint: the balance is no longer 50/50.
 
-- `postPersonaIQubeOpen()` triple-dispatches `OPEN_PERSONA_IQUBE`
-- `postIdentityIQubeOpen()` triple-dispatches `OPEN_IDENTITY_IQUBE`
+### 2) Persona / Identity / Cartridge actions are not reliably reaching the runtime
+The drawer and cartridge helpers themselves are already correct. The instability is in the delivery path:
 
-The more likely regression is in the UI interaction layer:
+- `ShellContext` only stores **one** pending runtime command (`pendingRuntimeCommandRef`)
+- commands are flushed when `iframeReadiness === "ready"`
+- `EmbedFrame` currently promotes the iframe to `"ready"` after a **5s fallback timeout even if `RUNTIME_READY` never arrived**
+- drawer/cartridge actions have **no acknowledgement or retry**
+- later clicks can overwrite earlier pending clicks before the runtime is truly ready
 
-1. The rendered Be submenu controls are fragile
-   - submenu buttons and persona pills still rely on click timing inside a hover/auto-hide system
-   - recent hover-persistence and submenu-order changes increased the chance that the panel state changes before the drawer-open action is dispatched
+That combination can produce exactly the symptoms you described:
+- clicks appear to do nothing
+- actions fire very late
+- a command can be lost if it was flushed on the fallback-ready state before the runtime handlers were actually live
 
-2. The shell has helper-level tests but not rendered interaction tests
-   - current tests validate the message helpers only
-   - there is no regression coverage proving that clicking the actual Be quick links and persona pills invokes those helpers from the mounted UI
+## Implementation plan
 
-3. System-only drawer actions are spread across multiple paths
-   - Persona open is a two-step UI flow
-   - Identity open is a direct quick action
-   - both need one hardened interaction path that is isolated from prompt/inference/menu-action behavior
+### A. Restore the nav activation balance to 50/50
+Update `src/components/SmartMenu.tsx` so the area between the center cluster and each edge item is split evenly:
 
-## What to change
+- replace the current over-constrained edge/gap ownership
+- make each side bridge explicitly divided into:
+  - an inner half for Play activation
+  - an outer half for Be or Share activation
+- keep the enlarged Be/Share rollover zones, but cap them so they do not steal more than half of the bridge area
+- preserve the existing hover-preview persistence and submenu travel grace
 
-### 1) Harden the Be submenu interaction path
-Update `src/components/SmartMenuSubmenu.tsx` so drawer-opening actions dispatch on stable pointer interaction, not fragile late click timing.
+Result:
+- Play regains half of each side bridge
+- Be/Share still have materially larger rollover zones
+- submenu hover behavior remains unchanged
 
-Implementation:
-- Convert the system-action buttons/pills that open drawers from plain `onClick` handling to a guarded pointer handler (`onPointerUp`, with `stopPropagation`)
-- Apply the same hardening to:
-  - Persona quick action
-  - Identity quick action
-  - Persona selector pills
-- Keep hover persistence intact while the pointer remains inside the floating panel
-- Only restart the idle timer after pointer leave, not during the drawer-open interaction itself
+### B. Separate “iframe loaded” from “runtime actually ready”
+Harden the runtime lifecycle in `EmbedFrame`, `RuntimeFrame`, and `ShellContext`:
 
-Goal:
-- the user action dispatches before any hover collapse or submenu state reset can interfere
+- stop treating the 5s fallback as true runtime readiness
+- keep a distinct state for:
+  - iframe element loaded / bootstrap sent
+  - runtime handshake received (`RUNTIME_READY`)
+- only flush runtime-bound drawer/cartridge commands after the real handshake
+- if a fallback state is still needed for UX, use a non-command-flushing status like `loaded-unconfirmed` rather than `ready`
 
-### 2) Centralize drawer opens as explicit system actions
-Refine `src/components/SmartMenuSubmenu.tsx` and `src/contexts/ShellContext.tsx` so both iQube drawers use one clean “system-only” execution path.
+### C. Replace the single pending command with a real queue
+Refactor `ShellContext` so runtime-bound actions use a FIFO queue instead of one mutable ref:
 
-Implementation:
-- Treat Persona and Identity as explicit shell-owned system actions
-- Ensure they do not fall through to:
-  - `handleMenuAction`
-  - prompt submission
-  - AA menu-action inference paths
-  - selector refresh paths
-- Keep the existing rule:
-  - Persona must never send `SELECTOR_CHANGE`
-  - Identity must never send persona-specific payload keys
+- queue persona drawer opens
+- queue identity drawer opens
+- queue cartridge launches
+- optionally queue direct iframe actions that must not be lost before handshake
 
-Goal:
-- drawer opens are fully decoupled from inference/menu behavior
+This prevents:
+- later clicks overwriting earlier ones
+- one slow startup silently dropping user intent
 
-### 3) Preserve submenu state correctly during drawer actions
-Adjust the post-selection/menu-state behavior so the shell doesn’t visually snap back or collapse prematurely while dispatching the drawer-open message.
+### D. Add delivery hardening for drawer and cartridge actions
+For runtime-only actions, add a guarded dispatch path:
 
-Implementation:
-- Persona selector:
-  - stays visible while hovered
-  - fades only after pointer leaves and the idle timeout completes
-- Identity quick action:
-  - dispatches immediately without forcing a submenu reset before the message is sent
-- Avoid any immediate submenu transition that can race the runtime open request
+- enqueue while runtime is not handshaked
+- flush in order on real `RUNTIME_READY`
+- re-send bootstrap context on `RUNTIME_READY` before flushing queued commands
+- keep origin handling centralized via `resolveIframeOrigin`
 
-Goal:
-- no more “menu flicker instead of drawer open”
+For cartridge launch specifically:
+- route launches through the same reliable queue instead of immediate fire-and-forget when the runtime is not truly ready
 
-### 4) Add UI-level regression tests, not just helper tests
-Extend coverage under `src/test/` to lock in the real rendered interaction flow.
+### E. Give immediate inline feedback instead of silent waiting
+Add visible feedback in the submenu layer while commands are queued:
 
-Add tests for:
-- clicking the Be quick action `Persona` switches to `personaSelector`
-- clicking a persona pill calls the persona open path exactly once
-- clicking `Identity` calls the identity open path exactly once
-- neither action falls through to `handleMenuAction`
-- hover persistence does not block dispatch
-- submenu order change does not alter action routing
+- show a lightweight “Opening…” / “Connecting runtime…” state on the tapped Persona, Identity, or Cartridge control
+- keep the active pill/button visually latched while waiting
+- clear the loading state once the queued command is dispatched
 
-Likely files:
-- new/expanded UI interaction tests for `SmartMenuSubmenu`
-- keep existing helper tests:
-  - `src/test/persona-flow.test.ts`
-  - `src/test/identity-flow.test.ts`
+This avoids the current “nothing happened” impression while the runtime finishes handshaking.
 
-## Files likely involved
+### F. Keep the existing drawer contract intact
+Do not change the known-good contracts:
+
+- persona pill click still sends **only** `OPEN_PERSONA_IQUBE`
+- identity still uses `OPEN_IDENTITY_IQUBE`
+- no `SELECTOR_CHANGE` is reintroduced into persona drawer opening
+- no business logic is moved into the shell
+
+## Files to update
+
+- `src/components/SmartMenu.tsx`
+  - rebalance bridge activation geometry
+  - preserve submenu persistence behavior
+
+- `src/components/EmbedFrame.tsx`
+  - stop equating timeout fallback with true runtime readiness
+  - expose a distinct non-handshake loaded state if needed
+
+- `src/components/RuntimeFrame.tsx`
+  - align bootstrap timing with the hardened readiness model
+  - re-send bootstrap on real handshake if needed before queue flush
+
+- `src/contexts/ShellContext.tsx`
+  - replace single pending command ref with ordered queue
+  - flush only on true `RUNTIME_READY`
+  - route persona / identity / cartridge actions through the same reliable dispatcher
+  - add queued/loading UI state exposure
 
 - `src/components/SmartMenuSubmenu.tsx`
-- `src/contexts/ShellContext.tsx`
-- `src/test/persona-flow.test.ts`
-- `src/test/identity-flow.test.ts`
-- one new rendered interaction test under `src/test/`
+  - show inline loading feedback for queued runtime actions
 
-## Expected outcome
+## Verification
 
-After the fix:
+### Interaction checks
+- hovering halfway between Be and the center cluster should trigger Be only on the outer half
+- hovering the inner half of that bridge should trigger Play
+- same behavior on the Share side
+- submenu must still persist long enough to travel from nav item to floating submenu
 
-- Clicking `Persona` in the Be submenu reliably opens the persona selector
-- Clicking `Qripto` opens the Qripto iQube drawer
-- Clicking `KNYT` opens the KNYT iQube drawer
-- Clicking `Identity` opens the Identity iQube drawer directly
-- Hover persistence remains intact while the pointer stays over the submenu
-- The submenu only auto-fades after the pointer leaves and the timeout expires
-- No prompt submission or menu-action inference is triggered by these drawer actions
-- Future submenu reorderings will not break drawer opening because the interaction path will be covered by rendered regression tests
+### Reliability checks
+- click Identity before the runtime handshake finishes → it should show loading, then open as soon as handshake completes
+- click Persona, then a persona pill before handshake finishes → it should queue and open deterministically after handshake
+- click Cartridge before handshake finishes → it should queue and launch once runtime is ready
+- repeated rapid clicks should not overwrite each other unpredictably
+
+### Regression tests to add/update
+- SmartMenu zone behavior tests for balanced bridge ownership
+- Shell queue tests proving multiple pending runtime commands are preserved in order
+- tests that fallback iframe loaded state does **not** flush queued runtime commands
+- rendered submenu tests for loading feedback and single-dispatch behavior
 
 ## Technical notes
 
 ```text
-Be quick action click
-  -> shell system-action path
-  -> drawer helper
-  -> postMessage triple-dispatch
-  -> runtime drawer opens
+Current failure mode:
+user click
+  -> single pending command slot
+  -> iframe marked "ready" by 5s timeout
+  -> queued command flushes too early
+  -> runtime not actually handshaked
+  -> no ack / no retry
+  -> action appears lost or arrives much later
 
-Persona pill click
-  -> selectPersona(personaId)
-  -> exact personaId -> iqube_type map
-  -> OPEN_PERSONA_IQUBE only
-  -> no SELECTOR_CHANGE
+Target behavior:
+user click
+  -> runtime command queue
+  -> inline loading state
+  -> real RUNTIME_READY received
+  -> bootstrap confirmed
+  -> queued commands flushed FIFO
+  -> drawer / cartridge opens deterministically
 ```
 
-The key fix is to make the rendered submenu controls as robust as the message helpers already are.
+The key fix is to stop treating timeout-based iframe availability as real runtime readiness, and to deliver runtime-only actions through an ordered queue instead of a single overwrite-prone pending ref.
