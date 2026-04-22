@@ -519,16 +519,39 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
-    setSubmenuTypeState("quickActions");
+    // Note: we do NOT revert submenu to "quickActions" here. The selector
+    // stays visible so the user has feedback that their click registered,
+    // and so the menu doesn't appear to "just reopen the be QL menu".
     startIdleTimer();
 
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
       console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
+
+      // Belt-and-suspenders: send BOTH a bridge-enveloped message AND a raw
+      // flat message. The runtime owner's spec says the listener accepts a
+      // raw `{ type, payload: { iqube_type } }` shape — some runtime builds
+      // may not unwrap the bridge envelope. Sending both guarantees delivery.
       postToIframe(iframeRef.current, {
         type: "OPEN_PERSONA_IQUBE",
         payload: { iqube_type: iqubeType },
       }, origin);
+
+      try {
+        iframeRef.current.contentWindow?.postMessage(
+          {
+            type: "OPEN_PERSONA_IQUBE",
+            msg_id: (crypto as any).randomUUID?.() ?? `shell-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            source: "shell",
+            payload: { iqube_type: iqubeType },
+          },
+          origin,
+        );
+        console.log("[Shell] selectPersona → raw fallback dispatched", iqubeType);
+      } catch (err) {
+        console.warn("[Shell] selectPersona: raw fallback failed", err);
+      }
     }
   }, [config, startIdleTimer, personaState.available]);
 
