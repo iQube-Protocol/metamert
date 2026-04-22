@@ -258,12 +258,14 @@ function NavButton({
   const accent = accentOverride ?? MODE_ACCENT[item.id];
   const isEdge = item.id === "be" || item.id === "share";
   const isActiveQA = activeQAMode === item.id;
+  // Be icon: stay neutral until a persona is activated (accentOverride present)
+  const isBeNeutral = item.id === "be" && !accentOverride;
 
   const isDark = document.documentElement.classList.contains('dark');
   const iconColor = isActiveQA
-    ? accent
+    ? (isBeNeutral ? "var(--mm-ink-muted)" : accent)
     : isEdge
-      ? (accentOverride ?? (hovered ? accent : "var(--mm-ink-muted)"))
+      ? (accentOverride ?? (hovered && !isBeNeutral ? accent : "var(--mm-ink-muted)"))
       : accent;
   const iconFilter = isDark
     ? (!isEdge && hovered && !isActiveQA
