@@ -69,15 +69,27 @@ export interface PersonaState {
   available: PersonaDef[];
 }
 
-export const DEFAULT_PERSONAS: PersonaDef[] = [
-  // metaMe persona hidden for now — re-enable by uncommenting.
-  // {
-  //   id: "metame-persona",
-  //   label: "metaMe",
-  //   icon: "user",
-  //   accentHex: "#FF6B6B",
-  //   iqubeId: "iqube-metame-persona",
-  // },
+/**
+ * ALL_PERSONAS — full registry including hidden ones.
+ * DEFAULT_PERSONAS — only personas that should be rendered in the submenu.
+ *
+ * Add `hidden: true` to keep a persona in the registry without showing it
+ * in the UI. The shell guarantees that `personaState.available` only
+ * contains visible personas.
+ */
+interface InternalPersonaDef extends PersonaDef {
+  hidden?: boolean;
+}
+
+export const ALL_PERSONAS: InternalPersonaDef[] = [
+  {
+    id: "metame-persona",
+    label: "metaMe",
+    icon: "user",
+    accentHex: "#FF6B6B",
+    iqubeId: "iqube-metame-persona",
+    hidden: true,
+  },
   {
     id: "qripto-persona",
     label: "Qripto",
@@ -93,6 +105,21 @@ export const DEFAULT_PERSONAS: PersonaDef[] = [
     iqubeId: "iqube-knyt-persona",
   },
 ];
+
+/** Visible personas — what the submenu renders. */
+export const DEFAULT_PERSONAS: PersonaDef[] = ALL_PERSONAS
+  .filter(p => !p.hidden)
+  .map(({ hidden: _h, ...rest }) => rest);
+
+/** Canonical default active persona id (first visible). */
+export const DEFAULT_ACTIVE_PERSONA_ID: string = DEFAULT_PERSONAS[0]?.id ?? "qripto-persona";
+
+/** Map a persona id to the runtime's iqube_type drawer key. */
+export function personaIdToIqubeType(personaId: string): "knyt" | "qripto" | null {
+  if (personaId === "knyt-persona") return "knyt";
+  if (personaId === "qripto-persona") return "qripto";
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // Quick action config
