@@ -43,6 +43,8 @@
 | `MENU_ACTION` | Quick action or menu tap | `{ action_id, prompt?, menu_event?, cartridge_id?, codex_id?, mode? }` |
 | `PROMPT_SUBMIT` | User submits prompt text | `{ text, cartridge_id?, codex_id?, mode? }` |
 | `SELECTOR_CHANGE` | User changes selector | `{ selector_type, id, iqube_id? }` |
+| `LAUNCH_CARTRIDGE` | Open a cartridge overlay in runtime | `{ cartridge_id, codex_id?, tab? }` (must be nested under `payload`) |
+| `OPEN_PERSONA_IQUBE` | Open a persona iQube drawer in runtime | `{ iqube_type: "knyt" \| "qripto" }` (nested under `payload`) |
 | `MODE_CHANGED` | Shell mode activated/deactivated | `{ mode, view_state, cartridge_id?, codex_id? }` |
 | `CONTEXT_UPDATE` | Arbitrary context push | `{ payload }` |
 | `RESET_WELCOME` | Shell reset action | `{}` |
