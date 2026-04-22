@@ -15,7 +15,7 @@ function getDeviceType(): DeviceType {
 }
 
 export default function RuntimeFrame() {
-  const { config, iframeRef, updateTrust, cartridgeState } = useShell();
+  const { config, iframeRef, updateTrust, reportIframeReadiness } = useShell();
   const browser = useBrowserOptional();
 
   // LOV-302: Transition class for smooth cartridge/codex switches
@@ -24,7 +24,8 @@ export default function RuntimeFrame() {
   // LOV-303: Report iframe readiness to shell
   const handleStatusChange = useCallback((status: IframeReadiness) => {
     console.log("[Shell] iframe readiness:", status);
-  }, []);
+    reportIframeReadiness(status);
+  }, [reportIframeReadiness]);
 
   const handleReady = useCallback(() => {
     if (!config || !iframeRef.current) return;
@@ -177,7 +178,7 @@ export default function RuntimeFrame() {
         url={config.iframe.url}
         origin={config.iframe.origin}
         className="absolute inset-0 h-full w-full"
-        onReady={handleReady}
+        onFrameLoad={handleReady}
         onStatusChange={handleStatusChange}
       />
     </div>
