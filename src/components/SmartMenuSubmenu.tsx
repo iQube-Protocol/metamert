@@ -235,6 +235,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       style={{ animationDuration: '350ms', borderRadius: 'var(--mm-radius-sm)' }}
       onPointerEnter={pauseIdleTimer}
     >
+      <PendingRuntimeBadge />
       <div
         ref={scrollRef}
         className="flex items-center overflow-x-auto px-0 py-1.5 scrollbar-hide"
