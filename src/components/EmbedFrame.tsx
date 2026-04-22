@@ -9,18 +9,21 @@ interface EmbedFrameProps {
   className?: string;
   /** Fires when the iframe element has loaded and can receive shell bootstrap messages. */
   onFrameLoad?: () => void;
-  /** Fires when the runtime explicitly signals RUNTIME_READY. */
-  onReady?: () => void;
   onStatusChange?: (status: FrameStatus) => void;
   /** Max probe retries before showing error (default 2) */
   maxRetries?: number;
 }
 
-type FrameStatus = "probing" | "loading" | "loaded-unconfirmed" | "ready" | "error" | "blocked";
+/**
+ * Iframe element lifecycle status only. RUNTIME_READY (true handshake) is
+ * owned by RuntimeFrame/ShellContext via the normalized message path —
+ * this component never promotes itself to "ready".
+ */
+type FrameStatus = "probing" | "loading" | "loaded-unconfirmed" | "error" | "blocked";
 export type { FrameStatus };
 
 const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
-  ({ url, origin, className = "", onFrameLoad, onReady, onStatusChange, maxRetries = 2 }, ref) => {
+  ({ url, origin: _origin, className = "", onFrameLoad, onStatusChange, maxRetries = 2 }, ref) => {
     const [status, setStatus] = useState<FrameStatus>("probing");
     const [retryCount, setRetryCount] = useState(0);
     // Notify parent of status changes via effect so we never call a parent
@@ -56,18 +59,11 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
       return () => { cancelled = true; };
     }, [url, retryCount, maxRetries]);
 
-    // Listen for RUNTIME_READY from iframe
-    useEffect(() => {
-      function handler(ev: MessageEvent) {
-        if (origin && ev.origin !== origin) return;
-        if (ev.data?.type === "RUNTIME_READY") {
-          setStatus("ready");
-          onReady?.();
-        }
-      }
-      window.addEventListener("message", handler);
-      return () => window.removeEventListener("message", handler);
-    }, [origin, onReady]);
+    // NOTE: RUNTIME_READY is intentionally NOT handled here. The single
+    // source of truth for true runtime readiness is the normalized message
+    // path in RuntimeFrame/ShellContext, which accepts enveloped and
+    // stringified message shapes. EmbedFrame only reports iframe element
+    // lifecycle: probing → loading → loaded-unconfirmed (or error/blocked).
 
     // Detect iframe load error (X-Frame-Options / CSP block)
     const handleIframeLoad = () => {
@@ -93,15 +89,11 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
 
       // The iframe element is loaded at this point, so the shell can safely
       // send bootstrap messages such as SHELL_READY and HANDOFF.
+      // Mark as loaded-unconfirmed immediately — this enables Phase A
+      // (optimistic) dispatch of runtime commands while we wait for the
+      // true RUNTIME_READY handshake (Phase B replay handled by ShellContext).
+      setStatus("loaded-unconfirmed");
       onFrameLoad?.();
-
-      // If we haven't received RUNTIME_READY within 5s, mark as "loaded-unconfirmed".
-      // This is a UX/visual signal ONLY — runtime-bound commands (drawer opens,
-      // cartridge launches) MUST NOT be flushed against this state. They flush
-      // only on a true RUNTIME_READY handshake.
-      setTimeout(() => {
-        setStatus((s) => (s === "loading" ? "loaded-unconfirmed" : s));
-      }, 5000);
     };
 
     if (status === "probing") {

@@ -216,11 +216,19 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
-  // FIFO queue of runtime-bound commands waiting for RUNTIME_READY.
-  // Replaces the previous single-slot ref so rapid clicks (Persona, Identity,
-  // Cartridge) before handshake are NOT lost or overwritten.
-  const pendingRuntimeQueueRef = useRef<Array<{ command: () => void; label?: string }>>([]);
+  // Replay queue for runtime-bound commands. Unlike a strict-wait queue,
+  // commands are also DISPATCHED OPTIMISTICALLY (Phase A) as soon as the
+  // iframe element is loaded. They additionally stay in this replay set so
+  // they re-fire ONCE on the first true RUNTIME_READY (Phase B), guaranteeing
+  // delivery even if the optimistic send arrived before the runtime's
+  // message client mounted.
+  const runtimeReplayQueueRef = useRef<Array<{ command: () => void; label?: string; id: number }>>([]);
+  const replaySeqRef = useRef(0);
   const [pendingRuntimeCommandCount, setPendingRuntimeCommandCount] = useState(0);
+  // Forward refs so launchCartridge (defined early) can reach helpers
+  // defined later in the provider body.
+  const stageRuntimeCommandRef = useRef<((command: () => void, label?: string) => void) | null>(null);
+  const submitPromptRef = useRef<((text: string) => Promise<void> | void) | null>(null);
 
   // Smart Menu state
   const [viewState, setViewState] = useState<ViewState>("defaultNav");
@@ -408,60 +416,39 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Launch a cartridge inside the runtime iframe.
-   * Sends a LAUNCH_CARTRIDGE message — does NOT mutate cartridgeState
-   * (so the header lightning bolt color is unaffected; that color is now
-   * driven exclusively by `runtimeContext`).
+   *
+   * Restored DUAL-DISPATCH behavior:
+   *   1. Send LAUNCH_CARTRIDGE (overlay open) — staged: Phase A immediate
+   *      if iframe element loaded, Phase B replay on true RUNTIME_READY.
+   *   2. Send a cartridge prompt through the authoritative shell prompt
+   *      pipeline (`submitPrompt`) so the runtime produces its conversational
+   *      response / content selection — same path used by the prompt bar.
+   *
+   * Header lightning bolt color is unaffected (driven by `runtimeContext`).
    */
   const launchCartridge = useCallback((cartridgeId: string) => {
     const cart = cartridgeState.available.find(c => c.id === cartridgeId);
     const codexId = cart?.default_codex_id;
 
-    // Build the dispatch closure once. It captures `cartridgeId`/`codexId`
-    // and references the live iframeRef/config at call time.
-    const dispatch = () => {
+    // Overlay-open dispatcher — captures cartridgeId, references live iframeRef/config.
+    // Runtime's MetaMeRuntimeClient handler reads msg.payload.cartridge_id,
+    // so the envelope MUST be nested under `payload`.
+    const dispatchOverlay = () => {
       if (!iframeRef.current || !config) return;
       const origin = getIframeOrigin(config);
-
-      // Canonical mount message — runtime opens the cartridge overlay
-      // (z-axis) and replies with CARTRIDGE_OVERLAY_ACTIVE.
-      // Runtime's MetaMeRuntimeClient handler reads msg.payload.cartridge_id,
-      // so the envelope MUST be nested under `payload`.
       postToIframe(iframeRef.current, {
         type: "LAUNCH_CARTRIDGE",
         payload: { cartridge_id: cartridgeId },
       }, origin);
-
-      const seedPrompts: Record<string, string> = {
-        "metame-codex": "Open the metaMe cartridge and orient me.",
-        "qripto-codex": "Open the Qriptopian cartridge and show me what's available.",
-        "knyt-codex":   "Open the KNYT cartridge and walk me through it.",
-      };
-      const seedPrompt =
-        seedPrompts[cartridgeId] ??
-        `Open the ${cart?.label ?? cartridgeId} cartridge.`;
-
-      postToIframe(iframeRef.current, {
-        type: "PROMPT_SUBMIT",
-        text: seedPrompt,
-        cartridge_id: cartridgeId,
-        codex_id: codexId,
-      }, origin);
     };
 
-    // Route through the same reliable queue as drawer opens.
-    // Only flush against true RUNTIME_READY; otherwise enqueue + show toast.
-    if (iframeRef.current && config && iframeReadiness === "ready") {
-      dispatch();
-    } else {
-      pendingRuntimeQueueRef.current.push({ command: dispatch, label: `${cart?.label ?? cartridgeId} cartridge` });
-      setPendingRuntimeCommandCount(pendingRuntimeQueueRef.current.length);
-      toast.info(`${cart?.label ?? cartridgeId} cartridge will launch as soon as the runtime is ready…`, { duration: 2500 });
-    }
+    // Stage the overlay open (Phase A immediate if loaded-unconfirmed,
+    // Phase B replay on true RUNTIME_READY).
+    stageRuntimeCommandRef.current?.(dispatchOverlay, `${cart?.label ?? cartridgeId} cartridge`);
 
     // Restore local cartridge state so the active checkmark moves, the codex
     // selector follows the new cartridge default, and outbound context
-    // enrichment carries the correct cartridge_id + codex_id. Header lightning
-    // color is NOT affected (RuntimeHeader reads `runtimeContext`).
+    // enrichment carries the correct cartridge_id + codex_id.
     setCartridgeState(prev => ({
       ...prev,
       activeCartridgeId: cartridgeId,
@@ -478,15 +465,28 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     inferCtrl.current?.start();
     inferCtrl.current?.complete(4_000);
 
+    // Restore the second dispatch leg: send a cartridge prompt through the
+    // shell's authoritative prompt pipeline so the runtime generates its
+    // conversational response / content selection. Use a microtask so the
+    // cartridge_id state update lands before submitPrompt reads it.
+    const seedPrompts: Record<string, string> = {
+      "metame-codex": "Open the metaMe cartridge and orient me.",
+      "qripto-codex": "Open the Qriptopian cartridge and show me what's available.",
+      "knyt-codex":   "Open the KNYT cartridge and walk me through it.",
+    };
+    const seedPrompt =
+      seedPrompts[cartridgeId] ??
+      `Open the ${cart?.label ?? cartridgeId} cartridge.`;
+    queueMicrotask(() => { void submitPromptRef.current?.(seedPrompt); });
+
     // Return to quick actions after selecting
     setSubmenuTypeState("quickActions");
     startIdleTimer();
-  }, [config, cartridgeState.available, startIdleTimer, iframeReadiness]);
+  }, [config, cartridgeState.available, startIdleTimer]);
 
   /**
    * Legacy `selectCartridge` — kept for backward compat (e.g. cartridge selector
-   * pill click). Now routes through `launchCartridge` so it dispatches to the
-   * iframe instead of mutating header state.
+   * pill click). Routes through `launchCartridge` for full dual-dispatch.
    */
   const selectCartridge = useCallback((cartridgeId: string) => {
     launchCartridge(cartridgeId);
@@ -526,32 +526,67 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [config, startIdleTimer]);
 
-  const flushPendingRuntimeCommands = useCallback(() => {
-    if (!iframeRef.current || !config || iframeReadiness !== "ready") return;
-    const queue = pendingRuntimeQueueRef.current;
+  /**
+   * Replay all pending runtime commands once on a true RUNTIME_READY handshake.
+   * Drains the replay queue (clears pending count and replay entries) so each
+   * command fires at most twice total: once optimistically and once on replay.
+   */
+  const replayPendingRuntimeCommands = useCallback(() => {
+    if (!iframeRef.current || !config) return;
+    const queue = runtimeReplayQueueRef.current;
     if (queue.length === 0) return;
-    pendingRuntimeQueueRef.current = [];
+    runtimeReplayQueueRef.current = [];
     setPendingRuntimeCommandCount(0);
-    // FIFO drain
     for (const entry of queue) {
-      try { entry.command(); } catch (err) { console.warn("[Shell] queued runtime command failed:", err); }
+      try {
+        console.log("[Shell] replay runtime command on RUNTIME_READY:", entry.label ?? "(unlabeled)");
+        entry.command();
+      } catch (err) {
+        console.warn("[Shell] replay runtime command failed:", err);
+      }
+    }
+  }, [config]);
+
+  /**
+   * Stage a runtime-bound command using the 2-phase model:
+   *   Phase A — if the iframe element is loaded (loaded-unconfirmed or ready),
+   *             dispatch immediately so the user does not wait on handshake.
+   *   Phase B — if not yet ready, also enroll the command in the replay queue
+   *             so it re-fires once on the first true RUNTIME_READY.
+   *
+   * If the iframe is still probing/loading/error, the command is queued
+   * for replay only (it will dispatch on first RUNTIME_READY).
+   */
+  const stageRuntimeCommand = useCallback((command: () => void, label?: string) => {
+    const hasFrame = !!iframeRef.current && !!config;
+    const canSendNow =
+      hasFrame && (iframeReadiness === "ready" || iframeReadiness === "loaded-unconfirmed");
+
+    // Phase A: optimistic immediate dispatch
+    if (canSendNow) {
+      try { command(); } catch (err) { console.warn("[Shell] optimistic runtime command failed:", err); }
+    }
+
+    // If runtime is already truly ready, no replay is needed.
+    if (iframeReadiness === "ready") return;
+
+    // Phase B: enroll for replay on next RUNTIME_READY
+    const id = ++replaySeqRef.current;
+    runtimeReplayQueueRef.current.push({ command, label, id });
+    setPendingRuntimeCommandCount(runtimeReplayQueueRef.current.length);
+
+    if (label && !canSendNow) {
+      // Only show "will open as soon as runtime is ready" when we couldn't
+      // even attempt an optimistic send. Otherwise the badge already shows
+      // "Waiting for runtime handshake…".
+      toast.info(`${label} will open as soon as the runtime is ready…`, { duration: 2500 });
     }
   }, [config, iframeReadiness]);
 
-  const queueOrRunRuntimeCommand = useCallback((command: () => void, label?: string) => {
-    // Only flush against TRUE handshake state. "loaded-unconfirmed" must NOT
-    // promote queued commands.
-    if (iframeRef.current && config && iframeReadiness === "ready") {
-      command();
-      return true;
-    }
-    pendingRuntimeQueueRef.current.push({ command, label });
-    setPendingRuntimeCommandCount(pendingRuntimeQueueRef.current.length);
-    if (label) {
-      toast.info(`${label} will open as soon as the runtime is ready…`, { duration: 2500 });
-    }
-    return false;
-  }, [config, iframeReadiness]);
+  // Keep ref in sync so launchCartridge (declared earlier) can call us.
+  useEffect(() => {
+    stageRuntimeCommandRef.current = stageRuntimeCommand;
+  }, [stageRuntimeCommand]);
 
   /**
    * Select a persona pill.
@@ -579,13 +614,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     clearIdleTimer();
     setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
 
-    queueOrRunRuntimeCommand(() => {
+    stageRuntimeCommand(() => {
       if (!iframeRef.current || !config) return;
       const origin = getIframeOrigin(config);
       console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
       postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
     }, `${persona.label} iQube`);
-  }, [config, clearIdleTimer, personaState.available, queueOrRunRuntimeCommand]);
+  }, [config, clearIdleTimer, personaState.available, stageRuntimeCommand]);
 
   /**
    * Open the Persona iQube drawer in the runtime directly (without changing
@@ -593,25 +628,24 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
    * a persona-specific acknowledgment.
    */
   const openPersonaIQube = useCallback((iqubeType: "knyt" | "qripto") => {
-    queueOrRunRuntimeCommand(() => {
+    stageRuntimeCommand(() => {
       if (!iframeRef.current || !config) return;
       console.log("[Shell] openPersonaIQube →", iqubeType);
       postPersonaIQubeOpen(iframeRef.current, getIframeOrigin(config), iqubeType);
     }, `${iqubeType === "knyt" ? "KNYT" : "Qripto"} iQube`);
-  }, [config, queueOrRunRuntimeCommand]);
+  }, [config, stageRuntimeCommand]);
 
   /**
    * Open the Identity iQube drawer in the runtime. Single drawer — no
-   * iqube_type variants. Mirrors the persona open dispatch (triple-send for
-   * cross-build compatibility) without sending SELECTOR_CHANGE.
+   * iqube_type variants.
    */
   const openIdentityIQube = useCallback(() => {
-    queueOrRunRuntimeCommand(() => {
+    stageRuntimeCommand(() => {
       if (!iframeRef.current || !config) return;
       console.log("[Shell] openIdentityIQube");
       postIdentityIQubeOpen(iframeRef.current, getIframeOrigin(config));
     }, "Identity iQube");
-  }, [config, queueOrRunRuntimeCommand]);
+  }, [config, stageRuntimeCommand]);
 
   const setInteractionState = useCallback((state: InteractionState) => {
     setInteractionStateRaw(state);
@@ -620,12 +654,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [resetIdleTimer]);
 
-  // Flush queued runtime commands as soon as we have a true RUNTIME_READY handshake.
+  // Replay queued runtime commands as soon as we have a true RUNTIME_READY handshake.
   useEffect(() => {
     if (iframeReadiness === "ready") {
-      flushPendingRuntimeCommands();
+      replayPendingRuntimeCommands();
     }
-  }, [iframeReadiness, flushPendingRuntimeCommands]);
+  }, [iframeReadiness, replayPendingRuntimeCommands]);
 
   useEffect(() => {
     if (!config) return;
@@ -639,7 +673,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
       if (t === "RUNTIME_READY") {
         setIframeReadiness("ready");
-        flushPendingRuntimeCommands();
+        replayPendingRuntimeCommands();
         return;
       }
 
@@ -982,6 +1016,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       inferCtrl.current?.start();
     }
   }, [config, applyConfigUpdate, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
+
+  // Expose submitPrompt via ref so launchCartridge (declared earlier) can
+  // reach the authoritative shell prompt pipeline for cartridge dual-dispatch.
+  useEffect(() => {
+    submitPromptRef.current = submitPrompt;
+  }, [submitPrompt]);
 
   const resetToWelcome = useCallback(() => {
     setShellState("welcome");
