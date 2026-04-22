@@ -268,13 +268,24 @@ function QuickActionButton({
   const [hovered, setHovered] = useState(false);
   const color = hovered || isActivated ? accent : undefined;
 
-  const handleClick = () => {
+  // Guarded pointer handler — fires on pointerup with stopPropagation so the
+  // dispatch happens before any hover-collapse / idle reset can interfere.
+  // We also keep onClick as a keyboard/Enter fallback (with a dedupe ref).
+  const dispatchedRef = useRef(false);
+  const dispatch = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+    if (dispatchedRef.current) return;
+    dispatchedRef.current = true;
     onAction(action);
+    // Reset on next tick so the same button can be re-clicked later.
+    setTimeout(() => { dispatchedRef.current = false; }, 50);
   };
 
   return (
     <button
-      onClick={handleClick}
+      type="button"
+      onPointerUp={dispatch}
+      onClick={dispatch}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
       className="flex flex-col items-center justify-center gap-0.5 py-1.5 transition-all duration-150 active:scale-95 shrink-0"
@@ -471,9 +482,22 @@ function CartridgePill({
   const [hovered, setHovered] = useState(false);
   const color = isActive ? accent : hovered ? accent : undefined;
 
+  // Guarded pointer dispatch (mirrors QuickActionButton) so the action
+  // fires before any parent hover-collapse / idle reset can interfere.
+  const dispatchedRef = useRef(false);
+  const dispatch = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+    if (dispatchedRef.current) return;
+    dispatchedRef.current = true;
+    onClick();
+    setTimeout(() => { dispatchedRef.current = false; }, 50);
+  };
+
   return (
     <button
-      onClick={onClick}
+      type="button"
+      onPointerUp={dispatch}
+      onClick={dispatch}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
       className="flex items-center gap-1 px-3 py-1.5 text-xs transition-all duration-150 active:scale-95"
