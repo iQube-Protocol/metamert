@@ -7,6 +7,9 @@ interface EmbedFrameProps {
   url: string;
   origin?: string;
   className?: string;
+  /** Fires when the iframe element has loaded and can receive shell bootstrap messages. */
+  onFrameLoad?: () => void;
+  /** Fires when the runtime explicitly signals RUNTIME_READY. */
   onReady?: () => void;
   onStatusChange?: (status: FrameStatus) => void;
   /** Max probe retries before showing error (default 2) */
@@ -17,7 +20,7 @@ type FrameStatus = "probing" | "loading" | "ready" | "error" | "blocked";
 export type { FrameStatus };
 
 const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
-  ({ url, origin, className = "", onReady, onStatusChange, maxRetries = 2 }, ref) => {
+  ({ url, origin, className = "", onFrameLoad, onReady, onStatusChange, maxRetries = 2 }, ref) => {
     const [status, setStatusRaw] = useState<FrameStatus>("probing");
     const [retryCount, setRetryCount] = useState(0);
     const setStatus = (s: FrameStatus | ((prev: FrameStatus) => FrameStatus)) => {
@@ -88,6 +91,11 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
         setStatus("blocked");
         return;
       }
+
+      // The iframe element is loaded at this point, so the shell can safely
+      // send bootstrap messages such as SHELL_READY and HANDOFF.
+      onFrameLoad?.();
+
       // If we haven't received RUNTIME_READY within 5s, mark as loaded but not handshaked
       setTimeout(() => {
         setStatus((s) => (s === "loading" ? "ready" : s));
