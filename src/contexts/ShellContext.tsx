@@ -481,7 +481,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     // Return to quick actions after selecting
     setSubmenuTypeState("quickActions");
     startIdleTimer();
-  }, [config, cartridgeState.available, startIdleTimer]);
+  }, [config, cartridgeState.available, startIdleTimer, iframeReadiness]);
 
   /**
    * Legacy `selectCartridge` — kept for backward compat (e.g. cartridge selector
