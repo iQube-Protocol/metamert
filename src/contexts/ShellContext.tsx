@@ -19,6 +19,7 @@ import {
   isInferenceStart,
   isInferenceComplete,
 } from "@/lib/shell-messages";
+import { postPersonaIQubeOpen } from "@/lib/persona-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
 import { toast } from "sonner";
 import {
@@ -527,31 +528,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
       console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
-
-      // Belt-and-suspenders: send BOTH a bridge-enveloped message AND a raw
-      // flat message. The runtime owner's spec says the listener accepts a
-      // raw `{ type, payload: { iqube_type } }` shape — some runtime builds
-      // may not unwrap the bridge envelope. Sending both guarantees delivery.
-      postToIframe(iframeRef.current, {
-        type: "OPEN_PERSONA_IQUBE",
-        payload: { iqube_type: iqubeType },
-      }, origin);
-
-      try {
-        iframeRef.current.contentWindow?.postMessage(
-          {
-            type: "OPEN_PERSONA_IQUBE",
-            msg_id: (crypto as any).randomUUID?.() ?? `shell-${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            source: "shell",
-            payload: { iqube_type: iqubeType },
-          },
-          origin,
-        );
-        console.log("[Shell] selectPersona → raw fallback dispatched", iqubeType);
-      } catch (err) {
-        console.warn("[Shell] selectPersona: raw fallback failed", err);
-      }
+      postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
     }
   }, [config, startIdleTimer, personaState.available]);
 
@@ -563,10 +540,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const openPersonaIQube = useCallback((iqubeType: "knyt" | "qripto") => {
     if (!iframeRef.current || !config) return;
     console.log("[Shell] openPersonaIQube →", iqubeType);
-    postToIframe(iframeRef.current, {
-      type: "OPEN_PERSONA_IQUBE",
-      payload: { iqube_type: iqubeType },
-    }, getIframeOrigin(config));
+    postPersonaIQubeOpen(iframeRef.current, getIframeOrigin(config), iqubeType);
   }, [config]);
 
   const setInteractionState = useCallback((state: InteractionState) => {
