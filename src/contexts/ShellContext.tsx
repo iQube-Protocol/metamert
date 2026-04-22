@@ -408,60 +408,39 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Launch a cartridge inside the runtime iframe.
-   * Sends a LAUNCH_CARTRIDGE message — does NOT mutate cartridgeState
-   * (so the header lightning bolt color is unaffected; that color is now
-   * driven exclusively by `runtimeContext`).
+   *
+   * Restored DUAL-DISPATCH behavior:
+   *   1. Send LAUNCH_CARTRIDGE (overlay open) — staged: Phase A immediate
+   *      if iframe element loaded, Phase B replay on true RUNTIME_READY.
+   *   2. Send a cartridge prompt through the authoritative shell prompt
+   *      pipeline (`submitPrompt`) so the runtime produces its conversational
+   *      response / content selection — same path used by the prompt bar.
+   *
+   * Header lightning bolt color is unaffected (driven by `runtimeContext`).
    */
   const launchCartridge = useCallback((cartridgeId: string) => {
     const cart = cartridgeState.available.find(c => c.id === cartridgeId);
     const codexId = cart?.default_codex_id;
 
-    // Build the dispatch closure once. It captures `cartridgeId`/`codexId`
-    // and references the live iframeRef/config at call time.
-    const dispatch = () => {
+    // Overlay-open dispatcher — captures cartridgeId, references live iframeRef/config.
+    // Runtime's MetaMeRuntimeClient handler reads msg.payload.cartridge_id,
+    // so the envelope MUST be nested under `payload`.
+    const dispatchOverlay = () => {
       if (!iframeRef.current || !config) return;
       const origin = getIframeOrigin(config);
-
-      // Canonical mount message — runtime opens the cartridge overlay
-      // (z-axis) and replies with CARTRIDGE_OVERLAY_ACTIVE.
-      // Runtime's MetaMeRuntimeClient handler reads msg.payload.cartridge_id,
-      // so the envelope MUST be nested under `payload`.
       postToIframe(iframeRef.current, {
         type: "LAUNCH_CARTRIDGE",
         payload: { cartridge_id: cartridgeId },
       }, origin);
-
-      const seedPrompts: Record<string, string> = {
-        "metame-codex": "Open the metaMe cartridge and orient me.",
-        "qripto-codex": "Open the Qriptopian cartridge and show me what's available.",
-        "knyt-codex":   "Open the KNYT cartridge and walk me through it.",
-      };
-      const seedPrompt =
-        seedPrompts[cartridgeId] ??
-        `Open the ${cart?.label ?? cartridgeId} cartridge.`;
-
-      postToIframe(iframeRef.current, {
-        type: "PROMPT_SUBMIT",
-        text: seedPrompt,
-        cartridge_id: cartridgeId,
-        codex_id: codexId,
-      }, origin);
     };
 
-    // Route through the same reliable queue as drawer opens.
-    // Only flush against true RUNTIME_READY; otherwise enqueue + show toast.
-    if (iframeRef.current && config && iframeReadiness === "ready") {
-      dispatch();
-    } else {
-      pendingRuntimeQueueRef.current.push({ command: dispatch, label: `${cart?.label ?? cartridgeId} cartridge` });
-      setPendingRuntimeCommandCount(pendingRuntimeQueueRef.current.length);
-      toast.info(`${cart?.label ?? cartridgeId} cartridge will launch as soon as the runtime is ready…`, { duration: 2500 });
-    }
+    // Stage the overlay open (Phase A immediate if loaded-unconfirmed,
+    // Phase B replay on true RUNTIME_READY).
+    stageRuntimeCommandRef.current?.(dispatchOverlay, `${cart?.label ?? cartridgeId} cartridge`);
 
     // Restore local cartridge state so the active checkmark moves, the codex
     // selector follows the new cartridge default, and outbound context
-    // enrichment carries the correct cartridge_id + codex_id. Header lightning
-    // color is NOT affected (RuntimeHeader reads `runtimeContext`).
+    // enrichment carries the correct cartridge_id + codex_id.
     setCartridgeState(prev => ({
       ...prev,
       activeCartridgeId: cartridgeId,
@@ -478,15 +457,28 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     inferCtrl.current?.start();
     inferCtrl.current?.complete(4_000);
 
+    // Restore the second dispatch leg: send a cartridge prompt through the
+    // shell's authoritative prompt pipeline so the runtime generates its
+    // conversational response / content selection. Use a microtask so the
+    // cartridge_id state update lands before submitPrompt reads it.
+    const seedPrompts: Record<string, string> = {
+      "metame-codex": "Open the metaMe cartridge and orient me.",
+      "qripto-codex": "Open the Qriptopian cartridge and show me what's available.",
+      "knyt-codex":   "Open the KNYT cartridge and walk me through it.",
+    };
+    const seedPrompt =
+      seedPrompts[cartridgeId] ??
+      `Open the ${cart?.label ?? cartridgeId} cartridge.`;
+    queueMicrotask(() => { void submitPromptRef.current?.(seedPrompt); });
+
     // Return to quick actions after selecting
     setSubmenuTypeState("quickActions");
     startIdleTimer();
-  }, [config, cartridgeState.available, startIdleTimer, iframeReadiness]);
+  }, [config, cartridgeState.available, startIdleTimer]);
 
   /**
    * Legacy `selectCartridge` — kept for backward compat (e.g. cartridge selector
-   * pill click). Now routes through `launchCartridge` so it dispatches to the
-   * iframe instead of mutating header state.
+   * pill click). Routes through `launchCartridge` for full dual-dispatch.
    */
   const selectCartridge = useCallback((cartridgeId: string) => {
     launchCartridge(cartridgeId);
