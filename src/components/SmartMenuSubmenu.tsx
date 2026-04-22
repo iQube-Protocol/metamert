@@ -167,9 +167,13 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     if (action.prompt) {
+      // Dual-dispatch (Wallet pattern): both legs may fire — apiAction hits
+      // the AA-API menu-action path, iframeAction is the immediate iframe
+      // nudge. They are NOT mutually exclusive.
       if (action.apiAction) {
         void handleMenuAction(action.apiAction);
-      } else if (action.iframeAction) {
+      }
+      if (action.iframeAction) {
         sendIframeAction(action.iframeAction);
       }
       submitPrompt(action.prompt);
