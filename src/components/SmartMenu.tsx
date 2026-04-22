@@ -49,7 +49,12 @@ export default function SmartMenu() {
     submenuVisibility,
     pauseIdleTimer,
     resumeIdleTimer,
+    personaState,
   } = useShell();
+
+  // Active persona accent — drives the Be icon tint when a persona is selected.
+  const activePersona = personaState.available.find(p => p.id === personaState.activePersonaId);
+  const personaAccent = activePersona?.accentHex;
 
   // Hover preview: show quick actions on rollover without entering prompt mode
   const [hoverPreviewMode, setHoverPreviewMode] = useState<SmartMenuMode | null>(null);
@@ -200,7 +205,7 @@ export default function SmartMenu() {
           onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[0]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            <NavButton item={NAV_ITEMS[0]} accentOverride={personaAccent} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
           <div
             className="flex-1 min-w-[8px]"
@@ -232,6 +237,7 @@ function NavButton({
   item,
   isCenter = false,
   activeQAMode,
+  accentOverride,
   onPointerTap,
   onAction,
   onHoverEnter,
@@ -241,6 +247,7 @@ function NavButton({
   item: { id: SmartMenuMode; label: string; icon: string };
   isCenter?: boolean;
   activeQAMode?: SmartMenuMode | null;
+  accentOverride?: string;
   onPointerTap: (mode: SmartMenuMode, pointerType: string) => void;
   onAction: (id: string) => Promise<void>;
   onHoverEnter: (mode: SmartMenuMode) => void;
@@ -248,7 +255,7 @@ function NavButton({
 }) {
   const [hovered, setHovered] = useState(false);
   const Icon = resolveIcon(item.icon, item.id);
-  const accent = MODE_ACCENT[item.id];
+  const accent = accentOverride ?? MODE_ACCENT[item.id];
   const isEdge = item.id === "be" || item.id === "share";
   const isActiveQA = activeQAMode === item.id;
 
@@ -256,7 +263,7 @@ function NavButton({
   const iconColor = isActiveQA
     ? accent
     : isEdge
-      ? (hovered ? accent : "var(--mm-ink-muted)")
+      ? (accentOverride ?? (hovered ? accent : "var(--mm-ink-muted)"))
       : accent;
   const iconFilter = isDark
     ? (!isEdge && hovered && !isActiveQA

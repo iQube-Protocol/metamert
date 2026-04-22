@@ -521,9 +521,10 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
     setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
     // Note: we do NOT revert submenu to "quickActions" here. The selector
-    // stays visible so the user has feedback that their click registered,
-    // and so the menu doesn't appear to "just reopen the be QL menu".
-    startIdleTimer();
+    // stays visible so the user has feedback that their click registered.
+    // We also do NOT start the idle timer — the panel persists while the
+    // pointer remains over it; the panel's onPointerLeave handler will
+    // restart the auto-fade when the pointer moves away.
 
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
