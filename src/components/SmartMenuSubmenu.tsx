@@ -108,11 +108,9 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     if (action.id === "persona") {
-      // Open the Persona iQube drawer in the runtime — knyt when the runtime
-      // is in KNYT context, qripto otherwise (metaMe maps to Qripto persona).
-      const iqubeType = runtimeContext === "knyt" ? "knyt" : "qripto";
-      openPersonaIQube(iqubeType);
-      resetIdleTimer("quickAction");
+      // Show the persona selector sub-sub menu — pills (Qripto, KNYT) appear
+      // above the prompt bar; clicking a pill opens that persona's iQube drawer.
+      setSubmenuType("personaSelector");
       return;
     }
 
@@ -304,7 +302,7 @@ function CartridgeSelector() {
           ← Back
         </button>
       </div>
-      <div className="flex gap-1.5 justify-center">
+      <div className="flex gap-1.5 justify-end">
         {cartridgeState.available.map(cart => {
           const isActive = cart.id === cartridgeState.activeCartridgeId;
           const Icon = resolveSmartIcon(cart.icon, cart.id);
@@ -401,7 +399,7 @@ function PersonaSelector() {
           ← Back
         </button>
       </div>
-      <div className="flex gap-1.5 justify-center">
+      <div className="flex gap-1.5 justify-start">
         {personaState.available.map(persona => {
           const isActive = persona.id === personaState.activePersonaId;
           const Icon = resolveSmartIcon(persona.icon, persona.id);
