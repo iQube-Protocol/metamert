@@ -218,15 +218,11 @@ const BE_ACTIONS: QuickActionDef[] = [
 ];
 
 const EARN_ACTIONS: QuickActionDef[] = [
-  { id: "knyt-progress", label: "Progress", icon: "trending-up", kind: "llm+menu", triggersInference: true, prompt: "Show my KNYT progression status and next milestones", apiAction: "knyt-progress", iframeAction: "knyt_progress" },
-  { id: "goal",        label: "Goal",        icon: "target",     kind: "llm+menu",    triggersInference: true,  prompt: "Show my current goals and progress" },
-  { id: "task",        label: "Task",        icon: "check-square", kind: "llm+menu",  triggersInference: true,  prompt: "What tasks should I work on next?" },
-  { id: "reward",      label: "Reward",      icon: "star",       kind: "llm+menu",    triggersInference: true,  prompt: "Show my rewards and achievements" },
-  { id: "offer",       label: "Offer",       icon: "tag",        kind: "llm+menu",    triggersInference: true,  prompt: "Find offers and deals available to me" },
-  { id: "opportunity", label: "Opportunity", icon: "compass",    kind: "llm+menu",    triggersInference: true,  prompt: "Discover new opportunities for me" },
-  { id: "wallet",      label: "Wallet",      icon: "wallet",     kind: "llm+menu",    triggersInference: true,  prompt: "What would you like to explore in your wallet?", apiAction: "wallet" },
-  { id: "share",       label: "Share",       icon: "share-2",    kind: "llm+menu",    triggersInference: true },
-  { id: "reset",       label: "Reset",       icon: "rotate-ccw", kind: "system-only", triggersInference: false },
+  { id: "goal",   label: "Goal",   icon: "target",       kind: "llm+menu",    triggersInference: true,  prompt: "Show my current goals and progress" },
+  { id: "task",   label: "Task",   icon: "check-square", kind: "llm+menu",    triggersInference: true,  prompt: "Open my wallet on the Tasks tab",    apiAction: "wallet", iframeAction: "wallet:tasks" },
+  { id: "wallet", label: "Wallet", icon: "wallet",       kind: "llm+menu",    triggersInference: true,  prompt: "Open my wallet",                     apiAction: "wallet" },
+  { id: "reward", label: "Reward", icon: "star",         kind: "llm+menu",    triggersInference: true,  prompt: "Open my wallet on the Rewards tab",  apiAction: "wallet", iframeAction: "wallet:rewards" },
+  { id: "offer",  label: "Offer",  icon: "tag",          kind: "llm+menu",    triggersInference: true,  prompt: "Open my wallet on the Offers tab",   apiAction: "wallet", iframeAction: "wallet:offers" },
 ];
 
 const MAKE_ACTIONS: QuickActionDef[] = [
@@ -271,9 +267,9 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     label: "Earn",
     accentColor: "142 71% 45%",
     accentHex: "#22C55E",
-    promptPlaceholder: "Ask about rewards, tasks, offers, value, or opportunities…",
-    defaultCenteredQuickActionId: "offer",
-    mobileVisibleFold: ["knyt-progress", "task", "reward", "offer", "wallet"],
+    promptPlaceholder: "Ask about goals, tasks, your wallet, rewards, or offers…",
+    defaultCenteredQuickActionId: "wallet",
+    mobileVisibleFold: ["goal", "task", "wallet", "reward", "offer"],
     quickActions: EARN_ACTIONS,
   },
   play: {
