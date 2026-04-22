@@ -157,9 +157,18 @@ function genMsgId(): string {
 /**
  * Wrap a ShellOutbound message in the bridge envelope expected by the runtime:
  * { type, msg_id, timestamp, source: "shell", payload }
+ *
+ * If the outbound message already declares an explicit `payload` object
+ * (e.g. LAUNCH_CARTRIDGE, browser.* events), use it as-is to avoid
+ * double-nesting (which would produce `payload.payload.cartridge_id` and
+ * cause the runtime handler to no-op).
  */
 function toBridgeEnvelope(msg: ShellOutbound): Record<string, unknown> {
-  const { type, ...payload } = msg as Record<string, unknown>;
+  const { type, ...rest } = msg as Record<string, unknown>;
+  const payload =
+    "payload" in rest && rest.payload && typeof rest.payload === "object"
+      ? (rest.payload as Record<string, unknown>)
+      : rest;
   return {
     type,
     msg_id: genMsgId(),
