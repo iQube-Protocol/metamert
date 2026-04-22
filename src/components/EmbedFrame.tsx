@@ -16,7 +16,7 @@ interface EmbedFrameProps {
   maxRetries?: number;
 }
 
-type FrameStatus = "probing" | "loading" | "ready" | "error" | "blocked";
+type FrameStatus = "probing" | "loading" | "loaded-unconfirmed" | "ready" | "error" | "blocked";
 export type { FrameStatus };
 
 const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
@@ -96,9 +96,12 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
       // send bootstrap messages such as SHELL_READY and HANDOFF.
       onFrameLoad?.();
 
-      // If we haven't received RUNTIME_READY within 5s, mark as loaded but not handshaked
+      // If we haven't received RUNTIME_READY within 5s, mark as "loaded-unconfirmed".
+      // This is a UX/visual signal ONLY — runtime-bound commands (drawer opens,
+      // cartridge launches) MUST NOT be flushed against this state. They flush
+      // only on a true RUNTIME_READY handshake.
       setTimeout(() => {
-        setStatus((s) => (s === "loading" ? "ready" : s));
+        setStatus((s) => (s === "loading" ? "loaded-unconfirmed" : s));
       }, 5000);
     };
 
