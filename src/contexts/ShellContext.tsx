@@ -218,9 +218,15 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     activeCodexId: "qripto-codex",
     available: DEFAULT_CARTRIDGES,
   });
-  const [personaState, setPersonaState] = useState<PersonaState>({
-    activePersonaId: "metame-persona",
-    available: DEFAULT_PERSONAS,
+  const [personaState, setPersonaState] = useState<PersonaState>(() => {
+    // Guard: if hardcoded default doesn't exist in visible personas, use first available.
+    const fallback = DEFAULT_PERSONAS.find(p => p.id === DEFAULT_ACTIVE_PERSONA_ID)
+      ? DEFAULT_ACTIVE_PERSONA_ID
+      : DEFAULT_PERSONAS[0]?.id ?? "";
+    return {
+      activePersonaId: fallback,
+      available: DEFAULT_PERSONAS,
+    };
   });
 
   // Runtime context (metaMe ↔ KNYT) — drives header lightning color and copilot framing
