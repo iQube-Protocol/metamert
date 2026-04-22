@@ -108,11 +108,9 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     if (action.id === "persona") {
-      // Open the Persona iQube drawer in the runtime — knyt when the runtime
-      // is in KNYT context, qripto otherwise (metaMe maps to Qripto persona).
-      const iqubeType = runtimeContext === "knyt" ? "knyt" : "qripto";
-      openPersonaIQube(iqubeType);
-      resetIdleTimer("quickAction");
+      // Show the persona selector sub-sub menu — pills (Qripto, KNYT) appear
+      // above the prompt bar; clicking a pill opens that persona's iQube drawer.
+      setSubmenuType("personaSelector");
       return;
     }
 
