@@ -32,6 +32,8 @@ import {
   MODE_CONFIGS,
   DEFAULT_CARTRIDGES,
   DEFAULT_PERSONAS,
+  DEFAULT_ACTIVE_PERSONA_ID,
+  personaIdToIqubeType,
   IDLE_TIMEOUT_MS,
 } from "@/lib/smart-menu-config";
 
