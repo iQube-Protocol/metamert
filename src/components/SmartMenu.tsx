@@ -212,11 +212,16 @@ export default function SmartMenu() {
           }}
           onPointerUp={handleNavAreaPointerUp}
         >
-          <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[0]} accentOverride={personaAccent} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+          <div
+            className="flex flex-1 items-stretch justify-start"
+            onPointerEnter={() => handleNavHoverEnter("be")}
+            onPointerLeave={handleNavHoverLeave}
+          >
+            <NavButton item={NAV_ITEMS[0]} accentOverride={personaAccent} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} expandedHitArea />
           </div>
           <div
-            className="flex-1 min-w-[8px]"
+            className="shrink-0"
+            style={{ width: '2.5rem' }}
             onPointerEnter={handleGapPointerEnter}
             onPointerLeave={handleGapPointerLeave}
             onPointerUp={handleGapPointerUp}
@@ -227,13 +232,18 @@ export default function SmartMenu() {
             ))}
           </div>
           <div
-            className="flex-1 min-w-[8px]"
+            className="shrink-0"
+            style={{ width: '2.5rem' }}
             onPointerEnter={handleGapPointerEnter}
             onPointerLeave={handleGapPointerLeave}
             onPointerUp={handleGapPointerUp}
           />
-          <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[4]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+          <div
+            className="flex flex-1 items-stretch justify-end"
+            onPointerEnter={() => handleNavHoverEnter("share")}
+            onPointerLeave={handleNavHoverLeave}
+          >
+            <NavButton item={NAV_ITEMS[4]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} expandedHitArea />
           </div>
         </nav>
       </div>
@@ -246,16 +256,17 @@ function NavButton({
   isCenter = false,
   activeQAMode,
   accentOverride,
+  expandedHitArea = false,
   onPointerTap,
   onAction,
   onHoverEnter,
   onHoverLeave,
-  
 }: {
   item: { id: SmartMenuMode; label: string; icon: string };
   isCenter?: boolean;
   activeQAMode?: SmartMenuMode | null;
   accentOverride?: string;
+  expandedHitArea?: boolean;
   onPointerTap: (mode: SmartMenuMode, pointerType: string) => void;
   onAction: (id: string) => Promise<void>;
   onHoverEnter: (mode: SmartMenuMode) => void;
@@ -300,7 +311,7 @@ function NavButton({
         onPointerEnter={() => { setHovered(true); onHoverEnter(item.id); }}
         onPointerLeave={() => { setHovered(false); onHoverLeave(); }}
         className={`flex flex-col items-center justify-center gap-0.5 py-0.5 text-[11px] transition-all duration-200
-          ${isCenter ? "min-w-[3.5rem] px-1" : "w-14 shrink-0"}
+          ${isCenter ? "min-w-[3.5rem] px-1" : expandedHitArea ? "w-full min-w-[10.5rem] shrink-0" : "w-14 shrink-0"}
           active:scale-110
         `}
         style={{ borderRadius: 'var(--mm-radius-xs)' }}
