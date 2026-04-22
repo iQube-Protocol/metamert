@@ -263,7 +263,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#4DA3FF",
     promptPlaceholder: "Set who you are being, your memory, identity, or connections…",
     defaultCenteredQuickActionId: "memory",
-    mobileVisibleFold: ["settings", "persona", "memory", "identity", "connections"],
+    mobileVisibleFold: ["persona", "settings", "memory", "identity", "connections"],
     quickActions: BE_ACTIONS,
   },
   earn: {
