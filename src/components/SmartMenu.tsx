@@ -237,6 +237,7 @@ function NavButton({
   item,
   isCenter = false,
   activeQAMode,
+  accentOverride,
   onPointerTap,
   onAction,
   onHoverEnter,
@@ -246,6 +247,7 @@ function NavButton({
   item: { id: SmartMenuMode; label: string; icon: string };
   isCenter?: boolean;
   activeQAMode?: SmartMenuMode | null;
+  accentOverride?: string;
   onPointerTap: (mode: SmartMenuMode, pointerType: string) => void;
   onAction: (id: string) => Promise<void>;
   onHoverEnter: (mode: SmartMenuMode) => void;
@@ -253,7 +255,7 @@ function NavButton({
 }) {
   const [hovered, setHovered] = useState(false);
   const Icon = resolveIcon(item.icon, item.id);
-  const accent = MODE_ACCENT[item.id];
+  const accent = accentOverride ?? MODE_ACCENT[item.id];
   const isEdge = item.id === "be" || item.id === "share";
   const isActiveQA = activeQAMode === item.id;
 
@@ -261,7 +263,7 @@ function NavButton({
   const iconColor = isActiveQA
     ? accent
     : isEdge
-      ? (hovered ? accent : "var(--mm-ink-muted)")
+      ? (accentOverride ?? (hovered ? accent : "var(--mm-ink-muted)"))
       : accent;
   const iconFilter = isDark
     ? (!isEdge && hovered && !isActiveQA
