@@ -496,25 +496,35 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [config, startIdleTimer]);
 
+  /**
+   * Select a persona pill.
+   *
+   * Canonical flow (per runtime owner contract):
+   *   1. update local activePersonaId
+   *   2. dispatch OPEN_PERSONA_IQUBE with the mapped iqube_type
+   *
+   * We intentionally do NOT also send SELECTOR_CHANGE here — that triggers
+   * a runtime content refresh which can supersede the drawer open. If the
+   * runtime later needs persona sync, do it as an explicit secondary step.
+   */
   const selectPersona = useCallback((personaId: string) => {
     const persona = personaState.available.find(p => p.id === personaId);
-    if (!persona) return;
+    if (!persona) {
+      console.warn("[Shell] selectPersona: id not in visible list", personaId, personaState.available.map(p => p.id));
+      return;
+    }
+    const iqubeType = personaIdToIqubeType(personaId);
+    if (!iqubeType) {
+      console.warn("[Shell] selectPersona: no iqube_type mapping for", personaId);
+      return;
+    }
     setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
     setSubmenuTypeState("quickActions");
     startIdleTimer();
 
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
-      // Notify iframe to load the persona's iQube
-      postToIframe(iframeRef.current, {
-        type: "SELECTOR_CHANGE",
-        selector_type: "persona" as any,
-        id: personaId,
-        iqube_id: persona.iqubeId,
-      }, origin);
-      // Also open the persona's iQube drawer.
-      // Mapping: knyt-persona → "knyt"; everything else → "qripto".
-      const iqubeType: "knyt" | "qripto" = personaId === "knyt-persona" ? "knyt" : "qripto";
+      console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
       postToIframe(iframeRef.current, {
         type: "OPEN_PERSONA_IQUBE",
         payload: { iqube_type: iqubeType },
@@ -523,13 +533,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }, [config, startIdleTimer, personaState.available]);
 
   /**
-   * Open the Persona iQube drawer in the runtime.
-   * Sends OPEN_PERSONA_IQUBE — the runtime's MetaMeRuntimeClient relays a
-   * window CustomEvent('open-persona-iqube') to its Sidebar which mounts
-   * PersonaIQubeDrawer for the requested persona type.
+   * Open the Persona iQube drawer in the runtime directly (without changing
+   * the active persona). Fire-and-forget — runtime does not currently emit
+   * a persona-specific acknowledgment.
    */
   const openPersonaIQube = useCallback((iqubeType: "knyt" | "qripto") => {
     if (!iframeRef.current || !config) return;
+    console.log("[Shell] openPersonaIQube →", iqubeType);
     postToIframe(iframeRef.current, {
       type: "OPEN_PERSONA_IQUBE",
       payload: { iqube_type: iqubeType },
