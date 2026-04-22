@@ -304,7 +304,7 @@ function CartridgeSelector() {
           ← Back
         </button>
       </div>
-      <div className="flex gap-1.5 justify-center">
+      <div className="flex gap-1.5 justify-end">
         {cartridgeState.available.map(cart => {
           const isActive = cart.id === cartridgeState.activeCartridgeId;
           const Icon = resolveSmartIcon(cart.icon, cart.id);
@@ -401,7 +401,7 @@ function PersonaSelector() {
           ← Back
         </button>
       </div>
-      <div className="flex gap-1.5 justify-center">
+      <div className="flex gap-1.5 justify-start">
         {personaState.available.map(persona => {
           const isActive = persona.id === personaState.activePersonaId;
           const Icon = resolveSmartIcon(persona.icon, persona.id);

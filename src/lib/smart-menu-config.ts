@@ -70,13 +70,14 @@ export interface PersonaState {
 }
 
 export const DEFAULT_PERSONAS: PersonaDef[] = [
-  {
-    id: "metame-persona",
-    label: "metaMe",
-    icon: "user",
-    accentHex: "#FF6B6B",
-    iqubeId: "iqube-metame-persona",
-  },
+  // metaMe persona hidden for now — re-enable by uncommenting.
+  // {
+  //   id: "metame-persona",
+  //   label: "metaMe",
+  //   icon: "user",
+  //   accentHex: "#FF6B6B",
+  //   iqubeId: "iqube-metame-persona",
+  // },
   {
     id: "qripto-persona",
     label: "Qripto",
