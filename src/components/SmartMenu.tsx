@@ -205,7 +205,7 @@ export default function SmartMenu() {
           onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[0]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            <NavButton item={NAV_ITEMS[0]} accentOverride={personaAccent} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
           <div
             className="flex-1 min-w-[8px]"
