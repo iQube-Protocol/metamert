@@ -64,7 +64,9 @@ const INITIAL_HINTS: RuntimeHints = {
 };
 
 // Iframe readiness state (LOV-303)
-export type IframeReadiness = "probing" | "loading" | "ready" | "error" | "blocked";
+// "loaded-unconfirmed" = iframe element loaded but RUNTIME_READY handshake not yet received.
+// Runtime-bound commands MUST NOT flush against this state — only on "ready".
+export type IframeReadiness = "probing" | "loading" | "loaded-unconfirmed" | "ready" | "error" | "blocked";
 
 interface ShellContextValue {
   config: ShellConfig | null;
@@ -82,6 +84,9 @@ interface ShellContextValue {
 
   // Iframe readiness (LOV-303)
   iframeReadiness: IframeReadiness;
+
+  /** Number of runtime-bound commands waiting for RUNTIME_READY. >0 means UI should show "Connecting…" feedback. */
+  pendingRuntimeCommandCount: number;
 
   // LOV-401: KNYT onboarding active flag
   knytOnboarding: boolean;
@@ -211,7 +216,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
-  const pendingRuntimeCommandRef = useRef<(() => void) | null>(null);
+  // FIFO queue of runtime-bound commands waiting for RUNTIME_READY.
+  // Replaces the previous single-slot ref so rapid clicks (Persona, Identity,
+  // Cartridge) before handshake are NOT lost or overwritten.
+  const pendingRuntimeQueueRef = useRef<Array<{ command: () => void; label?: string }>>([]);
+  const [pendingRuntimeCommandCount, setPendingRuntimeCommandCount] = useState(0);
 
   // Smart Menu state
   const [viewState, setViewState] = useState<ViewState>("defaultNav");
