@@ -256,16 +256,17 @@ function NavButton({
   isCenter = false,
   activeQAMode,
   accentOverride,
+  expandedHitArea = false,
   onPointerTap,
   onAction,
   onHoverEnter,
   onHoverLeave,
-  
 }: {
   item: { id: SmartMenuMode; label: string; icon: string };
   isCenter?: boolean;
   activeQAMode?: SmartMenuMode | null;
   accentOverride?: string;
+  expandedHitArea?: boolean;
   onPointerTap: (mode: SmartMenuMode, pointerType: string) => void;
   onAction: (id: string) => Promise<void>;
   onHoverEnter: (mode: SmartMenuMode) => void;
