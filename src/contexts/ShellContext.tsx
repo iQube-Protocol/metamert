@@ -115,6 +115,7 @@ interface ShellContextValue {
   resetToWelcome: () => void;
   updateTrust: (trust: { level: string; signals: string[]; scores?: Record<string, number> }) => void;
   iframeRef: React.RefObject<HTMLIFrameElement>;
+  reportIframeReadiness: (status: IframeReadiness) => void;
 
   // Smart Menu actions
   activateMode: (mode: SmartMenuMode) => void;
@@ -210,6 +211,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
+  const pendingRuntimeCommandRef = useRef<(() => void) | null>(null);
 
   // Smart Menu state
   const [viewState, setViewState] = useState<ViewState>("defaultNav");
