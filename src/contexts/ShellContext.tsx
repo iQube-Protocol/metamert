@@ -1017,7 +1017,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [config, applyConfigUpdate, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
 
-  const resetToWelcome = useCallback(() => {
+  // Expose submitPrompt via ref so launchCartridge (declared earlier) can
+  // reach the authoritative shell prompt pipeline for cartridge dual-dispatch.
+  useEffect(() => {
+    submitPromptRef.current = submitPrompt;
+  }, [submitPrompt]);
     setShellState("welcome");
     setActiveMenuItem(null);
     setQuickLinksExpanded(true);
