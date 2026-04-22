@@ -1022,6 +1022,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     submitPromptRef.current = submitPrompt;
   }, [submitPrompt]);
+
+  const resetToWelcome = useCallback(() => {
     setShellState("welcome");
     setActiveMenuItem(null);
     setQuickLinksExpanded(true);
