@@ -211,10 +211,10 @@ const PLAY_ACTIONS: QuickActionDef[] = [
 
 const BE_ACTIONS: QuickActionDef[] = [
   { id: "persona",     label: "Persona",     icon: "user",        kind: "system-only", triggersInference: false },
-  { id: "settings",    label: "Settings",    icon: "settings",    kind: "system-only", triggersInference: false },
-  { id: "memory",      label: "Memory",      icon: "sparkles",    kind: "llm+menu",    triggersInference: true, prompt: "Show my memory and context history" },
+  { id: "memory",      label: "Memories",    icon: "sparkles",    kind: "llm+menu",    triggersInference: true, prompt: "Show my memory and context history" },
   { id: "identity",    label: "Identity",    icon: "fingerprint", kind: "system-only", triggersInference: false },
   { id: "connections", label: "Connections", icon: "network",     kind: "llm+menu",    triggersInference: true, prompt: "Show my connections and network" },
+  { id: "settings",    label: "Settings",    icon: "settings",    kind: "system-only", triggersInference: false },
 ];
 
 const EARN_ACTIONS: QuickActionDef[] = [
@@ -263,7 +263,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#4DA3FF",
     promptPlaceholder: "Set who you are being, your memory, identity, or connections…",
     defaultCenteredQuickActionId: "memory",
-    mobileVisibleFold: ["persona", "settings", "memory", "identity", "connections"],
+    mobileVisibleFold: ["persona", "memory", "identity", "connections", "settings"],
     quickActions: BE_ACTIONS,
   },
   earn: {
