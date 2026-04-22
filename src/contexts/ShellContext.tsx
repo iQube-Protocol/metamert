@@ -657,9 +657,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   // Replay queued runtime commands as soon as we have a true RUNTIME_READY handshake.
   useEffect(() => {
     if (iframeReadiness === "ready") {
-      flushPendingRuntimeCommands();
+      replayPendingRuntimeCommands();
     }
-  }, [iframeReadiness, flushPendingRuntimeCommands]);
+  }, [iframeReadiness, replayPendingRuntimeCommands]);
 
   useEffect(() => {
     if (!config) return;
@@ -673,7 +673,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
       if (t === "RUNTIME_READY") {
         setIframeReadiness("ready");
-        flushPendingRuntimeCommands();
+        replayPendingRuntimeCommands();
         return;
       }
 
