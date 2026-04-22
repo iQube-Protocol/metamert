@@ -120,3 +120,34 @@ Tap-outside overlay (z-40) covers the runtime area when menu is active.
 - Own active guide or handoff card rendering
 
 These are all iframe/Codex responsibilities.
+
+## 6. Persona Flow Contract
+
+The Persona quick action in the **Be** menu opens a sub-sub menu of visible personas; clicking a persona pill opens that persona's iQube drawer in the runtime.
+
+### Canonical flow
+
+```
+Be → Persona quick action
+  → submenuType = "personaSelector"
+  → render pills from personaState.available  (visible personas only)
+  → click pill
+    → setPersonaState({ activePersonaId })
+    → postToIframe({ type: "OPEN_PERSONA_IQUBE", payload: { iqube_type } })
+```
+
+### Hard rules
+
+- `personaState.available` MUST contain only visible personas (`DEFAULT_PERSONAS`).
+- The default `activePersonaId` MUST exist in the visible list. The shell guards this on init.
+- `selectPersona()` MUST NOT also send `SELECTOR_CHANGE` for personas — that triggers a runtime content refresh which can supersede the drawer open.
+- `OPEN_PERSONA_IQUBE` is **fire-and-forget**: the runtime does not currently emit a persona-specific acknowledgment. If the drawer fails to open, check the runtime's `MetaMeRuntimeClient.onShellMessage` handler — there is no shell-side recovery path.
+- Persona id → iqube_type mapping is exact (no loose fallback):
+  - `qripto-persona` → `"qripto"`
+  - `knyt-persona` → `"knyt"`
+  - any other id → no message sent (warned in console)
+
+### Hidden personas
+
+`metame-persona` is currently hidden via the `hidden: true` flag in `ALL_PERSONAS`. It stays in the registry but is filtered out of `DEFAULT_PERSONAS` and never rendered.
+
