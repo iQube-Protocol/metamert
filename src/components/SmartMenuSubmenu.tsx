@@ -35,9 +35,9 @@ function PendingRuntimeBadge() {
   if (pendingRuntimeCommandCount <= 0) return null;
   const label =
     iframeReadiness === "ready"
-      ? "Dispatching…"
+      ? "Opening…"
       : iframeReadiness === "loaded-unconfirmed"
-        ? "Waiting for runtime handshake…"
+        ? "Launching…"
         : "Connecting runtime…";
   return (
     <div
