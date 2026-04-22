@@ -81,6 +81,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     runtimeContext,
     setRuntimeContext,
     openPersonaIQube,
+    openIdentityIQube,
     pulseInference,
   } = useShell();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -114,6 +115,15 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
+    if (action.id === "identity") {
+      // Identity has no sub-sub menu — open the IdentityIQubeDrawer in the
+      // runtime directly (single drawer, no variants). Same dispatch pattern
+      // as persona iQube. We do NOT submit a prompt or change submenuType.
+      openIdentityIQube();
+      resetIdleTimer("quickAction");
+      return;
+    }
+
     if (action.id === "browse") {
       setSubmenuType("browserSelector");
       return;
@@ -143,7 +153,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     handleMenuAction(action.id);
-  }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, runtimeContext, setRuntimeContext, openPersonaIQube, resetIdleTimer, sendIframeAction, pulseInference]);
+  }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, runtimeContext, setRuntimeContext, openPersonaIQube, openIdentityIQube, resetIdleTimer, sendIframeAction, pulseInference]);
 
   const foldIds = modeConfig?.mobileVisibleFold ?? [];
   const firstFoldIndex = modeConfig

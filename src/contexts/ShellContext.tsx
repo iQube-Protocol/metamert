@@ -20,6 +20,7 @@ import {
   isInferenceComplete,
 } from "@/lib/shell-messages";
 import { postPersonaIQubeOpen } from "@/lib/persona-messages";
+import { postIdentityIQubeOpen } from "@/lib/identity-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
 import { toast } from "sonner";
 import {
@@ -128,6 +129,8 @@ interface ShellContextValue {
   selectPersona: (personaId: string) => void;
   /** Open the Persona iQube drawer in the runtime (knyt or qripto). */
   openPersonaIQube: (iqubeType: "knyt" | "qripto") => void;
+  /** Open the Identity iQube drawer in the runtime (single drawer, no variants). */
+  openIdentityIQube: () => void;
   resetIdleTimer: (reason?: string) => void;
   pauseIdleTimer: () => void;
   resumeIdleTimer: () => void;
@@ -542,6 +545,17 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     if (!iframeRef.current || !config) return;
     console.log("[Shell] openPersonaIQube →", iqubeType);
     postPersonaIQubeOpen(iframeRef.current, getIframeOrigin(config), iqubeType);
+  }, [config]);
+
+  /**
+   * Open the Identity iQube drawer in the runtime. Single drawer — no
+   * iqube_type variants. Mirrors the persona open dispatch (triple-send for
+   * cross-build compatibility) without sending SELECTOR_CHANGE.
+   */
+  const openIdentityIQube = useCallback(() => {
+    if (!iframeRef.current || !config) return;
+    console.log("[Shell] openIdentityIQube");
+    postIdentityIQubeOpen(iframeRef.current, getIframeOrigin(config));
   }, [config]);
 
   const setInteractionState = useCallback((state: InteractionState) => {
@@ -961,7 +975,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     // Smart Menu actions
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, openIdentityIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
     pulseInference,
   }), [
     config, loading, authenticated, shellState,
@@ -973,7 +987,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     toggleQuickLinks, hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, openIdentityIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
     pulseInference,
   ]);
 

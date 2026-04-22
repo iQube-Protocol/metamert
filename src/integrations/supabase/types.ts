@@ -5293,6 +5293,69 @@ export type Database = {
         }
         Relationships: []
       }
+      identity_iqubes: {
+        Row: {
+          addresses: Json
+          created_at: string
+          date_of_birth: string
+          driving_license_expiry: string
+          driving_license_number: string
+          driving_license_state: string
+          emails: Json
+          fio_handle: string
+          first_name: string
+          id: string
+          last_name: string
+          middle_name: string
+          mint_status: string
+          mint_stub_id: string | null
+          personas: Json
+          phones: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          addresses?: Json
+          created_at?: string
+          date_of_birth?: string
+          driving_license_expiry?: string
+          driving_license_number?: string
+          driving_license_state?: string
+          emails?: Json
+          fio_handle?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          middle_name?: string
+          mint_status?: string
+          mint_stub_id?: string | null
+          personas?: Json
+          phones?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          addresses?: Json
+          created_at?: string
+          date_of_birth?: string
+          driving_license_expiry?: string
+          driving_license_number?: string
+          driving_license_state?: string
+          emails?: Json
+          fio_handle?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          middle_name?: string
+          mint_status?: string
+          mint_stub_id?: string | null
+          personas?: Json
+          phones?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       iq_blak_qubes: {
         Row: {
           checksum: string | null
