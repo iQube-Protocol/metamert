@@ -382,6 +382,7 @@ function CodexSelector() {
 
 function PersonaSelector() {
   const { personaState, selectPersona, setSubmenuType, pauseIdleTimer } = useShell();
+  const visible = personaState.available;
 
   return (
     <div
@@ -399,26 +400,32 @@ function PersonaSelector() {
           ← Back
         </button>
       </div>
-      <div className="flex gap-1.5 justify-start">
-        {personaState.available.map(persona => {
-          const isActive = persona.id === personaState.activePersonaId;
-          const Icon = resolveSmartIcon(persona.icon, persona.id);
-          return (
-            <CartridgePill
-              key={persona.id}
-              isActive={isActive}
-              accent={persona.accentHex}
-              onClick={() => selectPersona(persona.id)}
-            >
-              <div className="flex items-center gap-1">
-                {Icon && <Icon className="h-3.5 w-3.5" />}
-                <span className="font-medium whitespace-nowrap">{persona.label}</span>
-                {isActive && <Check className="h-3 w-3" />}
-              </div>
-            </CartridgePill>
-          );
-        })}
-      </div>
+      {visible.length === 0 ? (
+        <div className="px-2 py-1 text-[11px]" style={{ color: 'var(--mm-ink-muted)' }}>
+          No personas available
+        </div>
+      ) : (
+        <div className="flex gap-1.5 justify-start">
+          {visible.map(persona => {
+            const isActive = persona.id === personaState.activePersonaId;
+            const Icon = resolveSmartIcon(persona.icon, persona.id);
+            return (
+              <CartridgePill
+                key={persona.id}
+                isActive={isActive}
+                accent={persona.accentHex}
+                onClick={() => selectPersona(persona.id)}
+              >
+                <div className="flex items-center gap-1">
+                  {Icon && <Icon className="h-3.5 w-3.5" />}
+                  <span className="font-medium whitespace-nowrap">{persona.label}</span>
+                  {isActive && <Check className="h-3 w-3" />}
+                </div>
+              </CartridgePill>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
