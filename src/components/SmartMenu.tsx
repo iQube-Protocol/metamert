@@ -52,9 +52,17 @@ export default function SmartMenu() {
     personaState,
   } = useShell();
 
-  // Active persona accent — drives the Be icon tint when a persona is selected.
+  // Active persona accent — drives the Be icon tint ONLY after user explicitly activates a persona.
+  // The shell hydrates with a default activePersonaId, so we track changes from the initial value.
+  const initialPersonaIdRef = useRef(personaState.activePersonaId);
+  const [userActivatedPersona, setUserActivatedPersona] = useState(false);
+  useEffect(() => {
+    if (personaState.activePersonaId && personaState.activePersonaId !== initialPersonaIdRef.current) {
+      setUserActivatedPersona(true);
+    }
+  }, [personaState.activePersonaId]);
   const activePersona = personaState.available.find(p => p.id === personaState.activePersonaId);
-  const personaAccent = activePersona?.accentHex;
+  const personaAccent = userActivatedPersona ? activePersona?.accentHex : undefined;
 
   // Hover preview: show quick actions on rollover without entering prompt mode
   const [hoverPreviewMode, setHoverPreviewMode] = useState<SmartMenuMode | null>(null);
