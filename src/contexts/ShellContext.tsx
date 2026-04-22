@@ -513,9 +513,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     pending();
   }, [config, iframeReadiness]);
 
-  const queueOrRunRuntimeCommand = useCallback((command: () => void) => {
+  const queueOrRunRuntimeCommand = useCallback((command: () => void, label?: string) => {
     if (!iframeRef.current || !config || iframeReadiness !== "ready") {
       pendingRuntimeCommandRef.current = command;
+      // Visible feedback when the runtime isn't ready yet — quicklink isn't
+      // lost, it will fire as soon as RUNTIME_READY arrives.
+      if (label) {
+        toast.info(`${label} will open as soon as the runtime is ready…`, { duration: 2500 });
+      }
       return false;
     }
     command();
@@ -553,7 +558,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       const origin = getIframeOrigin(config);
       console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
       postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
-    });
+    }, `${persona.label} iQube`);
   }, [config, clearIdleTimer, personaState.available, queueOrRunRuntimeCommand]);
 
   /**
@@ -566,7 +571,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       if (!iframeRef.current || !config) return;
       console.log("[Shell] openPersonaIQube →", iqubeType);
       postPersonaIQubeOpen(iframeRef.current, getIframeOrigin(config), iqubeType);
-    });
+    }, `${iqubeType === "knyt" ? "KNYT" : "Qripto"} iQube`);
   }, [config, queueOrRunRuntimeCommand]);
 
   /**
@@ -579,7 +584,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       if (!iframeRef.current || !config) return;
       console.log("[Shell] openIdentityIQube");
       postIdentityIQubeOpen(iframeRef.current, getIframeOrigin(config));
-    });
+    }, "Identity iQube");
   }, [config, queueOrRunRuntimeCommand]);
 
   const setInteractionState = useCallback((state: InteractionState) => {
