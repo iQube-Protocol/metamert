@@ -251,6 +251,10 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => () => inferCtrl.current?.cleanup(), []);
 
+  const reportIframeReadiness = useCallback((status: IframeReadiness) => {
+    setIframeReadiness(status);
+  }, []);
+
   // Idle auto-hide logic — split timers per spec
   const clearIdleTimer = useCallback(() => {
     if (idleTimerRef.current) { clearTimeout(idleTimerRef.current); idleTimerRef.current = null; }
@@ -502,6 +506,22 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [config, startIdleTimer]);
 
+  const flushPendingRuntimeCommand = useCallback(() => {
+    const pending = pendingRuntimeCommandRef.current;
+    if (!pending || !iframeRef.current || !config || iframeReadiness !== "ready") return;
+    pendingRuntimeCommandRef.current = null;
+    pending();
+  }, [config, iframeReadiness]);
+
+  const queueOrRunRuntimeCommand = useCallback((command: () => void) => {
+    if (!iframeRef.current || !config || iframeReadiness !== "ready") {
+      pendingRuntimeCommandRef.current = command;
+      return false;
+    }
+    command();
+    return true;
+  }, [config, iframeReadiness]);
+
   /**
    * Select a persona pill.
    *
@@ -525,19 +545,16 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Pause the idle timer BEFORE we dispatch so the floating panel cannot
-    // collapse mid-flight. The PersonaSelector's onPointerLeave handler will
-    // restart the timer once the pointer actually leaves the panel.
     clearIdleTimer();
-
     setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
 
-    if (iframeRef.current && config) {
+    queueOrRunRuntimeCommand(() => {
+      if (!iframeRef.current || !config) return;
       const origin = getIframeOrigin(config);
       console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
       postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
-    }
-  }, [config, clearIdleTimer, personaState.available]);
+    });
+  }, [config, clearIdleTimer, personaState.available, queueOrRunRuntimeCommand]);
 
   /**
    * Open the Persona iQube drawer in the runtime directly (without changing
@@ -545,10 +562,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
    * a persona-specific acknowledgment.
    */
   const openPersonaIQube = useCallback((iqubeType: "knyt" | "qripto") => {
-    if (!iframeRef.current || !config) return;
-    console.log("[Shell] openPersonaIQube →", iqubeType);
-    postPersonaIQubeOpen(iframeRef.current, getIframeOrigin(config), iqubeType);
-  }, [config]);
+    queueOrRunRuntimeCommand(() => {
+      if (!iframeRef.current || !config) return;
+      console.log("[Shell] openPersonaIQube →", iqubeType);
+      postPersonaIQubeOpen(iframeRef.current, getIframeOrigin(config), iqubeType);
+    });
+  }, [config, queueOrRunRuntimeCommand]);
 
   /**
    * Open the Identity iQube drawer in the runtime. Single drawer — no
@@ -556,10 +575,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
    * cross-build compatibility) without sending SELECTOR_CHANGE.
    */
   const openIdentityIQube = useCallback(() => {
-    if (!iframeRef.current || !config) return;
-    console.log("[Shell] openIdentityIQube");
-    postIdentityIQubeOpen(iframeRef.current, getIframeOrigin(config));
-  }, [config]);
+    queueOrRunRuntimeCommand(() => {
+      if (!iframeRef.current || !config) return;
+      console.log("[Shell] openIdentityIQube");
+      postIdentityIQubeOpen(iframeRef.current, getIframeOrigin(config));
+    });
+  }, [config, queueOrRunRuntimeCommand]);
 
   const setInteractionState = useCallback((state: InteractionState) => {
     setInteractionStateRaw(state);
@@ -570,6 +591,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   // Listen for iframe inference lifecycle signals
   useEffect(() => {
+    if (iframeReadiness === "ready") {
+      flushPendingRuntimeCommand();
+    }
+  }, [iframeReadiness, flushPendingRuntimeCommand]);
+
+  useEffect(() => {
     if (!config) return;
     const runtimeOrigin = getIframeOrigin(config);
 
@@ -578,6 +605,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       const msg = normalizeInbound(e.data);
       if (!msg) return;
       const t = msg.type as string;
+
+      if (t === "RUNTIME_READY") {
+        setIframeReadiness("ready");
+        flushPendingRuntimeCommand();
+        return;
+      }
 
       if (import.meta.env.DEV) {
         console.log("[Shell:lifecycle]", t, "origin:", e.origin, "state:", msg.state ?? "-");
@@ -975,7 +1008,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     // Actions
     toggleQuickLinks,
     hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
-    submitPrompt, resetToWelcome, updateTrust, iframeRef,
+    submitPrompt, resetToWelcome, updateTrust, iframeRef, reportIframeReadiness,
     // Smart Menu actions
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
     launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, openIdentityIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
@@ -988,7 +1021,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
     runtimeContext, setRuntimeContext,
     toggleQuickLinks, hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
-    submitPrompt, resetToWelcome, updateTrust, iframeRef,
+    submitPrompt, resetToWelcome, updateTrust, iframeRef, reportIframeReadiness,
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
     launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, openIdentityIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
     pulseInference,
