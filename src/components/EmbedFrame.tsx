@@ -9,18 +9,21 @@ interface EmbedFrameProps {
   className?: string;
   /** Fires when the iframe element has loaded and can receive shell bootstrap messages. */
   onFrameLoad?: () => void;
-  /** Fires when the runtime explicitly signals RUNTIME_READY. */
-  onReady?: () => void;
   onStatusChange?: (status: FrameStatus) => void;
   /** Max probe retries before showing error (default 2) */
   maxRetries?: number;
 }
 
-type FrameStatus = "probing" | "loading" | "loaded-unconfirmed" | "ready" | "error" | "blocked";
+/**
+ * Iframe element lifecycle status only. RUNTIME_READY (true handshake) is
+ * owned by RuntimeFrame/ShellContext via the normalized message path —
+ * this component never promotes itself to "ready".
+ */
+type FrameStatus = "probing" | "loading" | "loaded-unconfirmed" | "error" | "blocked";
 export type { FrameStatus };
 
 const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
-  ({ url, origin, className = "", onFrameLoad, onReady, onStatusChange, maxRetries = 2 }, ref) => {
+  ({ url, origin: _origin, className = "", onFrameLoad, onStatusChange, maxRetries = 2 }, ref) => {
     const [status, setStatus] = useState<FrameStatus>("probing");
     const [retryCount, setRetryCount] = useState(0);
     // Notify parent of status changes via effect so we never call a parent
