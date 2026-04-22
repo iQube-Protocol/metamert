@@ -472,7 +472,7 @@ function CartridgePill({
 // ---------------------------------------------------------------------------
 
 function BrowserSelector() {
-  const { setSubmenuType, pauseIdleTimer, activeMode, activateMode } = useShell();
+  const { setSubmenuType, pauseIdleTimer, resumeIdleTimer, activeMode, activateMode } = useShell();
   const browser = useBrowserOptional();
   const accent = activeMode ? MODE_CONFIGS[activeMode].accentHex : "#4F8C98";
 
@@ -495,6 +495,7 @@ function BrowserSelector() {
       className="glass-float shadow-mm-low animate-in fade-in slide-in-from-bottom-2 p-2"
       style={{ animationDuration: '350ms', borderRadius: 'var(--mm-radius-sm)' }}
       onPointerEnter={pauseIdleTimer}
+      onPointerLeave={resumeIdleTimer}
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
         <Globe className="h-3 w-3" style={{ color: 'var(--mm-ink-muted)' }} />
