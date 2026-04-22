@@ -937,7 +937,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     // Smart Menu actions
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-    launchCartridge, selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
     pulseInference,
   }), [
     config, loading, authenticated, shellState,
@@ -949,7 +949,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     toggleQuickLinks, hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-    launchCartridge, selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
     pulseInference,
   ]);
 
