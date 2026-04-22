@@ -416,7 +416,10 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     const cart = cartridgeState.available.find(c => c.id === cartridgeId);
     const codexId = cart?.default_codex_id;
 
-    if (iframeRef.current && config) {
+    // Build the dispatch closure once. It captures `cartridgeId`/`codexId`
+    // and references the live iframeRef/config at call time.
+    const dispatch = () => {
+      if (!iframeRef.current || !config) return;
       const origin = getIframeOrigin(config);
 
       // Canonical mount message — runtime opens the cartridge overlay
@@ -428,8 +431,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         payload: { cartridge_id: cartridgeId },
       }, origin);
 
-      // Seed an initialisation prompt so the cartridge opens with a
-      // meaningful first turn instead of an empty surface.
       const seedPrompts: Record<string, string> = {
         "metame-codex": "Open the metaMe cartridge and orient me.",
         "qripto-codex": "Open the Qriptopian cartridge and show me what's available.",
@@ -445,6 +446,16 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         cartridge_id: cartridgeId,
         codex_id: codexId,
       }, origin);
+    };
+
+    // Route through the same reliable queue as drawer opens.
+    // Only flush against true RUNTIME_READY; otherwise enqueue + show toast.
+    if (iframeRef.current && config && iframeReadiness === "ready") {
+      dispatch();
+    } else {
+      pendingRuntimeQueueRef.current.push({ command: dispatch, label: `${cart?.label ?? cartridgeId} cartridge` });
+      setPendingRuntimeCommandCount(pendingRuntimeQueueRef.current.length);
+      toast.info(`${cart?.label ?? cartridgeId} cartridge will launch as soon as the runtime is ready…`, { duration: 2500 });
     }
 
     // Restore local cartridge state so the active checkmark moves, the codex
