@@ -526,32 +526,67 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [config, startIdleTimer]);
 
-  const flushPendingRuntimeCommands = useCallback(() => {
-    if (!iframeRef.current || !config || iframeReadiness !== "ready") return;
-    const queue = pendingRuntimeQueueRef.current;
+  /**
+   * Replay all pending runtime commands once on a true RUNTIME_READY handshake.
+   * Drains the replay queue (clears pending count and replay entries) so each
+   * command fires at most twice total: once optimistically and once on replay.
+   */
+  const replayPendingRuntimeCommands = useCallback(() => {
+    if (!iframeRef.current || !config) return;
+    const queue = runtimeReplayQueueRef.current;
     if (queue.length === 0) return;
-    pendingRuntimeQueueRef.current = [];
+    runtimeReplayQueueRef.current = [];
     setPendingRuntimeCommandCount(0);
-    // FIFO drain
     for (const entry of queue) {
-      try { entry.command(); } catch (err) { console.warn("[Shell] queued runtime command failed:", err); }
+      try {
+        console.log("[Shell] replay runtime command on RUNTIME_READY:", entry.label ?? "(unlabeled)");
+        entry.command();
+      } catch (err) {
+        console.warn("[Shell] replay runtime command failed:", err);
+      }
+    }
+  }, [config]);
+
+  /**
+   * Stage a runtime-bound command using the 2-phase model:
+   *   Phase A — if the iframe element is loaded (loaded-unconfirmed or ready),
+   *             dispatch immediately so the user does not wait on handshake.
+   *   Phase B — if not yet ready, also enroll the command in the replay queue
+   *             so it re-fires once on the first true RUNTIME_READY.
+   *
+   * If the iframe is still probing/loading/error, the command is queued
+   * for replay only (it will dispatch on first RUNTIME_READY).
+   */
+  const stageRuntimeCommand = useCallback((command: () => void, label?: string) => {
+    const hasFrame = !!iframeRef.current && !!config;
+    const canSendNow =
+      hasFrame && (iframeReadiness === "ready" || iframeReadiness === "loaded-unconfirmed");
+
+    // Phase A: optimistic immediate dispatch
+    if (canSendNow) {
+      try { command(); } catch (err) { console.warn("[Shell] optimistic runtime command failed:", err); }
+    }
+
+    // If runtime is already truly ready, no replay is needed.
+    if (iframeReadiness === "ready") return;
+
+    // Phase B: enroll for replay on next RUNTIME_READY
+    const id = ++replaySeqRef.current;
+    runtimeReplayQueueRef.current.push({ command, label, id });
+    setPendingRuntimeCommandCount(runtimeReplayQueueRef.current.length);
+
+    if (label && !canSendNow) {
+      // Only show "will open as soon as runtime is ready" when we couldn't
+      // even attempt an optimistic send. Otherwise the badge already shows
+      // "Waiting for runtime handshake…".
+      toast.info(`${label} will open as soon as the runtime is ready…`, { duration: 2500 });
     }
   }, [config, iframeReadiness]);
 
-  const queueOrRunRuntimeCommand = useCallback((command: () => void, label?: string) => {
-    // Only flush against TRUE handshake state. "loaded-unconfirmed" must NOT
-    // promote queued commands.
-    if (iframeRef.current && config && iframeReadiness === "ready") {
-      command();
-      return true;
-    }
-    pendingRuntimeQueueRef.current.push({ command, label });
-    setPendingRuntimeCommandCount(pendingRuntimeQueueRef.current.length);
-    if (label) {
-      toast.info(`${label} will open as soon as the runtime is ready…`, { duration: 2500 });
-    }
-    return false;
-  }, [config, iframeReadiness]);
+  // Keep ref in sync so launchCartridge (declared earlier) can call us.
+  useEffect(() => {
+    stageRuntimeCommandRef.current = stageRuntimeCommand;
+  }, [stageRuntimeCommand]);
 
   /**
    * Select a persona pill.
@@ -579,13 +614,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     clearIdleTimer();
     setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
 
-    queueOrRunRuntimeCommand(() => {
+    stageRuntimeCommand(() => {
       if (!iframeRef.current || !config) return;
       const origin = getIframeOrigin(config);
       console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
       postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
     }, `${persona.label} iQube`);
-  }, [config, clearIdleTimer, personaState.available, queueOrRunRuntimeCommand]);
+  }, [config, clearIdleTimer, personaState.available, stageRuntimeCommand]);
 
   /**
    * Open the Persona iQube drawer in the runtime directly (without changing
@@ -593,25 +628,24 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
    * a persona-specific acknowledgment.
    */
   const openPersonaIQube = useCallback((iqubeType: "knyt" | "qripto") => {
-    queueOrRunRuntimeCommand(() => {
+    stageRuntimeCommand(() => {
       if (!iframeRef.current || !config) return;
       console.log("[Shell] openPersonaIQube →", iqubeType);
       postPersonaIQubeOpen(iframeRef.current, getIframeOrigin(config), iqubeType);
     }, `${iqubeType === "knyt" ? "KNYT" : "Qripto"} iQube`);
-  }, [config, queueOrRunRuntimeCommand]);
+  }, [config, stageRuntimeCommand]);
 
   /**
    * Open the Identity iQube drawer in the runtime. Single drawer — no
-   * iqube_type variants. Mirrors the persona open dispatch (triple-send for
-   * cross-build compatibility) without sending SELECTOR_CHANGE.
+   * iqube_type variants.
    */
   const openIdentityIQube = useCallback(() => {
-    queueOrRunRuntimeCommand(() => {
+    stageRuntimeCommand(() => {
       if (!iframeRef.current || !config) return;
       console.log("[Shell] openIdentityIQube");
       postIdentityIQubeOpen(iframeRef.current, getIframeOrigin(config));
     }, "Identity iQube");
-  }, [config, queueOrRunRuntimeCommand]);
+  }, [config, stageRuntimeCommand]);
 
   const setInteractionState = useCallback((state: InteractionState) => {
     setInteractionStateRaw(state);
@@ -620,7 +654,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [resetIdleTimer]);
 
-  // Flush queued runtime commands as soon as we have a true RUNTIME_READY handshake.
+  // Replay queued runtime commands as soon as we have a true RUNTIME_READY handshake.
   useEffect(() => {
     if (iframeReadiness === "ready") {
       flushPendingRuntimeCommands();
