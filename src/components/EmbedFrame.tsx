@@ -21,15 +21,14 @@ export type { FrameStatus };
 
 const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
   ({ url, origin, className = "", onFrameLoad, onReady, onStatusChange, maxRetries = 2 }, ref) => {
-    const [status, setStatusRaw] = useState<FrameStatus>("probing");
+    const [status, setStatus] = useState<FrameStatus>("probing");
     const [retryCount, setRetryCount] = useState(0);
-    const setStatus = (s: FrameStatus | ((prev: FrameStatus) => FrameStatus)) => {
-      setStatusRaw(prev => {
-        const next = typeof s === "function" ? s(prev) : s;
-        if (next !== prev) onStatusChange?.(next);
-        return next;
-      });
-    };
+    // Notify parent of status changes via effect so we never call a parent
+    // setState during a child render (avoids "Cannot update a component while
+    // rendering a different component" warnings).
+    useEffect(() => {
+      onStatusChange?.(status);
+    }, [status, onStatusChange]);
     const [src, setSrc] = useState<string>("");
 
     // Probe then load — with retry support
