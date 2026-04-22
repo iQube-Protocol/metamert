@@ -9369,7 +9369,7 @@ export type Database = {
           "Tokens-of-Interest": string[] | null
           "Twitter-Handle": string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           "Wallets-of-Interest": string[] | null
           "Web3-Interests": string[] | null
           "YouTube-ID": string | null
@@ -9401,7 +9401,7 @@ export type Database = {
           "Tokens-of-Interest"?: string[] | null
           "Twitter-Handle"?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           "Wallets-of-Interest"?: string[] | null
           "Web3-Interests"?: string[] | null
           "YouTube-ID"?: string | null
@@ -9433,7 +9433,7 @@ export type Database = {
           "Tokens-of-Interest"?: string[] | null
           "Twitter-Handle"?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           "Wallets-of-Interest"?: string[] | null
           "Web3-Interests"?: string[] | null
           "YouTube-ID"?: string | null
