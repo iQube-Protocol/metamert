@@ -145,8 +145,19 @@ export default function RuntimeHeader() {
   // Cartridge overlay chip accent — tinted with the active cartridge's accentHex
   // so the floppy disk indicator matches the quick-actions cartridge color
   // (KNYT amber, Qriptopian cyan, metaMe coral).
+  // Tolerant slug match: runtime may emit 'metame' / 'knyt' / 'qripto' (bare)
+  // while our canonical cartridge IDs are '-codex' suffixed (e.g. 'metame-codex').
+  // Compare both forms so the floppy chip always picks up the cartridge accent.
   const overlayCart = cartridgeOverlay
-    ? cartridgeState.available.find(c => c.id === cartridgeOverlay.slug)
+    ? cartridgeState.available.find(c => {
+        const slug = cartridgeOverlay.slug;
+        const cid = c.id;
+        return (
+          cid === slug ||
+          cid === `${slug}-codex` ||
+          cid.replace(/-codex$/, "") === slug.replace(/-codex$/, "")
+        );
+      })
     : null;
   const overlayAccent = overlayCart?.accentHex ?? 'var(--mm-ink-secondary)';
 
