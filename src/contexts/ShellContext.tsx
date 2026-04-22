@@ -609,12 +609,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [resetIdleTimer]);
 
-  // Listen for iframe inference lifecycle signals
+  // Flush queued runtime commands as soon as we have a true RUNTIME_READY handshake.
   useEffect(() => {
     if (iframeReadiness === "ready") {
-      flushPendingRuntimeCommand();
+      flushPendingRuntimeCommands();
     }
-  }, [iframeReadiness, flushPendingRuntimeCommand]);
+  }, [iframeReadiness, flushPendingRuntimeCommands]);
 
   useEffect(() => {
     if (!config) return;
@@ -628,7 +628,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
       if (t === "RUNTIME_READY") {
         setIframeReadiness("ready");
-        flushPendingRuntimeCommand();
+        flushPendingRuntimeCommands();
         return;
       }
 
