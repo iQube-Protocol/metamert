@@ -352,6 +352,7 @@ function CartridgeSelector() {
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
         <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--mm-ink-muted)' }}>Cartridge</span>
+        <PendingRuntimeBadge />
         <button
           onClick={() => setSubmenuType("quickActions")}
           className="ml-auto text-[10px] transition-colors"
@@ -452,6 +453,7 @@ function PersonaSelector() {
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
         <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--mm-ink-muted)' }}>Persona</span>
+        <PendingRuntimeBadge />
         <button
           onClick={() => setSubmenuType("quickActions")}
           className="ml-auto text-[10px] transition-colors"
