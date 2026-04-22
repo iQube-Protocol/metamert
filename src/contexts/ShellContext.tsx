@@ -495,14 +495,22 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setSubmenuTypeState("quickActions");
     startIdleTimer();
 
-    // Notify iframe to load the persona's iQube
     if (iframeRef.current && config) {
+      const origin = getIframeOrigin(config);
+      // Notify iframe to load the persona's iQube
       postToIframe(iframeRef.current, {
         type: "SELECTOR_CHANGE",
         selector_type: "persona" as any,
         id: personaId,
         iqube_id: persona.iqubeId,
-      }, getIframeOrigin(config));
+      }, origin);
+      // Also open the persona's iQube drawer.
+      // Mapping: knyt-persona → "knyt"; everything else → "qripto".
+      const iqubeType: "knyt" | "qripto" = personaId === "knyt-persona" ? "knyt" : "qripto";
+      postToIframe(iframeRef.current, {
+        type: "OPEN_PERSONA_IQUBE",
+        payload: { iqube_type: iqubeType },
+      }, origin);
     }
   }, [config, startIdleTimer, personaState.available]);
 
