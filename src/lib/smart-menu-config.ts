@@ -210,8 +210,8 @@ const PLAY_ACTIONS: QuickActionDef[] = [
 ];
 
 const BE_ACTIONS: QuickActionDef[] = [
-  { id: "settings",    label: "Settings",    icon: "settings",    kind: "system-only", triggersInference: false },
   { id: "persona",     label: "Persona",     icon: "user",        kind: "system-only", triggersInference: false },
+  { id: "settings",    label: "Settings",    icon: "settings",    kind: "system-only", triggersInference: false },
   { id: "memory",      label: "Memory",      icon: "sparkles",    kind: "llm+menu",    triggersInference: true, prompt: "Show my memory and context history" },
   { id: "identity",    label: "Identity",    icon: "fingerprint", kind: "llm+menu",    triggersInference: true, prompt: "Show my identity and credentials" },
   { id: "connections", label: "Connections", icon: "network",     kind: "llm+menu",    triggersInference: true, prompt: "Show my connections and network" },
