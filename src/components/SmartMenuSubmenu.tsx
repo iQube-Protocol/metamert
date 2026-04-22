@@ -9,7 +9,7 @@ import { useBrowserOptional } from "@/contexts/BrowserContext";
 import { MODE_CONFIGS, type QuickActionDef, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
 import { SMART_MENU_ICON_DEFAULTS } from "@/lib/smart-menu-icons";
-import { Check, Globe, ArrowRight } from "lucide-react";
+import { Check, Globe, ArrowRight, Loader2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /** Resolve icon from smart menu defaults or lucide fallback */
@@ -23,6 +23,31 @@ function resolveSmartIcon(iconName?: string, id?: string): LucideIcon | undefine
 interface SmartMenuSubmenuProps {
   /** When set, renders quick actions for this mode as a hover preview (no cartridge/codex selectors) */
   previewMode?: SmartMenuMode;
+}
+
+/**
+ * Inline feedback badge — visible whenever a runtime-bound command (drawer
+ * open or cartridge launch) is queued waiting for the runtime handshake.
+ * Replaces the previous "click does nothing" silent wait.
+ */
+function PendingRuntimeBadge() {
+  const { pendingRuntimeCommandCount, iframeReadiness } = useShell();
+  if (pendingRuntimeCommandCount <= 0) return null;
+  const label =
+    iframeReadiness === "ready"
+      ? "Dispatching…"
+      : iframeReadiness === "loaded-unconfirmed"
+        ? "Waiting for runtime handshake…"
+        : "Connecting runtime…";
+  return (
+    <div
+      className="flex items-center gap-1.5 px-2 py-1 text-[10px] animate-in fade-in"
+      style={{ color: 'var(--mm-ink-muted)' }}
+    >
+      <Loader2 className="h-3 w-3 animate-spin" />
+      <span className="whitespace-nowrap">{label}</span>
+    </div>
+  );
 }
 
 export default function SmartMenuSubmenu({ previewMode }: SmartMenuSubmenuProps = {}) {
@@ -210,6 +235,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       style={{ animationDuration: '350ms', borderRadius: 'var(--mm-radius-sm)' }}
       onPointerEnter={pauseIdleTimer}
     >
+      <PendingRuntimeBadge />
       <div
         ref={scrollRef}
         className="flex items-center overflow-x-auto px-0 py-1.5 scrollbar-hide"
@@ -326,6 +352,7 @@ function CartridgeSelector() {
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
         <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--mm-ink-muted)' }}>Cartridge</span>
+        <PendingRuntimeBadge />
         <button
           onClick={() => setSubmenuType("quickActions")}
           className="ml-auto text-[10px] transition-colors"
@@ -426,6 +453,7 @@ function PersonaSelector() {
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
         <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--mm-ink-muted)' }}>Persona</span>
+        <PendingRuntimeBadge />
         <button
           onClick={() => setSubmenuType("quickActions")}
           className="ml-auto text-[10px] transition-colors"

@@ -16,20 +16,19 @@ interface EmbedFrameProps {
   maxRetries?: number;
 }
 
-type FrameStatus = "probing" | "loading" | "ready" | "error" | "blocked";
+type FrameStatus = "probing" | "loading" | "loaded-unconfirmed" | "ready" | "error" | "blocked";
 export type { FrameStatus };
 
 const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
   ({ url, origin, className = "", onFrameLoad, onReady, onStatusChange, maxRetries = 2 }, ref) => {
-    const [status, setStatusRaw] = useState<FrameStatus>("probing");
+    const [status, setStatus] = useState<FrameStatus>("probing");
     const [retryCount, setRetryCount] = useState(0);
-    const setStatus = (s: FrameStatus | ((prev: FrameStatus) => FrameStatus)) => {
-      setStatusRaw(prev => {
-        const next = typeof s === "function" ? s(prev) : s;
-        if (next !== prev) onStatusChange?.(next);
-        return next;
-      });
-    };
+    // Notify parent of status changes via effect so we never call a parent
+    // setState during a child render (avoids "Cannot update a component while
+    // rendering a different component" warnings).
+    useEffect(() => {
+      onStatusChange?.(status);
+    }, [status, onStatusChange]);
     const [src, setSrc] = useState<string>("");
 
     // Probe then load — with retry support
@@ -96,9 +95,12 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
       // send bootstrap messages such as SHELL_READY and HANDOFF.
       onFrameLoad?.();
 
-      // If we haven't received RUNTIME_READY within 5s, mark as loaded but not handshaked
+      // If we haven't received RUNTIME_READY within 5s, mark as "loaded-unconfirmed".
+      // This is a UX/visual signal ONLY — runtime-bound commands (drawer opens,
+      // cartridge launches) MUST NOT be flushed against this state. They flush
+      // only on a true RUNTIME_READY handshake.
       setTimeout(() => {
-        setStatus((s) => (s === "loading" ? "ready" : s));
+        setStatus((s) => (s === "loading" ? "loaded-unconfirmed" : s));
       }, 5000);
     };
 

@@ -64,7 +64,9 @@ const INITIAL_HINTS: RuntimeHints = {
 };
 
 // Iframe readiness state (LOV-303)
-export type IframeReadiness = "probing" | "loading" | "ready" | "error" | "blocked";
+// "loaded-unconfirmed" = iframe element loaded but RUNTIME_READY handshake not yet received.
+// Runtime-bound commands MUST NOT flush against this state — only on "ready".
+export type IframeReadiness = "probing" | "loading" | "loaded-unconfirmed" | "ready" | "error" | "blocked";
 
 interface ShellContextValue {
   config: ShellConfig | null;
@@ -82,6 +84,9 @@ interface ShellContextValue {
 
   // Iframe readiness (LOV-303)
   iframeReadiness: IframeReadiness;
+
+  /** Number of runtime-bound commands waiting for RUNTIME_READY. >0 means UI should show "Connecting…" feedback. */
+  pendingRuntimeCommandCount: number;
 
   // LOV-401: KNYT onboarding active flag
   knytOnboarding: boolean;
@@ -211,7 +216,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
-  const pendingRuntimeCommandRef = useRef<(() => void) | null>(null);
+  // FIFO queue of runtime-bound commands waiting for RUNTIME_READY.
+  // Replaces the previous single-slot ref so rapid clicks (Persona, Identity,
+  // Cartridge) before handshake are NOT lost or overwritten.
+  const pendingRuntimeQueueRef = useRef<Array<{ command: () => void; label?: string }>>([]);
+  const [pendingRuntimeCommandCount, setPendingRuntimeCommandCount] = useState(0);
 
   // Smart Menu state
   const [viewState, setViewState] = useState<ViewState>("defaultNav");
@@ -407,7 +416,10 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     const cart = cartridgeState.available.find(c => c.id === cartridgeId);
     const codexId = cart?.default_codex_id;
 
-    if (iframeRef.current && config) {
+    // Build the dispatch closure once. It captures `cartridgeId`/`codexId`
+    // and references the live iframeRef/config at call time.
+    const dispatch = () => {
+      if (!iframeRef.current || !config) return;
       const origin = getIframeOrigin(config);
 
       // Canonical mount message — runtime opens the cartridge overlay
@@ -419,8 +431,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         payload: { cartridge_id: cartridgeId },
       }, origin);
 
-      // Seed an initialisation prompt so the cartridge opens with a
-      // meaningful first turn instead of an empty surface.
       const seedPrompts: Record<string, string> = {
         "metame-codex": "Open the metaMe cartridge and orient me.",
         "qripto-codex": "Open the Qriptopian cartridge and show me what's available.",
@@ -436,6 +446,16 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         cartridge_id: cartridgeId,
         codex_id: codexId,
       }, origin);
+    };
+
+    // Route through the same reliable queue as drawer opens.
+    // Only flush against true RUNTIME_READY; otherwise enqueue + show toast.
+    if (iframeRef.current && config && iframeReadiness === "ready") {
+      dispatch();
+    } else {
+      pendingRuntimeQueueRef.current.push({ command: dispatch, label: `${cart?.label ?? cartridgeId} cartridge` });
+      setPendingRuntimeCommandCount(pendingRuntimeQueueRef.current.length);
+      toast.info(`${cart?.label ?? cartridgeId} cartridge will launch as soon as the runtime is ready…`, { duration: 2500 });
     }
 
     // Restore local cartridge state so the active checkmark moves, the codex
@@ -461,7 +481,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     // Return to quick actions after selecting
     setSubmenuTypeState("quickActions");
     startIdleTimer();
-  }, [config, cartridgeState.available, startIdleTimer]);
+  }, [config, cartridgeState.available, startIdleTimer, iframeReadiness]);
 
   /**
    * Legacy `selectCartridge` — kept for backward compat (e.g. cartridge selector
@@ -506,25 +526,31 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [config, startIdleTimer]);
 
-  const flushPendingRuntimeCommand = useCallback(() => {
-    const pending = pendingRuntimeCommandRef.current;
-    if (!pending || !iframeRef.current || !config || iframeReadiness !== "ready") return;
-    pendingRuntimeCommandRef.current = null;
-    pending();
+  const flushPendingRuntimeCommands = useCallback(() => {
+    if (!iframeRef.current || !config || iframeReadiness !== "ready") return;
+    const queue = pendingRuntimeQueueRef.current;
+    if (queue.length === 0) return;
+    pendingRuntimeQueueRef.current = [];
+    setPendingRuntimeCommandCount(0);
+    // FIFO drain
+    for (const entry of queue) {
+      try { entry.command(); } catch (err) { console.warn("[Shell] queued runtime command failed:", err); }
+    }
   }, [config, iframeReadiness]);
 
   const queueOrRunRuntimeCommand = useCallback((command: () => void, label?: string) => {
-    if (!iframeRef.current || !config || iframeReadiness !== "ready") {
-      pendingRuntimeCommandRef.current = command;
-      // Visible feedback when the runtime isn't ready yet — quicklink isn't
-      // lost, it will fire as soon as RUNTIME_READY arrives.
-      if (label) {
-        toast.info(`${label} will open as soon as the runtime is ready…`, { duration: 2500 });
-      }
-      return false;
+    // Only flush against TRUE handshake state. "loaded-unconfirmed" must NOT
+    // promote queued commands.
+    if (iframeRef.current && config && iframeReadiness === "ready") {
+      command();
+      return true;
     }
-    command();
-    return true;
+    pendingRuntimeQueueRef.current.push({ command, label });
+    setPendingRuntimeCommandCount(pendingRuntimeQueueRef.current.length);
+    if (label) {
+      toast.info(`${label} will open as soon as the runtime is ready…`, { duration: 2500 });
+    }
+    return false;
   }, [config, iframeReadiness]);
 
   /**
@@ -594,12 +620,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [resetIdleTimer]);
 
-  // Listen for iframe inference lifecycle signals
+  // Flush queued runtime commands as soon as we have a true RUNTIME_READY handshake.
   useEffect(() => {
     if (iframeReadiness === "ready") {
-      flushPendingRuntimeCommand();
+      flushPendingRuntimeCommands();
     }
-  }, [iframeReadiness, flushPendingRuntimeCommand]);
+  }, [iframeReadiness, flushPendingRuntimeCommands]);
 
   useEffect(() => {
     if (!config) return;
@@ -613,7 +639,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
       if (t === "RUNTIME_READY") {
         setIframeReadiness("ready");
-        flushPendingRuntimeCommand();
+        flushPendingRuntimeCommands();
         return;
       }
 
@@ -1004,7 +1030,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const ctxValue: ShellContextValue = useMemo(() => ({
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
-    runtimeHints, iframeReadiness, knytOnboarding,
+    runtimeHints, iframeReadiness, pendingRuntimeCommandCount, knytOnboarding,
     cartridgeOverlay, closeCartridgeOverlay,
     // Smart Menu state
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
@@ -1021,7 +1047,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }), [
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
-    runtimeHints, iframeReadiness, knytOnboarding,
+    runtimeHints, iframeReadiness, pendingRuntimeCommandCount, knytOnboarding,
     cartridgeOverlay, closeCartridgeOverlay,
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
     runtimeContext, setRuntimeContext,
