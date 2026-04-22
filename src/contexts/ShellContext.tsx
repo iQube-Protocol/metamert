@@ -216,11 +216,19 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
-  // FIFO queue of runtime-bound commands waiting for RUNTIME_READY.
-  // Replaces the previous single-slot ref so rapid clicks (Persona, Identity,
-  // Cartridge) before handshake are NOT lost or overwritten.
-  const pendingRuntimeQueueRef = useRef<Array<{ command: () => void; label?: string }>>([]);
+  // Replay queue for runtime-bound commands. Unlike a strict-wait queue,
+  // commands are also DISPATCHED OPTIMISTICALLY (Phase A) as soon as the
+  // iframe element is loaded. They additionally stay in this replay set so
+  // they re-fire ONCE on the first true RUNTIME_READY (Phase B), guaranteeing
+  // delivery even if the optimistic send arrived before the runtime's
+  // message client mounted.
+  const runtimeReplayQueueRef = useRef<Array<{ command: () => void; label?: string; id: number }>>([]);
+  const replaySeqRef = useRef(0);
   const [pendingRuntimeCommandCount, setPendingRuntimeCommandCount] = useState(0);
+  // Forward refs so launchCartridge (defined early) can reach helpers
+  // defined later in the provider body.
+  const stageRuntimeCommandRef = useRef<((command: () => void, label?: string) => void) | null>(null);
+  const submitPromptRef = useRef<((text: string) => Promise<void> | void) | null>(null);
 
   // Smart Menu state
   const [viewState, setViewState] = useState<ViewState>("defaultNav");
