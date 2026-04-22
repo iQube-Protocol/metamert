@@ -80,6 +80,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     resetIdleTimer,
     runtimeContext,
     setRuntimeContext,
+    openPersonaIQube,
     pulseInference,
   } = useShell();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -107,7 +108,11 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     if (action.id === "persona") {
-      setSubmenuType("personaSelector");
+      // Open the Persona iQube drawer in the runtime — knyt when the runtime
+      // is in KNYT context, qripto otherwise (metaMe maps to Qripto persona).
+      const iqubeType = runtimeContext === "knyt" ? "knyt" : "qripto";
+      openPersonaIQube(iqubeType);
+      resetIdleTimer("quickAction");
       return;
     }
 
@@ -140,7 +145,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     handleMenuAction(action.id);
-  }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, runtimeContext, setRuntimeContext, resetIdleTimer, sendIframeAction, pulseInference]);
+  }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, runtimeContext, setRuntimeContext, openPersonaIQube, resetIdleTimer, sendIframeAction, pulseInference]);
 
   const foldIds = modeConfig?.mobileVisibleFold ?? [];
   const firstFoldIndex = modeConfig

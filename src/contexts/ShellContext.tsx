@@ -123,6 +123,8 @@ interface ShellContextValue {
   selectCartridge: (cartridgeId: string) => void;
   selectCodex: (codexId: string) => void;
   selectPersona: (personaId: string) => void;
+  /** Open the Persona iQube drawer in the runtime (knyt or qripto). */
+  openPersonaIQube: (iqubeType: "knyt" | "qripto") => void;
   resetIdleTimer: (reason?: string) => void;
   pauseIdleTimer: () => void;
   resumeIdleTimer: () => void;
@@ -503,6 +505,20 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       }, getIframeOrigin(config));
     }
   }, [config, startIdleTimer, personaState.available]);
+
+  /**
+   * Open the Persona iQube drawer in the runtime.
+   * Sends OPEN_PERSONA_IQUBE — the runtime's MetaMeRuntimeClient relays a
+   * window CustomEvent('open-persona-iqube') to its Sidebar which mounts
+   * PersonaIQubeDrawer for the requested persona type.
+   */
+  const openPersonaIQube = useCallback((iqubeType: "knyt" | "qripto") => {
+    if (!iframeRef.current || !config) return;
+    postToIframe(iframeRef.current, {
+      type: "OPEN_PERSONA_IQUBE",
+      payload: { iqube_type: iqubeType },
+    }, getIframeOrigin(config));
+  }, [config]);
 
   const setInteractionState = useCallback((state: InteractionState) => {
     setInteractionStateRaw(state);
@@ -921,7 +937,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     // Smart Menu actions
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-    launchCartridge, selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
     pulseInference,
   }), [
     config, loading, authenticated, shellState,
@@ -933,7 +949,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     toggleQuickLinks, hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-    launchCartridge, selectCartridge, selectCodex, selectPersona, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
     pulseInference,
   ]);
 

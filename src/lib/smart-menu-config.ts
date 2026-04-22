@@ -182,15 +182,11 @@ const PLAY_ACTIONS: QuickActionDef[] = [
 ];
 
 const BE_ACTIONS: QuickActionDef[] = [
-  { id: "settings",  label: "Settings",  icon: "settings",   kind: "system-only", triggersInference: false },
-  { id: "vault",     label: "Vault",     icon: "lock",       kind: "llm+menu",    triggersInference: true,  prompt: "Open my secure vault" },
-  { id: "persona",   label: "Persona",   icon: "user",       kind: "system-only", triggersInference: false },
-  { id: "memory",    label: "Memory",    icon: "sparkles",   kind: "llm+menu",    triggersInference: true,  prompt: "Show my memory and context history" },
-  { id: "policy",    label: "Policy",    icon: "shield",     kind: "llm+menu",    triggersInference: true,  prompt: "Review my current policies and settings" },
-  { id: "identity",  label: "Identity",  icon: "fingerprint", kind: "llm+menu",   triggersInference: true,  prompt: "Show my identity and credentials" },
-  { id: "presence",  label: "Presence",  icon: "radio",      kind: "llm+menu",    triggersInference: true,  prompt: "Show my presence and availability status" },
-  { id: "share",     label: "Share",     icon: "share-2",    kind: "llm+menu",    triggersInference: true },
-  { id: "reset",     label: "Reset",     icon: "rotate-ccw", kind: "system-only", triggersInference: false },
+  { id: "settings",    label: "Settings",    icon: "settings",    kind: "system-only", triggersInference: false },
+  { id: "persona",     label: "Persona",     icon: "user",        kind: "system-only", triggersInference: false },
+  { id: "memory",      label: "Memory",      icon: "sparkles",    kind: "llm+menu",    triggersInference: true, prompt: "Show my memory and context history" },
+  { id: "identity",    label: "Identity",    icon: "fingerprint", kind: "llm+menu",    triggersInference: true, prompt: "Show my identity and credentials" },
+  { id: "connections", label: "Connections", icon: "network",     kind: "llm+menu",    triggersInference: true, prompt: "Show my connections and network" },
 ];
 
 const EARN_ACTIONS: QuickActionDef[] = [
@@ -237,9 +233,9 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     label: "Be",
     accentColor: "210 70% 55%",
     accentHex: "#4DA3FF",
-    promptPlaceholder: "Set who you are being, your policy, memory, or identity context…",
-    defaultCenteredQuickActionId: "policy",
-    mobileVisibleFold: ["settings", "persona", "memory", "policy", "identity", "presence"],
+    promptPlaceholder: "Set who you are being, your memory, identity, or connections…",
+    defaultCenteredQuickActionId: "memory",
+    mobileVisibleFold: ["settings", "persona", "memory", "identity", "connections"],
     quickActions: BE_ACTIONS,
   },
   earn: {
