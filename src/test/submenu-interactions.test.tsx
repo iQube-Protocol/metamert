@@ -98,16 +98,24 @@ describe("SmartMenuSubmenu — Be quick actions routing", () => {
     expect(pulseInference).not.toHaveBeenCalled();
   });
 
-  it("Identity click opens the Identity iQube drawer exactly once and does NOT trigger inference", () => {
+  it("Identity click mirrors Wallet — handleMenuAction + sendIframeAction + submitPrompt, no openIdentityIQube special-case", () => {
     render(<SmartMenuSubmenu />);
     const btn = screen.getByTitle("Identity");
     fireEvent.pointerUp(btn);
 
-    expect(openIdentityIQube).toHaveBeenCalledTimes(1);
-    expect(handleMenuAction).not.toHaveBeenCalled();
-    expect(submitPrompt).not.toHaveBeenCalled();
+    // Wallet pattern: AA-API menu-action + iframe action nudge + prompt pipeline
+    expect(handleMenuAction).toHaveBeenCalledWith("identity");
+    expect(sendIframeAction).toHaveBeenCalledWith("open_identity_iqube");
+    expect(submitPrompt).toHaveBeenCalledTimes(1);
+    expect(submitPrompt).toHaveBeenCalledWith(
+      expect.stringMatching(/identity/i),
+    );
+
+    // Old special-case path must NOT fire
+    expect(openIdentityIQube).not.toHaveBeenCalled();
     expect(setSubmenuType).not.toHaveBeenCalled();
-    expect(pulseInference).not.toHaveBeenCalled();
+    // Pulse fires for inference-bearing quick actions (matches Wallet)
+    expect(pulseInference).toHaveBeenCalled();
   });
 
   it("Identity click only fires once even if pointerUp and click both bubble", () => {
@@ -115,11 +123,12 @@ describe("SmartMenuSubmenu — Be quick actions routing", () => {
     const btn = screen.getByTitle("Identity");
     fireEvent.pointerUp(btn);
     fireEvent.click(btn);
-    expect(openIdentityIQube).toHaveBeenCalledTimes(1);
+    expect(handleMenuAction).toHaveBeenCalledTimes(1);
+    expect(submitPrompt).toHaveBeenCalledTimes(1);
   });
 });
 
-describe("SmartMenuSubmenu — Persona pill routing", () => {
+describe("SmartMenuSubmenu — Persona pill routing (mirrors Cartridge)", () => {
   it("clicking the KNYT pill calls selectPersona('knyt-persona') exactly once", () => {
     __submenuType = "personaSelector";
     render(<SmartMenuSubmenu />);
