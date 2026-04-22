@@ -522,19 +522,20 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       console.warn("[Shell] selectPersona: no iqube_type mapping for", personaId);
       return;
     }
+
+    // Pause the idle timer BEFORE we dispatch so the floating panel cannot
+    // collapse mid-flight. The PersonaSelector's onPointerLeave handler will
+    // restart the timer once the pointer actually leaves the panel.
+    clearIdleTimer();
+
     setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
-    // Note: we do NOT revert submenu to "quickActions" here. The selector
-    // stays visible so the user has feedback that their click registered.
-    // We also do NOT start the idle timer — the panel persists while the
-    // pointer remains over it; the panel's onPointerLeave handler will
-    // restart the auto-fade when the pointer moves away.
 
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
       console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
       postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
     }
-  }, [config, startIdleTimer, personaState.available]);
+  }, [config, clearIdleTimer, personaState.available]);
 
   /**
    * Open the Persona iQube drawer in the runtime directly (without changing
