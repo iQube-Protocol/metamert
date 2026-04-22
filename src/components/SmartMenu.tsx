@@ -95,7 +95,8 @@ export default function SmartMenu() {
   }, []);
 
   const handleNavHoverLeave = useCallback(() => {
-    hoverTimeout.current = setTimeout(() => setHoverPreviewMode(null), 150);
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    hoverTimeout.current = setTimeout(() => setHoverPreviewMode(null), 400);
   }, []);
 
   const handlePointerEnter = useCallback(() => {
