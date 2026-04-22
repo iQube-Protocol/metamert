@@ -1,155 +1,190 @@
 
-# Stabilize SmartMenu activation zones and eliminate delayed/lost drawer launches
+Fix the runtime handshake and cartridge delivery path without changing the menu geometry again.
 
-## What is actually going wrong
+## Why it is slow now
 
-### 1) Play hover territory was over-reduced
-The current nav layout gives both center gaps a fixed `2.5rem` width while the Be/Share sides each take `flex-1`. That means the edge activation zones now own too much of the space between the center cluster and the edge buttons. This matches your complaint: the balance is no longer 50/50.
+The delay is not a real “load time” problem so much as a broken delivery pipeline:
 
-### 2) Persona / Identity / Cartridge actions are not reliably reaching the runtime
-The drawer and cartridge helpers themselves are already correct. The instability is in the delivery path:
+1. `EmbedFrame` and `ShellContext` both listen for `RUNTIME_READY`, but they do it differently.
+   - `EmbedFrame` only accepts `ev.data?.type === "RUNTIME_READY"`
+   - `ShellContext` uses `normalizeInbound()` and accepts enveloped/stringified messages
+   - result: readiness is inconsistent and can be missed by one layer
 
-- `ShellContext` only stores **one** pending runtime command (`pendingRuntimeCommandRef`)
-- commands are flushed when `iframeReadiness === "ready"`
-- `EmbedFrame` currently promotes the iframe to `"ready"` after a **5s fallback timeout even if `RUNTIME_READY` never arrived**
-- drawer/cartridge actions have **no acknowledgement or retry**
-- later clicks can overwrite earlier pending clicks before the runtime is truly ready
+2. `RuntimeFrame` never passes `onReady` to `EmbedFrame`.
+   - bootstrap is only sent on iframe `onLoad`
+   - if the runtime build expects or benefits from a post-`RUNTIME_READY` replay, it never gets it
 
-That combination can produce exactly the symptoms you described:
-- clicks appear to do nothing
-- actions fire very late
-- a command can be lost if it was flushed on the fallback-ready state before the runtime handlers were actually live
+3. Cartridge selection no longer follows the existing dual-dispatch pattern.
+   - it currently goes through `launchCartridge()`
+   - that sends a direct iframe `PROMPT_SUBMIT` plus `LAUNCH_CARTRIDGE`
+   - it does not use the authoritative `promptAction()` / shell prompt path that was previously generating the conversational response
+   - so both the prompt side and the cartridge layer side became fragile
 
-## Implementation plan
+4. Runtime-only actions are over-blocked behind the “true ready” queue.
+   - Persona / Identity / Cartridge overlay actions wait for `iframeReadiness === "ready"`
+   - when handshake signaling is delayed or missed, those actions sit in the queue far too long
 
-### A. Restore the nav activation balance to 50/50
-Update `src/components/SmartMenu.tsx` so the area between the center cluster and each edge item is split evenly:
+## What to change
 
-- replace the current over-constrained edge/gap ownership
-- make each side bridge explicitly divided into:
-  - an inner half for Play activation
-  - an outer half for Be or Share activation
-- keep the enlarged Be/Share rollover zones, but cap them so they do not steal more than half of the bridge area
-- preserve the existing hover-preview persistence and submenu travel grace
+### 1. Unify handshake ownership in one place
+Refactor the readiness flow so `RuntimeFrame` is the single source of truth for lifecycle events.
+
+- Remove the separate `RUNTIME_READY` listener logic from `EmbedFrame`
+- keep `EmbedFrame` focused on iframe element lifecycle only:
+  - `probing`
+  - `loading`
+  - `loaded-unconfirmed`
+  - `error`
+  - `blocked`
+- detect `RUNTIME_READY` only in the normalized message path used by `RuntimeFrame` / `ShellContext`
 
 Result:
-- Play regains half of each side bridge
-- Be/Share still have materially larger rollover zones
-- submenu hover behavior remains unchanged
+- no split-brain readiness state
+- no missed ready events because of envelope shape differences
 
-### B. Separate “iframe loaded” from “runtime actually ready”
-Harden the runtime lifecycle in `EmbedFrame`, `RuntimeFrame`, and `ShellContext`:
+### 2. Make bootstrap idempotent and replay it once on true runtime readiness
+Introduce a dedicated bootstrap helper in `RuntimeFrame`:
 
-- stop treating the 5s fallback as true runtime readiness
-- keep a distinct state for:
-  - iframe element loaded / bootstrap sent
-  - runtime handshake received (`RUNTIME_READY`)
-- only flush runtime-bound drawer/cartridge commands after the real handshake
-- if a fallback state is still needed for UX, use a non-command-flushing status like `loaded-unconfirmed` rather than `ready`
+- send `SHELL_READY`
+- send `HANDOFF`
+- send `SET_THEME`
+- send `DEVICE_CONTEXT_UPDATE`
 
-### C. Replace the single pending command with a real queue
-Refactor `ShellContext` so runtime-bound actions use a FIFO queue instead of one mutable ref:
+Call it:
+- once when the iframe element loads
+- once again on the first normalized `RUNTIME_READY`
 
-- queue persona drawer opens
-- queue identity drawer opens
-- queue cartridge launches
-- optionally queue direct iframe actions that must not be lost before handshake
+Use a guard so replay is controlled and intentional, not spammy.
 
-This prevents:
-- later clicks overwriting earlier ones
-- one slow startup silently dropping user intent
+Result:
+- compatibility with runtime builds that are ready to receive bootstrap only after their internal client mounts
+- no minute-long stall waiting on a one-shot bootstrap that arrived too early
 
-### D. Add delivery hardening for drawer and cartridge actions
-For runtime-only actions, add a guarded dispatch path:
+### 3. Split “iframe-loaded” delivery from “runtime-confirmed” replay
+Change queued runtime commands from “wait silently until ready” to a 2-phase model:
 
-- enqueue while runtime is not handshaked
-- flush in order on real `RUNTIME_READY`
-- re-send bootstrap context on `RUNTIME_READY` before flushing queued commands
-- keep origin handling centralized via `resolveIframeOrigin`
+- Phase A: if the iframe element is loaded (`loaded-unconfirmed`), send the command optimistically immediately
+- Phase B: keep a replay entry and resend once on first `RUNTIME_READY`
+- remove the command only when:
+  - a known ack arrives, or
+  - the replay has happened and no further retry is needed
 
-For cartridge launch specifically:
-- route launches through the same reliable queue instead of immediate fire-and-forget when the runtime is not truly ready
+Use this for:
+- `OPEN_PERSONA_IQUBE`
+- `OPEN_IDENTITY_IQUBE`
+- `LAUNCH_CARTRIDGE`
 
-### E. Give immediate inline feedback instead of silent waiting
-Add visible feedback in the submenu layer while commands are queued:
+Result:
+- commands do not sit idle for 60+ seconds
+- slow handshake no longer blocks first delivery attempt
+- runtime still gets a guaranteed replay after full readiness
 
-- show a lightweight “Opening…” / “Connecting runtime…” state on the tapped Persona, Identity, or Cartridge control
-- keep the active pill/button visually latched while waiting
-- clear the loading state once the queued command is dispatched
+### 4. Restore cartridge dual-dispatch exactly
+Refactor cartridge selection so it restores the original two-path behavior:
 
-This avoids the current “nothing happened” impression while the runtime finishes handshaking.
+```text
+select cartridge
+  -> update local cartridge/codex state
+  -> immediately send prompt path through shell prompt/API flow
+  -> send cartridge overlay open to iframe
+  -> replay overlay open on true RUNTIME_READY if needed
+```
 
-### F. Keep the existing drawer contract intact
-Do not change the known-good contracts:
+Concretely:
+- stop using direct iframe `PROMPT_SUBMIT` as the primary cartridge prompt path
+- reuse the shell’s existing prompt pipeline (`submitPrompt` / `promptAction`) so cartridge selection again produces the runtime response/content selection behavior
+- keep `LAUNCH_CARTRIDGE` as a separate overlay action
+- preserve the required nested payload contract:
+  - `{ type: "LAUNCH_CARTRIDGE", payload: { cartridge_id } }`
 
-- persona pill click still sends **only** `OPEN_PERSONA_IQUBE`
-- identity still uses `OPEN_IDENTITY_IQUBE`
-- no `SELECTOR_CHANGE` is reintroduced into persona drawer opening
-- no business logic is moved into the shell
+Result:
+- cartridge selection again does both things:
+  1. generates the conversational/content response
+  2. opens the cartridge layer
+
+### 5. Keep Persona and Identity fast without reintroducing old races
+Preserve the current “no `SELECTOR_CHANGE` on persona click” rule, but change delivery behavior:
+
+- persona pill click still sends only `OPEN_PERSONA_IQUBE`
+- identity still sends only `OPEN_IDENTITY_IQUBE`
+- both dispatch immediately once the iframe element exists
+- both replay once on `RUNTIME_READY`
+
+This keeps the known-good drawer contract while removing the long wait.
+
+### 6. Tighten the feedback UI without touching nav behavior
+Do not alter SmartMenu hover geometry in this pass.
+
+Only update the feedback copy/state so it reflects the new lifecycle accurately:
+- “Connecting runtime…” = iframe not yet loaded
+- “Launching…” / “Opening…” = command sent, awaiting replay/confirmation
+- clear feedback as soon as command is delivered/replayed
+
+### 7. Clean the submenu ref warning
+Fix the `Function components cannot be given refs` warnings in `SmartMenuSubmenu.tsx`.
+
+That warning is not the root cause of the handshake delay, but it is noisy and can mask real lifecycle issues during debugging. Clean it in the same pass so the preview signal is trustworthy again.
 
 ## Files to update
 
-- `src/components/SmartMenu.tsx`
-  - rebalance bridge activation geometry
-  - preserve submenu persistence behavior
-
 - `src/components/EmbedFrame.tsx`
-  - stop equating timeout fallback with true runtime readiness
-  - expose a distinct non-handshake loaded state if needed
+  - remove direct `RUNTIME_READY` ownership
+  - keep only iframe element status reporting
+  - keep `loaded-unconfirmed` as visual state only
 
 - `src/components/RuntimeFrame.tsx`
-  - align bootstrap timing with the hardened readiness model
-  - re-send bootstrap on real handshake if needed before queue flush
+  - centralize normalized runtime readiness handling
+  - add idempotent bootstrap helper
+  - replay bootstrap once on first `RUNTIME_READY`
 
 - `src/contexts/ShellContext.tsx`
-  - replace single pending command ref with ordered queue
-  - flush only on true `RUNTIME_READY`
-  - route persona / identity / cartridge actions through the same reliable dispatcher
-  - add queued/loading UI state exposure
+  - replace strict ready-only queue behavior with staged send + replay
+  - separate replay tracking for runtime-only actions
+  - restore cartridge dual-dispatch using shell prompt flow plus overlay launch
+  - keep persona/identity contract unchanged
 
 - `src/components/SmartMenuSubmenu.tsx`
-  - show inline loading feedback for queued runtime actions
+  - keep feedback badge but align it with staged send/replay states
+  - fix ref-warning source
+
+- `src/test/persona-flow.test.ts`
+  - keep current contract locked
+
+- `src/test/submenu-interactions.test.tsx`
+  - add regression coverage for cartridge selection restoring both prompt + overlay behavior
+
+- `src/test/shell-state.test.ts`
+  - add normalized `RUNTIME_READY` envelope/string cases
+  - add staged-send/replay queue coverage
 
 ## Verification
 
-### Interaction checks
-- hovering halfway between Be and the center cluster should trigger Be only on the outer half
-- hovering the inner half of that bridge should trigger Play
-- same behavior on the Share side
-- submenu must still persist long enough to travel from nav item to floating submenu
+### Handshake
+- iframe load should trigger immediate bootstrap
+- first normalized `RUNTIME_READY` should trigger one controlled bootstrap replay
+- queued commands should no longer wait a minute before first delivery attempt
 
-### Reliability checks
-- click Identity before the runtime handshake finishes → it should show loading, then open as soon as handshake completes
-- click Persona, then a persona pill before handshake finishes → it should queue and open deterministically after handshake
-- click Cartridge before handshake finishes → it should queue and launch once runtime is ready
-- repeated rapid clicks should not overwrite each other unpredictably
+### Persona / Identity
+- click Identity before full handshake:
+  - immediate feedback
+  - first send on iframe load
+  - replay on `RUNTIME_READY`
+- click Persona pill before full handshake:
+  - same behavior
+- no `SELECTOR_CHANGE` should be sent for persona drawer open
 
-### Regression tests to add/update
-- SmartMenu zone behavior tests for balanced bridge ownership
-- Shell queue tests proving multiple pending runtime commands are preserved in order
-- tests that fallback iframe loaded state does **not** flush queued runtime commands
-- rendered submenu tests for loading feedback and single-dispatch behavior
+### Cartridge
+- selecting a cartridge must again do both:
+  - produce a prompt-driven response/content selection
+  - open the cartridge layer
+- if handshake is delayed, the prompt path must still start immediately
+- overlay launch must replay on `RUNTIME_READY` if the first send was too early
 
-## Technical notes
+### Regressions to lock in
+- no nav activation-zone changes
+- no submenu persistence changes
+- no loss of queued actions on rapid repeated clicks
+- no direct double-nesting of `payload` in cartridge/persona messages
 
-```text
-Current failure mode:
-user click
-  -> single pending command slot
-  -> iframe marked "ready" by 5s timeout
-  -> queued command flushes too early
-  -> runtime not actually handshaked
-  -> no ack / no retry
-  -> action appears lost or arrives much later
-
-Target behavior:
-user click
-  -> runtime command queue
-  -> inline loading state
-  -> real RUNTIME_READY received
-  -> bootstrap confirmed
-  -> queued commands flushed FIFO
-  -> drawer / cartridge opens deterministically
-```
-
-The key fix is to stop treating timeout-based iframe availability as real runtime readiness, and to deliver runtime-only actions through an ordered queue instead of a single overwrite-prone pending ref.
+## Technical note
+The repeated `HEAD ... status 0` probe requests are expected with `mode: "no-cors"` and are not themselves the 60-second bottleneck. The real bottleneck is the current handshake/delivery sequencing and the cartridge path bypassing the shell’s authoritative prompt flow.
