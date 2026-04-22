@@ -515,25 +515,31 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [config, startIdleTimer]);
 
-  const flushPendingRuntimeCommand = useCallback(() => {
-    const pending = pendingRuntimeCommandRef.current;
-    if (!pending || !iframeRef.current || !config || iframeReadiness !== "ready") return;
-    pendingRuntimeCommandRef.current = null;
-    pending();
+  const flushPendingRuntimeCommands = useCallback(() => {
+    if (!iframeRef.current || !config || iframeReadiness !== "ready") return;
+    const queue = pendingRuntimeQueueRef.current;
+    if (queue.length === 0) return;
+    pendingRuntimeQueueRef.current = [];
+    setPendingRuntimeCommandCount(0);
+    // FIFO drain
+    for (const entry of queue) {
+      try { entry.command(); } catch (err) { console.warn("[Shell] queued runtime command failed:", err); }
+    }
   }, [config, iframeReadiness]);
 
   const queueOrRunRuntimeCommand = useCallback((command: () => void, label?: string) => {
-    if (!iframeRef.current || !config || iframeReadiness !== "ready") {
-      pendingRuntimeCommandRef.current = command;
-      // Visible feedback when the runtime isn't ready yet — quicklink isn't
-      // lost, it will fire as soon as RUNTIME_READY arrives.
-      if (label) {
-        toast.info(`${label} will open as soon as the runtime is ready…`, { duration: 2500 });
-      }
-      return false;
+    // Only flush against TRUE handshake state. "loaded-unconfirmed" must NOT
+    // promote queued commands.
+    if (iframeRef.current && config && iframeReadiness === "ready") {
+      command();
+      return true;
     }
-    command();
-    return true;
+    pendingRuntimeQueueRef.current.push({ command, label });
+    setPendingRuntimeCommandCount(pendingRuntimeQueueRef.current.length);
+    if (label) {
+      toast.info(`${label} will open as soon as the runtime is ready…`, { duration: 2500 });
+    }
+    return false;
   }, [config, iframeReadiness]);
 
   /**
