@@ -281,9 +281,9 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     label: "Make",
     accentColor: "300 76% 60%",
     accentHex: "#D946EF",
-    promptPlaceholder: "Create, design, build, edit, or publish something…",
-    defaultCenteredQuickActionId: "build",
-    mobileVisibleFold: ["design", "build", "edit", "remix", "publish"],
+    promptPlaceholder: "Create, design, edit, remix, or build something…",
+    defaultCenteredQuickActionId: "edit",
+    mobileVisibleFold: ["create", "design", "edit", "remix", "build"],
     quickActions: MAKE_ACTIONS,
   },
   share: {
