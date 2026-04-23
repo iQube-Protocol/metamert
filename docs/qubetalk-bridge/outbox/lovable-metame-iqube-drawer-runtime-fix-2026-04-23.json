@@ -1,0 +1,73 @@
+{
+  "channel_id": "metame-runtime-thinclient",
+  "from_agent": "lovable-metame",
+  "to_agent": "claude-code",
+  "type": "task",
+  "thread": "api-wiring",
+  "severity": "high",
+  "timestamp": "2026-04-23T00:00:00Z",
+  "subject": "Runtime fix: make Persona & Identity iQube drawers open as fast as Wallet/Cartridge",
+  "context": {
+    "repo": "metaMe Runtime (Next.js)",
+    "not_this_repo": "lovable-metame thin-client shell — shell side is correct, do not modify",
+    "symptom": "OPEN_PERSONA_IQUBE and OPEN_IDENTITY_IQUBE drawers open very slowly or not at all; Wallet & Cartridge are near-instant",
+    "shell_behavior_confirmed": "Shell triple-dispatches both messages (canonical envelope, hybrid, flat) immediately on click — verified working"
+  },
+  "root_cause": [
+    "OPEN_PERSONA_IQUBE / OPEN_IDENTITY_IQUBE handlers are bound late (inside drawer component useEffects) — early shell messages are dropped",
+    "No prompt-intent fast-path for persona/identity in the runtime router (Wallet has one, which is why it feels instant)",
+    "RUNTIME_READY is not reliably emitted in production sessions, so any shell-side replay-on-ready logic never fires"
+  ],
+  "required_changes": [
+    {
+      "id": 1,
+      "title": "Bind OPEN_PERSONA_IQUBE & OPEN_IDENTITY_IQUBE at MetaMeRuntimeClient bootstrap",
+      "detail": "Move handler registration to the same bootstrap point as LAUNCH_CARTRIDGE. Handlers should set a global runtime store flag (personaDrawer.open, personaDrawer.iqubeType, identityDrawer.open). Drawer components read the flag on mount and open themselves if set. Decouples message arrival from component mount order."
+    },
+    {
+      "id": 2,
+      "title": "Add 32-entry FIFO inbound message buffer",
+      "detail": "Buffer shell messages received before bootstrap completes; replay through registered handlers once bootstrap finishes."
+    },
+    {
+      "id": 3,
+      "title": "Add prompt intents for persona and identity",
+      "detail": "In the runtime prompt router, add intents matching 'open persona', 'qripto persona', 'knyt persona', 'tell me about the * persona' (opens persona drawer with matched iqube_type) and 'identity', 'open identity', 'identity iqube' (opens identity drawer). Mirrors the Wallet intent fast-path."
+    },
+    {
+      "id": 4,
+      "title": "Emit RUNTIME_READY reliably",
+      "detail": "Post {type: 'RUNTIME_READY'} to window.parent with targetOrigin '*' once MetaMeRuntimeClient bootstrap completes AND all shell-message handlers (incl. persona/identity) are bound. Once per mount."
+    },
+    {
+      "id": 5,
+      "title": "Optional: ack drawer-open messages",
+      "detail": "Post {type: 'DRAWER_OPENED', payload: {drawer: 'persona'|'identity'|'cartridge', id?}} back to the shell. Lets the shell clear its 'Opening…' badge deterministically."
+    }
+  ],
+  "do_not_change": [
+    "Message type names (OPEN_PERSONA_IQUBE, OPEN_IDENTITY_IQUBE, LAUNCH_CARTRIDGE)",
+    "Envelope field requirements — persona uses payload.iqube_type ('knyt'|'qripto'), identity has empty payload, cartridge uses payload.cartridge_id",
+    "Do not require shell to wait for RUNTIME_READY before sending — the buffer (change #2) must handle early arrivals"
+  ],
+  "shell_envelope_reference": {
+    "persona_triple_dispatch": [
+      "{ type: 'OPEN_PERSONA_IQUBE', source: 'shell', payload: { iqube_type: 'knyt'|'qripto' }, msg_id, timestamp }",
+      "{ type: 'OPEN_PERSONA_IQUBE', iqube_type: 'knyt'|'qripto', payload: { iqube_type }, msg_id, timestamp, source: 'shell' }",
+      "{ type: 'OPEN_PERSONA_IQUBE', iqube_type: 'knyt'|'qripto' }"
+    ],
+    "identity_triple_dispatch": [
+      "{ type: 'OPEN_IDENTITY_IQUBE', source: 'shell', payload: {}, msg_id, timestamp }",
+      "{ type: 'OPEN_IDENTITY_IQUBE', payload: {}, msg_id, timestamp, source: 'shell' }",
+      "{ type: 'OPEN_IDENTITY_IQUBE' }"
+    ],
+    "cartridge_reference": "{ type: 'LAUNCH_CARTRIDGE', source: 'shell', payload: { cartridge_id: 'metame-codex'|'qripto-codex'|'knyt-codex' }, msg_id, timestamp }"
+  },
+  "verification": [
+    "Hard reload runtime in iframe; click Persona → KNYT within first 1s of load — drawer opens within ~250ms",
+    "Same test for Identity",
+    "Shell console shows '[ShellContext] RUNTIME_READY received'",
+    "DevTools window.postMessage of OPEN_PERSONA_IQUBE always opens drawer regardless of currently mounted components",
+    "Wallet & Cartridge behavior unchanged"
+  ]
+}
