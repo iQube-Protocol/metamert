@@ -6,8 +6,11 @@
  *  - hidden metaMe persona is not rendered
  *  - personaId → iqube_type mapping is exact
  *  - OPEN_PERSONA_IQUBE envelope keeps payload shape (no double-nesting)
+ *
+ * The platform runtime now exposes a single permanent handler for
+ * OPEN_PERSONA_IQUBE — one postMessage per action, no triple-dispatch.
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   DEFAULT_PERSONAS,
   ALL_PERSONAS,
@@ -15,7 +18,6 @@ import {
   personaIdToIqubeType,
 } from "@/lib/smart-menu-config";
 import { postToIframe } from "@/lib/shell-messages";
-import { postPersonaIQubeOpen } from "@/lib/persona-messages";
 
 describe("persona config", () => {
   it("default active persona id exists in visible list", () => {
@@ -72,33 +74,5 @@ describe("OPEN_PERSONA_IQUBE envelope", () => {
     // payload must be { iqube_type: "knyt" } — NOT { payload: { iqube_type: "knyt" } }
     expect(env.payload).toEqual({ iqube_type: "knyt" });
     expect(env.payload.payload).toBeUndefined();
-  });
-
-  it("dispatches compatibility-safe persona open messages for mixed runtime builds", () => {
-    const posts: any[] = [];
-    const iframe = {
-      contentWindow: {
-        postMessage: (msg: any) => posts.push(msg),
-      },
-    } as unknown as HTMLIFrameElement;
-
-    postPersonaIQubeOpen(iframe, "*", "qripto");
-
-    expect(posts).toHaveLength(3);
-    expect(posts[0]).toMatchObject({
-      type: "OPEN_PERSONA_IQUBE",
-      source: "shell",
-      payload: { iqube_type: "qripto" },
-    });
-    expect(posts[1]).toMatchObject({
-      type: "OPEN_PERSONA_IQUBE",
-      source: "shell",
-      iqube_type: "qripto",
-      payload: { iqube_type: "qripto" },
-    });
-    expect(posts[2]).toEqual({
-      type: "OPEN_PERSONA_IQUBE",
-      iqube_type: "qripto",
-    });
   });
 });
