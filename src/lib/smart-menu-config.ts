@@ -295,8 +295,8 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentColor: "38 92% 50%",
     accentHex: "#F59E0B",
     promptPlaceholder: "Send, publish, export, connect, or collaborate…",
-    defaultCenteredQuickActionId: "connect",
-    mobileVisibleFold: ["publish", "export", "connect", "collaborate", "deliver"],
+    defaultCenteredQuickActionId: "message",
+    mobileVisibleFold: ["refer", "invite", "message", "share", "publish"],
     quickActions: SHARE_ACTIONS,
   },
 };
