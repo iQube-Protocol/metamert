@@ -447,7 +447,7 @@ const PERSONA_OPTIONS = [
 ];
 
 function PersonaSelector() {
-  const { activeMode, selectPersona, setSubmenuType, pauseIdleTimer, resumeIdleTimer } = useShell();
+  const { selectPersona, setSubmenuType, pauseIdleTimer, resumeIdleTimer } = useShell();
 
   return (
     <div
@@ -467,13 +467,12 @@ function PersonaSelector() {
           ← Back
         </button>
       </div>
-      <div className="flex gap-1.5 justify-start">
+      <div className="flex gap-1.5 justify-end">
         {PERSONA_OPTIONS.map(p => {
-          const isActive = false;
           return (
             <CartridgePill
               key={p.id}
-              isActive={isActive}
+              isActive={false}
               accent={undefined}
               onClick={() => selectPersona(p.id)}
             >
