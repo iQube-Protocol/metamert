@@ -456,7 +456,6 @@ function PersonaSelector() {
       className="glass-float shadow-mm-low animate-in fade-in slide-in-from-bottom-2 p-2"
       style={{ animationDuration: '350ms', borderRadius: 'var(--mm-radius-sm)' }}
       onPointerEnter={pauseIdleTimer}
-      onPointerLeave={resumeIdleTimer}
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
         <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--mm-ink-muted)' }}>Persona</span>
