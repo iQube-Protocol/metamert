@@ -255,8 +255,8 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentColor: "210 70% 55%",
     accentHex: "#4DA3FF",
     promptPlaceholder: "Set who you are being, your memory, identity, or connections…",
-    defaultCenteredQuickActionId: "memory",
-    mobileVisibleFold: ["persona", "settings", "memory", "identity", "connections"],
+    defaultCenteredQuickActionId: "identity",
+    mobileVisibleFold: ["persona", "memory", "identity", "connections", "settings"],
     quickActions: BE_ACTIONS,
   },
   earn: {
@@ -265,8 +265,8 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentColor: "142 71% 45%",
     accentHex: "#22C55E",
     promptPlaceholder: "Ask about rewards, tasks, offers, value, or opportunities…",
-    defaultCenteredQuickActionId: "offer",
-    mobileVisibleFold: ["knyt-progress", "task", "reward", "offer", "wallet"],
+    defaultCenteredQuickActionId: "wallet",
+    mobileVisibleFold: ["goal", "task", "wallet", "reward", "offer"],
     quickActions: EARN_ACTIONS,
   },
   play: {
