@@ -207,23 +207,47 @@ export default function SmartMenu() {
           <div className="flex items-stretch">
             <NavButton item={NAV_ITEMS[0]} accentOverride={personaAccent} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
-          <div
-            className="flex-1 min-w-[8px]"
-            onPointerEnter={handleGapPointerEnter}
-            onPointerLeave={handleGapPointerLeave}
-            onPointerUp={handleGapPointerUp}
-          />
+          {/* Left gap: outer half extends Be activation, inner half triggers Play */}
+          <div className="flex-1 min-w-[8px] flex">
+            <div
+              className="flex-1"
+              onPointerEnter={() => handleNavHoverEnter("be")}
+              onPointerLeave={handleNavHoverLeave}
+              onPointerUp={(e) => {
+                e.stopPropagation();
+                if (e.pointerType === "touch") handleNavPointerUp("be", "touch");
+              }}
+            />
+            <div
+              className="flex-1"
+              onPointerEnter={handleGapPointerEnter}
+              onPointerLeave={handleGapPointerLeave}
+              onPointerUp={handleGapPointerUp}
+            />
+          </div>
           <div className="flex shrink-0 items-stretch justify-center gap-0">
             {NAV_ITEMS.slice(1, 4).map(item => (
               <NavButton key={item.id} item={item} isCenter activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
             ))}
           </div>
-          <div
-            className="flex-1 min-w-[8px]"
-            onPointerEnter={handleGapPointerEnter}
-            onPointerLeave={handleGapPointerLeave}
-            onPointerUp={handleGapPointerUp}
-          />
+          {/* Right gap: inner half triggers Play, outer half extends Share activation */}
+          <div className="flex-1 min-w-[8px] flex">
+            <div
+              className="flex-1"
+              onPointerEnter={handleGapPointerEnter}
+              onPointerLeave={handleGapPointerLeave}
+              onPointerUp={handleGapPointerUp}
+            />
+            <div
+              className="flex-1"
+              onPointerEnter={() => handleNavHoverEnter("share")}
+              onPointerLeave={handleNavHoverLeave}
+              onPointerUp={(e) => {
+                e.stopPropagation();
+                if (e.pointerType === "touch") handleNavPointerUp("share", "touch");
+              }}
+            />
+          </div>
           <div className="flex items-stretch">
             <NavButton item={NAV_ITEMS[4]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
@@ -260,11 +284,14 @@ function NavButton({
   const isActiveQA = activeQAMode === item.id;
 
   const isDark = document.documentElement.classList.contains('dark');
+  const isBe = item.id === "be";
   const iconColor = isActiveQA
     ? accent
-    : isEdge
-      ? (accentOverride ?? (hovered ? accent : "var(--mm-ink-muted)"))
-      : accent;
+    : isBe
+      ? (accentOverride ?? "var(--mm-ink-muted)")
+      : isEdge
+        ? (accentOverride ?? (hovered ? accent : "var(--mm-ink-muted)"))
+        : accent;
   const iconFilter = isDark
     ? (!isEdge && hovered && !isActiveQA
         ? "brightness(1.2) drop-shadow(0 0 6px currentColor)"

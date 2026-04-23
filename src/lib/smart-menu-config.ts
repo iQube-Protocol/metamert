@@ -211,22 +211,18 @@ const PLAY_ACTIONS: QuickActionDef[] = [
 
 const BE_ACTIONS: QuickActionDef[] = [
   { id: "persona",     label: "Persona",     icon: "user",        kind: "system-only", triggersInference: false },
-  { id: "settings",    label: "Settings",    icon: "settings",    kind: "system-only", triggersInference: false },
   { id: "memory",      label: "Memory",      icon: "sparkles",    kind: "system-only", triggersInference: false },
   { id: "identity",    label: "Identity",    icon: "fingerprint", kind: "system-only", triggersInference: false },
   { id: "connections", label: "Connections", icon: "network",     kind: "llm+menu",    triggersInference: true, prompt: "Show my connections and network" },
+  { id: "settings",    label: "Settings",    icon: "settings",    kind: "system-only", triggersInference: false },
 ];
 
 const EARN_ACTIONS: QuickActionDef[] = [
-  { id: "knyt-progress", label: "Progress", icon: "trending-up", kind: "llm+menu", triggersInference: true, prompt: "Show my KNYT progression status and next milestones", apiAction: "knyt-progress", iframeAction: "knyt_progress" },
-  { id: "goal",        label: "Goal",        icon: "target",     kind: "llm+menu",    triggersInference: true,  prompt: "Show my current goals and progress" },
-  { id: "task",        label: "Task",        icon: "check-square", kind: "llm+menu",  triggersInference: true,  prompt: "What tasks should I work on next?" },
-  { id: "reward",      label: "Reward",      icon: "star",       kind: "llm+menu",    triggersInference: true,  prompt: "Show my rewards and achievements" },
-  { id: "offer",       label: "Offer",       icon: "tag",        kind: "llm+menu",    triggersInference: true,  prompt: "Find offers and deals available to me" },
-  { id: "opportunity", label: "Opportunity", icon: "compass",    kind: "llm+menu",    triggersInference: true,  prompt: "Discover new opportunities for me" },
-  { id: "wallet",      label: "Wallet",      icon: "wallet",     kind: "llm+menu",    triggersInference: true,  prompt: "What would you like to explore in your wallet?", apiAction: "wallet" },
-  { id: "share",       label: "Share",       icon: "share-2",    kind: "llm+menu",    triggersInference: true },
-  { id: "reset",       label: "Reset",       icon: "rotate-ccw", kind: "system-only", triggersInference: false },
+  { id: "goal",        label: "Goal",        icon: "target",       kind: "llm+menu", triggersInference: true,  prompt: "Show my current goals and progress" },
+  { id: "task",        label: "Task",        icon: "check-square", kind: "llm+menu", triggersInference: true,  prompt: "What tasks should I work on next?" },
+  { id: "wallet",      label: "Wallet",      icon: "wallet",       kind: "llm+menu", triggersInference: true,  prompt: "What would you like to explore in your wallet?", apiAction: "wallet" },
+  { id: "reward",      label: "Reward",      icon: "star",         kind: "llm+menu", triggersInference: true,  prompt: "Show my rewards and achievements" },
+  { id: "offer",       label: "Offer",       icon: "tag",          kind: "llm+menu", triggersInference: true,  prompt: "Find offers and deals available to me" },
 ];
 
 const MAKE_ACTIONS: QuickActionDef[] = [
@@ -241,14 +237,11 @@ const MAKE_ACTIONS: QuickActionDef[] = [
 ];
 
 const SHARE_ACTIONS: QuickActionDef[] = [
-  { id: "send",        label: "Send",        icon: "send",       kind: "llm+menu",    triggersInference: true,  prompt: "Send a message for me" },
-  { id: "publish",     label: "Publish",     icon: "upload",     kind: "llm+menu",    triggersInference: true,  prompt: "Publish and share my content" },
-  { id: "export",      label: "Export",      icon: "download",   kind: "llm+menu",    triggersInference: true,  prompt: "Export my data and content" },
-  { id: "connect",     label: "Connect",     icon: "link",       kind: "llm+menu",    triggersInference: true,  prompt: "Connect me with someone" },
-  { id: "collaborate", label: "Collaborate", icon: "users",      kind: "llm+menu",    triggersInference: true,  prompt: "Start a collaboration session" },
-  { id: "deliver",     label: "Deliver",     icon: "truck",      kind: "llm+menu",    triggersInference: true,  prompt: "Deliver my content to its destination" },
-  { id: "be",          label: "Be",          icon: "user",       kind: "llm+menu",    triggersInference: true,  prompt: "Show me who I can be" },
-  { id: "reset",       label: "Reset",       icon: "rotate-ccw", kind: "system-only", triggersInference: false },
+  { id: "refer",       label: "Refer",       icon: "user-plus",  kind: "llm+menu", triggersInference: true, prompt: "Help me refer someone" },
+  { id: "invite",      label: "Invite",      icon: "mail",       kind: "llm+menu", triggersInference: true, prompt: "Help me invite someone" },
+  { id: "message",     label: "Message",     icon: "message-circle", kind: "llm+menu", triggersInference: true, prompt: "Help me send a message" },
+  { id: "share",       label: "Share",       icon: "share-2",    kind: "llm+menu", triggersInference: true, prompt: "Help me share something" },
+  { id: "publish",     label: "Publish",     icon: "upload",     kind: "llm+menu", triggersInference: true, prompt: "Publish and share my content" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -262,8 +255,8 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentColor: "210 70% 55%",
     accentHex: "#4DA3FF",
     promptPlaceholder: "Set who you are being, your memory, identity, or connections…",
-    defaultCenteredQuickActionId: "memory",
-    mobileVisibleFold: ["persona", "settings", "memory", "identity", "connections"],
+    defaultCenteredQuickActionId: "identity",
+    mobileVisibleFold: ["persona", "memory", "identity", "connections", "settings"],
     quickActions: BE_ACTIONS,
   },
   earn: {
@@ -272,8 +265,8 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentColor: "142 71% 45%",
     accentHex: "#22C55E",
     promptPlaceholder: "Ask about rewards, tasks, offers, value, or opportunities…",
-    defaultCenteredQuickActionId: "offer",
-    mobileVisibleFold: ["knyt-progress", "task", "reward", "offer", "wallet"],
+    defaultCenteredQuickActionId: "wallet",
+    mobileVisibleFold: ["goal", "task", "wallet", "reward", "offer"],
     quickActions: EARN_ACTIONS,
   },
   play: {
@@ -302,8 +295,8 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentColor: "38 92% 50%",
     accentHex: "#F59E0B",
     promptPlaceholder: "Send, publish, export, connect, or collaborate…",
-    defaultCenteredQuickActionId: "connect",
-    mobileVisibleFold: ["publish", "export", "connect", "collaborate", "deliver"],
+    defaultCenteredQuickActionId: "message",
+    mobileVisibleFold: ["refer", "invite", "message", "share", "publish"],
     quickActions: SHARE_ACTIONS,
   },
 };
