@@ -246,6 +246,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const submenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Track whether prompt has text (prevents collapse)
   const promptHasTextRef = useRef(false);
+  // Track latest submenuType so the idle collapse timer reads the live value
+  // at fire time — prevents auto-collapse from tearing down explicit selectors
+  // (persona/cartridge/codex/browser) the user is interacting with.
+  const submenuTypeRef = useRef<SubmenuType | null>(null);
+  useEffect(() => { submenuTypeRef.current = submenuType; }, [submenuType]);
 
   // Lazily create inference controller
   if (!inferCtrl.current) {
