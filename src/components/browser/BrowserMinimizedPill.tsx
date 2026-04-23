@@ -1,8 +1,10 @@
-import { useBrowser } from "@/contexts/BrowserContext";
+import { useBrowserOptional } from "@/contexts/BrowserContext";
 import { Globe, ChevronUp } from "lucide-react";
 
 export default function BrowserMinimizedPill() {
-  const { surfaceState, mountPayload, requestExpand, stepState } = useBrowser();
+  const ctx = useBrowserOptional();
+  if (!ctx) return null;
+  const { surfaceState, mountPayload, requestExpand, stepState } = ctx;
 
   if (surfaceState !== "minimized" || !mountPayload) return null;
 

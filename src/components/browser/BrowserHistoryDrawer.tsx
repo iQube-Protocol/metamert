@@ -1,4 +1,4 @@
-import { useBrowser } from "@/contexts/BrowserContext";
+import { useBrowserOptional } from "@/contexts/BrowserContext";
 import { RefreshCw, History, FileText, Receipt, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -57,7 +57,9 @@ function DrawerColumn({
 }
 
 export default function BrowserHistoryDrawer() {
-  const { drawerOpen, drawerData, requestDrawerRefresh } = useBrowser();
+  const ctx = useBrowserOptional();
+  if (!ctx) return null;
+  const { drawerOpen, drawerData, requestDrawerRefresh } = ctx;
 
   if (!drawerOpen) return null;
 
