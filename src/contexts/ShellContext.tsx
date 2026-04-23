@@ -246,6 +246,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const submenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Track whether prompt has text (prevents collapse)
   const promptHasTextRef = useRef(false);
+  // Track latest submenuType so the idle collapse timer reads the live value
+  // at fire time — prevents auto-collapse from tearing down explicit selectors
+  // (persona/cartridge/codex/browser) the user is interacting with.
+  const submenuTypeRef = useRef<SubmenuType | null>(null);
+  useEffect(() => { submenuTypeRef.current = submenuType; }, [submenuType]);
 
   // Lazily create inference controller
   if (!inferCtrl.current) {
@@ -266,14 +271,24 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   const startIdleTimer = useCallback(() => {
     clearIdleTimer();
-    // 4s: auto-hide quick action floating layer
+    // 4s: auto-hide quick action floating layer (no effect on explicit selectors —
+    // those are gated by isSelectorOpen in SmartMenu.tsx)
     submenuTimerRef.current = setTimeout(() => {
       setSubmenuVisibility("hiddenAutoIdle");
       submenuTimerRef.current = null;
     }, 4000);
-    // 5s: full prompt collapse (only if prompt is empty)
+    // 5s: full prompt collapse (only if prompt is empty AND no explicit selector
+    // is open). Persona/Cartridge/Codex/Browser selectors are explicit user
+    // navigation and must persist until pill click or ← Back.
     idleTimerRef.current = setTimeout(() => {
       if (promptHasTextRef.current) return; // spec: don't collapse with text
+      const currentType = submenuTypeRef.current;
+      if (
+        currentType === "personaSelector" ||
+        currentType === "cartridgeSelector" ||
+        currentType === "codexSelector" ||
+        currentType === "browserSelector"
+      ) return;
       setViewState("defaultNav");
       setActiveMode(null);
       setSubmenuTypeState(null);
