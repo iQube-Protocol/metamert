@@ -52,6 +52,76 @@ export interface CartridgeState {
 }
 
 // ---------------------------------------------------------------------------
+// Persona
+// ---------------------------------------------------------------------------
+
+export interface PersonaDef {
+  id: string;
+  label: string;
+  icon?: string;
+  accentHex?: string;
+  /** iQube ID to load when this persona is selected */
+  iqubeId?: string;
+}
+
+export interface PersonaState {
+  activePersonaId: string;
+  available: PersonaDef[];
+}
+
+/**
+ * ALL_PERSONAS — full registry including hidden ones.
+ * DEFAULT_PERSONAS — only personas that should be rendered in the submenu.
+ *
+ * Add `hidden: true` to keep a persona in the registry without showing it
+ * in the UI. The shell guarantees that `personaState.available` only
+ * contains visible personas.
+ */
+interface InternalPersonaDef extends PersonaDef {
+  hidden?: boolean;
+}
+
+export const ALL_PERSONAS: InternalPersonaDef[] = [
+  {
+    id: "metame-persona",
+    label: "metaMe",
+    icon: "user",
+    accentHex: "#FF6B6B",
+    iqubeId: "iqube-metame-persona",
+    hidden: true,
+  },
+  {
+    id: "qripto-persona",
+    label: "Qripto",
+    icon: "user",
+    accentHex: "#00D5FF",
+    iqubeId: "iqube-qripto-persona",
+  },
+  {
+    id: "knyt-persona",
+    label: "KNYT",
+    icon: "user",
+    accentHex: "#F59E0B",
+    iqubeId: "iqube-knyt-persona",
+  },
+];
+
+/** Visible personas — what the submenu renders. */
+export const DEFAULT_PERSONAS: PersonaDef[] = ALL_PERSONAS
+  .filter(p => !p.hidden)
+  .map(({ hidden: _h, ...rest }) => rest);
+
+/** Canonical default active persona id (first visible). */
+export const DEFAULT_ACTIVE_PERSONA_ID: string = DEFAULT_PERSONAS[0]?.id ?? "qripto-persona";
+
+/** Map a persona id to the runtime's iqube_type drawer key. */
+export function personaIdToIqubeType(personaId: string): "knyt" | "qripto" | null {
+  if (personaId === "knyt-persona") return "knyt";
+  if (personaId === "qripto-persona") return "qripto";
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Quick action config
 // ---------------------------------------------------------------------------
 
@@ -141,20 +211,22 @@ const PLAY_ACTIONS: QuickActionDef[] = [
 
 const BE_ACTIONS: QuickActionDef[] = [
   { id: "persona",     label: "Persona",     icon: "user",        kind: "system-only", triggersInference: false },
-  { id: "memory",      label: "Memories",    icon: "sparkles",    kind: "llm+menu",    triggersInference: true, prompt: "Show my memory and context history" },
-  // Identity is a drawer-open action — handled directly via openIdentityIQube()
-  // in SmartMenuSubmenu. Intentionally has no prompt/apiAction/iframeAction.
-  { id: "identity",    label: "Identity",    icon: "fingerprint", kind: "system-only", triggersInference: false },
-  { id: "connections", label: "Connections", icon: "network",     kind: "llm+menu",    triggersInference: true, prompt: "Show my connections and network" },
   { id: "settings",    label: "Settings",    icon: "settings",    kind: "system-only", triggersInference: false },
+  { id: "memory",      label: "Memory",      icon: "sparkles",    kind: "llm+menu",    triggersInference: true, prompt: "Show my memory and context history" },
+  { id: "identity",    label: "Identity",    icon: "fingerprint", kind: "llm+menu",    triggersInference: true, prompt: "Show my identity and credentials" },
+  { id: "connections", label: "Connections", icon: "network",     kind: "llm+menu",    triggersInference: true, prompt: "Show my connections and network" },
 ];
 
 const EARN_ACTIONS: QuickActionDef[] = [
-  { id: "goal",   label: "Goal",   icon: "target",       kind: "llm+menu",    triggersInference: true,  prompt: "Show my current goals and progress" },
-  { id: "task",   label: "Task",   icon: "check-square", kind: "llm+menu",    triggersInference: true,  prompt: "Open my wallet on the Tasks tab",    apiAction: "wallet", iframeAction: "wallet:tasks" },
-  { id: "wallet", label: "Wallet", icon: "wallet",       kind: "llm+menu",    triggersInference: true,  prompt: "Open my wallet",                     apiAction: "wallet" },
-  { id: "reward", label: "Reward", icon: "star",         kind: "llm+menu",    triggersInference: true,  prompt: "Open my wallet on the Rewards tab",  apiAction: "wallet", iframeAction: "wallet:rewards" },
-  { id: "offer",  label: "Offer",  icon: "tag",          kind: "llm+menu",    triggersInference: true,  prompt: "Open my wallet on the Offers tab",   apiAction: "wallet", iframeAction: "wallet:offers" },
+  { id: "knyt-progress", label: "Progress", icon: "trending-up", kind: "llm+menu", triggersInference: true, prompt: "Show my KNYT progression status and next milestones", apiAction: "knyt-progress", iframeAction: "knyt_progress" },
+  { id: "goal",        label: "Goal",        icon: "target",     kind: "llm+menu",    triggersInference: true,  prompt: "Show my current goals and progress" },
+  { id: "task",        label: "Task",        icon: "check-square", kind: "llm+menu",  triggersInference: true,  prompt: "What tasks should I work on next?" },
+  { id: "reward",      label: "Reward",      icon: "star",       kind: "llm+menu",    triggersInference: true,  prompt: "Show my rewards and achievements" },
+  { id: "offer",       label: "Offer",       icon: "tag",        kind: "llm+menu",    triggersInference: true,  prompt: "Find offers and deals available to me" },
+  { id: "opportunity", label: "Opportunity", icon: "compass",    kind: "llm+menu",    triggersInference: true,  prompt: "Discover new opportunities for me" },
+  { id: "wallet",      label: "Wallet",      icon: "wallet",     kind: "llm+menu",    triggersInference: true,  prompt: "What would you like to explore in your wallet?", apiAction: "wallet" },
+  { id: "share",       label: "Share",       icon: "share-2",    kind: "llm+menu",    triggersInference: true },
+  { id: "reset",       label: "Reset",       icon: "rotate-ccw", kind: "system-only", triggersInference: false },
 ];
 
 const MAKE_ACTIONS: QuickActionDef[] = [
@@ -191,7 +263,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#4DA3FF",
     promptPlaceholder: "Set who you are being, your memory, identity, or connections…",
     defaultCenteredQuickActionId: "memory",
-    mobileVisibleFold: ["persona", "memory", "identity", "connections", "settings"],
+    mobileVisibleFold: ["persona", "settings", "memory", "identity", "connections"],
     quickActions: BE_ACTIONS,
   },
   earn: {
@@ -199,9 +271,9 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     label: "Earn",
     accentColor: "142 71% 45%",
     accentHex: "#22C55E",
-    promptPlaceholder: "Ask about goals, tasks, your wallet, rewards, or offers…",
-    defaultCenteredQuickActionId: "wallet",
-    mobileVisibleFold: ["goal", "task", "wallet", "reward", "offer"],
+    promptPlaceholder: "Ask about rewards, tasks, offers, value, or opportunities…",
+    defaultCenteredQuickActionId: "offer",
+    mobileVisibleFold: ["knyt-progress", "task", "reward", "offer", "wallet"],
     quickActions: EARN_ACTIONS,
   },
   play: {

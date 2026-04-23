@@ -47,14 +47,9 @@ export default function SmartMenu() {
     activateQuickActions,
     handleMenuAction,
     submenuVisibility,
-    submenuType,
     pauseIdleTimer,
     resumeIdleTimer,
   } = useShell();
-
-  // Persona accent on the Be icon is no longer driven by an active persona id —
-  // persona selection is fire-and-forget and opens the runtime drawer directly.
-  const personaAccent: string | undefined = undefined;
 
   // Hover preview: show quick actions on rollover without entering prompt mode
   const [hoverPreviewMode, setHoverPreviewMode] = useState<SmartMenuMode | null>(null);
@@ -87,8 +82,7 @@ export default function SmartMenu() {
   }, []);
 
   const handleNavHoverLeave = useCallback(() => {
-    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
-    hoverTimeout.current = setTimeout(() => setHoverPreviewMode(null), 400);
+    hoverTimeout.current = setTimeout(() => setHoverPreviewMode(null), 150);
   }, []);
 
   const handlePointerEnter = useCallback(() => {
@@ -156,14 +150,7 @@ export default function SmartMenu() {
   const isPromptMode = viewState === "promptMode" && !!activeMode;
   const isActiveMode = !!activeMode && (viewState === "promptMode" || viewState === "quickActionOnly");
 
-  const isSelectorOpen =
-    submenuType === "personaSelector" ||
-    submenuType === "cartridgeSelector" ||
-    submenuType === "codexSelector" ||
-    submenuType === "browserSelector";
-
   const showSubmenu =
-    isSelectorOpen ||
     (isActiveMode && submenuVisibility === "visibleAuto") ||
     (!isActiveMode && !!hoverPreviewMode);
 
@@ -212,51 +199,29 @@ export default function SmartMenu() {
           }}
           onPointerUp={handleNavAreaPointerUp}
         >
-          {/* Be edge button — outer half of left bridge owns its hover zone */}
-          <NavButton item={NAV_ITEMS[0]} accentOverride={personaAccent} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} expandedHitArea />
-
-          {/* Left bridge: split 50/50 between Be (outer half) and Play (inner half) */}
-          <div
-            className="flex flex-1 items-stretch min-w-0"
-          >
-            <div
-              className="flex-1"
-              onPointerEnter={() => handleNavHoverEnter("be")}
-              onPointerLeave={handleNavHoverLeave}
-            />
-            <div
-              className="flex-1"
-              onPointerEnter={handleGapPointerEnter}
-              onPointerLeave={handleGapPointerLeave}
-              onPointerUp={handleGapPointerUp}
-            />
+          <div className="flex items-stretch">
+            <NavButton item={NAV_ITEMS[0]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
-
+          <div
+            className="flex-1 min-w-[8px]"
+            onPointerEnter={handleGapPointerEnter}
+            onPointerLeave={handleGapPointerLeave}
+            onPointerUp={handleGapPointerUp}
+          />
           <div className="flex shrink-0 items-stretch justify-center gap-0">
             {NAV_ITEMS.slice(1, 4).map(item => (
               <NavButton key={item.id} item={item} isCenter activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
             ))}
           </div>
-
-          {/* Right bridge: split 50/50 between Play (inner half) and Share (outer half) */}
           <div
-            className="flex flex-1 items-stretch min-w-0"
-          >
-            <div
-              className="flex-1"
-              onPointerEnter={handleGapPointerEnter}
-              onPointerLeave={handleGapPointerLeave}
-              onPointerUp={handleGapPointerUp}
-            />
-            <div
-              className="flex-1"
-              onPointerEnter={() => handleNavHoverEnter("share")}
-              onPointerLeave={handleNavHoverLeave}
-            />
+            className="flex-1 min-w-[8px]"
+            onPointerEnter={handleGapPointerEnter}
+            onPointerLeave={handleGapPointerLeave}
+            onPointerUp={handleGapPointerUp}
+          />
+          <div className="flex items-stretch">
+            <NavButton item={NAV_ITEMS[4]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
-
-          {/* Share edge button */}
-          <NavButton item={NAV_ITEMS[4]} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} expandedHitArea />
         </nav>
       </div>
     </TooltipProvider>
@@ -267,18 +232,15 @@ function NavButton({
   item,
   isCenter = false,
   activeQAMode,
-  accentOverride,
-  expandedHitArea = false,
   onPointerTap,
   onAction,
   onHoverEnter,
   onHoverLeave,
+  
 }: {
   item: { id: SmartMenuMode; label: string; icon: string };
   isCenter?: boolean;
   activeQAMode?: SmartMenuMode | null;
-  accentOverride?: string;
-  expandedHitArea?: boolean;
   onPointerTap: (mode: SmartMenuMode, pointerType: string) => void;
   onAction: (id: string) => Promise<void>;
   onHoverEnter: (mode: SmartMenuMode) => void;
@@ -286,17 +248,15 @@ function NavButton({
 }) {
   const [hovered, setHovered] = useState(false);
   const Icon = resolveIcon(item.icon, item.id);
-  const accent = accentOverride ?? MODE_ACCENT[item.id];
+  const accent = MODE_ACCENT[item.id];
   const isEdge = item.id === "be" || item.id === "share";
   const isActiveQA = activeQAMode === item.id;
-  // Be icon: stay neutral until a persona is activated (accentOverride present)
-  const isBeNeutral = item.id === "be" && !accentOverride;
 
   const isDark = document.documentElement.classList.contains('dark');
   const iconColor = isActiveQA
-    ? (isBeNeutral ? "var(--mm-ink-muted)" : accent)
+    ? accent
     : isEdge
-      ? (accentOverride ?? (hovered && !isBeNeutral ? accent : "var(--mm-ink-muted)"))
+      ? (hovered ? accent : "var(--mm-ink-muted)")
       : accent;
   const iconFilter = isDark
     ? (!isEdge && hovered && !isActiveQA
@@ -323,7 +283,7 @@ function NavButton({
         onPointerEnter={() => { setHovered(true); onHoverEnter(item.id); }}
         onPointerLeave={() => { setHovered(false); onHoverLeave(); }}
         className={`flex flex-col items-center justify-center gap-0.5 py-0.5 text-[11px] transition-all duration-200
-          ${isCenter ? "min-w-[3.5rem] px-1" : expandedHitArea ? "min-w-[5rem] px-2 shrink-0" : "w-14 shrink-0"}
+          ${isCenter ? "min-w-[3.5rem] px-1" : "w-14 shrink-0"}
           active:scale-110
         `}
         style={{ borderRadius: 'var(--mm-radius-xs)' }}

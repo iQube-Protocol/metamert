@@ -2070,36 +2070,6 @@ export type Database = {
         }
         Relationships: []
       }
-      conversation_summaries: {
-        Row: {
-          conversation_type: string
-          created_at: string
-          id: string
-          included_interaction_ids: string[]
-          summary_text: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          conversation_type: string
-          created_at?: string
-          id?: string
-          included_interaction_ids?: string[]
-          summary_text: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          conversation_type?: string
-          created_at?: string
-          id?: string
-          included_interaction_ids?: string[]
-          summary_text?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       crm_admin_categories: {
         Row: {
           color: string | null
@@ -5320,69 +5290,6 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           verified?: boolean
-        }
-        Relationships: []
-      }
-      identity_iqubes: {
-        Row: {
-          addresses: Json
-          created_at: string
-          date_of_birth: string
-          driving_license_expiry: string
-          driving_license_number: string
-          driving_license_state: string
-          emails: Json
-          fio_handle: string
-          first_name: string
-          id: string
-          last_name: string
-          middle_name: string
-          mint_status: string
-          mint_stub_id: string | null
-          personas: Json
-          phones: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          addresses?: Json
-          created_at?: string
-          date_of_birth?: string
-          driving_license_expiry?: string
-          driving_license_number?: string
-          driving_license_state?: string
-          emails?: Json
-          fio_handle?: string
-          first_name?: string
-          id?: string
-          last_name?: string
-          middle_name?: string
-          mint_status?: string
-          mint_stub_id?: string | null
-          personas?: Json
-          phones?: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          addresses?: Json
-          created_at?: string
-          date_of_birth?: string
-          driving_license_expiry?: string
-          driving_license_number?: string
-          driving_license_state?: string
-          emails?: Json
-          fio_handle?: string
-          first_name?: string
-          id?: string
-          last_name?: string
-          middle_name?: string
-          mint_status?: string
-          mint_stub_id?: string | null
-          personas?: Json
-          phones?: Json
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -9399,7 +9306,7 @@ export type Database = {
           "Tokens-of-Interest": string[] | null
           "Twitter-Handle": string | null
           updated_at: string
-          user_id: string | null
+          user_id: string
           "Wallets-of-Interest": string[] | null
           "Web3-Interests": string[] | null
           "YouTube-ID": string | null
@@ -9431,7 +9338,7 @@ export type Database = {
           "Tokens-of-Interest"?: string[] | null
           "Twitter-Handle"?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
           "Wallets-of-Interest"?: string[] | null
           "Web3-Interests"?: string[] | null
           "YouTube-ID"?: string | null
@@ -9463,7 +9370,7 @@ export type Database = {
           "Tokens-of-Interest"?: string[] | null
           "Twitter-Handle"?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
           "Wallets-of-Interest"?: string[] | null
           "Web3-Interests"?: string[] | null
           "YouTube-ID"?: string | null
@@ -13434,39 +13341,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      user_interactions: {
-        Row: {
-          created_at: string
-          id: string
-          interaction_type: string
-          metadata: Json | null
-          query: string
-          response: string
-          summarized: boolean
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          interaction_type: string
-          metadata?: Json | null
-          query: string
-          response: string
-          summarized?: boolean
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          interaction_type?: string
-          metadata?: Json | null
-          query?: string
-          response?: string
-          summarized?: boolean
-          user_id?: string
-        }
-        Relationships: []
       }
       user_iqubes: {
         Row: {

@@ -9,7 +9,7 @@ import { useBrowserOptional } from "@/contexts/BrowserContext";
 import { MODE_CONFIGS, type QuickActionDef, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
 import { SMART_MENU_ICON_DEFAULTS } from "@/lib/smart-menu-icons";
-import { Check, Globe, ArrowRight, Loader2 } from "lucide-react";
+import { Check, Globe, ArrowRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /** Resolve icon from smart menu defaults or lucide fallback */
@@ -25,31 +25,6 @@ interface SmartMenuSubmenuProps {
   previewMode?: SmartMenuMode;
 }
 
-/**
- * Inline feedback badge — visible whenever a runtime-bound command (drawer
- * open or cartridge launch) is queued waiting for the runtime handshake.
- * Replaces the previous "click does nothing" silent wait.
- */
-function PendingRuntimeBadge() {
-  const { pendingRuntimeCommandCount, iframeReadiness } = useShell();
-  if (pendingRuntimeCommandCount <= 0) return null;
-  const label =
-    iframeReadiness === "ready"
-      ? "Opening…"
-      : iframeReadiness === "loaded-unconfirmed"
-        ? "Launching…"
-        : "Connecting runtime…";
-  return (
-    <div
-      className="flex items-center gap-1.5 px-2 py-1 text-[10px] animate-in fade-in"
-      style={{ color: 'var(--mm-ink-muted)' }}
-    >
-      <Loader2 className="h-3 w-3 animate-spin" />
-      <span className="whitespace-nowrap">{label}</span>
-    </div>
-  );
-}
-
 export default function SmartMenuSubmenu({ previewMode }: SmartMenuSubmenuProps = {}) {
   const {
     activeMode,
@@ -60,6 +35,7 @@ export default function SmartMenuSubmenu({ previewMode }: SmartMenuSubmenuProps 
     cartridgeState,
     selectCartridge,
     selectCodex,
+    personaState,
     selectPersona,
   } = useShell();
 
@@ -105,7 +81,6 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     runtimeContext,
     setRuntimeContext,
     openPersonaIQube,
-    openIdentityIQube,
     pulseInference,
   } = useShell();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -120,40 +95,23 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     setActivatedId(action.id);
     pauseIdleTimer();
 
-    // ---- System-only actions: drawer opens / submenu transitions ----
-    // These MUST NOT pulse inference, submit prompts, or fall through to
-    // handleMenuAction. They are pure shell-owned UI/iframe-bridge actions.
+    // Pulse the trust/reliability score dots to signal processing
+    pulseInference();
+
+    if (overrideMode && overrideMode !== activeMode) {
+      activateMode(overrideMode);
+    }
+
     if (action.id === "cartridge") {
       setSubmenuType("cartridgeSelector");
       return;
     }
 
     if (action.id === "persona") {
+      // Show the persona selector sub-sub menu — pills (Qripto, KNYT) appear
+      // above the prompt bar; clicking a pill opens that persona's iQube drawer.
       setSubmenuType("personaSelector");
       return;
-    }
-
-    // Identity is a drawer-open action (NOT inference). Use the canonical
-    // OPEN_IDENTITY_IQUBE triple-dispatch directly — the runtime now has a
-    // permanently-bound handler that catches it instantly. Do not route
-    // through generic apiAction/iframeAction/submitPrompt.
-    if (action.id === "identity") {
-      pulseInference();
-      openIdentityIQube();
-      resetIdleTimer("quickAction");
-      return;
-    }
-
-    if (action.id === "browse") {
-      setSubmenuType("browserSelector");
-      return;
-    }
-
-    // ---- Regular quick actions: now we can pulse inference ----
-    pulseInference();
-
-    if (overrideMode && overrideMode !== activeMode) {
-      activateMode(overrideMode);
     }
 
     if (action.id === "browse") {
@@ -170,13 +128,9 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     if (action.prompt) {
-      // Dual-dispatch (Wallet pattern): both legs may fire — apiAction hits
-      // the AA-API menu-action path, iframeAction is the immediate iframe
-      // nudge. They are NOT mutually exclusive.
       if (action.apiAction) {
         void handleMenuAction(action.apiAction);
-      }
-      if (action.iframeAction) {
+      } else if (action.iframeAction) {
         sendIframeAction(action.iframeAction);
       }
       submitPrompt(action.prompt);
@@ -189,7 +143,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     handleMenuAction(action.id);
-  }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, runtimeContext, setRuntimeContext, openPersonaIQube, openIdentityIQube, resetIdleTimer, sendIframeAction, pulseInference]);
+  }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, runtimeContext, setRuntimeContext, openPersonaIQube, resetIdleTimer, sendIframeAction, pulseInference]);
 
   const foldIds = modeConfig?.mobileVisibleFold ?? [];
   const firstFoldIndex = modeConfig
@@ -236,7 +190,6 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       style={{ animationDuration: '350ms', borderRadius: 'var(--mm-radius-sm)' }}
       onPointerEnter={pauseIdleTimer}
     >
-      <PendingRuntimeBadge />
       <div
         ref={scrollRef}
         className="flex items-center overflow-x-auto px-0 py-1.5 scrollbar-hide"
@@ -295,24 +248,13 @@ function QuickActionButton({
   const [hovered, setHovered] = useState(false);
   const color = hovered || isActivated ? accent : undefined;
 
-  // Guarded pointer handler — fires on pointerup with stopPropagation so the
-  // dispatch happens before any hover-collapse / idle reset can interfere.
-  // We also keep onClick as a keyboard/Enter fallback (with a dedupe ref).
-  const dispatchedRef = useRef(false);
-  const dispatch = (e: React.SyntheticEvent) => {
-    e.stopPropagation();
-    if (dispatchedRef.current) return;
-    dispatchedRef.current = true;
+  const handleClick = () => {
     onAction(action);
-    // Reset on next tick so the same button can be re-clicked later.
-    setTimeout(() => { dispatchedRef.current = false; }, 50);
   };
 
   return (
     <button
-      type="button"
-      onPointerUp={dispatch}
-      onClick={dispatch}
+      onClick={handleClick}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
       className="flex flex-col items-center justify-center gap-0.5 py-1.5 transition-all duration-150 active:scale-95 shrink-0"
@@ -353,7 +295,6 @@ function CartridgeSelector() {
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
         <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--mm-ink-muted)' }}>Cartridge</span>
-        <PendingRuntimeBadge />
         <button
           onClick={() => setSubmenuType("quickActions")}
           className="ml-auto text-[10px] transition-colors"
@@ -438,16 +379,12 @@ function CodexSelector() {
 }
 
 // ---------------------------------------------------------------------------
-// Persona Selector — LITERAL COPY of CartridgeSelector with substitutions.
+// Persona Selector
 // ---------------------------------------------------------------------------
 
-const PERSONA_OPTIONS = [
-  { id: "knyt" as const,   label: "KNYT",   description: "metaKnyt identity & character stats" },
-  { id: "qripto" as const, label: "Qripto", description: "Qriptopian reader identity" },
-];
-
 function PersonaSelector() {
-  const { selectPersona, setSubmenuType, pauseIdleTimer, resumeIdleTimer } = useShell();
+  const { personaState, selectPersona, setSubmenuType, pauseIdleTimer, resumeIdleTimer } = useShell();
+  const visible = personaState.available;
 
   return (
     <div
@@ -458,7 +395,6 @@ function PersonaSelector() {
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
         <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--mm-ink-muted)' }}>Persona</span>
-        <PendingRuntimeBadge />
         <button
           onClick={() => setSubmenuType("quickActions")}
           className="ml-auto text-[10px] transition-colors"
@@ -467,22 +403,32 @@ function PersonaSelector() {
           ← Back
         </button>
       </div>
-      <div className="flex gap-1.5 justify-end">
-        {PERSONA_OPTIONS.map(p => {
-          return (
-            <CartridgePill
-              key={p.id}
-              isActive={false}
-              accent={undefined}
-              onClick={() => selectPersona(p.id)}
-            >
-              <div className="flex items-center gap-1">
-                <span className="font-medium whitespace-nowrap">{p.label}</span>
-              </div>
-            </CartridgePill>
-          );
-        })}
-      </div>
+      {visible.length === 0 ? (
+        <div className="px-2 py-1 text-[11px]" style={{ color: 'var(--mm-ink-muted)' }}>
+          No personas available
+        </div>
+      ) : (
+        <div className="flex gap-1.5 justify-start">
+          {visible.map(persona => {
+            const isActive = persona.id === personaState.activePersonaId;
+            const Icon = resolveSmartIcon(persona.icon, persona.id);
+            return (
+              <CartridgePill
+                key={persona.id}
+                isActive={isActive}
+                accent={persona.accentHex}
+                onClick={() => selectPersona(persona.id)}
+              >
+                <div className="flex items-center gap-1">
+                  {Icon && <Icon className="h-3.5 w-3.5" />}
+                  <span className="font-medium whitespace-nowrap">{persona.label}</span>
+                  {isActive && <Check className="h-3 w-3" />}
+                </div>
+              </CartridgePill>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -505,22 +451,9 @@ function CartridgePill({
   const [hovered, setHovered] = useState(false);
   const color = isActive ? accent : hovered ? accent : undefined;
 
-  // Guarded pointer dispatch (mirrors QuickActionButton) so the action
-  // fires before any parent hover-collapse / idle reset can interfere.
-  const dispatchedRef = useRef(false);
-  const dispatch = (e: React.SyntheticEvent) => {
-    e.stopPropagation();
-    if (dispatchedRef.current) return;
-    dispatchedRef.current = true;
-    onClick();
-    setTimeout(() => { dispatchedRef.current = false; }, 50);
-  };
-
   return (
     <button
-      type="button"
-      onPointerUp={dispatch}
-      onClick={dispatch}
+      onClick={onClick}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
       className="flex items-center gap-1 px-3 py-1.5 text-xs transition-all duration-150 active:scale-95"

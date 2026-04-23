@@ -19,8 +19,7 @@ import {
   isInferenceStart,
   isInferenceComplete,
 } from "@/lib/shell-messages";
-
-import { postIdentityIQubeOpen } from "@/lib/identity-messages";
+import { postPersonaIQubeOpen } from "@/lib/persona-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
 import { toast } from "sonner";
 import {
@@ -30,8 +29,12 @@ import {
   type QuickActionVisibility,
   type InteractionState,
   type CartridgeState,
+  type PersonaState,
   MODE_CONFIGS,
   DEFAULT_CARTRIDGES,
+  DEFAULT_PERSONAS,
+  DEFAULT_ACTIVE_PERSONA_ID,
+  personaIdToIqubeType,
   IDLE_TIMEOUT_MS,
 } from "@/lib/smart-menu-config";
 
@@ -60,9 +63,7 @@ const INITIAL_HINTS: RuntimeHints = {
 };
 
 // Iframe readiness state (LOV-303)
-// "loaded-unconfirmed" = iframe element loaded but RUNTIME_READY handshake not yet received.
-// Runtime-bound commands MUST NOT flush against this state — only on "ready".
-export type IframeReadiness = "probing" | "loading" | "loaded-unconfirmed" | "ready" | "error" | "blocked";
+export type IframeReadiness = "probing" | "loading" | "ready" | "error" | "blocked";
 
 interface ShellContextValue {
   config: ShellConfig | null;
@@ -81,9 +82,6 @@ interface ShellContextValue {
   // Iframe readiness (LOV-303)
   iframeReadiness: IframeReadiness;
 
-  /** Number of runtime-bound commands waiting for RUNTIME_READY. >0 means UI should show "Connecting…" feedback. */
-  pendingRuntimeCommandCount: number;
-
   // LOV-401: KNYT onboarding active flag
   knytOnboarding: boolean;
 
@@ -98,6 +96,7 @@ interface ShellContextValue {
   submenuVisibility: QuickActionVisibility;
   interactionState: InteractionState;
   cartridgeState: CartridgeState;
+  personaState: PersonaState;
 
   // Runtime context (metaMe ↔ KNYT) — drives the header lightning color
   // and the play menu's central context-toggle quick action.
@@ -115,7 +114,6 @@ interface ShellContextValue {
   resetToWelcome: () => void;
   updateTrust: (trust: { level: string; signals: string[]; scores?: Record<string, number> }) => void;
   iframeRef: React.RefObject<HTMLIFrameElement>;
-  reportIframeReadiness: (status: IframeReadiness) => void;
 
   // Smart Menu actions
   activateMode: (mode: SmartMenuMode) => void;
@@ -127,12 +125,9 @@ interface ShellContextValue {
   launchCartridge: (cartridgeId: string) => void;
   selectCartridge: (cartridgeId: string) => void;
   selectCodex: (codexId: string) => void;
-  /** Select a persona — mirrors launchCartridge exactly. Opens the persona iQube drawer + seeds a prompt. */
-  selectPersona: (iqubeType: "knyt" | "qripto") => void;
+  selectPersona: (personaId: string) => void;
   /** Open the Persona iQube drawer in the runtime (knyt or qripto). */
   openPersonaIQube: (iqubeType: "knyt" | "qripto") => void;
-  /** Open the Identity iQube drawer in the runtime (single drawer, no variants). */
-  openIdentityIQube: () => void;
   resetIdleTimer: (reason?: string) => void;
   pauseIdleTimer: () => void;
   resumeIdleTimer: () => void;
@@ -212,19 +207,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
-  // Replay queue for runtime-bound commands. Unlike a strict-wait queue,
-  // commands are also DISPATCHED OPTIMISTICALLY (Phase A) as soon as the
-  // iframe element is loaded. They additionally stay in this replay set so
-  // they re-fire ONCE on the first true RUNTIME_READY (Phase B), guaranteeing
-  // delivery even if the optimistic send arrived before the runtime's
-  // message client mounted.
-  const runtimeReplayQueueRef = useRef<Array<{ command: () => void; label?: string; id: number }>>([]);
-  const replaySeqRef = useRef(0);
-  const [pendingRuntimeCommandCount, setPendingRuntimeCommandCount] = useState(0);
-  // Forward refs so launchCartridge (defined early) can reach helpers
-  // defined later in the provider body.
-  const stageRuntimeCommandRef = useRef<((command: () => void, label?: string) => void) | null>(null);
-  const submitPromptRef = useRef<((text: string) => Promise<void> | void) | null>(null);
 
   // Smart Menu state
   const [viewState, setViewState] = useState<ViewState>("defaultNav");
@@ -237,6 +219,16 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     activeCodexId: "qripto-codex",
     available: DEFAULT_CARTRIDGES,
   });
+  const [personaState, setPersonaState] = useState<PersonaState>(() => {
+    // Guard: if hardcoded default doesn't exist in visible personas, use first available.
+    const fallback = DEFAULT_PERSONAS.find(p => p.id === DEFAULT_ACTIVE_PERSONA_ID)
+      ? DEFAULT_ACTIVE_PERSONA_ID
+      : DEFAULT_PERSONAS[0]?.id ?? "";
+    return {
+      activePersonaId: fallback,
+      available: DEFAULT_PERSONAS,
+    };
+  });
 
   // Runtime context (metaMe ↔ KNYT) — drives header lightning color and copilot framing
   const [runtimeContext, setRuntimeContextState] = useState<RuntimeContext>("metame");
@@ -246,11 +238,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const submenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Track whether prompt has text (prevents collapse)
   const promptHasTextRef = useRef(false);
-  // Track latest submenuType so the idle collapse timer reads the live value
-  // at fire time — prevents auto-collapse from tearing down explicit selectors
-  // (persona/cartridge/codex/browser) the user is interacting with.
-  const submenuTypeRef = useRef<SubmenuType | null>(null);
-  useEffect(() => { submenuTypeRef.current = submenuType; }, [submenuType]);
 
   // Lazily create inference controller
   if (!inferCtrl.current) {
@@ -258,10 +245,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => () => inferCtrl.current?.cleanup(), []);
-
-  const reportIframeReadiness = useCallback((status: IframeReadiness) => {
-    setIframeReadiness(status);
-  }, []);
 
   // Idle auto-hide logic — split timers per spec
   const clearIdleTimer = useCallback(() => {
@@ -271,24 +254,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   const startIdleTimer = useCallback(() => {
     clearIdleTimer();
-    // 4s: auto-hide quick action floating layer (no effect on explicit selectors —
-    // those are gated by isSelectorOpen in SmartMenu.tsx)
+    // 4s: auto-hide quick action floating layer
     submenuTimerRef.current = setTimeout(() => {
       setSubmenuVisibility("hiddenAutoIdle");
       submenuTimerRef.current = null;
     }, 4000);
-    // 5s: full prompt collapse (only if prompt is empty AND no explicit selector
-    // is open). Persona/Cartridge/Codex/Browser selectors are explicit user
-    // navigation and must persist until pill click or ← Back.
+    // 5s: full prompt collapse (only if prompt is empty)
     idleTimerRef.current = setTimeout(() => {
       if (promptHasTextRef.current) return; // spec: don't collapse with text
-      const currentType = submenuTypeRef.current;
-      if (
-        currentType === "personaSelector" ||
-        currentType === "cartridgeSelector" ||
-        currentType === "codexSelector" ||
-        currentType === "browserSelector"
-      ) return;
       setViewState("defaultNav");
       setActiveMode(null);
       setSubmenuTypeState(null);
@@ -396,21 +369,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     notifyModeChanged(null, "defaultNav");
   }, [clearIdleTimer, notifyModeChanged]);
 
-  // Reference-stable setSubmenuType: avoids stale closures in quick-action callbacks
-  // (e.g. Persona) where re-renders of startIdleTimer would otherwise leak through.
-  const startIdleTimerRef = useRef(startIdleTimer);
-  useEffect(() => { startIdleTimerRef.current = startIdleTimer; }, [startIdleTimer]);
-
   const setSubmenuType = useCallback((type: SubmenuType | null) => {
     setSubmenuTypeState(type);
     if (type) {
       setSubmenuVisibility("visibleAuto");
-      // Defer arming the idle timer to the next microtask so any pointer-leave
-      // race that fires in the same tick as the type change cannot pre-arm a
-      // competing collapse timer.
-      queueMicrotask(() => startIdleTimerRef.current?.());
+      startIdleTimer();
     }
-  }, []);
+  }, [startIdleTimer]);
 
   const toggleSubmenu = useCallback(() => {
     setSubmenuVisibility(prev => {
@@ -425,39 +390,49 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Launch a cartridge inside the runtime iframe.
-   *
-   * Restored DUAL-DISPATCH behavior:
-   *   1. Send LAUNCH_CARTRIDGE (overlay open) — staged: Phase A immediate
-   *      if iframe element loaded, Phase B replay on true RUNTIME_READY.
-   *   2. Send a cartridge prompt through the authoritative shell prompt
-   *      pipeline (`submitPrompt`) so the runtime produces its conversational
-   *      response / content selection — same path used by the prompt bar.
-   *
-   * Header lightning bolt color is unaffected (driven by `runtimeContext`).
+   * Sends a LAUNCH_CARTRIDGE message — does NOT mutate cartridgeState
+   * (so the header lightning bolt color is unaffected; that color is now
+   * driven exclusively by `runtimeContext`).
    */
   const launchCartridge = useCallback((cartridgeId: string) => {
     const cart = cartridgeState.available.find(c => c.id === cartridgeId);
     const codexId = cart?.default_codex_id;
 
-    // Overlay-open dispatcher — captures cartridgeId, references live iframeRef/config.
-    // Runtime's MetaMeRuntimeClient handler reads msg.payload.cartridge_id,
-    // so the envelope MUST be nested under `payload`.
-    const dispatchOverlay = () => {
-      if (!iframeRef.current || !config) return;
+    if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
+
+      // Canonical mount message — runtime opens the cartridge overlay
+      // (z-axis) and replies with CARTRIDGE_OVERLAY_ACTIVE.
+      // Runtime's MetaMeRuntimeClient handler reads msg.payload.cartridge_id,
+      // so the envelope MUST be nested under `payload`.
       postToIframe(iframeRef.current, {
         type: "LAUNCH_CARTRIDGE",
         payload: { cartridge_id: cartridgeId },
       }, origin);
-    };
 
-    // Stage the overlay open (Phase A immediate if loaded-unconfirmed,
-    // Phase B replay on true RUNTIME_READY).
-    stageRuntimeCommandRef.current?.(dispatchOverlay, `${cart?.label ?? cartridgeId} cartridge`);
+      // Seed an initialisation prompt so the cartridge opens with a
+      // meaningful first turn instead of an empty surface.
+      const seedPrompts: Record<string, string> = {
+        "metame-codex": "Open the metaMe cartridge and orient me.",
+        "qripto-codex": "Open the Qriptopian cartridge and show me what's available.",
+        "knyt-codex":   "Open the KNYT cartridge and walk me through it.",
+      };
+      const seedPrompt =
+        seedPrompts[cartridgeId] ??
+        `Open the ${cart?.label ?? cartridgeId} cartridge.`;
+
+      postToIframe(iframeRef.current, {
+        type: "PROMPT_SUBMIT",
+        text: seedPrompt,
+        cartridge_id: cartridgeId,
+        codex_id: codexId,
+      }, origin);
+    }
 
     // Restore local cartridge state so the active checkmark moves, the codex
     // selector follows the new cartridge default, and outbound context
-    // enrichment carries the correct cartridge_id + codex_id.
+    // enrichment carries the correct cartridge_id + codex_id. Header lightning
+    // color is NOT affected (RuntimeHeader reads `runtimeContext`).
     setCartridgeState(prev => ({
       ...prev,
       activeCartridgeId: cartridgeId,
@@ -474,20 +449,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     inferCtrl.current?.start();
     inferCtrl.current?.complete(4_000);
 
-    // Restore the second dispatch leg: send a cartridge prompt through the
-    // shell's authoritative prompt pipeline so the runtime generates its
-    // conversational response / content selection. Use a microtask so the
-    // cartridge_id state update lands before submitPrompt reads it.
-    const seedPrompts: Record<string, string> = {
-      "metame-codex": "Open the metaMe cartridge and orient me.",
-      "qripto-codex": "Open the Qriptopian cartridge and show me what's available.",
-      "knyt-codex":   "Open the KNYT cartridge and walk me through it.",
-    };
-    const seedPrompt =
-      seedPrompts[cartridgeId] ??
-      `Open the ${cart?.label ?? cartridgeId} cartridge.`;
-    queueMicrotask(() => { void submitPromptRef.current?.(seedPrompt); });
-
     // Return to quick actions after selecting
     setSubmenuTypeState("quickActions");
     startIdleTimer();
@@ -495,7 +456,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Legacy `selectCartridge` — kept for backward compat (e.g. cartridge selector
-   * pill click). Routes through `launchCartridge` for full dual-dispatch.
+   * pill click). Now routes through `launchCartridge` so it dispatches to the
+   * iframe instead of mutating header state.
    */
   const selectCartridge = useCallback((cartridgeId: string) => {
     launchCartridge(cartridgeId);
@@ -536,115 +498,49 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }, [config, startIdleTimer]);
 
   /**
-   * Replay all pending runtime commands once on a true RUNTIME_READY handshake.
-   * Drains the replay queue (clears pending count and replay entries) so each
-   * command fires at most twice total: once optimistically and once on replay.
-   */
-  const replayPendingRuntimeCommands = useCallback(() => {
-    if (!iframeRef.current || !config) return;
-    const queue = runtimeReplayQueueRef.current;
-    if (queue.length === 0) return;
-    runtimeReplayQueueRef.current = [];
-    setPendingRuntimeCommandCount(0);
-    for (const entry of queue) {
-      try {
-        console.log("[Shell] replay runtime command on RUNTIME_READY:", entry.label ?? "(unlabeled)");
-        entry.command();
-      } catch (err) {
-        console.warn("[Shell] replay runtime command failed:", err);
-      }
-    }
-  }, [config]);
-
-  /**
-   * Stage a runtime-bound command using the 2-phase model:
-   *   Phase A — if the iframe element is loaded (loaded-unconfirmed or ready),
-   *             dispatch immediately so the user does not wait on handshake.
-   *   Phase B — if not yet ready, also enroll the command in the replay queue
-   *             so it re-fires once on the first true RUNTIME_READY.
+   * Select a persona pill.
    *
-   * If the iframe is still probing/loading/error, the command is queued
-   * for replay only (it will dispatch on first RUNTIME_READY).
-   */
-  const stageRuntimeCommand = useCallback((command: () => void, label?: string) => {
-    const hasFrame = !!iframeRef.current && !!config;
-    const canSendNow =
-      hasFrame && (iframeReadiness === "ready" || iframeReadiness === "loaded-unconfirmed");
-
-    // Phase A: optimistic immediate dispatch
-    if (canSendNow) {
-      try { command(); } catch (err) { console.warn("[Shell] optimistic runtime command failed:", err); }
-    }
-
-    // If runtime is already truly ready, no replay is needed.
-    if (iframeReadiness === "ready") return;
-
-    // Phase B: enroll for replay on next RUNTIME_READY
-    const id = ++replaySeqRef.current;
-    runtimeReplayQueueRef.current.push({ command, label, id });
-    setPendingRuntimeCommandCount(runtimeReplayQueueRef.current.length);
-
-    if (label && !canSendNow) {
-      // Only show "will open as soon as runtime is ready" when we couldn't
-      // even attempt an optimistic send. Otherwise the badge already shows
-      // "Waiting for runtime handshake…".
-      toast.info(`${label} will open as soon as the runtime is ready…`, { duration: 2500 });
-    }
-  }, [config, iframeReadiness]);
-
-  // Keep ref in sync so launchCartridge (declared earlier) can call us.
-  useEffect(() => {
-    stageRuntimeCommandRef.current = stageRuntimeCommand;
-  }, [stageRuntimeCommand]);
-
-  /**
-   * Select a persona — LITERAL COPY of launchCartridge() with substitutions.
+   * Canonical flow (per runtime owner contract):
+   *   1. update local activePersonaId
+   *   2. dispatch OPEN_PERSONA_IQUBE with the mapped iqube_type
    *
-   * Three-step flow (identical to cartridge):
-   *   1. Stage the OPEN_PERSONA_IQUBE overlay command (Phase A immediate
-   *      + Phase B replay on RUNTIME_READY).
-   *   2. Pulse trust/reliability dots.
-   *   3. Run the shell prompt pipeline via `submitPrompt(...)` so the
-   *      runtime produces a conversational response — same authoritative
-   *      path the prompt bar uses.
+   * We intentionally do NOT also send SELECTOR_CHANGE here — that triggers
+   * a runtime content refresh which can supersede the drawer open. If the
+   * runtime later needs persona sync, do it as an explicit secondary step.
    */
-  const selectPersona = useCallback((iqubeType: "knyt" | "qripto") => {
+  const selectPersona = useCallback((personaId: string) => {
+    const persona = personaState.available.find(p => p.id === personaId);
+    if (!persona) {
+      console.warn("[Shell] selectPersona: id not in visible list", personaId, personaState.available.map(p => p.id));
+      return;
+    }
+    const iqubeType = personaIdToIqubeType(personaId);
+    if (!iqubeType) {
+      console.warn("[Shell] selectPersona: no iqube_type mapping for", personaId);
+      return;
+    }
+    setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
+    // Note: we do NOT revert submenu to "quickActions" here. The selector
+    // stays visible so the user has feedback that their click registered,
+    // and so the menu doesn't appear to "just reopen the be QL menu".
+    startIdleTimer();
+
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
-      postToIframe(iframeRef.current, {
-        type: "OPEN_PERSONA_IQUBE",
-        payload: { iqube_type: iqubeType },
-      }, origin);
+      console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
+      postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
     }
-    inferCtrl.current?.start();
-    inferCtrl.current?.complete(4_000);
-    const prompt = `Tell me about the ${iqubeType === "knyt" ? "KNYT" : "Qripto"} persona.`;
-    queueMicrotask(() => { void submitPromptRef.current?.(prompt); });
-    setSubmenuTypeState("quickActions");
-    startIdleTimer();
-  }, [config, startIdleTimer]);
+  }, [config, startIdleTimer, personaState.available]);
 
   /**
    * Open the Persona iQube drawer in the runtime directly (without changing
-   * the active persona). Single message — mirrors LAUNCH_CARTRIDGE shape.
+   * the active persona). Fire-and-forget — runtime does not currently emit
+   * a persona-specific acknowledgment.
    */
   const openPersonaIQube = useCallback((iqubeType: "knyt" | "qripto") => {
     if (!iframeRef.current || !config) return;
-    const origin = getIframeOrigin(config);
-    postToIframe(iframeRef.current, {
-      type: "OPEN_PERSONA_IQUBE",
-      payload: { iqube_type: iqubeType },
-    }, origin);
-  }, [config]);
-
-  /**
-   * Open the Identity iQube drawer in the runtime. Single drawer — no
-   * iqube_type variants. Direct send — runtime handler is permanently bound.
-   */
-  const openIdentityIQube = useCallback(() => {
-    if (!iframeRef.current || !config) return;
-    console.log("[Shell] openIdentityIQube");
-    postIdentityIQubeOpen(iframeRef.current, getIframeOrigin(config));
+    console.log("[Shell] openPersonaIQube →", iqubeType);
+    postPersonaIQubeOpen(iframeRef.current, getIframeOrigin(config), iqubeType);
   }, [config]);
 
   const setInteractionState = useCallback((state: InteractionState) => {
@@ -654,13 +550,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [resetIdleTimer]);
 
-  // Replay queued runtime commands as soon as we have a true RUNTIME_READY handshake.
-  useEffect(() => {
-    if (iframeReadiness === "ready") {
-      replayPendingRuntimeCommands();
-    }
-  }, [iframeReadiness, replayPendingRuntimeCommands]);
-
+  // Listen for iframe inference lifecycle signals
   useEffect(() => {
     if (!config) return;
     const runtimeOrigin = getIframeOrigin(config);
@@ -670,12 +560,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       const msg = normalizeInbound(e.data);
       if (!msg) return;
       const t = msg.type as string;
-
-      if (t === "RUNTIME_READY") {
-        setIframeReadiness("ready");
-        replayPendingRuntimeCommands();
-        return;
-      }
 
       if (import.meta.env.DEV) {
         console.log("[Shell:lifecycle]", t, "origin:", e.origin, "state:", msg.state ?? "-");
@@ -1017,12 +901,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [config, applyConfigUpdate, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
 
-  // Expose submitPrompt via ref so launchCartridge (declared earlier) can
-  // reach the authoritative shell prompt pipeline for cartridge dual-dispatch.
-  useEffect(() => {
-    submitPromptRef.current = submitPrompt;
-  }, [submitPrompt]);
-
   const resetToWelcome = useCallback(() => {
     setShellState("welcome");
     setActiveMenuItem(null);
@@ -1070,29 +948,31 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const ctxValue: ShellContextValue = useMemo(() => ({
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
-    runtimeHints, iframeReadiness, pendingRuntimeCommandCount, knytOnboarding,
+    runtimeHints, iframeReadiness, knytOnboarding,
     cartridgeOverlay, closeCartridgeOverlay,
     // Smart Menu state
-    viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState,
+    viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
+    // Runtime context
     runtimeContext, setRuntimeContext,
     // Actions
     toggleQuickLinks,
     hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
-    submitPrompt, resetToWelcome, updateTrust, iframeRef, reportIframeReadiness,
+    submitPrompt, resetToWelcome, updateTrust, iframeRef,
     // Smart Menu actions
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, openIdentityIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
     pulseInference,
   }), [
     config, loading, authenticated, shellState,
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
-    runtimeHints, iframeReadiness, pendingRuntimeCommandCount, knytOnboarding,
+    runtimeHints, iframeReadiness, knytOnboarding,
     cartridgeOverlay, closeCartridgeOverlay,
-    viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState,
+    viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
+    runtimeContext, setRuntimeContext,
     toggleQuickLinks, hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
-    submitPrompt, resetToWelcome, updateTrust, iframeRef, reportIframeReadiness,
+    submitPrompt, resetToWelcome, updateTrust, iframeRef,
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, openIdentityIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
     pulseInference,
   ]);
 

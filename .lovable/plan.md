@@ -1,107 +1,180 @@
 
+# Fix the Persona flow end to end
 
-# Restoration manifest — what to surgically re-apply after reverting to build `53ee4b0b`
+## What is broken right now
 
-Build `53ee4b0b` ("Fixed persona dispatch bug", 2026-04-22 03:48) is the last build where the Persona/Cartridge selectors rendered and persisted. After the revert, the following non-debugging features must be re-applied. Each item lists the file(s), the change, and the source-of-truth message in the chat history.
+There are two separate issues in the current shell code:
 
-## Group A — Be submenu reordering & labels (msg #739, #740)
+1. **The shell boots into an invalid persona state**
+   - `DEFAULT_PERSONAS` now hides `metame-persona` in `src/lib/smart-menu-config.ts`
+   - but `ShellContext` still initializes `activePersonaId: "metame-persona"`
+   - so the shell starts with an active persona that does not exist in the rendered list
 
-**File:** `src/lib/smart-menu-config.ts`
-- Reorder `BE_ACTIONS` to: **Persona | Memories | Identity | Connections | Settings**
-- Rename `memory` action label from "Memory" to **"Memories"**
-- Update `mobileVisibleFold` for Be to match the new order
+2. **Persona selection is doing two different runtime actions at once**
+   - `selectPersona()` currently sends:
+     - `SELECTOR_CHANGE` with `selector_type: "persona"`
+     - `OPEN_PERSONA_IQUBE`
+   - the runtime owner’s contract for opening the drawer only requires `OPEN_PERSONA_IQUBE`
+   - that matches your symptom exactly: **runtime content refreshes, but the persona drawer does not open reliably**
 
-(Note: the previous Persona↔Settings swap from msg #727/#728 is superseded by this newer order — apply the newer order only.)
+A third gap is making this harder to debug:
 
-## Group B — Identity quick link (msg #737, #738)
+3. **There is no persona-specific acknowledgment path**
+   - cartridges have explicit overlay lifecycle handling
+   - personas do not
+   - so the shell cannot tell the difference between:
+     - submenu render problem
+     - wrong outbound message
+     - runtime ignore/no-op
+     - runtime opens then immediately replaces the drawer
 
-**Files:**
-- **New file:** `src/lib/identity-messages.ts` — `postIdentityIQubeOpen(iframe, origin)` triple-dispatch helper (canonical envelope, hybrid with msg_id/timestamp/source, bare flat). No `iqube_type`. Already preserved in current tree — verify it survived the revert; if not, re-create from the version pasted in this conversation.
-- `src/contexts/ShellContext.tsx` — add `openIdentityIQube()` method on the shell context that calls `postIdentityIQubeOpen(iframeRef.current, getIframeOrigin(config))`. No `apiAction`, no `iframeAction`, no `submitPrompt` — drawer-open only.
-- `src/components/SmartMenuSubmenu.tsx` — `handleAction` Identity branch: call `openIdentityIQube()` directly and return.
-- **New test:** `src/test/identity-flow.test.ts` (already in tree — preserve).
+## Implementation plan
 
-## Group C — Earn submenu refactor + wallet deep-link tabs (msg #753, #754)
+### 1. Make persona state internally consistent
+Update the persona model so hidden personas cannot leave the shell in an impossible state.
 
-**File:** `src/lib/smart-menu-config.ts`
-- Replace `EARN_ACTIONS` with: **Goal | Task | Wallet | Reward | Offer**
-- `task`, `reward`, `offer` deep-link to the corresponding Wallet tabs (use the existing wallet-tab field on the action def — value matches the runtime's tab id).
-- Remove the older Earn entries that are not in the above five.
+Files:
+- `src/lib/smart-menu-config.ts`
+- `src/contexts/ShellContext.tsx`
 
-**File:** `src/components/SmartMenuSubmenu.tsx`
-- Optimistic "Opening…" pending feedback for Earn deep-link actions while the runtime mounts. Implementation: the existing `PendingRuntimeBadge` + activation-id state pattern.
+Changes:
+- Replace the comment-hidden `metaMe` approach with an explicit visible/hidden rule in the persona config, or a dedicated filtered constant for rendered personas.
+- Set the default `activePersonaId` to a visible persona (`qripto-persona` unless you want `knyt-persona`).
+- Ensure `personaState.available` only contains personas the submenu should actually render.
+- Add a guard so if the active persona is not in `available`, the shell automatically falls back to the first visible persona.
 
-## Group D — SmartMenu activation zones (msg #755, #756, #761, #762)
+Result:
+- The shell never starts with a missing persona.
+- Persona pills always have a valid active selection.
 
-**File:** `src/components/SmartMenu.tsx`
-- Left and right "bridge" containers between center cluster (Make/Play/Earn) and edge buttons (Be/Share) split **50/50**: outer half belongs to Be/Share hover zone, inner half is Play activation gap.
-- Edge buttons (`Be`, `Share`) get `expandedHitArea` (min-width `5rem`, px-2) so their tap+hover zone is ~3× the center buttons.
-- Play "gap intent" pointer-enter uses a 220ms hover-intent timer before activating; pointer-leave cancels it.
-- `handleNavAreaPointerUp` activates Play quick actions on touch in empty nav area.
-- `navRestoredAt` / `modeActivatedAt` 400ms phantom-hover guards survive the revert as-is — reapply if missing.
+### 2. Make persona opening use one canonical runtime action
+Refactor the end-to-end persona click flow so it does exactly one thing for drawer opening.
 
-This is exactly the layout already in the file pasted in this conversation; treat that file as the canonical post-revert version.
+Files:
+- `src/contexts/ShellContext.tsx`
+- `src/lib/shell-messages.ts`
 
-## Group E — Command queueing & pending UI (msg #761, #762)
+Changes:
+- Create one canonical mapper:
+  - `qripto-persona -> "qripto"`
+  - `knyt-persona -> "knyt"`
+- Remove the loose fallback logic (`everything else -> qripto`).
+- Change `selectPersona()` so it:
+  1. updates local shell state
+  2. sends the canonical `OPEN_PERSONA_IQUBE` message
+  3. only sends `SELECTOR_CHANGE` if runtime actually needs that for persona sync
+- If selector sync is still required, separate it into an explicit secondary sync step instead of bundling it into “open drawer”.
 
-**File:** `src/contexts/ShellContext.tsx`
-- `stageRuntimeCommand(dispatchFn, label)` helper that queues a runtime command, fires it immediately if iframe is ready, otherwise replays on `RUNTIME_READY`.
-- `inferCtrl` start/complete pattern for optimistic in-flight UI on Persona/Cartridge launches.
-- `submitPromptRef` for queued prompt submission via `queueMicrotask`.
+Preferred behavior:
+```ts
+postToIframe(iframeRef.current, {
+  type: "OPEN_PERSONA_IQUBE",
+  payload: { iqube_type: "knyt" | "qripto" },
+}, origin);
+```
 
-These were used by `selectPersona` and `launchCartridge` after the revert point.
+Result:
+- Clicking a persona pill opens the drawer instead of refreshing content.
+- The shell follows the runtime owner’s contract exactly.
 
-## Group F — Persona dispatch (build 53ee4b0b baseline + ONE simplification we want to keep)
+### 3. Make the submenu render robustly instead of silently failing
+Harden the Persona submenu so missing data becomes visible immediately.
 
-The reverted build's `selectPersona` already does the right thing. The only change worth keeping from post-revert work is the **single-message dispatch** (no triple-dispatch). After revert:
+Files:
+- `src/components/SmartMenuSubmenu.tsx`
 
-**File:** `src/contexts/ShellContext.tsx` — `selectPersona`
-- Send ONE message identical to Cartridge:
-  ```ts
-  postToIframe(iframeRef.current, {
-    type: "OPEN_PERSONA_IQUBE",
-    payload: { iqube_type: iqubeType },
-  }, origin);
-  ```
-- Delete `src/lib/persona-messages.ts` if the revert restored it.
-- Update `src/test/persona-flow.test.ts` to assert single-message dispatch.
+Changes:
+- Render persona pills from the validated visible persona list.
+- Keep persona pills left-justified as requested.
+- Keep cartridge pills right-justified as requested.
+- Add a small fallback empty state if the visible persona list is empty:
+  - e.g. “No personas available”
+- Keep metaMe hidden for now.
 
-This is the only post-revert behavioural change to retain in this group; it does not affect rendering — selectors will work because we are NOT re-applying the `setSubmenuType` idle-timer mistake.
+Result:
+- If persona config ever breaks again, the UI will show a clear state instead of “nothing appears”.
 
-## Group G — Memory updates to re-apply
+### 4. Add persona-specific diagnostics and success criteria
+Make the bridge observable so this cannot regress silently.
 
-After revert, restore these memory entries:
-- `mem://integration/persona-iqube-contract.md` — single OPEN_PERSONA_IQUBE dispatch
-- `mem://integration/identity-iqube-contract.md` — direct openIdentityIQube, no apiAction
-- `mem://integration/launch-cartridge-contract.md` — payload-nested cartridge_id
-- `mem://features/persona-system.md` — append: "Selectors must not arm idle timer in `setSubmenuType`."
+Files:
+- `src/contexts/ShellContext.tsx`
+- `docs/SHELL_CONTRACT.md`
+- `docs/RUNTIME_THINCLIENT_REFERENCE.md`
 
-## What we are explicitly NOT re-applying
+Changes:
+- Add focused logging around persona actions:
+  - quick action opened persona selector
+  - persona selected
+  - `OPEN_PERSONA_IQUBE` dispatched with chosen `iqube_type`
+- If the runtime already emits any persona-related inbound event, wire it into the shell logger.
+- If not, document the missing ack explicitly and treat `OPEN_PERSONA_IQUBE` as a fire-and-forget command with a known limitation until runtime adds an acknowledgment.
+- Update docs so the canonical flow is accurate:
+  - Be → Persona → visible persona pills
+  - pill click → local state update + `OPEN_PERSONA_IQUBE`
+  - no extra inference/content refresh side effect
 
-These were the failed debugging attempts and must stay reverted:
-- The `startIdleTimerRef` / `queueMicrotask(startIdleTimerRef.current)` block inside `setSubmenuType` (the cause of the regression)
-- The `submenuTypeRef` guard inside the 5s `idleTimerRef` (no longer needed once `setSubmenuType` doesn't arm the timer)
-- The `isSelectorOpen` gate in `SmartMenu.tsx` `showSubmenu` (harmless, but can be omitted)
-- Triple-dispatch envelope helpers for Persona/Identity (single-message dispatch is preferred per Group F; identity helper stays single-purpose)
+Result:
+- Future debugging becomes straightforward.
+- The documented contract matches the actual implementation.
 
-## Execution order after revert
+### 5. Add regression tests for the exact failure you hit
+Add unit coverage around the shell-side persona contract.
 
-1. Verify `Be → Persona → KNYT/Qripto` selector renders and persists in the reverted build (sanity check the baseline).
-2. Apply Group A (Be order + Memories label).
-3. Apply Group B (Identity).
-4. Apply Group C (Earn refactor).
-5. Apply Group D (activation zones).
-6. Apply Group E (command queue + pending UI).
-7. Apply Group F (single-message persona dispatch).
-8. Apply Group G (memory).
-9. Run `vitest` — persona-flow + identity-flow tests should pass.
-10. Manual verify: Be→Persona, Be→Identity, Play→Cartridge, Earn→Task/Reward/Offer deep-link.
+Files:
+- `src/test/...` new or existing test files
 
-## How to revert
+Tests:
+- default active persona must exist in `DEFAULT_PERSONAS`
+- hidden metaMe persona is not rendered
+- `personaId -> iqube_type` mapping is exact
+- `OPEN_PERSONA_IQUBE` is envelope-safe and not double-nested
+- selector rendering uses the visible persona list, not a stale hardcoded default
 
-Use the History tab or the revert button under the build `53ee4b0b` message in chat to restore that snapshot, then proceed with steps 2–10.
+Result:
+- This specific regression is caught automatically next time.
 
-<lov-actions>
-  <lov-open-history>View History</lov-open-history>
-</lov-actions>
+## Technical notes
 
+### Root cause summary
+```text
+Current flow:
+Be -> Persona -> personaSelector -> click pill
+  -> SELECTOR_CHANGE(persona)
+  -> OPEN_PERSONA_IQUBE(...)
+  -> runtime refreshes content
+  -> drawer open is lost / ignored / superseded
+
+Target flow:
+Be -> Persona -> personaSelector -> click pill
+  -> local activePersonaId updates
+  -> OPEN_PERSONA_IQUBE(...)
+  -> runtime opens requested drawer
+```
+
+### Files to touch
+- `src/lib/smart-menu-config.ts`
+- `src/contexts/ShellContext.tsx`
+- `src/components/SmartMenuSubmenu.tsx`
+- `src/lib/shell-messages.ts` if type tightening is needed
+- `docs/SHELL_CONTRACT.md`
+- `docs/RUNTIME_THINCLIENT_REFERENCE.md`
+- test file(s) under `src/test/`
+
+## Expected outcome after the fix
+
+- The Be menu shows only:
+  - Settings
+  - Persona
+  - Memory
+  - Identity
+  - Connections
+- Persona submenu shows only:
+  - Qripto
+  - KNYT
+- Persona options are visibly left-aligned
+- Cartridge options remain right-aligned
+- Clicking `Qripto` opens the Qripto persona iQube drawer
+- Clicking `KNYT` opens the KNYT persona iQube drawer
+- No unwanted runtime prompt refresh replaces the drawer
+- The shell starts in a valid persona state every time

@@ -23,7 +23,6 @@ export type ShellOutbound =
   | { type: "DEVICE_CONTEXT_UPDATE"; context: DeviceContext }
   | { type: "MODE_CHANGED"; mode: string | null; view_state: string; cartridge_id?: string; codex_id?: string }
   | { type: "OPEN_PERSONA_IQUBE"; payload: { iqube_type: "knyt" | "qripto" } }
-  | { type: "OPEN_IDENTITY_IQUBE"; payload: Record<string, never> }
   // Browser bridge events (shell → runtime)
   | { type: "browser.open.request"; payload?: { intent?: string } }
   | { type: "browser.close.request"; payload: { sessionId: string } }

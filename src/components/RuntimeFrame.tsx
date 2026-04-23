@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, useRef } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useShell, type IframeReadiness } from "@/contexts/ShellContext";
 import { useBrowserOptional } from "@/contexts/BrowserContext";
 import EmbedFrame from "@/components/EmbedFrame";
@@ -15,40 +15,26 @@ function getDeviceType(): DeviceType {
 }
 
 export default function RuntimeFrame() {
-  const { config, iframeRef, updateTrust, reportIframeReadiness } = useShell();
+  const { config, iframeRef, updateTrust, cartridgeState } = useShell();
   const browser = useBrowserOptional();
 
   // LOV-302: Transition class for smooth cartridge/codex switches
-  const [transitioning] = useState(false);
-
-  // Guard so bootstrap is sent at most twice: once on iframe load,
-  // and once again on first true RUNTIME_READY (handshake replay).
-  const bootstrapSentRef = useRef({ onLoad: false, onReady: false });
+  const [transitioning, setTransitioning] = useState(false);
 
   // LOV-303: Report iframe readiness to shell
   const handleStatusChange = useCallback((status: IframeReadiness) => {
     console.log("[Shell] iframe readiness:", status);
-    reportIframeReadiness(status);
-  }, [reportIframeReadiness]);
+  }, []);
 
-  /**
-   * Idempotent bootstrap: SHELL_READY → HANDOFF → SET_THEME → DEVICE_CONTEXT_UPDATE.
-   * Safe to call multiple times. Used for both the initial iframe-load send
-   * and the post-handshake replay (so runtimes that mount their message
-   * client late still get a guaranteed bootstrap).
-   */
-  const sendBootstrap = useCallback((reason: "onLoad" | "onReady") => {
+  const handleReady = useCallback(() => {
     if (!config || !iframeRef.current) return;
-    if (bootstrapSentRef.current[reason]) return;
-    bootstrapSentRef.current[reason] = true;
-
     const origin = resolveIframeOrigin(config);
     const theme = document.documentElement.classList.contains("dark") ? "dark" : "light";
 
-    console.log(`[Shell] sendBootstrap (${reason}) → ${origin}`);
-
+    // Step 1: SHELL_READY
     postToIframe(iframeRef.current, { type: "SHELL_READY", hide_chrome: true }, origin);
 
+    // Step 2: HANDOFF with token + AA credentials for runtime AA client
     if (config.iframe.handoff_token) {
       const aaBaseUrl = import.meta.env.VITE_AIGENT_Z_AA_BASE || "https://aa.dev-beta.aigentz.me/aa/v1";
       const aaToken = getToken();
@@ -67,6 +53,7 @@ export default function RuntimeFrame() {
 
     postToIframe(iframeRef.current, { type: "SET_THEME", theme }, origin);
 
+    // Step 3: Send initial device context
     postToIframe(iframeRef.current, {
       type: "DEVICE_CONTEXT_UPDATE",
       context: {
@@ -75,15 +62,6 @@ export default function RuntimeFrame() {
       },
     }, origin);
   }, [config, iframeRef]);
-
-  const handleFrameLoad = useCallback(() => {
-    sendBootstrap("onLoad");
-  }, [sendBootstrap]);
-
-  // Reset bootstrap guards when config changes (e.g., refresh / reset)
-  useEffect(() => {
-    bootstrapSentRef.current = { onLoad: false, onReady: false };
-  }, [config?.iframe?.url]);
 
   // Forward viewport/device changes to iframe
   useEffect(() => {
@@ -105,24 +83,16 @@ export default function RuntimeFrame() {
     return () => window.removeEventListener("resize", handleResize);
   }, [config, iframeRef]);
 
-  // Listen for iframe → shell messages (single source of truth for RUNTIME_READY)
+  // Listen for iframe → shell messages
   useEffect(() => {
     if (!config) return;
     const origin = resolveIframeOrigin(config);
 
     function handler(ev: MessageEvent) {
-      if (origin !== "*" && ev.origin !== origin) return;
+      if (ev.origin !== origin) return;
       const msg = normalizeInbound(ev.data);
       if (!msg) return;
       const t = msg.type as string;
-
-      // Authoritative RUNTIME_READY detection — accepts enveloped/stringified shapes
-      if (t === "RUNTIME_READY") {
-        console.log("[Shell] RUNTIME_READY received → promoting to ready + replaying bootstrap");
-        reportIframeReadiness("ready");
-        sendBootstrap("onReady");
-        return;
-      }
 
       // Browser bridge events (runtime → shell)
       if (t.startsWith("browser.") && browser) {
@@ -179,11 +149,13 @@ export default function RuntimeFrame() {
           console.log("[Shell] Welcome completed by iframe");
           break;
         case "STATE_SYNC":
+          console.log("[Shell] STATE_SYNC received:", msg.state);
           if ((msg as any).close_codex_handled || ((msg as any).payload && (msg as any).payload.close_codex_handled)) {
             console.log("[Shell:close_codex] ✅ Runtime acknowledged close_codex dismissal");
           }
           break;
         case "TRUST_UPDATE":
+          console.log("[Shell] TRUST_UPDATE received:", msg.trust);
           if (msg.trust && typeof msg.trust === "object") {
             const trust = msg.trust as { level: string; signals: string[]; scores?: Record<string, number> };
             updateTrust(trust);
@@ -194,7 +166,7 @@ export default function RuntimeFrame() {
 
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
-  }, [config, updateTrust, browser, reportIframeReadiness, sendBootstrap]);
+  }, [config, updateTrust, browser]);
 
   if (!config) return null;
 
@@ -205,7 +177,7 @@ export default function RuntimeFrame() {
         url={config.iframe.url}
         origin={config.iframe.origin}
         className="absolute inset-0 h-full w-full"
-        onFrameLoad={handleFrameLoad}
+        onReady={handleReady}
         onStatusChange={handleStatusChange}
       />
     </div>
