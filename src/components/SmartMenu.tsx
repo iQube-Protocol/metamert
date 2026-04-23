@@ -47,6 +47,7 @@ export default function SmartMenu() {
     activateQuickActions,
     handleMenuAction,
     submenuVisibility,
+    submenuType,
     pauseIdleTimer,
     resumeIdleTimer,
   } = useShell();
