@@ -132,7 +132,10 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     if (action.id === "persona") {
       // Show the persona selector sub-sub menu — pills (Qripto, KNYT) appear
       // above the prompt bar; clicking a pill opens that persona's iQube drawer.
+      pauseIdleTimer();
       setSubmenuType("personaSelector");
+      // Defeat the pointer-leave race during the QuickActionsCarousel → PersonaSelector swap.
+      queueMicrotask(() => pauseIdleTimer());
       return;
     }
 
@@ -453,7 +456,6 @@ function PersonaSelector() {
       className="glass-float shadow-mm-low animate-in fade-in slide-in-from-bottom-2 p-2"
       style={{ animationDuration: '350ms', borderRadius: 'var(--mm-radius-sm)' }}
       onPointerEnter={pauseIdleTimer}
-      onPointerLeave={resumeIdleTimer}
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
         <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--mm-ink-muted)' }}>Persona</span>

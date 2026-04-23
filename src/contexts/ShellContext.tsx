@@ -395,13 +395,21 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     notifyModeChanged(null, "defaultNav");
   }, [clearIdleTimer, notifyModeChanged]);
 
+  // Reference-stable setSubmenuType: avoids stale closures in quick-action callbacks
+  // (e.g. Persona) where re-renders of startIdleTimer would otherwise leak through.
+  const startIdleTimerRef = useRef(startIdleTimer);
+  useEffect(() => { startIdleTimerRef.current = startIdleTimer; }, [startIdleTimer]);
+
   const setSubmenuType = useCallback((type: SubmenuType | null) => {
     setSubmenuTypeState(type);
     if (type) {
       setSubmenuVisibility("visibleAuto");
-      startIdleTimer();
+      // Defer arming the idle timer to the next microtask so any pointer-leave
+      // race that fires in the same tick as the type change cannot pre-arm a
+      // competing collapse timer.
+      queueMicrotask(() => startIdleTimerRef.current?.());
     }
-  }, [startIdleTimer]);
+  }, []);
 
   const toggleSubmenu = useCallback(() => {
     setSubmenuVisibility(prev => {
