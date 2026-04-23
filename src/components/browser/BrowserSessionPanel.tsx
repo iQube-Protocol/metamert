@@ -1,4 +1,4 @@
-import { useBrowser } from "@/contexts/BrowserContext";
+import { useBrowserOptional } from "@/contexts/BrowserContext";
 import {
   PanelBottomClose,
   PanelBottomOpen,
@@ -17,6 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 export default function BrowserSessionPanel() {
+  const ctx = useBrowserOptional();
+  if (!ctx) return null;
   const {
     surfaceState,
     mountPayload,
@@ -32,7 +34,7 @@ export default function BrowserSessionPanel() {
     requestMinimize,
     requestExpand,
     requestClose,
-  } = useBrowser();
+  } = ctx;
 
   // Only show when a session is active (any non-collapsed, non-error state with a mount payload)
   if (!mountPayload) return null;
