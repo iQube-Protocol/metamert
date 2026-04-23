@@ -1,105 +1,74 @@
 
 
-# Instructions for Claude Code: Make iQube drawers (Persona, Identity) open as fast as Wallet/Cartridge
+# Restore canonical drawer-open paths for Identity and Persona
 
-Paste the following as a single instruction block to Claude Code working in the metaMe Runtime repo (the Next.js runtime app, NOT this Lovable shell).
+The runtime now has stable, permanently-bound handlers for `OPEN_PERSONA_IQUBE` and `OPEN_IDENTITY_IQUBE` (registered with `[]` deps, not gated on `RUNTIME_READY`). The shell must therefore stop routing these through the wrong paths and stop staging them for replay.
 
----
+## Fix 1 — Identity uses `openIdentityIQube()` directly
 
-## Context
+**File:** `src/components/SmartMenuSubmenu.tsx`
 
-The Lovable thin-client shell sends drawer-open messages to the runtime iframe. Wallet and Cartridge drawers open near-instantly. Persona (`OPEN_PERSONA_IQUBE`) and Identity (`OPEN_IDENTITY_IQUBE`) drawers open very slowly or not at all.
+In `handleAction` (inside `QuickActionsCarousel`), add a dedicated early-return branch for Identity, placed alongside the existing `cartridge` / `persona` / `browse` branches and BEFORE the generic dual-dispatch (`apiAction` / `iframeAction` / `submitPrompt`) block:
 
-Root cause is on the **runtime side**, not the shell side:
-
-1. The runtime's `MetaMeRuntimeClient.onShellMessage` handler for `LAUNCH_CARTRIDGE` is bound very early in the runtime bootstrap. Wallet opens via a built-in **prompt intent** in the runtime's inference/router layer, which is also available immediately.
-2. The handlers for `OPEN_PERSONA_IQUBE` and `OPEN_IDENTITY_IQUBE` are bound **later** in the runtime lifecycle (after the relevant drawer components mount), so early shell messages are dropped.
-3. Neither Persona nor Identity has a corresponding fast-path **prompt intent** in the runtime router, so the inference fallback never opens the drawer either.
-4. The runtime never reliably emits `RUNTIME_READY` in production sessions, so the shell cannot use it as a gate.
-
-The shell already triple-dispatches `OPEN_PERSONA_IQUBE` and `OPEN_IDENTITY_IQUBE` (canonical envelope, hybrid, flat) — that is not the problem. The problem is the **runtime's** message handling and intent routing.
-
-## What to change in the runtime
-
-### 1. Bind `OPEN_PERSONA_IQUBE` and `OPEN_IDENTITY_IQUBE` handlers at the same lifecycle stage as `LAUNCH_CARTRIDGE`
-
-In `MetaMeRuntimeClient` (or whichever module owns `onShellMessage`):
-
-- Move the registration of `OPEN_PERSONA_IQUBE` and `OPEN_IDENTITY_IQUBE` to the **same bootstrap point** where `LAUNCH_CARTRIDGE` is registered, not inside the persona/identity drawer components' `useEffect`.
-- The handler should set a global runtime store flag (e.g. `personaDrawer.open = true`, `personaDrawer.iqubeType = "knyt"`), not directly call into a not-yet-mounted component.
-- Whenever `PersonaIQubeDrawer` / `IdentityIQubeDrawer` mounts, it reads from that store flag and opens itself if the flag is set. This decouples message arrival from component mount order.
-
-This alone will fix ~90% of the perceived slowness.
-
-### 2. Add a small inbound message buffer
-
-In the runtime's shell-message bridge, keep a 32-entry FIFO of inbound messages received before the runtime is fully bootstrapped. On bootstrap completion, replay the buffer through the registered handlers.
-
-This makes the runtime tolerant of shell messages that arrive before any handlers exist (which is what's happening with Persona/Identity today).
-
-### 3. Add prompt intents for `persona` and `identity` so the inference path can also open the drawer
-
-In the runtime's prompt router (the same module that maps `"open my wallet"` → wallet drawer):
-
-- Add a `persona` intent that matches phrases like `"open persona"`, `"qripto persona"`, `"knyt persona"`, `"tell me about the * persona"` and opens the Persona iQube drawer with the matched `iqube_type`.
-- Add an `identity` intent that matches `"identity"`, `"open identity"`, `"identity iqube"`, `"tell me about identity in the iqube protocol"` and opens the Identity iQube drawer.
-
-This gives Persona and Identity the same dual-path reliability Wallet has: the drawer opens either via the direct iframe message OR via the prompt-inference fast path, whichever wins.
-
-### 4. Emit `RUNTIME_READY` reliably
-
-The shell already listens for `RUNTIME_READY` via `normalizeInbound()`. The runtime must:
-
-- emit `{ type: "RUNTIME_READY" }` to `window.parent` once `MetaMeRuntimeClient` has finished bootstrapping AND the shell-message handlers (including persona/identity) are bound.
-- emit it via `window.parent.postMessage(...)` with `targetOrigin: "*"` (the shell normalizes origins).
-- emit it exactly once per mount, but it is safe to emit again on full re-mount.
-
-Without this, the shell's replay-on-ready logic never fires.
-
-### 5. (Optional) Acknowledge drawer-open messages
-
-For each of `LAUNCH_CARTRIDGE`, `OPEN_PERSONA_IQUBE`, `OPEN_IDENTITY_IQUBE`, post back an ack envelope to the shell:
-
-```
-{ type: "DRAWER_OPENED", payload: { drawer: "persona" | "identity" | "cartridge", id?: string } }
+```ts
+if (action.id === "identity") {
+  pulseInference();
+  openIdentityIQube();   // canonical OPEN_IDENTITY_IQUBE triple-dispatch
+  resetIdleTimer("quickAction");
+  return;
+}
 ```
 
-The shell can use this to clear its "Opening…" badge deterministically and to stop any retry attempts. Not required for the speed fix, but eliminates the need for the shell to do timer-based retries.
+This bypasses `handleMenuAction("identity")`, `sendIframeAction("open_identity_iqube")`, and `submitPrompt(...)` — Identity is a drawer-open action, not an inference action.
 
-## What NOT to change
+**File:** `src/lib/smart-menu-config.ts`
 
-- Do not change the message **type names** (`OPEN_PERSONA_IQUBE`, `OPEN_IDENTITY_IQUBE`, `LAUNCH_CARTRIDGE`). The shell contract is correct.
-- Do not require additional fields in the envelopes. Persona uses `payload.iqube_type` ∈ `"knyt" | "qripto"`. Identity has empty payload. Cartridge uses `payload.cartridge_id`.
-- Do not require the shell to wait for `RUNTIME_READY` before sending — the buffer in step 2 must handle early arrivals.
+In the Identity quick-action definition, remove the `apiAction`, `iframeAction`, and `prompt` fields (and any `triggersInference` flag if present). Keep only `id`, `label`, `icon`, and any visual/layout fields. With those fields removed, Identity will no longer be eligible for the generic prompt branch even if the early-return is ever reordered.
 
-## Verification (runtime side)
+## Fix 2 — Persona sends `OPEN_PERSONA_IQUBE` directly, no staging
 
-1. Hard reload the runtime in the iframe. Click Persona → KNYT in the shell within the first 1 second of load. The drawer should open within ~250ms, not after 30+ seconds.
-2. Same test for Identity.
-3. Confirm `RUNTIME_READY` is observed in the shell's console (`[ShellContext] RUNTIME_READY received`).
-4. Confirm that sending an `OPEN_PERSONA_IQUBE` message via DevTools `window.postMessage` to the iframe always opens the drawer, regardless of whether any persona-related component is currently mounted.
-5. Confirm Wallet and Cartridge behavior is unchanged.
+**File:** `src/contexts/ShellContext.tsx`, function `selectPersona()`
 
-## Reference: shell-side envelopes Claude Code should expect
+Remove the `stageRuntimeCommand(() => postPersonaIQubeOpen(...))` wrapper. Replace it with a direct, immediate call:
 
-```
-// Persona (triple-dispatched by shell)
-{ type: "OPEN_PERSONA_IQUBE", source: "shell", payload: { iqube_type: "knyt" | "qripto" }, msg_id, timestamp }
-{ type: "OPEN_PERSONA_IQUBE", iqube_type: "knyt" | "qripto", payload: { iqube_type: ... }, msg_id, timestamp, source: "shell" }
-{ type: "OPEN_PERSONA_IQUBE", iqube_type: "knyt" | "qripto" }
+```ts
+// before
+stageRuntimeCommand(() => postPersonaIQubeOpen(iframe, origin, iqubeType));
 
-// Identity (triple-dispatched by shell)
-{ type: "OPEN_IDENTITY_IQUBE", source: "shell", payload: {}, msg_id, timestamp }
-{ type: "OPEN_IDENTITY_IQUBE", payload: {}, msg_id, timestamp, source: "shell" }
-{ type: "OPEN_IDENTITY_IQUBE" }
-
-// Cartridge (single envelope, already working)
-{ type: "LAUNCH_CARTRIDGE", source: "shell", payload: { cartridge_id: "metame-codex" | "qripto-codex" | "knyt-codex" }, msg_id, timestamp }
+// after
+postPersonaIQubeOpen(iframe, origin, iqubeType);
 ```
 
-The runtime should accept all three persona/identity shapes (it likely already does for cartridge — same normalization).
+Keep everything else in `selectPersona()` exactly as-is:
+- local persona state update (`activePersonaId`)
+- `submitPromptRef.current?.(...)` for the conversational prompt
+- `setSubmenuTypeState("quickActions")` collapse
 
----
+The `openPersonaIQube()` helper in `ShellContext` (used elsewhere) should also drop its `stageRuntimeCommand` wrapper for consistency — direct send only.
 
-End of instruction block for Claude Code.
+## What is NOT changing
+
+- `postPersonaIQubeOpen()` / `postIdentityIQubeOpen()` / `openIdentityIQube()` helpers — already correct (triple-dispatch).
+- Persona submenu-open step (`setSubmenuType("personaSelector")`) — works correctly.
+- Cartridge, Wallet, Memory, Browse — untouched.
+- `stageRuntimeCommand` itself — still used for any other commands that legitimately need replay; only the persona usage is removed.
+- Nav geometry, submenu persistence, idle-timer behavior — unchanged.
+- The `PendingRuntimeBadge` UI — kept; will simply rarely show now since direct sends land immediately.
+
+## Tests + memory
+
+- `src/test/persona-flow.test.ts` — update to assert that `postPersonaIQubeOpen` is invoked synchronously in `selectPersona` (no staging), and `submitPrompt` still fires.
+- `src/test/submenu-interactions.test.tsx` — update the Identity test to assert `openIdentityIQube()` is called once, and `handleMenuAction` / `sendIframeAction` / `submitPrompt` are NOT called for the Identity action.
+- `mem://integration/identity-iqube-contract.md` — update: Identity quick action calls `openIdentityIQube()` directly; no `apiAction`, no `iframeAction`, no `submitPrompt`.
+- `mem://integration/persona-iqube-contract.md` — update: persona drawer-open is sent directly via `postPersonaIQubeOpen`, not via `stageRuntimeCommand`. Prompt leg still fires.
+- `mem://index.md` Core lines for persona/identity — update wording to reflect "direct send, no staging" for persona and "direct openIdentityIQube only" for identity.
+
+## Verification
+
+1. Click Identity (Be menu) → Identity iQube drawer opens within ~250ms. No prompt response is generated (drawer-open only).
+2. Click Persona → KNYT or Persona → Qripto → drawer opens within ~250ms; conversational prompt about that persona still appears in the runtime chat.
+3. Cartridge launch (Play) — unchanged, still instant.
+4. Wallet (Earn) — unchanged, still instant.
+5. Memory and other prompt-only quick actions — unchanged.
+6. No regression in submenu hover, persistence, or idle-collapse behavior.
 
