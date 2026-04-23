@@ -15,7 +15,6 @@ import {
   personaIdToIqubeType,
 } from "@/lib/smart-menu-config";
 import { postToIframe } from "@/lib/shell-messages";
-import { postPersonaIQubeOpen } from "@/lib/persona-messages";
 
 describe("persona config", () => {
   it("default active persona id exists in visible list", () => {
