@@ -160,7 +160,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     handleMenuAction(action.id);
-  }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, runtimeContext, setRuntimeContext, openPersonaIQube, openIdentityIQube, resetIdleTimer, sendIframeAction, pulseInference]);
+  }, [handleMenuAction, submitPrompt, setSubmenuType, pauseIdleTimer, overrideMode, activeMode, activateMode, viewState, effectiveMode, runtimeContext, setRuntimeContext, openPersonaIQube, openIdentityIQube, openMemoryIQube, resetIdleTimer, sendIframeAction, pulseInference]);
 
   const foldIds = modeConfig?.mobileVisibleFold ?? [];
   const firstFoldIndex = modeConfig
