@@ -98,23 +98,21 @@ describe("SmartMenuSubmenu — Be quick actions routing", () => {
     expect(pulseInference).not.toHaveBeenCalled();
   });
 
-  it("Identity click mirrors Wallet — handleMenuAction + sendIframeAction + submitPrompt, no openIdentityIQube special-case", () => {
+  it("Identity click calls openIdentityIQube exactly once and does NOT route through generic prompt path", () => {
     render(<SmartMenuSubmenu />);
     const btn = screen.getByTitle("Identity");
     fireEvent.pointerUp(btn);
 
-    // Wallet pattern: AA-API menu-action + iframe action nudge + prompt pipeline
-    expect(handleMenuAction).toHaveBeenCalledWith("identity");
-    expect(sendIframeAction).toHaveBeenCalledWith("open_identity_iqube");
-    expect(submitPrompt).toHaveBeenCalledTimes(1);
-    expect(submitPrompt).toHaveBeenCalledWith(
-      expect.stringMatching(/identity/i),
-    );
+    // Direct drawer-open via canonical OPEN_IDENTITY_IQUBE triple-dispatch
+    expect(openIdentityIQube).toHaveBeenCalledTimes(1);
 
-    // Old special-case path must NOT fire
-    expect(openIdentityIQube).not.toHaveBeenCalled();
+    // Generic prompt-path legs MUST NOT fire for Identity
+    expect(handleMenuAction).not.toHaveBeenCalled();
+    expect(sendIframeAction).not.toHaveBeenCalled();
+    expect(submitPrompt).not.toHaveBeenCalled();
     expect(setSubmenuType).not.toHaveBeenCalled();
-    // Pulse fires for inference-bearing quick actions (matches Wallet)
+
+    // Pulse fires for visual feedback
     expect(pulseInference).toHaveBeenCalled();
   });
 
@@ -123,8 +121,7 @@ describe("SmartMenuSubmenu — Be quick actions routing", () => {
     const btn = screen.getByTitle("Identity");
     fireEvent.pointerUp(btn);
     fireEvent.click(btn);
-    expect(handleMenuAction).toHaveBeenCalledTimes(1);
-    expect(submitPrompt).toHaveBeenCalledTimes(1);
+    expect(openIdentityIQube).toHaveBeenCalledTimes(1);
   });
 });
 
