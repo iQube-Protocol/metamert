@@ -19,7 +19,7 @@ import {
   isInferenceStart,
   isInferenceComplete,
 } from "@/lib/shell-messages";
-import { postPersonaIQubeOpen } from "@/lib/persona-messages";
+
 import { postIdentityIQubeOpen } from "@/lib/identity-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
 import { toast } from "sonner";
@@ -594,39 +594,32 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
    *      path the prompt bar uses.
    */
   const selectPersona = useCallback((iqubeType: "knyt" | "qripto") => {
-    // Overlay-open dispatcher — captures iqubeType, references live iframeRef/config.
-    const dispatchOverlay = () => {
-      if (!iframeRef.current || !config) return;
+    if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
-      postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
-    };
-
-    // Stage the overlay open (Phase A immediate if loaded-unconfirmed,
-    // Phase B replay on true RUNTIME_READY).
-    stageRuntimeCommandRef.current?.(dispatchOverlay, `${iqubeType === "knyt" ? "KNYT" : "Qripto"} persona`);
-
-    // Pulse trust/reliability dots while the persona drawer mounts.
+      postToIframe(iframeRef.current, {
+        type: "OPEN_PERSONA_IQUBE",
+        payload: { iqube_type: iqubeType },
+      }, origin);
+    }
     inferCtrl.current?.start();
     inferCtrl.current?.complete(4_000);
-
-    // Shell prompt pipeline — generic persona-protocol prompt
-    const seedPrompt = `Tell me about the ${iqubeType === "knyt" ? "KNYT" : "Qripto"} persona.`;
-    queueMicrotask(() => { void submitPromptRef.current?.(seedPrompt); });
-
-    // Return to quick actions after selecting
+    const prompt = `Tell me about the ${iqubeType === "knyt" ? "KNYT" : "Qripto"} persona.`;
+    queueMicrotask(() => { void submitPromptRef.current?.(prompt); });
     setSubmenuTypeState("quickActions");
     startIdleTimer();
   }, [config, startIdleTimer]);
 
   /**
    * Open the Persona iQube drawer in the runtime directly (without changing
-   * the active persona). Fire-and-forget — runtime does not currently emit
-   * a persona-specific acknowledgment.
+   * the active persona). Single message — mirrors LAUNCH_CARTRIDGE shape.
    */
   const openPersonaIQube = useCallback((iqubeType: "knyt" | "qripto") => {
     if (!iframeRef.current || !config) return;
-    console.log("[Shell] openPersonaIQube →", iqubeType);
-    postPersonaIQubeOpen(iframeRef.current, getIframeOrigin(config), iqubeType);
+    const origin = getIframeOrigin(config);
+    postToIframe(iframeRef.current, {
+      type: "OPEN_PERSONA_IQUBE",
+      payload: { iqube_type: iqubeType },
+    }, origin);
   }, [config]);
 
   /**
