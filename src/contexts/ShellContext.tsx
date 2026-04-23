@@ -639,7 +639,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     // Return to quick actions after selecting (mirrors cartridge selector)
     setSubmenuTypeState("quickActions");
     startIdleTimer();
-  }, [config, clearIdleTimer, personaState.available, stageRuntimeCommand, startIdleTimer]);
+  }, [config, clearIdleTimer, personaState.available, startIdleTimer]);
 
   /**
    * Open the Persona iQube drawer in the runtime directly (without changing
