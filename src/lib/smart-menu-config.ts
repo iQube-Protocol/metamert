@@ -226,14 +226,11 @@ const EARN_ACTIONS: QuickActionDef[] = [
 ];
 
 const MAKE_ACTIONS: QuickActionDef[] = [
-  { id: "write",   label: "Write",   icon: "pen-line",   kind: "llm+menu",    triggersInference: true,  prompt: "Help me write something" },
-  { id: "design",  label: "Design",  icon: "palette",    kind: "llm+menu",    triggersInference: true,  prompt: "Help me design something creative" },
-  { id: "build",   label: "Build",   icon: "hammer",     kind: "llm+menu",    triggersInference: true,  prompt: "Help me build something new" },
-  { id: "edit",    label: "Edit",    icon: "pencil",     kind: "llm+menu",    triggersInference: true,  prompt: "Help me edit and refine my work" },
-  { id: "remix",   label: "Remix",   icon: "shuffle",    kind: "llm+menu",    triggersInference: true,  prompt: "Remix something creative for me" },
-  { id: "publish", label: "Publish", icon: "upload",     kind: "llm+menu",    triggersInference: true,  prompt: "Help me publish my work" },
-  { id: "share",   label: "Share",   icon: "share-2",    kind: "llm+menu",    triggersInference: true },
-  { id: "reset",   label: "Reset",   icon: "rotate-ccw", kind: "system-only", triggersInference: false },
+  { id: "create",  label: "Create",  icon: "sparkles",  kind: "llm+menu", triggersInference: true, prompt: "Help me create something new" },
+  { id: "design",  label: "Design",  icon: "palette",   kind: "llm+menu", triggersInference: true, prompt: "Help me design something creative" },
+  { id: "edit",    label: "Edit",    icon: "pencil",    kind: "llm+menu", triggersInference: true, prompt: "Help me edit and refine my work" },
+  { id: "remix",   label: "Remix",   icon: "shuffle",   kind: "llm+menu", triggersInference: true, prompt: "Remix something creative for me" },
+  { id: "build",   label: "Build",   icon: "hammer",    kind: "llm+menu", triggersInference: true, prompt: "Help me build something new" },
 ];
 
 const SHARE_ACTIONS: QuickActionDef[] = [
@@ -284,9 +281,9 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     label: "Make",
     accentColor: "300 76% 60%",
     accentHex: "#D946EF",
-    promptPlaceholder: "Create, design, build, edit, or publish something…",
-    defaultCenteredQuickActionId: "build",
-    mobileVisibleFold: ["design", "build", "edit", "remix", "publish"],
+    promptPlaceholder: "Create, design, edit, remix, or build something…",
+    defaultCenteredQuickActionId: "edit",
+    mobileVisibleFold: ["create", "design", "edit", "remix", "build"],
     quickActions: MAKE_ACTIONS,
   },
   share: {
