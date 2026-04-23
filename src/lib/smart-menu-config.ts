@@ -211,22 +211,18 @@ const PLAY_ACTIONS: QuickActionDef[] = [
 
 const BE_ACTIONS: QuickActionDef[] = [
   { id: "persona",     label: "Persona",     icon: "user",        kind: "system-only", triggersInference: false },
-  { id: "settings",    label: "Settings",    icon: "settings",    kind: "system-only", triggersInference: false },
   { id: "memory",      label: "Memory",      icon: "sparkles",    kind: "system-only", triggersInference: false },
   { id: "identity",    label: "Identity",    icon: "fingerprint", kind: "system-only", triggersInference: false },
   { id: "connections", label: "Connections", icon: "network",     kind: "llm+menu",    triggersInference: true, prompt: "Show my connections and network" },
+  { id: "settings",    label: "Settings",    icon: "settings",    kind: "system-only", triggersInference: false },
 ];
 
 const EARN_ACTIONS: QuickActionDef[] = [
-  { id: "knyt-progress", label: "Progress", icon: "trending-up", kind: "llm+menu", triggersInference: true, prompt: "Show my KNYT progression status and next milestones", apiAction: "knyt-progress", iframeAction: "knyt_progress" },
-  { id: "goal",        label: "Goal",        icon: "target",     kind: "llm+menu",    triggersInference: true,  prompt: "Show my current goals and progress" },
-  { id: "task",        label: "Task",        icon: "check-square", kind: "llm+menu",  triggersInference: true,  prompt: "What tasks should I work on next?" },
-  { id: "reward",      label: "Reward",      icon: "star",       kind: "llm+menu",    triggersInference: true,  prompt: "Show my rewards and achievements" },
-  { id: "offer",       label: "Offer",       icon: "tag",        kind: "llm+menu",    triggersInference: true,  prompt: "Find offers and deals available to me" },
-  { id: "opportunity", label: "Opportunity", icon: "compass",    kind: "llm+menu",    triggersInference: true,  prompt: "Discover new opportunities for me" },
-  { id: "wallet",      label: "Wallet",      icon: "wallet",     kind: "llm+menu",    triggersInference: true,  prompt: "What would you like to explore in your wallet?", apiAction: "wallet" },
-  { id: "share",       label: "Share",       icon: "share-2",    kind: "llm+menu",    triggersInference: true },
-  { id: "reset",       label: "Reset",       icon: "rotate-ccw", kind: "system-only", triggersInference: false },
+  { id: "goal",        label: "Goal",        icon: "target",       kind: "llm+menu", triggersInference: true,  prompt: "Show my current goals and progress" },
+  { id: "task",        label: "Task",        icon: "check-square", kind: "llm+menu", triggersInference: true,  prompt: "What tasks should I work on next?" },
+  { id: "wallet",      label: "Wallet",      icon: "wallet",       kind: "llm+menu", triggersInference: true,  prompt: "What would you like to explore in your wallet?", apiAction: "wallet" },
+  { id: "reward",      label: "Reward",      icon: "star",         kind: "llm+menu", triggersInference: true,  prompt: "Show my rewards and achievements" },
+  { id: "offer",       label: "Offer",       icon: "tag",          kind: "llm+menu", triggersInference: true,  prompt: "Find offers and deals available to me" },
 ];
 
 const MAKE_ACTIONS: QuickActionDef[] = [
