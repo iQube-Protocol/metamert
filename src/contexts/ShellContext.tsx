@@ -623,13 +623,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     inferCtrl.current?.start();
     inferCtrl.current?.complete(4_000);
 
-    // 2) Staged overlay open (Phase A immediate, Phase B replay on RUNTIME_READY)
-    stageRuntimeCommand(() => {
-      if (!iframeRef.current || !config) return;
+    // 2) Direct overlay open — runtime now has a permanently-bound handler
+    //    for OPEN_PERSONA_IQUBE (no RUNTIME_READY gating needed). Send
+    //    immediately; no staging/replay required.
+    if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
       console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
       postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
-    }, `${persona.label} iQube`);
+    }
 
     // 3) Shell prompt pipeline — generic persona-protocol prompt
     const seedPrompt = `Tell me about the ${persona.label} persona in the iQube protocol.`;
@@ -638,7 +639,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     // Return to quick actions after selecting (mirrors cartridge selector)
     setSubmenuTypeState("quickActions");
     startIdleTimer();
-  }, [config, clearIdleTimer, personaState.available, stageRuntimeCommand, startIdleTimer]);
+  }, [config, clearIdleTimer, personaState.available, startIdleTimer]);
 
   /**
    * Open the Persona iQube drawer in the runtime directly (without changing
@@ -646,24 +647,20 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
    * a persona-specific acknowledgment.
    */
   const openPersonaIQube = useCallback((iqubeType: "knyt" | "qripto") => {
-    stageRuntimeCommand(() => {
-      if (!iframeRef.current || !config) return;
-      console.log("[Shell] openPersonaIQube →", iqubeType);
-      postPersonaIQubeOpen(iframeRef.current, getIframeOrigin(config), iqubeType);
-    }, `${iqubeType === "knyt" ? "KNYT" : "Qripto"} iQube`);
-  }, [config, stageRuntimeCommand]);
+    if (!iframeRef.current || !config) return;
+    console.log("[Shell] openPersonaIQube →", iqubeType);
+    postPersonaIQubeOpen(iframeRef.current, getIframeOrigin(config), iqubeType);
+  }, [config]);
 
   /**
    * Open the Identity iQube drawer in the runtime. Single drawer — no
-   * iqube_type variants.
+   * iqube_type variants. Direct send — runtime handler is permanently bound.
    */
   const openIdentityIQube = useCallback(() => {
-    stageRuntimeCommand(() => {
-      if (!iframeRef.current || !config) return;
-      console.log("[Shell] openIdentityIQube");
-      postIdentityIQubeOpen(iframeRef.current, getIframeOrigin(config));
-    }, "Identity iQube");
-  }, [config, stageRuntimeCommand]);
+    if (!iframeRef.current || !config) return;
+    console.log("[Shell] openIdentityIQube");
+    postIdentityIQubeOpen(iframeRef.current, getIframeOrigin(config));
+  }, [config]);
 
   const setInteractionState = useCallback((state: InteractionState) => {
     setInteractionStateRaw(state);

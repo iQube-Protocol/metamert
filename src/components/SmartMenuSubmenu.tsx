@@ -136,10 +136,16 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
-    // NOTE: Identity is intentionally NOT special-cased here. It falls through
-    // to the generic Wallet-style dual-dispatch branch below (apiAction +
-    // iframeAction + submitPrompt) so it mirrors Wallet exactly.
-
+    // Identity is a drawer-open action (NOT inference). Use the canonical
+    // OPEN_IDENTITY_IQUBE triple-dispatch directly — the runtime now has a
+    // permanently-bound handler that catches it instantly. Do not route
+    // through generic apiAction/iframeAction/submitPrompt.
+    if (action.id === "identity") {
+      pulseInference();
+      openIdentityIQube();
+      resetIdleTimer("quickAction");
+      return;
+    }
 
     if (action.id === "browse") {
       setSubmenuType("browserSelector");

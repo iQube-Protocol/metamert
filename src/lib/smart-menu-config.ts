@@ -212,7 +212,9 @@ const PLAY_ACTIONS: QuickActionDef[] = [
 const BE_ACTIONS: QuickActionDef[] = [
   { id: "persona",     label: "Persona",     icon: "user",        kind: "system-only", triggersInference: false },
   { id: "memory",      label: "Memories",    icon: "sparkles",    kind: "llm+menu",    triggersInference: true, prompt: "Show my memory and context history" },
-  { id: "identity",    label: "Identity",    icon: "fingerprint", kind: "llm+menu",    triggersInference: true, prompt: "Tell me about identity in the iQube protocol.", apiAction: "identity", iframeAction: "open_identity_iqube" },
+  // Identity is a drawer-open action — handled directly via openIdentityIQube()
+  // in SmartMenuSubmenu. Intentionally has no prompt/apiAction/iframeAction.
+  { id: "identity",    label: "Identity",    icon: "fingerprint", kind: "system-only", triggersInference: false },
   { id: "connections", label: "Connections", icon: "network",     kind: "llm+menu",    triggersInference: true, prompt: "Show my connections and network" },
   { id: "settings",    label: "Settings",    icon: "settings",    kind: "system-only", triggersInference: false },
 ];
