@@ -82,6 +82,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     setRuntimeContext,
     openPersonaIQube,
     openIdentityIQube,
+    openMemoryIQube,
     pulseInference,
   } = useShell();
   const scrollRef = useRef<HTMLDivElement>(null);
