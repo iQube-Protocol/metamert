@@ -60,7 +60,6 @@ export default function SmartMenuSubmenu({ previewMode }: SmartMenuSubmenuProps 
     cartridgeState,
     selectCartridge,
     selectCodex,
-    personaState,
     selectPersona,
   } = useShell();
 
@@ -130,12 +129,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     if (action.id === "persona") {
-      // Show the persona selector sub-sub menu — pills (Qripto, KNYT) appear
-      // above the prompt bar; clicking a pill opens that persona's iQube drawer.
-      pauseIdleTimer();
       setSubmenuType("personaSelector");
-      // Defeat the pointer-leave race during the QuickActionsCarousel → PersonaSelector swap.
-      queueMicrotask(() => pauseIdleTimer());
       return;
     }
 
@@ -444,18 +438,23 @@ function CodexSelector() {
 }
 
 // ---------------------------------------------------------------------------
-// Persona Selector
+// Persona Selector — LITERAL COPY of CartridgeSelector with substitutions.
 // ---------------------------------------------------------------------------
 
+const PERSONA_OPTIONS = [
+  { id: "knyt" as const,   label: "KNYT",   description: "metaKnyt identity & character stats" },
+  { id: "qripto" as const, label: "Qripto", description: "Qriptopian reader identity" },
+];
+
 function PersonaSelector() {
-  const { personaState, selectPersona, setSubmenuType, pauseIdleTimer, resumeIdleTimer } = useShell();
-  const visible = personaState.available;
+  const { selectPersona, setSubmenuType, pauseIdleTimer, resumeIdleTimer } = useShell();
 
   return (
     <div
       className="glass-float shadow-mm-low animate-in fade-in slide-in-from-bottom-2 p-2"
       style={{ animationDuration: '350ms', borderRadius: 'var(--mm-radius-sm)' }}
       onPointerEnter={pauseIdleTimer}
+      onPointerLeave={resumeIdleTimer}
     >
       <div className="flex items-center gap-1 mb-1.5 px-1">
         <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--mm-ink-muted)' }}>Persona</span>
@@ -468,32 +467,22 @@ function PersonaSelector() {
           ← Back
         </button>
       </div>
-      {visible.length === 0 ? (
-        <div className="px-2 py-1 text-[11px]" style={{ color: 'var(--mm-ink-muted)' }}>
-          No personas available
-        </div>
-      ) : (
-        <div className="flex gap-1.5 justify-start">
-          {visible.map(persona => {
-            const isActive = persona.id === personaState.activePersonaId;
-            const Icon = resolveSmartIcon(persona.icon, persona.id);
-            return (
-              <CartridgePill
-                key={persona.id}
-                isActive={isActive}
-                accent={persona.accentHex}
-                onClick={() => selectPersona(persona.id)}
-              >
-                <div className="flex items-center gap-1">
-                  {Icon && <Icon className="h-3.5 w-3.5" />}
-                  <span className="font-medium whitespace-nowrap">{persona.label}</span>
-                  {isActive && <Check className="h-3 w-3" />}
-                </div>
-              </CartridgePill>
-            );
-          })}
-        </div>
-      )}
+      <div className="flex gap-1.5 justify-end">
+        {PERSONA_OPTIONS.map(p => {
+          return (
+            <CartridgePill
+              key={p.id}
+              isActive={false}
+              accent={undefined}
+              onClick={() => selectPersona(p.id)}
+            >
+              <div className="flex items-center gap-1">
+                <span className="font-medium whitespace-nowrap">{p.label}</span>
+              </div>
+            </CartridgePill>
+          );
+        })}
+      </div>
     </div>
   );
 }

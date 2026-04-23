@@ -65,13 +65,6 @@ vi.mock("@/contexts/ShellContext", () => ({
     },
     selectCartridge,
     selectCodex,
-    personaState: {
-      activePersonaId: "qripto-persona",
-      available: [
-        { id: "qripto-persona", label: "Qripto", accentHex: "#4F8C98", icon: undefined },
-        { id: "knyt-persona", label: "KNYT", accentHex: "#F59E0B", icon: undefined },
-      ],
-    },
     selectPersona,
   }),
 }));
@@ -126,25 +119,25 @@ describe("SmartMenuSubmenu — Be quick actions routing", () => {
 });
 
 describe("SmartMenuSubmenu — Persona pill routing (mirrors Cartridge)", () => {
-  it("clicking the KNYT pill calls selectPersona('knyt-persona') exactly once", () => {
+  it("clicking the KNYT pill calls selectPersona('knyt') exactly once", () => {
     __submenuType = "personaSelector";
     render(<SmartMenuSubmenu />);
     const knytBtn = screen.getByText("KNYT").closest("button")!;
     fireEvent.pointerUp(knytBtn);
 
     expect(selectPersona).toHaveBeenCalledTimes(1);
-    expect(selectPersona).toHaveBeenCalledWith("knyt-persona");
+    expect(selectPersona).toHaveBeenCalledWith("knyt");
     expect(handleMenuAction).not.toHaveBeenCalled();
     expect(submitPrompt).not.toHaveBeenCalled();
   });
 
-  it("clicking the Qripto pill calls selectPersona('qripto-persona') exactly once", () => {
+  it("clicking the Qripto pill calls selectPersona('qripto') exactly once", () => {
     __submenuType = "personaSelector";
     render(<SmartMenuSubmenu />);
     const qriptoBtn = screen.getByText("Qripto").closest("button")!;
     fireEvent.pointerUp(qriptoBtn);
 
     expect(selectPersona).toHaveBeenCalledTimes(1);
-    expect(selectPersona).toHaveBeenCalledWith("qripto-persona");
+    expect(selectPersona).toHaveBeenCalledWith("qripto");
   });
 });

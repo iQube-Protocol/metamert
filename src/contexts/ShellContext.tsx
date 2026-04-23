@@ -30,12 +30,8 @@ import {
   type QuickActionVisibility,
   type InteractionState,
   type CartridgeState,
-  type PersonaState,
   MODE_CONFIGS,
   DEFAULT_CARTRIDGES,
-  DEFAULT_PERSONAS,
-  DEFAULT_ACTIVE_PERSONA_ID,
-  personaIdToIqubeType,
   IDLE_TIMEOUT_MS,
 } from "@/lib/smart-menu-config";
 
@@ -102,7 +98,6 @@ interface ShellContextValue {
   submenuVisibility: QuickActionVisibility;
   interactionState: InteractionState;
   cartridgeState: CartridgeState;
-  personaState: PersonaState;
 
   // Runtime context (metaMe ↔ KNYT) — drives the header lightning color
   // and the play menu's central context-toggle quick action.
@@ -132,7 +127,8 @@ interface ShellContextValue {
   launchCartridge: (cartridgeId: string) => void;
   selectCartridge: (cartridgeId: string) => void;
   selectCodex: (codexId: string) => void;
-  selectPersona: (personaId: string) => void;
+  /** Select a persona — mirrors launchCartridge exactly. Opens the persona iQube drawer + seeds a prompt. */
+  selectPersona: (iqubeType: "knyt" | "qripto") => void;
   /** Open the Persona iQube drawer in the runtime (knyt or qripto). */
   openPersonaIQube: (iqubeType: "knyt" | "qripto") => void;
   /** Open the Identity iQube drawer in the runtime (single drawer, no variants). */
@@ -240,16 +236,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     activeCartridgeId: "qripto-codex",
     activeCodexId: "qripto-codex",
     available: DEFAULT_CARTRIDGES,
-  });
-  const [personaState, setPersonaState] = useState<PersonaState>(() => {
-    // Guard: if hardcoded default doesn't exist in visible personas, use first available.
-    const fallback = DEFAULT_PERSONAS.find(p => p.id === DEFAULT_ACTIVE_PERSONA_ID)
-      ? DEFAULT_ACTIVE_PERSONA_ID
-      : DEFAULT_PERSONAS[0]?.id ?? "";
-    return {
-      activePersonaId: fallback,
-      available: DEFAULT_PERSONAS,
-    };
   });
 
   // Runtime context (metaMe ↔ KNYT) — drives header lightning color and copilot framing
@@ -597,57 +583,40 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }, [stageRuntimeCommand]);
 
   /**
-   * Select a persona pill — mirrors `launchCartridge` exactly.
+   * Select a persona — LITERAL COPY of launchCartridge() with substitutions.
    *
    * Three-step flow (identical to cartridge):
-   *   1. Update local activePersonaId (state).
-   *   2. Stage the OPEN_PERSONA_IQUBE overlay command (Phase A immediate
+   *   1. Stage the OPEN_PERSONA_IQUBE overlay command (Phase A immediate
    *      + Phase B replay on RUNTIME_READY).
+   *   2. Pulse trust/reliability dots.
    *   3. Run the shell prompt pipeline via `submitPrompt(...)` so the
    *      runtime produces a conversational response — same authoritative
    *      path the prompt bar uses.
-   *
-   * SELECTOR_CHANGE is still NOT sent here (would refresh runtime content
-   * and race the drawer open).
    */
-  const selectPersona = useCallback((personaId: string) => {
-    const persona = personaState.available.find(p => p.id === personaId);
-    if (!persona) {
-      console.warn("[Shell] selectPersona: id not in visible list", personaId, personaState.available.map(p => p.id));
-      return;
-    }
-    const iqubeType = personaIdToIqubeType(personaId);
-    if (!iqubeType) {
-      console.warn("[Shell] selectPersona: no iqube_type mapping for", personaId);
-      return;
-    }
+  const selectPersona = useCallback((iqubeType: "knyt" | "qripto") => {
+    // Overlay-open dispatcher — captures iqubeType, references live iframeRef/config.
+    const dispatchOverlay = () => {
+      if (!iframeRef.current || !config) return;
+      const origin = getIframeOrigin(config);
+      postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
+    };
 
-    clearIdleTimer();
-
-    // 1) Local state update (active pill checkmark)
-    setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
+    // Stage the overlay open (Phase A immediate if loaded-unconfirmed,
+    // Phase B replay on true RUNTIME_READY).
+    stageRuntimeCommandRef.current?.(dispatchOverlay, `${iqubeType === "knyt" ? "KNYT" : "Qripto"} persona`);
 
     // Pulse trust/reliability dots while the persona drawer mounts.
     inferCtrl.current?.start();
     inferCtrl.current?.complete(4_000);
 
-    // 2) Direct overlay open — runtime now has a permanently-bound handler
-    //    for OPEN_PERSONA_IQUBE (no RUNTIME_READY gating needed). Send
-    //    immediately; no staging/replay required.
-    if (iframeRef.current && config) {
-      const origin = getIframeOrigin(config);
-      console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
-      postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
-    }
-
-    // 3) Shell prompt pipeline — generic persona-protocol prompt
-    const seedPrompt = `Tell me about the ${persona.label} persona in the iQube protocol.`;
+    // Shell prompt pipeline — generic persona-protocol prompt
+    const seedPrompt = `Tell me about the ${iqubeType === "knyt" ? "KNYT" : "Qripto"} persona.`;
     queueMicrotask(() => { void submitPromptRef.current?.(seedPrompt); });
 
-    // Return to quick actions after selecting (mirrors cartridge selector)
+    // Return to quick actions after selecting
     setSubmenuTypeState("quickActions");
     startIdleTimer();
-  }, [config, clearIdleTimer, personaState.available, startIdleTimer]);
+  }, [config, startIdleTimer]);
 
   /**
    * Open the Persona iQube drawer in the runtime directly (without changing
@@ -1096,8 +1065,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     runtimeHints, iframeReadiness, pendingRuntimeCommandCount, knytOnboarding,
     cartridgeOverlay, closeCartridgeOverlay,
     // Smart Menu state
-    viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
-    // Runtime context
+    viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState,
     runtimeContext, setRuntimeContext,
     // Actions
     toggleQuickLinks,
@@ -1112,8 +1080,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     activeMenuItem, quickLinksExpanded, inferring, overlayTrigger, resetKey,
     runtimeHints, iframeReadiness, pendingRuntimeCommandCount, knytOnboarding,
     cartridgeOverlay, closeCartridgeOverlay,
-    viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
-    runtimeContext, setRuntimeContext,
+    viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState,
     toggleQuickLinks, hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
     submitPrompt, resetToWelcome, updateTrust, iframeRef, reportIframeReadiness,
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
