@@ -3,13 +3,13 @@
  *
  * Locks in the contract:
  *  - OPEN_IDENTITY_IQUBE envelope has empty payload (no iqube_type)
- *  - triple-dispatch fires for cross-build compatibility
+ *  - single-dispatch (one postMessage per action) per platform contract
  */
 import { describe, it, expect } from "vitest";
-import { postIdentityIQubeOpen } from "@/lib/identity-messages";
+import { postToIframe } from "@/lib/shell-messages";
 
 describe("OPEN_IDENTITY_IQUBE envelope", () => {
-  it("dispatches three compatibility-safe messages with empty payload", () => {
+  it("dispatches a single message with empty payload", () => {
     const posts: any[] = [];
     const iframe = {
       contentWindow: {
@@ -17,29 +17,17 @@ describe("OPEN_IDENTITY_IQUBE envelope", () => {
       },
     } as unknown as HTMLIFrameElement;
 
-    postIdentityIQubeOpen(iframe, "*");
+    postToIframe(
+      iframe,
+      { type: "OPEN_IDENTITY_IQUBE", payload: {} },
+      "*",
+    );
 
-    expect(posts).toHaveLength(3);
-
-    // 1: canonical bridge envelope
+    expect(posts).toHaveLength(1);
     expect(posts[0]).toMatchObject({
       type: "OPEN_IDENTITY_IQUBE",
       source: "shell",
       payload: {},
-    });
-
-    // 2: hybrid with shell meta
-    expect(posts[1]).toMatchObject({
-      type: "OPEN_IDENTITY_IQUBE",
-      source: "shell",
-      payload: {},
-    });
-    expect(posts[1].msg_id).toBeTruthy();
-    expect(posts[1].timestamp).toBeTruthy();
-
-    // 3: bare flat fallback — no iqube_type
-    expect(posts[2]).toEqual({
-      type: "OPEN_IDENTITY_IQUBE",
     });
   });
 
@@ -51,7 +39,11 @@ describe("OPEN_IDENTITY_IQUBE envelope", () => {
       },
     } as unknown as HTMLIFrameElement;
 
-    postIdentityIQubeOpen(iframe, "*");
+    postToIframe(
+      iframe,
+      { type: "OPEN_IDENTITY_IQUBE", payload: {} },
+      "*",
+    );
 
     for (const p of posts) {
       expect(p.iqube_type).toBeUndefined();

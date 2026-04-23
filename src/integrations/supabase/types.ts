@@ -2070,6 +2070,36 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_summaries: {
+        Row: {
+          conversation_type: string
+          created_at: string
+          id: string
+          included_interaction_ids: string[]
+          summary_text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_type: string
+          created_at?: string
+          id?: string
+          included_interaction_ids?: string[]
+          summary_text: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_type?: string
+          created_at?: string
+          id?: string
+          included_interaction_ids?: string[]
+          summary_text?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       crm_admin_categories: {
         Row: {
           color: string | null
@@ -9369,7 +9399,7 @@ export type Database = {
           "Tokens-of-Interest": string[] | null
           "Twitter-Handle": string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           "Wallets-of-Interest": string[] | null
           "Web3-Interests": string[] | null
           "YouTube-ID": string | null
@@ -9401,7 +9431,7 @@ export type Database = {
           "Tokens-of-Interest"?: string[] | null
           "Twitter-Handle"?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           "Wallets-of-Interest"?: string[] | null
           "Web3-Interests"?: string[] | null
           "YouTube-ID"?: string | null
@@ -9433,7 +9463,7 @@ export type Database = {
           "Tokens-of-Interest"?: string[] | null
           "Twitter-Handle"?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           "Wallets-of-Interest"?: string[] | null
           "Web3-Interests"?: string[] | null
           "YouTube-ID"?: string | null
@@ -13404,6 +13434,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_interactions: {
+        Row: {
+          created_at: string
+          id: string
+          interaction_type: string
+          metadata: Json | null
+          query: string
+          response: string
+          summarized: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interaction_type: string
+          metadata?: Json | null
+          query: string
+          response: string
+          summarized?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interaction_type?: string
+          metadata?: Json | null
+          query?: string
+          response?: string
+          summarized?: boolean
+          user_id?: string
+        }
+        Relationships: []
       }
       user_iqubes: {
         Row: {

@@ -19,8 +19,6 @@ import {
   isInferenceStart,
   isInferenceComplete,
 } from "@/lib/shell-messages";
-import { postPersonaIQubeOpen } from "@/lib/persona-messages";
-import { postIdentityIQubeOpen } from "@/lib/identity-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
 import { toast } from "sonner";
 import {
@@ -131,6 +129,8 @@ interface ShellContextValue {
   openPersonaIQube: (iqubeType: "knyt" | "qripto") => void;
   /** Open the Identity iQube drawer in the runtime (single drawer, no variants). */
   openIdentityIQube: () => void;
+  /** Open the Memory iQube drawer in the runtime. */
+  openMemoryIQube: () => void;
   resetIdleTimer: (reason?: string) => void;
   pauseIdleTimer: () => void;
   resumeIdleTimer: () => void;
@@ -210,6 +210,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
+  // Forward ref so callbacks defined before submitPrompt can still call it
+  const submitPromptRef = useRef<((text: string) => Promise<void> | void) | null>(null);
 
   // Smart Menu state
   const [viewState, setViewState] = useState<ViewState>("defaultNav");
@@ -248,6 +250,20 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => () => inferCtrl.current?.cleanup(), []);
+
+  // ---------------------------------------------------------------------------
+  // Unified runtime message dispatch.
+  //
+  // Per the platform contract (2026-04-23): the runtime has a single permanent
+  // handler for OPEN_PERSONA_IQUBE / OPEN_IDENTITY_IQUBE / OPEN_MEMORY_IQUBE /
+  // LAUNCH_CARTRIDGE / RUNTIME_CONTEXT_CHANGE. One postMessage per action — no
+  // triple-dispatch, no compatibility helpers.
+  // ---------------------------------------------------------------------------
+  const sendRuntimeMessage = useCallback((type: string, payload: Record<string, unknown> = {}) => {
+    if (!iframeRef.current || !config) return;
+    const origin = getIframeOrigin(config);
+    postToIframe(iframeRef.current, { type, source: "shell", payload } as any, origin);
+  }, [config]);
 
   // Idle auto-hide logic — split timers per spec
   const clearIdleTimer = useCallback(() => {
@@ -393,74 +409,46 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Launch a cartridge inside the runtime iframe.
-   * Sends a LAUNCH_CARTRIDGE message — does NOT mutate cartridgeState
-   * (so the header lightning bolt color is unaffected; that color is now
-   * driven exclusively by `runtimeContext`).
+   * Single dispatch per platform contract — no triple-dispatch, no extra
+   * SELECTOR_CHANGE. Followed by the seed-prompt + UI animation.
    */
   const launchCartridge = useCallback((cartridgeId: string) => {
+    sendRuntimeMessage("LAUNCH_CARTRIDGE", { cartridge_id: cartridgeId });
+
+    inferCtrl.current?.start();
+    inferCtrl.current?.complete(4_000);
+
+    const prompts: Record<string, string> = {
+      "knyt-codex":   "Open the KNYT cartridge and walk me through it.",
+      "qripto-codex": "Open the Qriptopian cartridge and show me what's available.",
+      "metame-codex": "Open the metaMe cartridge and orient me.",
+    };
+    queueMicrotask(() => {
+      void submitPromptRef.current?.(
+        prompts[cartridgeId] ?? `Open the ${cartridgeId} cartridge.`,
+      );
+    });
+
+    // Restore local cartridge state so the active checkmark moves and outbound
+    // context enrichment carries the correct cartridge_id + codex_id.
     const cart = cartridgeState.available.find(c => c.id === cartridgeId);
     const codexId = cart?.default_codex_id;
-
-    if (iframeRef.current && config) {
-      const origin = getIframeOrigin(config);
-
-      // Canonical mount message — runtime opens the cartridge overlay
-      // (z-axis) and replies with CARTRIDGE_OVERLAY_ACTIVE.
-      // Runtime's MetaMeRuntimeClient handler reads msg.payload.cartridge_id,
-      // so the envelope MUST be nested under `payload`.
-      postToIframe(iframeRef.current, {
-        type: "LAUNCH_CARTRIDGE",
-        payload: { cartridge_id: cartridgeId },
-      }, origin);
-
-      // Seed an initialisation prompt so the cartridge opens with a
-      // meaningful first turn instead of an empty surface.
-      const seedPrompts: Record<string, string> = {
-        "metame-codex": "Open the metaMe cartridge and orient me.",
-        "qripto-codex": "Open the Qriptopian cartridge and show me what's available.",
-        "knyt-codex":   "Open the KNYT cartridge and walk me through it.",
-      };
-      const seedPrompt =
-        seedPrompts[cartridgeId] ??
-        `Open the ${cart?.label ?? cartridgeId} cartridge.`;
-
-      postToIframe(iframeRef.current, {
-        type: "PROMPT_SUBMIT",
-        text: seedPrompt,
-        cartridge_id: cartridgeId,
-        codex_id: codexId,
-      }, origin);
-    }
-
-    // Restore local cartridge state so the active checkmark moves, the codex
-    // selector follows the new cartridge default, and outbound context
-    // enrichment carries the correct cartridge_id + codex_id. Header lightning
-    // color is NOT affected (RuntimeHeader reads `runtimeContext`).
     setCartridgeState(prev => ({
       ...prev,
       activeCartridgeId: cartridgeId,
       activeCodexId: codexId ?? prev.activeCodexId,
     }));
-
-    // Optimistically show the cartridge overlay indicator (floppy-disk + X)
-    // in the header so the user gets immediate feedback.
     if (cart) {
       setCartridgeOverlay({ slug: cart.id, title: cart.label ?? cart.id });
     }
 
-    // Pulse trust/reliability dots while the cartridge mounts.
-    inferCtrl.current?.start();
-    inferCtrl.current?.complete(4_000);
-
-    // Return to quick actions after selecting
     setSubmenuTypeState("quickActions");
     startIdleTimer();
-  }, [config, cartridgeState.available, startIdleTimer]);
+  }, [sendRuntimeMessage, startIdleTimer, cartridgeState.available]);
 
   /**
-   * Legacy `selectCartridge` — kept for backward compat (e.g. cartridge selector
-   * pill click). Now routes through `launchCartridge` so it dispatches to the
-   * iframe instead of mutating header state.
+   * Legacy `selectCartridge` — kept for backward compat (cartridge selector
+   * pill click). Routes through `launchCartridge`.
    */
   const selectCartridge = useCallback((cartridgeId: string) => {
     launchCartridge(cartridgeId);
@@ -468,24 +456,16 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Set the active runtime context (metaMe ↔ KNYT).
-   * Sends RUNTIME_CONTEXT_CHANGE to the iframe + AA-API so the copilot
-   * reframes itself, and updates local state so the header lightning bolt
-   * color updates immediately.
+   * Single RUNTIME_CONTEXT_CHANGE dispatch per platform contract.
    */
   const setRuntimeContext = useCallback((next: RuntimeContext) => {
     setRuntimeContextState(next);
-    if (iframeRef.current && config) {
-      const origin = getIframeOrigin(config);
-      postToIframe(iframeRef.current, {
-        type: "RUNTIME_CONTEXT_CHANGE",
-        context: next,
-      } as any, origin);
-    }
+    sendRuntimeMessage("RUNTIME_CONTEXT_CHANGE", { context: next });
     // Best-effort AA-API notification (non-blocking)
     void menuAction("runtime-context", { runtime_context: next } as any).catch(() => {
       /* swallow — runtime context is local-first */
     });
-  }, [config]);
+  }, [sendRuntimeMessage]);
 
   const selectCodex = useCallback((codexId: string) => {
     setCartridgeState(prev => ({
@@ -501,62 +481,49 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }, [config, startIdleTimer]);
 
   /**
-   * Select a persona pill.
+   * Select a persona pill — opens the persona iQube drawer.
    *
-   * Canonical flow (per runtime owner contract):
-   *   1. update local activePersonaId
-   *   2. dispatch OPEN_PERSONA_IQUBE with the mapped iqube_type
-   *
-   * We intentionally do NOT also send SELECTOR_CHANGE here — that triggers
-   * a runtime content refresh which can supersede the drawer open. If the
-   * runtime later needs persona sync, do it as an explicit secondary step.
+   * Single OPEN_PERSONA_IQUBE dispatch per platform contract; followed by a
+   * descriptive prompt and inference pulse for UX feedback. Local
+   * activePersonaId is updated so the "Be" icon tints with the persona accent.
    */
   const selectPersona = useCallback((personaId: string) => {
-    const persona = personaState.available.find(p => p.id === personaId);
-    if (!persona) {
-      console.warn("[Shell] selectPersona: id not in visible list", personaId, personaState.available.map(p => p.id));
-      return;
-    }
     const iqubeType = personaIdToIqubeType(personaId);
     if (!iqubeType) {
       console.warn("[Shell] selectPersona: no iqube_type mapping for", personaId);
       return;
     }
     setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
-    // Note: we do NOT revert submenu to "quickActions" here. The selector
-    // stays visible so the user has feedback that their click registered.
-    // We also do NOT start the idle timer — the panel persists while the
-    // pointer remains over it; the panel's onPointerLeave handler will
-    // restart the auto-fade when the pointer moves away.
 
-    if (iframeRef.current && config) {
-      const origin = getIframeOrigin(config);
-      console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
-      postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
-    }
-  }, [config, startIdleTimer, personaState.available]);
+    sendRuntimeMessage("OPEN_PERSONA_IQUBE", { iqube_type: iqubeType });
 
-  /**
-   * Open the Persona iQube drawer in the runtime directly (without changing
-   * the active persona). Fire-and-forget — runtime does not currently emit
-   * a persona-specific acknowledgment.
-   */
+    inferCtrl.current?.start();
+    inferCtrl.current?.complete(4_000);
+
+    queueMicrotask(() => {
+      void submitPromptRef.current?.(
+        `Tell me about the ${iqubeType === "knyt" ? "KNYT" : "Qripto"} persona.`,
+      );
+    });
+
+    setSubmenuTypeState("quickActions");
+    startIdleTimer();
+  }, [sendRuntimeMessage, startIdleTimer]);
+
+  /** Open the Persona iQube drawer in the runtime directly. */
   const openPersonaIQube = useCallback((iqubeType: "knyt" | "qripto") => {
-    if (!iframeRef.current || !config) return;
-    console.log("[Shell] openPersonaIQube →", iqubeType);
-    postPersonaIQubeOpen(iframeRef.current, getIframeOrigin(config), iqubeType);
-  }, [config]);
+    sendRuntimeMessage("OPEN_PERSONA_IQUBE", { iqube_type: iqubeType });
+  }, [sendRuntimeMessage]);
 
-  /**
-   * Open the Identity iQube drawer in the runtime. Single drawer — no
-   * iqube_type variants. Mirrors the persona open dispatch (triple-send for
-   * cross-build compatibility) without sending SELECTOR_CHANGE.
-   */
+  /** Open the Identity iQube drawer in the runtime. Single drawer — no variants. */
   const openIdentityIQube = useCallback(() => {
-    if (!iframeRef.current || !config) return;
-    console.log("[Shell] openIdentityIQube");
-    postIdentityIQubeOpen(iframeRef.current, getIframeOrigin(config));
-  }, [config]);
+    sendRuntimeMessage("OPEN_IDENTITY_IQUBE");
+  }, [sendRuntimeMessage]);
+
+  /** Open the Memory iQube drawer in the runtime. */
+  const openMemoryIQube = useCallback(() => {
+    sendRuntimeMessage("OPEN_MEMORY_IQUBE");
+  }, [sendRuntimeMessage]);
 
   const setInteractionState = useCallback((state: InteractionState) => {
     setInteractionStateRaw(state);
@@ -916,6 +883,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     }
   }, [config, applyConfigUpdate, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
 
+  // Keep the forward ref in sync so callbacks defined earlier (selectPersona,
+  // launchCartridge) can call submitPrompt without a circular dependency.
+  useEffect(() => {
+    submitPromptRef.current = submitPrompt;
+  }, [submitPrompt]);
+
   const resetToWelcome = useCallback(() => {
     setShellState("welcome");
     setActiveMenuItem(null);
@@ -975,7 +948,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     // Smart Menu actions
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, openIdentityIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, openIdentityIQube, openMemoryIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
     pulseInference,
   }), [
     config, loading, authenticated, shellState,
@@ -987,7 +960,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     toggleQuickLinks, hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
-    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, openIdentityIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
+    launchCartridge, selectCartridge, selectCodex, selectPersona, openPersonaIQube, openIdentityIQube, openMemoryIQube, resetIdleTimer, pauseIdleTimer, resumeIdleTimer, setInteractionState, setPromptHasText,
     pulseInference,
   ]);
 
