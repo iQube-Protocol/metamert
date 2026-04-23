@@ -19,7 +19,7 @@ import {
   isInferenceStart,
   isInferenceComplete,
 } from "@/lib/shell-messages";
-import { postPersonaIQubeOpen } from "@/lib/persona-messages";
+
 import { postIdentityIQubeOpen } from "@/lib/identity-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
 import { toast } from "sonner";
