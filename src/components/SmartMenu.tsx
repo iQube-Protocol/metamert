@@ -285,19 +285,21 @@ function NavButton({
 
   const isDark = document.documentElement.classList.contains('dark');
   const isBe = item.id === "be";
-  const iconColor = isActiveQA
-    ? accent
-    : isBe
-      ? (accentOverride ?? "var(--mm-ink-muted)")
+  const iconColor = isBe
+    ? (accentOverride ?? "var(--mm-ink-muted)")
+    : isActiveQA
+      ? accent
       : isEdge
         ? (accentOverride ?? (hovered ? accent : "var(--mm-ink-muted)"))
         : accent;
   const iconFilter = isDark
-    ? (!isEdge && hovered && !isActiveQA
-        ? "brightness(1.2) drop-shadow(0 0 6px currentColor)"
-        : isActiveQA
-          ? "drop-shadow(0 0 5px currentColor)"
-          : "none")
+    ? (isBe
+        ? (accentOverride ? "drop-shadow(0 0 5px currentColor)" : "none")
+        : !isEdge && hovered && !isActiveQA
+          ? "brightness(1.2) drop-shadow(0 0 6px currentColor)"
+          : isActiveQA
+            ? "drop-shadow(0 0 5px currentColor)"
+            : "none")
     : "none";
 
   const handlePointerUp = (e: React.PointerEvent) => {
