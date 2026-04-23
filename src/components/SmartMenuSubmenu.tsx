@@ -129,12 +129,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     }
 
     if (action.id === "persona") {
-      // Show the persona selector sub-sub menu — pills (Qripto, KNYT) appear
-      // above the prompt bar; clicking a pill opens that persona's iQube drawer.
-      pauseIdleTimer();
       setSubmenuType("personaSelector");
-      // Defeat the pointer-leave race during the QuickActionsCarousel → PersonaSelector swap.
-      queueMicrotask(() => pauseIdleTimer());
       return;
     }
 
