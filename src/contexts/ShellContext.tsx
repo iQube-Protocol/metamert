@@ -206,6 +206,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
+  // Forward-ref to submitPrompt so callbacks defined before it (e.g. selectPersona)
+  // can invoke it without a TDZ / ordering issue.
+  const submitPromptRef = useRef<((text: string) => Promise<void>) | null>(null);
 
   // Smart Menu state
   const [viewState, setViewState] = useState<ViewState>("defaultNav");
@@ -905,6 +908,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       inferCtrl.current?.start();
     }
   }, [config, applyConfigUpdate, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
+
+  // Keep ref in sync so callbacks declared earlier can invoke the latest submitPrompt.
+  useEffect(() => { submitPromptRef.current = submitPrompt; }, [submitPrompt]);
 
   const resetToWelcome = useCallback(() => {
     setShellState("welcome");
