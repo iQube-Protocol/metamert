@@ -15,6 +15,7 @@ import {
   personaIdToIqubeType,
 } from "@/lib/smart-menu-config";
 import { postToIframe } from "@/lib/shell-messages";
+import { postPersonaIQubeOpen } from "@/lib/persona-messages";
 
 describe("persona config", () => {
   it("default active persona id exists in visible list", () => {
@@ -73,7 +74,7 @@ describe("OPEN_PERSONA_IQUBE envelope", () => {
     expect(env.payload.payload).toBeUndefined();
   });
 
-  it("sends exactly ONE message (mirrors LAUNCH_CARTRIDGE — no triple-dispatch)", () => {
+  it("dispatches compatibility-safe persona open messages for mixed runtime builds", () => {
     const posts: any[] = [];
     const iframe = {
       contentWindow: {
@@ -81,17 +82,23 @@ describe("OPEN_PERSONA_IQUBE envelope", () => {
       },
     } as unknown as HTMLIFrameElement;
 
-    postToIframe(
-      iframe,
-      { type: "OPEN_PERSONA_IQUBE", payload: { iqube_type: "qripto" } },
-      "*",
-    );
+    postPersonaIQubeOpen(iframe, "*", "qripto");
 
-    expect(posts).toHaveLength(1);
+    expect(posts).toHaveLength(3);
     expect(posts[0]).toMatchObject({
       type: "OPEN_PERSONA_IQUBE",
       source: "shell",
       payload: { iqube_type: "qripto" },
+    });
+    expect(posts[1]).toMatchObject({
+      type: "OPEN_PERSONA_IQUBE",
+      source: "shell",
+      iqube_type: "qripto",
+      payload: { iqube_type: "qripto" },
+    });
+    expect(posts[2]).toEqual({
+      type: "OPEN_PERSONA_IQUBE",
+      iqube_type: "qripto",
     });
   });
 });

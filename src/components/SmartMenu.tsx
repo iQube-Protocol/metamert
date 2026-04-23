@@ -43,7 +43,6 @@ export default function SmartMenu() {
     config,
     viewState,
     activeMode,
-    submenuType,
     activateMode,
     activateQuickActions,
     handleMenuAction,
@@ -150,14 +149,8 @@ export default function SmartMenu() {
 
   const isPromptMode = viewState === "promptMode" && !!activeMode;
   const isActiveMode = !!activeMode && (viewState === "promptMode" || viewState === "quickActionOnly");
-  const isSelectorOpen =
-    submenuType === "personaSelector" ||
-    submenuType === "cartridgeSelector" ||
-    submenuType === "codexSelector" ||
-    submenuType === "browserSelector";
 
   const showSubmenu =
-    isSelectorOpen ||
     (isActiveMode && submenuVisibility === "visibleAuto") ||
     (!isActiveMode && !!hoverPreviewMode);
 

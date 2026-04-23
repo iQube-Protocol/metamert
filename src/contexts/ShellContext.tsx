@@ -19,6 +19,7 @@ import {
   isInferenceStart,
   isInferenceComplete,
 } from "@/lib/shell-messages";
+import { postPersonaIQubeOpen } from "@/lib/persona-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
 import { toast } from "sonner";
 import {
@@ -206,9 +207,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const bumpOverlay = useCallback(() => setOverlayTrigger((n) => n + 1), []);
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const inferCtrl = useRef<ReturnType<typeof createInferenceController> | null>(null);
-  // Forward-ref to submitPrompt so callbacks defined before it (e.g. selectPersona)
-  // can invoke it without a TDZ / ordering issue.
-  const submitPromptRef = useRef<((text: string) => Promise<void>) | null>(null);
 
   // Smart Menu state
   const [viewState, setViewState] = useState<ViewState>("defaultNav");
@@ -502,9 +500,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   /**
    * Select a persona pill.
    *
-   * Mirrors the cartridge launch contract: ONE canonical message
-   * (`OPEN_PERSONA_IQUBE` nested under `payload`), then a seed prompt.
-   * No triple-dispatch, no SELECTOR_CHANGE.
+   * Canonical flow (per runtime owner contract):
+   *   1. update local activePersonaId
+   *   2. dispatch OPEN_PERSONA_IQUBE with the mapped iqube_type
+   *
+   * We intentionally do NOT also send SELECTOR_CHANGE here — that triggers
+   * a runtime content refresh which can supersede the drawer open. If the
+   * runtime later needs persona sync, do it as an explicit secondary step.
    */
   const selectPersona = useCallback((personaId: string) => {
     const persona = personaState.available.find(p => p.id === personaId);
@@ -518,37 +520,27 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
+    // Note: we do NOT revert submenu to "quickActions" here. The selector
+    // stays visible so the user has feedback that their click registered,
+    // and so the menu doesn't appear to "just reopen the be QL menu".
+    startIdleTimer();
 
     if (iframeRef.current && config) {
       const origin = getIframeOrigin(config);
       console.log("[Shell] selectPersona →", personaId, "iqube_type:", iqubeType);
-      postToIframe(iframeRef.current, {
-        type: "OPEN_PERSONA_IQUBE",
-        payload: { iqube_type: iqubeType },
-      }, origin);
+      postPersonaIQubeOpen(iframeRef.current, origin, iqubeType);
     }
-
-    inferCtrl.current?.start();
-    inferCtrl.current?.complete(4_000);
-
-    const prompt = `Tell me about the ${iqubeType === "knyt" ? "KNYT" : "Qripto"} persona.`;
-    queueMicrotask(() => { void submitPromptRef.current?.(prompt); });
-
-    setSubmenuTypeState("quickActions");
-    startIdleTimer();
   }, [config, startIdleTimer, personaState.available]);
 
   /**
    * Open the Persona iQube drawer in the runtime directly (without changing
-   * the active persona). Single canonical message — fire-and-forget.
+   * the active persona). Fire-and-forget — runtime does not currently emit
+   * a persona-specific acknowledgment.
    */
   const openPersonaIQube = useCallback((iqubeType: "knyt" | "qripto") => {
     if (!iframeRef.current || !config) return;
     console.log("[Shell] openPersonaIQube →", iqubeType);
-    postToIframe(iframeRef.current, {
-      type: "OPEN_PERSONA_IQUBE",
-      payload: { iqube_type: iqubeType },
-    }, getIframeOrigin(config));
+    postPersonaIQubeOpen(iframeRef.current, getIframeOrigin(config), iqubeType);
   }, [config]);
 
   const setInteractionState = useCallback((state: InteractionState) => {
@@ -908,9 +900,6 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       inferCtrl.current?.start();
     }
   }, [config, applyConfigUpdate, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
-
-  // Keep ref in sync so callbacks declared earlier can invoke the latest submitPrompt.
-  useEffect(() => { submitPromptRef.current = submitPrompt; }, [submitPrompt]);
 
   const resetToWelcome = useCallback(() => {
     setShellState("welcome");
