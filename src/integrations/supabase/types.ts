@@ -5473,6 +5473,10 @@ export type Database = {
       iq_token_qubes: {
         Row: {
           access_policy: Json | null
+          chain_id: number | null
+          chain_minter: string | null
+          chain_token_id: number | null
+          chain_tx_hash: string | null
           created_at: string | null
           id: string
           key_ciphertext: string
@@ -5482,6 +5486,10 @@ export type Database = {
         }
         Insert: {
           access_policy?: Json | null
+          chain_id?: number | null
+          chain_minter?: string | null
+          chain_token_id?: number | null
+          chain_tx_hash?: string | null
           created_at?: string | null
           id?: string
           key_ciphertext: string
@@ -5491,6 +5499,10 @@ export type Database = {
         }
         Update: {
           access_policy?: Json | null
+          chain_id?: number | null
+          chain_minter?: string | null
+          chain_token_id?: number | null
+          chain_tx_hash?: string | null
           created_at?: string | null
           id?: string
           key_ciphertext?: string
