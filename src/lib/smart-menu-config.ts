@@ -273,7 +273,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#00D5FF",
     promptPlaceholder: "Ask, explore, watch, listen, read, or switch context…",
     defaultCenteredQuickActionId: "knyt",
-    mobileVisibleFold: ["read", "listen", "watch", "knyt", "browse", "cartridge", "reset"],
+    mobileVisibleFold: ["browse", "listen", "knyt", "watch", "cartridge", "read", "reset"],
     quickActions: PLAY_ACTIONS,
   },
   make: {
@@ -283,7 +283,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#D946EF",
     promptPlaceholder: "Create, design, edit, remix, or build something…",
     defaultCenteredQuickActionId: "edit",
-    mobileVisibleFold: ["create", "design", "edit", "remix", "build"],
+    mobileVisibleFold: ["create", "design", "remix", "edit", "build"],
     quickActions: MAKE_ACTIONS,
   },
   share: {
