@@ -200,12 +200,12 @@ export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
  * the runtime context state, not these static fields.
  */
 const PLAY_ACTIONS: QuickActionDef[] = [
-  { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true,  prompt: "Find me something good to read" },
-  { id: "listen",    label: "Listen",    icon: "headphones", kind: "llm+menu",    triggersInference: true,  prompt: "Play something for me to listen to" },
-  { id: "watch",     label: "Watch",     icon: "eye",        kind: "llm+menu",    triggersInference: true,  prompt: "Show me something interesting to watch" },
-  { id: "knyt",      label: "KNYT",      icon: "zap",        kind: "system-only", triggersInference: false },
   { id: "browse",    label: "Browse",    icon: "globe",      kind: "system-only", triggersInference: false },
+  { id: "listen",    label: "Listen",    icon: "headphones", kind: "llm+menu",    triggersInference: true,  prompt: "Play something for me to listen to" },
+  { id: "knyt",      label: "KNYT",      icon: "zap",        kind: "system-only", triggersInference: false },
+  { id: "watch",     label: "Watch",     icon: "eye",        kind: "llm+menu",    triggersInference: true,  prompt: "Show me something interesting to watch" },
   { id: "cartridge", label: "Cartridge", icon: "save",       kind: "system-only", triggersInference: false },
+  { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true,  prompt: "Find me something good to read" },
   { id: "reset",     label: "Reset",     icon: "rotate-ccw", kind: "system-only", triggersInference: false },
 ];
 
@@ -228,8 +228,8 @@ const EARN_ACTIONS: QuickActionDef[] = [
 const MAKE_ACTIONS: QuickActionDef[] = [
   { id: "create",  label: "Create",  icon: "sparkles",  kind: "llm+menu", triggersInference: true, prompt: "Help me create something new" },
   { id: "design",  label: "Design",  icon: "palette",   kind: "llm+menu", triggersInference: true, prompt: "Help me design something creative" },
-  { id: "edit",    label: "Edit",    icon: "pencil",    kind: "llm+menu", triggersInference: true, prompt: "Help me edit and refine my work" },
   { id: "remix",   label: "Remix",   icon: "shuffle",   kind: "llm+menu", triggersInference: true, prompt: "Remix something creative for me" },
+  { id: "edit",    label: "Edit",    icon: "pencil",    kind: "llm+menu", triggersInference: true, prompt: "Help me edit and refine my work" },
   { id: "build",   label: "Build",   icon: "hammer",    kind: "llm+menu", triggersInference: true, prompt: "Help me build something new" },
 ];
 
@@ -273,7 +273,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#00D5FF",
     promptPlaceholder: "Ask, explore, watch, listen, read, or switch context…",
     defaultCenteredQuickActionId: "knyt",
-    mobileVisibleFold: ["read", "listen", "watch", "knyt", "browse", "cartridge", "reset"],
+    mobileVisibleFold: ["browse", "listen", "knyt", "watch", "cartridge", "read", "reset"],
     quickActions: PLAY_ACTIONS,
   },
   make: {
@@ -283,7 +283,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#D946EF",
     promptPlaceholder: "Create, design, edit, remix, or build something…",
     defaultCenteredQuickActionId: "edit",
-    mobileVisibleFold: ["create", "design", "edit", "remix", "build"],
+    mobileVisibleFold: ["create", "design", "remix", "edit", "build"],
     quickActions: MAKE_ACTIONS,
   },
   share: {
