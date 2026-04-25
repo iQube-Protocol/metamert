@@ -200,12 +200,12 @@ export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
  * the runtime context state, not these static fields.
  */
 const PLAY_ACTIONS: QuickActionDef[] = [
+  { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true,  prompt: "Find me something good to read" },
   { id: "browse",    label: "Browse",    icon: "globe",      kind: "system-only", triggersInference: false },
   { id: "listen",    label: "Listen",    icon: "headphones", kind: "llm+menu",    triggersInference: true,  prompt: "Play something for me to listen to" },
   { id: "knyt",      label: "KNYT",      icon: "zap",        kind: "system-only", triggersInference: false },
   { id: "watch",     label: "Watch",     icon: "eye",        kind: "llm+menu",    triggersInference: true,  prompt: "Show me something interesting to watch" },
   { id: "cartridge", label: "Cartridge", icon: "save",       kind: "system-only", triggersInference: false },
-  { id: "read",      label: "Read",      icon: "book-open",  kind: "llm+menu",    triggersInference: true,  prompt: "Find me something good to read" },
   { id: "reset",     label: "Reset",     icon: "rotate-ccw", kind: "system-only", triggersInference: false },
 ];
 
@@ -273,7 +273,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#00D5FF",
     promptPlaceholder: "Ask, explore, watch, listen, read, or switch context…",
     defaultCenteredQuickActionId: "knyt",
-    mobileVisibleFold: ["browse", "listen", "knyt", "watch", "cartridge", "read", "reset"],
+    mobileVisibleFold: ["read", "browse", "listen", "knyt", "watch", "cartridge", "reset"],
     quickActions: PLAY_ACTIONS,
   },
   make: {
