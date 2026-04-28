@@ -138,10 +138,10 @@ export default function RuntimeHeader() {
   const activeCart = cartridgeState.available.find(c => c.id === cartridgeState.activeCartridgeId);
   const activeCodex = activeCart?.codexes.find(c => c.id === cartridgeState.activeCodexId);
   // Header lightning bolt color reflects the active runtime context, not the cartridge.
-  // KNYT context → amber; metaMe context → coral. Onboarding forces KNYT amber.
+  // KNYT context → amber; metaMe context → emerald. Onboarding forces KNYT amber.
   const KNYT_AMBER = "#F59E0B";
-  const METAME_CORAL = "#FF6B6B";
-  const cartridgeColor = (runtimeContext === "knyt" || knytOnboarding) ? KNYT_AMBER : METAME_CORAL;
+  const METAME_EMERALD = "#10B981";
+  const cartridgeColor = (runtimeContext === "knyt" || knytOnboarding) ? KNYT_AMBER : METAME_EMERALD;
   // Cartridge overlay chip accent — tinted with the active cartridge's accentHex
   // so the floppy disk indicator matches the quick-actions cartridge color
   // (KNYT amber, Qriptopian cyan, metaMe coral).
