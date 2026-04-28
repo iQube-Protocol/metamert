@@ -114,8 +114,9 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
         return;
       }
       // If we haven't received RUNTIME_READY within 5s, mark as loaded but not handshaked
+      // (unless a takeover is pending — then keep spinner until STATE_SYNC clears it)
       setTimeout(() => {
-        setStatus((s) => (s === "loading" ? "ready" : s));
+        setStatus((s) => (s === "loading" && !takeoverPending ? "ready" : s));
       }, 5000);
     };
 
