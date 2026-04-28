@@ -52,6 +52,50 @@ export type Database = {
           },
         ]
       }
+      agent_environment: {
+        Row: {
+          activated_at: string | null
+          agent_root_id: string | null
+          created_at: string | null
+          did_uri: string
+          environment_type: string
+          expires_at: string | null
+          host_context: string | null
+          id: string
+          session_scope: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          agent_root_id?: string | null
+          created_at?: string | null
+          did_uri: string
+          environment_type?: string
+          expires_at?: string | null
+          host_context?: string | null
+          id?: string
+          session_scope?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          agent_root_id?: string | null
+          created_at?: string | null
+          did_uri?: string
+          environment_type?: string
+          expires_at?: string | null
+          host_context?: string | null
+          id?: string
+          session_scope?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_environment_agent_root_id_fkey"
+            columns: ["agent_root_id"]
+            isOneToOne: false
+            referencedRelation: "agent_root_identity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_keys: {
         Row: {
           agent_id: string
@@ -144,6 +188,116 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      agent_persona: {
+        Row: {
+          agent_root_id: string | null
+          created_at: string | null
+          delegation_persona_id: string | null
+          delegation_scopes: Json | null
+          delegation_user_root_id: string | null
+          did_uri: string
+          environment_id: string | null
+          id: string
+          max_identifiability: string
+          persona_role: string | null
+          updated_at: string | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          agent_root_id?: string | null
+          created_at?: string | null
+          delegation_persona_id?: string | null
+          delegation_scopes?: Json | null
+          delegation_user_root_id?: string | null
+          did_uri: string
+          environment_id?: string | null
+          id?: string
+          max_identifiability?: string
+          persona_role?: string | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          agent_root_id?: string | null
+          created_at?: string | null
+          delegation_persona_id?: string | null
+          delegation_scopes?: Json | null
+          delegation_user_root_id?: string | null
+          did_uri?: string
+          environment_id?: string | null
+          id?: string
+          max_identifiability?: string
+          persona_role?: string | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_persona_agent_root_id_fkey"
+            columns: ["agent_root_id"]
+            isOneToOne: false
+            referencedRelation: "agent_root_identity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_persona_delegation_persona_id_fkey"
+            columns: ["delegation_persona_id"]
+            isOneToOne: false
+            referencedRelation: "did_persona"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_persona_delegation_user_root_id_fkey"
+            columns: ["delegation_user_root_id"]
+            isOneToOne: false
+            referencedRelation: "root_identity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_persona_environment_id_fkey"
+            columns: ["environment_id"]
+            isOneToOne: false
+            referencedRelation: "agent_environment"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_root_identity: {
+        Row: {
+          agent_class: string
+          agent_id: string
+          created_at: string | null
+          description: string | null
+          did_uri: string
+          display_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          agent_class: string
+          agent_id: string
+          created_at?: string | null
+          description?: string | null
+          did_uri: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          agent_class?: string
+          agent_id?: string
+          created_at?: string | null
+          description?: string | null
+          did_uri?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       analysis_cards: {
         Row: {
@@ -4423,6 +4577,50 @@ export type Database = {
           kybe_did?: string | null
         }
         Relationships: []
+      }
+      did_persona: {
+        Row: {
+          app_origin: string | null
+          created_at: string | null
+          default_identity_state: string
+          fio_handle: string | null
+          id: string
+          payload_row_id: string | null
+          persona_type: string | null
+          root_id: string | null
+          world_id_status: string | null
+        }
+        Insert: {
+          app_origin?: string | null
+          created_at?: string | null
+          default_identity_state?: string
+          fio_handle?: string | null
+          id?: string
+          payload_row_id?: string | null
+          persona_type?: string | null
+          root_id?: string | null
+          world_id_status?: string | null
+        }
+        Update: {
+          app_origin?: string | null
+          created_at?: string | null
+          default_identity_state?: string
+          fio_handle?: string | null
+          id?: string
+          payload_row_id?: string | null
+          persona_type?: string | null
+          root_id?: string | null
+          world_id_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "did_persona_root_id_fkey"
+            columns: ["root_id"]
+            isOneToOne: false
+            referencedRelation: "root_identity"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       digital_episode_pricing: {
         Row: {
@@ -8870,6 +9068,7 @@ export type Database = {
           csv_other_nfts: string | null
           csv_transaction_count: number | null
           csv_transfer_methods: string | null
+          did_persona_id: string | null
           "Digital-Cards-Owned": string | null
           "Digital-Comics-Owned": string | null
           "Discord-Handle": string | null
@@ -8957,6 +9156,7 @@ export type Database = {
           csv_other_nfts?: string | null
           csv_transaction_count?: number | null
           csv_transfer_methods?: string | null
+          did_persona_id?: string | null
           "Digital-Cards-Owned"?: string | null
           "Digital-Comics-Owned"?: string | null
           "Discord-Handle"?: string | null
@@ -9044,6 +9244,7 @@ export type Database = {
           csv_other_nfts?: string | null
           csv_transaction_count?: number | null
           csv_transfer_methods?: string | null
+          did_persona_id?: string | null
           "Digital-Cards-Owned"?: string | null
           "Digital-Comics-Owned"?: string | null
           "Discord-Handle"?: string | null
@@ -9111,7 +9312,15 @@ export type Database = {
           "Web3-Interests"?: string[] | null
           "YouTube-ID"?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "nakamoto_knyt_personas_did_persona_id_fkey"
+            columns: ["did_persona_id"]
+            isOneToOne: false
+            referencedRelation: "did_persona"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       nakamoto_master_site_updates: {
         Row: {
@@ -9388,6 +9597,7 @@ export type Database = {
           "BTC-Public-Key": string | null
           "Chain-IDs": string[] | null
           created_at: string
+          did_persona_id: string | null
           "Discord-Handle": string | null
           Email: string | null
           "EVM-Public-Key": string | null
@@ -9420,6 +9630,7 @@ export type Database = {
           "BTC-Public-Key"?: string | null
           "Chain-IDs"?: string[] | null
           created_at?: string
+          did_persona_id?: string | null
           "Discord-Handle"?: string | null
           Email?: string | null
           "EVM-Public-Key"?: string | null
@@ -9452,6 +9663,7 @@ export type Database = {
           "BTC-Public-Key"?: string | null
           "Chain-IDs"?: string[] | null
           created_at?: string
+          did_persona_id?: string | null
           "Discord-Handle"?: string | null
           Email?: string | null
           "EVM-Public-Key"?: string | null
@@ -9480,7 +9692,15 @@ export type Database = {
           "Web3-Interests"?: string[] | null
           "YouTube-ID"?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "nakamoto_qripto_personas_did_persona_id_fkey"
+            columns: ["did_persona_id"]
+            isOneToOne: false
+            referencedRelation: "did_persona"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       nakamoto_role_audit_log: {
         Row: {
@@ -10223,23 +10443,33 @@ export type Database = {
       persona_agent_binding: {
         Row: {
           agent_id: string
+          agent_root_id: string | null
           created_at: string | null
           is_primary: boolean | null
           persona_id: string
         }
         Insert: {
           agent_id: string
+          agent_root_id?: string | null
           created_at?: string | null
           is_primary?: boolean | null
           persona_id: string
         }
         Update: {
           agent_id?: string
+          agent_root_id?: string | null
           created_at?: string | null
           is_primary?: boolean | null
           persona_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "persona_agent_binding_agent_root_id_fkey"
+            columns: ["agent_root_id"]
+            isOneToOne: false
+            referencedRelation: "agent_root_identity"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "persona_agent_binding_persona_id_fkey"
             columns: ["persona_id"]
@@ -12455,30 +12685,39 @@ export type Database = {
       }
       root_identity: {
         Row: {
+          auth_user_id: string | null
           created_at: string | null
           did_uri: string
+          display_name: string | null
           id: string
           kybe_hash: string | null
           kybe_id: string | null
           kyc_status: string | null
+          primary_email: string | null
           updated_at: string | null
         }
         Insert: {
+          auth_user_id?: string | null
           created_at?: string | null
           did_uri: string
+          display_name?: string | null
           id?: string
           kybe_hash?: string | null
           kybe_id?: string | null
           kyc_status?: string | null
+          primary_email?: string | null
           updated_at?: string | null
         }
         Update: {
+          auth_user_id?: string | null
           created_at?: string | null
           did_uri?: string
+          display_name?: string | null
           id?: string
           kybe_hash?: string | null
           kybe_id?: string | null
           kyc_status?: string | null
+          primary_email?: string | null
           updated_at?: string | null
         }
         Relationships: [
