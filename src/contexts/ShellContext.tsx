@@ -435,11 +435,21 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     // context enrichment carries the correct cartridge_id + codex_id.
     const cart = cartridgeState.available.find(c => c.id === cartridgeId);
     const codexId = cart?.default_codex_id;
-    setCartridgeState(prev => ({
-      ...prev,
-      activeCartridgeId: cartridgeId,
-      activeCodexId: codexId ?? prev.activeCodexId,
-    }));
+    setCartridgeState(prev => {
+      const changed =
+        prev.activeCartridgeId !== cartridgeId ||
+        (codexId != null && prev.activeCodexId !== codexId);
+      if (changed) {
+        // Pulse R/T dots to acknowledge cartridge activation/change
+        setInferring(true);
+        window.setTimeout(() => setInferring(false), 3000);
+      }
+      return {
+        ...prev,
+        activeCartridgeId: cartridgeId,
+        activeCodexId: codexId ?? prev.activeCodexId,
+      };
+    });
     if (cart) {
       setCartridgeOverlay({ slug: cart.id, title: cart.label ?? cart.id });
     }
