@@ -101,7 +101,7 @@ export default function RuntimeHeader() {
           setTrustFlash(false);
           setTrustDir(null);
           setReliabilityDir(null);
-        }, 1200);
+        }, 3000);
         prevScoresRef.current = trustScores;
         return () => clearTimeout(timer);
       }

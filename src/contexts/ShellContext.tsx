@@ -480,7 +480,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       // Pulse the R/T trust dots to acknowledge the runtime lead handover,
       // mirroring the inference animation triggered by prompt sends.
       setInferring(true);
-      window.setTimeout(() => setInferring(false), 1200);
+      window.setTimeout(() => setInferring(false), 3000);
       return next;
     });
   }, []);
