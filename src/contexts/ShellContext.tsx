@@ -679,6 +679,23 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         const p = (msg as any) as { active?: boolean; slug?: string; title?: string };
         if (p.active && p.slug) {
           setCartridgeOverlay({ slug: p.slug, title: p.title ?? p.slug });
+          // Mirror cartridge state so the active checkmark moves AND pulse R/T dots
+          setCartridgeState(prev => {
+            const cart = prev.available.find(c => c.id === p.slug);
+            const codexId = cart?.default_codex_id;
+            const changed =
+              prev.activeCartridgeId !== p.slug ||
+              (codexId != null && prev.activeCodexId !== codexId);
+            if (changed) {
+              setInferring(true);
+              window.setTimeout(() => setInferring(false), 3000);
+            }
+            return {
+              ...prev,
+              activeCartridgeId: p.slug!,
+              activeCodexId: codexId ?? prev.activeCodexId,
+            };
+          });
         } else {
           setCartridgeOverlay(null);
         }
