@@ -54,13 +54,38 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
       return () => { cancelled = true; };
     }, [url, retryCount, maxRetries]);
 
+    // Track if a takeover is pending — if so, hold spinner open until STATE_SYNC clears it
+    const [takeoverPending, setTakeoverPending] = useState(false);
+
     // Listen for RUNTIME_READY from iframe
     useEffect(() => {
       function handler(ev: MessageEvent) {
         if (origin && ev.origin !== origin) return;
-        if (ev.data?.type === "RUNTIME_READY") {
-          setStatus("ready");
+        const data = ev.data;
+        if (!data || typeof data !== "object") return;
+
+        if (data.type === "RUNTIME_READY") {
+          const payload = data.payload ?? data;
+          const pending = payload?.takeover_pending === true;
+          // Always notify ready (handoff can proceed), but hold spinner if takeover pending
           onReady?.();
+          if (pending) {
+            console.log("[EmbedFrame] RUNTIME_READY with takeover_pending — holding spinner");
+            setTakeoverPending(true);
+            // keep status as "loading" so spinner remains visible
+          } else {
+            setStatus("ready");
+          }
+          return;
+        }
+
+        if (data.type === "STATE_SYNC") {
+          const payload = data.payload ?? data;
+          if (payload?.takeover_pending === false) {
+            console.log("[EmbedFrame] STATE_SYNC takeover_pending=false — dismissing spinner");
+            setTakeoverPending(false);
+            setStatus("ready");
+          }
         }
       }
       window.addEventListener("message", handler);
