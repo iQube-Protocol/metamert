@@ -15,7 +15,7 @@ function getDeviceType(): DeviceType {
 }
 
 export default function RuntimeFrame() {
-  const { config, iframeRef, updateTrust, cartridgeState } = useShell();
+  const { config, iframeRef, updateTrust, cartridgeState, applyRuntimeContextFromRuntime } = useShell();
   const browser = useBrowserOptional();
 
   // LOV-302: Transition class for smooth cartridge/codex switches
@@ -161,12 +161,22 @@ export default function RuntimeFrame() {
             updateTrust(trust);
           }
           break;
+        case "RUNTIME_LEAD_CHANGE": {
+          const next = (msg.runtime_context ?? (msg as any).context) as string | undefined;
+          console.log("[Shell] RUNTIME_LEAD_CHANGE received:", next);
+          if (next === "metame" || next === "knyt") {
+            applyRuntimeContextFromRuntime(next);
+          } else {
+            console.warn("[Shell] RUNTIME_LEAD_CHANGE: ignoring unknown runtime_context", next);
+          }
+          break;
+        }
       }
     }
 
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
-  }, [config, updateTrust, browser]);
+  }, [config, updateTrust, browser, applyRuntimeContextFromRuntime]);
 
   if (!config) return null;
 

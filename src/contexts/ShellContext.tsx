@@ -101,6 +101,8 @@ interface ShellContextValue {
   // and the play menu's central context-toggle quick action.
   runtimeContext: RuntimeContext;
   setRuntimeContext: (next: RuntimeContext) => void;
+  /** Apply runtime-originated context change without echoing back to iframe. */
+  applyRuntimeContextFromRuntime: (next: RuntimeContext) => void;
 
   // Actions
   toggleQuickLinks: () => void;
@@ -466,6 +468,18 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       /* swallow — runtime context is local-first */
     });
   }, [sendRuntimeMessage]);
+
+  /**
+   * Apply a runtime-originated lead change (RUNTIME_LEAD_CHANGE) without
+   * echoing RUNTIME_CONTEXT_CHANGE back to the iframe. Avoids feedback loops.
+   */
+  const applyRuntimeContextFromRuntime = useCallback((next: RuntimeContext) => {
+    setRuntimeContextState(prev => {
+      if (prev === next) return prev;
+      console.log("[Shell] RUNTIME_LEAD_CHANGE → applying runtimeContext:", next);
+      return next;
+    });
+  }, []);
 
   const selectCodex = useCallback((codexId: string) => {
     setCartridgeState(prev => ({
@@ -941,7 +955,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     // Smart Menu state
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
     // Runtime context
-    runtimeContext, setRuntimeContext,
+    runtimeContext, setRuntimeContext, applyRuntimeContextFromRuntime,
     // Actions
     toggleQuickLinks,
     hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
@@ -956,7 +970,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     runtimeHints, iframeReadiness, knytOnboarding,
     cartridgeOverlay, closeCartridgeOverlay,
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
-    runtimeContext, setRuntimeContext,
+    runtimeContext, setRuntimeContext, applyRuntimeContextFromRuntime,
     toggleQuickLinks, hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
