@@ -469,6 +469,18 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     });
   }, [sendRuntimeMessage]);
 
+  /**
+   * Apply a runtime-originated lead change (RUNTIME_LEAD_CHANGE) without
+   * echoing RUNTIME_CONTEXT_CHANGE back to the iframe. Avoids feedback loops.
+   */
+  const applyRuntimeContextFromRuntime = useCallback((next: RuntimeContext) => {
+    setRuntimeContextState(prev => {
+      if (prev === next) return prev;
+      console.log("[Shell] RUNTIME_LEAD_CHANGE → applying runtimeContext:", next);
+      return next;
+    });
+  }, []);
+
   const selectCodex = useCallback((codexId: string) => {
     setCartridgeState(prev => ({
       ...prev,
