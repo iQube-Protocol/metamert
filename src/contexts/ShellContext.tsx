@@ -955,7 +955,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     // Smart Menu state
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
     // Runtime context
-    runtimeContext, setRuntimeContext,
+    runtimeContext, setRuntimeContext, applyRuntimeContextFromRuntime,
     // Actions
     toggleQuickLinks,
     hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
