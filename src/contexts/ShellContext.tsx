@@ -477,6 +477,10 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     setRuntimeContextState(prev => {
       if (prev === next) return prev;
       console.log("[Shell] RUNTIME_LEAD_CHANGE → applying runtimeContext:", next);
+      // Pulse the R/T trust dots to acknowledge the runtime lead handover,
+      // mirroring the inference animation triggered by prompt sends.
+      setInferring(true);
+      window.setTimeout(() => setInferring(false), 1200);
       return next;
     });
   }, []);
