@@ -101,6 +101,8 @@ interface ShellContextValue {
   // and the play menu's central context-toggle quick action.
   runtimeContext: RuntimeContext;
   setRuntimeContext: (next: RuntimeContext) => void;
+  /** Apply runtime-originated context change without echoing back to iframe. */
+  applyRuntimeContextFromRuntime: (next: RuntimeContext) => void;
 
   // Actions
   toggleQuickLinks: () => void;
