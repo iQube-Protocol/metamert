@@ -15,7 +15,7 @@ function getDeviceType(): DeviceType {
 }
 
 export default function RuntimeFrame() {
-  const { config, iframeRef, updateTrust, cartridgeState } = useShell();
+  const { config, iframeRef, updateTrust, cartridgeState, applyRuntimeContextFromRuntime } = useShell();
   const browser = useBrowserOptional();
 
   // LOV-302: Transition class for smooth cartridge/codex switches
