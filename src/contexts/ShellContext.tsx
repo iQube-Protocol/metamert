@@ -496,10 +496,17 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const selectCodex = useCallback((codexId: string) => {
-    setCartridgeState(prev => ({
-      ...prev,
-      activeCodexId: codexId,
-    }));
+    setCartridgeState(prev => {
+      if (prev.activeCodexId !== codexId) {
+        // Pulse R/T dots to acknowledge codex change
+        setInferring(true);
+        window.setTimeout(() => setInferring(false), 3000);
+      }
+      return {
+        ...prev,
+        activeCodexId: codexId,
+      };
+    });
     setSubmenuTypeState("quickActions");
     startIdleTimer();
 
