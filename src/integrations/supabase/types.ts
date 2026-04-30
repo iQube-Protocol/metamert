@@ -1690,6 +1690,149 @@ export type Database = {
         }
         Relationships: []
       }
+      community_content_quotas: {
+        Row: {
+          daily_free_used: number
+          daily_free_used_date: string
+          daily_refund_used_date: string | null
+          last_discard_refund_at: string | null
+          persona_id: string
+          total_generations: number
+          total_qc_spent: number
+          updated_at: string
+        }
+        Insert: {
+          daily_free_used?: number
+          daily_free_used_date?: string
+          daily_refund_used_date?: string | null
+          last_discard_refund_at?: string | null
+          persona_id: string
+          total_generations?: number
+          total_qc_spent?: number
+          updated_at?: string
+        }
+        Update: {
+          daily_free_used?: number
+          daily_free_used_date?: string
+          daily_refund_used_date?: string | null
+          last_discard_refund_at?: string | null
+          persona_id?: string
+          total_generations?: number
+          total_qc_spent?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      community_content_settings: {
+        Row: {
+          cost_qc_article: number
+          cost_qc_story: number
+          daily_discard_refund: number
+          daily_free_quota: number
+          discard_window_seconds: number
+          id: number
+          surcharge_pct: number
+          updated_at: string
+        }
+        Insert: {
+          cost_qc_article?: number
+          cost_qc_story?: number
+          daily_discard_refund?: number
+          daily_free_quota?: number
+          discard_window_seconds?: number
+          id?: number
+          surcharge_pct?: number
+          updated_at?: string
+        }
+        Update: {
+          cost_qc_article?: number
+          cost_qc_story?: number
+          daily_discard_refund?: number
+          daily_free_quota?: number
+          discard_window_seconds?: number
+          id?: number
+          surcharge_pct?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      community_generated_content: {
+        Row: {
+          article_body: string | null
+          created_at: string
+          creator_persona_id: string
+          generation_index: number
+          id: string
+          image_url: string | null
+          parent_id: string | null
+          prompt: string
+          qc_cost: number
+          refunded_at: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          runtime_promoted_at: string | null
+          runtime_promoted_by: string | null
+          skill: string
+          source_experience_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          article_body?: string | null
+          created_at?: string
+          creator_persona_id: string
+          generation_index?: number
+          id?: string
+          image_url?: string | null
+          parent_id?: string | null
+          prompt: string
+          qc_cost?: number
+          refunded_at?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          runtime_promoted_at?: string | null
+          runtime_promoted_by?: string | null
+          skill: string
+          source_experience_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          article_body?: string | null
+          created_at?: string
+          creator_persona_id?: string
+          generation_index?: number
+          id?: string
+          image_url?: string | null
+          parent_id?: string | null
+          prompt?: string
+          qc_cost?: number
+          refunded_at?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          runtime_promoted_at?: string | null
+          runtime_promoted_by?: string | null
+          skill?: string
+          source_experience_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_generated_content_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "community_generated_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       composer_experience_qubes: {
         Row: {
           blak_qube: Json
@@ -6715,6 +6858,27 @@ export type Database = {
           persona_id?: string
           signal_type?: string
           wallet_task_id?: string | null
+        }
+        Relationships: []
+      }
+      knyt_sku_config: {
+        Row: {
+          minting_mode: string
+          sku_id: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          minting_mode?: string
+          sku_id: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          minting_mode?: string
+          sku_id?: string
+          updated_at?: string | null
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -13987,6 +14151,66 @@ export type Database = {
           y_score?: string
         }
         Relationships: []
+      }
+      wallet_alias_commitments: {
+        Row: {
+          alias_commitment: string
+          alias_ttl_days: number
+          chain: string
+          created_at: string
+          did_persona_id: string | null
+          expires_at: string
+          id: string
+          last_used_at: string | null
+          mailbox_id: string
+          root_identity_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          alias_commitment: string
+          alias_ttl_days?: number
+          chain: string
+          created_at?: string
+          did_persona_id?: string | null
+          expires_at: string
+          id?: string
+          last_used_at?: string | null
+          mailbox_id: string
+          root_identity_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          alias_commitment?: string
+          alias_ttl_days?: number
+          chain?: string
+          created_at?: string
+          did_persona_id?: string | null
+          expires_at?: string
+          id?: string
+          last_used_at?: string | null
+          mailbox_id?: string
+          root_identity_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_alias_commitments_did_persona_id_fkey"
+            columns: ["did_persona_id"]
+            isOneToOne: false
+            referencedRelation: "did_persona"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_alias_commitments_root_identity_id_fkey"
+            columns: ["root_identity_id"]
+            isOneToOne: false
+            referencedRelation: "root_identity"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wallet_balances: {
         Row: {
