@@ -10671,6 +10671,33 @@ export type Database = {
           },
         ]
       }
+      persona_cartridge_defaults: {
+        Row: {
+          auth_profile_id: string
+          cartridge_slug: string
+          created_at: string | null
+          id: string
+          persona_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          auth_profile_id: string
+          cartridge_slug: string
+          created_at?: string | null
+          id?: string
+          persona_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          auth_profile_id?: string
+          cartridge_slug?: string
+          created_at?: string | null
+          id?: string
+          persona_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       persona_legacy_20260125: {
         Row: {
           app_origin: string | null
@@ -11216,6 +11243,7 @@ export type Database = {
       purchases: {
         Row: {
           amount: number
+          cart_purchase_id: string | null
           completed_at: string | null
           created_at: string
           currency: string
@@ -11230,6 +11258,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          cart_purchase_id?: string | null
           completed_at?: string | null
           created_at?: string
           currency: string
@@ -11244,6 +11273,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          cart_purchase_id?: string | null
           completed_at?: string | null
           created_at?: string
           currency?: string
@@ -14154,6 +14184,7 @@ export type Database = {
       }
       wallet_alias_commitments: {
         Row: {
+          address_fingerprint: string | null
           alias_commitment: string
           alias_ttl_days: number
           chain: string
@@ -14168,6 +14199,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address_fingerprint?: string | null
           alias_commitment: string
           alias_ttl_days?: number
           chain: string
@@ -14182,6 +14214,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address_fingerprint?: string | null
           alias_commitment?: string
           alias_ttl_days?: number
           chain?: string
