@@ -715,11 +715,36 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       console.log("[Shell:CODEX_CLOSE_DIAG] METAME_CODEX_CLOSE_LAYER received", { origin: e.origin });
     };
 
+    // Persona sync FROM iframe → shell.
+    // The runtime (and codex embed bridge) broadcast the canonical
+    // `aa-persona-change-v1` envelope when the user switches persona inside an
+    // iframe. We listen raw (no source/origin filter beyond the runtime origin
+    // check below — broadcasts from PersonaContext are untagged on purpose) and
+    // mirror the change into local personaState so the "Be" pill, accent
+    // tinting, and submenu reflect the new persona. We do NOT echo
+    // OPEN_PERSONA_IQUBE back to the iframe — that would loop.
+    const personaSyncHandler = (e: MessageEvent) => {
+      const raw = e.data;
+      if (!raw || typeof raw !== "object") return;
+      if (raw.type !== "aa-persona-change-v1") return;
+      const incoming = typeof raw.personaId === "string" ? raw.personaId : null;
+      if (!incoming) return;
+      setPersonaState(prev => {
+        if (prev.activePersonaId === incoming) return prev;
+        // Only accept ids the shell knows about (visible registry).
+        if (!prev.available.some(p => p.id === incoming)) return prev;
+        console.log("[Shell] persona sync from iframe:", incoming);
+        return { ...prev, activePersonaId: incoming };
+      });
+    };
+
     window.addEventListener("message", handler);
     window.addEventListener("message", codexCloseHandler);
+    window.addEventListener("message", personaSyncHandler);
     return () => {
       window.removeEventListener("message", handler);
       window.removeEventListener("message", codexCloseHandler);
+      window.removeEventListener("message", personaSyncHandler);
     };
   }, [config]);
 
