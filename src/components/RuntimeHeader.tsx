@@ -123,13 +123,18 @@ export default function RuntimeHeader() {
   if (!config) return null;
 
   const trust = config.trust ?? { level: "unverified", signals: [], scores: {} };
-  const rScore = scoreToDots(trustScores.reliability, 4);
-  const tScore = scoreToDots(trustScores.trust, 3);
+  const dotTotal = isMobile ? 3 : 5;
+  const rScore = isMobile
+    ? scoreToDots3(trustScores.reliability, 3)
+    : scoreToDots(trustScores.reliability, 4);
+  const tScore = isMobile
+    ? scoreToDots3(trustScores.trust, 2)
+    : scoreToDots(trustScores.trust, 3);
   const rColor = reliabilityDotColor(trustScores.reliability);
   const tColor = trustDotColor(trustScores.trust);
 
-  const renderDots = (filled: number, activeColor: string) =>
-    [...Array(5)].map((_, i) => (
+  const renderDots = (filled: number, activeColor: string, total: number = 5) =>
+    [...Array(total)].map((_, i) => (
       <span
         key={i}
         className={`inline-block h-2 w-2 rounded-full ${
