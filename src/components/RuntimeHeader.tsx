@@ -351,7 +351,7 @@ export default function RuntimeHeader() {
                 </div>
                 <div className="relative flex items-center gap-0.5">
                   <span className="font-medium mr-1" style={{ color: 'var(--mm-ink-secondary)' }}>T</span>
-                  {renderDots(tScore, tColor)}
+                  {renderDots(tScore, tColor, dotTotal)}
                   {trustDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${trustDir === "up" ? "text-mm-accent-earn" : "text-mm-accent-alert"}`}>{trustDir === "up" ? "▲" : "▼"}</span>}
                 </div>
               </div>
