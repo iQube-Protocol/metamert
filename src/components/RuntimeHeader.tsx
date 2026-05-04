@@ -13,11 +13,21 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /** Map a 0-10 score to 0-5 filled dots using ceil(score/2) */
 function scoreToDots(score: number | undefined, fallback: number): number {
   if (score == null) return fallback;
   return Math.ceil(Math.min(10, Math.max(0, score)) / 2);
+}
+
+/** Map a 0-10 score to 0-3 filled dots (mobile compact view).
+ *  Bands: 0 → 0, 1–3.33 → 1, 3.34–6.66 → 2, 6.67–10 → 3. */
+function scoreToDots3(score: number | undefined, fallback: number): number {
+  if (score == null) return fallback;
+  const v = Math.min(10, Math.max(0, score));
+  if (v === 0) return 0;
+  return Math.min(3, Math.ceil(v / (10 / 3)));
 }
 
 function trustDotColor(score: number | undefined): string {
