@@ -54,6 +54,7 @@ function scoreDirection(prev: number | undefined, curr: number | undefined): "up
 
 export default function RuntimeHeader() {
   const { config, selectAigent, selectLLM, inferring, cartridgeState, knytOnboarding, iframeRef, runtimeContext, cartridgeOverlay, closeCartridgeOverlay } = useShell();
+  const isMobile = useIsMobile();
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
   const [trustFlash, setTrustFlash] = useState(false);
