@@ -346,7 +346,7 @@ export default function RuntimeHeader() {
                 <div className="absolute inset-0 bg-mm-canvas-variant/40" style={{ borderRadius: 'inherit' }} />
                 <div className="relative flex items-center gap-0.5">
                   <span className="font-medium mr-1" style={{ color: 'var(--mm-ink-secondary)' }}>R</span>
-                  {renderDots(rScore, rColor)}
+                  {renderDots(rScore, rColor, dotTotal)}
                   {reliabilityDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${reliabilityDir === "up" ? "text-mm-accent-earn" : "text-mm-accent-alert"}`}>{reliabilityDir === "up" ? "▲" : "▼"}</span>}
                 </div>
                 <div className="relative flex items-center gap-0.5">
