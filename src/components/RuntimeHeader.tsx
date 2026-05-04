@@ -13,11 +13,21 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /** Map a 0-10 score to 0-5 filled dots using ceil(score/2) */
 function scoreToDots(score: number | undefined, fallback: number): number {
   if (score == null) return fallback;
   return Math.ceil(Math.min(10, Math.max(0, score)) / 2);
+}
+
+/** Map a 0-10 score to 0-3 filled dots (mobile compact view).
+ *  Bands: 0 → 0, 1–3.33 → 1, 3.34–6.66 → 2, 6.67–10 → 3. */
+function scoreToDots3(score: number | undefined, fallback: number): number {
+  if (score == null) return fallback;
+  const v = Math.min(10, Math.max(0, score));
+  if (v === 0) return 0;
+  return Math.min(3, Math.ceil(v / (10 / 3)));
 }
 
 function trustDotColor(score: number | undefined): string {
@@ -44,6 +54,7 @@ function scoreDirection(prev: number | undefined, curr: number | undefined): "up
 
 export default function RuntimeHeader() {
   const { config, selectAigent, selectLLM, inferring, cartridgeState, knytOnboarding, iframeRef, runtimeContext, cartridgeOverlay, closeCartridgeOverlay } = useShell();
+  const isMobile = useIsMobile();
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
   const [trustFlash, setTrustFlash] = useState(false);
@@ -112,13 +123,18 @@ export default function RuntimeHeader() {
   if (!config) return null;
 
   const trust = config.trust ?? { level: "unverified", signals: [], scores: {} };
-  const rScore = scoreToDots(trustScores.reliability, 4);
-  const tScore = scoreToDots(trustScores.trust, 3);
+  const dotTotal = isMobile ? 3 : 5;
+  const rScore = isMobile
+    ? scoreToDots3(trustScores.reliability, 3)
+    : scoreToDots(trustScores.reliability, 4);
+  const tScore = isMobile
+    ? scoreToDots3(trustScores.trust, 2)
+    : scoreToDots(trustScores.trust, 3);
   const rColor = reliabilityDotColor(trustScores.reliability);
   const tColor = trustDotColor(trustScores.trust);
 
-  const renderDots = (filled: number, activeColor: string) =>
-    [...Array(5)].map((_, i) => (
+  const renderDots = (filled: number, activeColor: string, total: number = 5) =>
+    [...Array(total)].map((_, i) => (
       <span
         key={i}
         className={`inline-block h-2 w-2 rounded-full ${
@@ -320,7 +336,7 @@ export default function RuntimeHeader() {
           <Tooltip>
             <TooltipTrigger asChild>
               <div
-                className={`relative flex items-center gap-4 px-3 py-2 text-[11px] cursor-default transition-all duration-300 ${trustFlash ? "ring-1 ring-mm-accent-runtime/40 scale-105" : ""}`}
+                className={`relative flex items-center gap-2 sm:gap-4 px-2 py-1.5 sm:px-3 sm:py-2 text-[11px] cursor-default transition-all duration-300 ${trustFlash ? "ring-1 ring-mm-accent-runtime/40 scale-105" : ""}`}
                 style={{
                   borderRadius: 'var(--mm-radius-xs)',
                   color: 'var(--mm-ink-muted)',
@@ -330,12 +346,12 @@ export default function RuntimeHeader() {
                 <div className="absolute inset-0 bg-mm-canvas-variant/40" style={{ borderRadius: 'inherit' }} />
                 <div className="relative flex items-center gap-0.5">
                   <span className="font-medium mr-1" style={{ color: 'var(--mm-ink-secondary)' }}>R</span>
-                  {renderDots(rScore, rColor)}
+                  {renderDots(rScore, rColor, dotTotal)}
                   {reliabilityDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${reliabilityDir === "up" ? "text-mm-accent-earn" : "text-mm-accent-alert"}`}>{reliabilityDir === "up" ? "▲" : "▼"}</span>}
                 </div>
                 <div className="relative flex items-center gap-0.5">
                   <span className="font-medium mr-1" style={{ color: 'var(--mm-ink-secondary)' }}>T</span>
-                  {renderDots(tScore, tColor)}
+                  {renderDots(tScore, tColor, dotTotal)}
                   {trustDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${trustDir === "up" ? "text-mm-accent-earn" : "text-mm-accent-alert"}`}>{trustDir === "up" ? "▲" : "▼"}</span>}
                 </div>
               </div>

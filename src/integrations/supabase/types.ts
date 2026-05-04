@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -1466,6 +1466,7 @@ export type Database = {
           recommended_task: string | null
           series: string | null
           status: string | null
+          supabase_title: string | null
           title: string
           token_qube_id: string | null
           updated_at: string | null
@@ -1501,6 +1502,7 @@ export type Database = {
           recommended_task?: string | null
           series?: string | null
           status?: string | null
+          supabase_title?: string | null
           title: string
           token_qube_id?: string | null
           updated_at?: string | null
@@ -1536,6 +1538,7 @@ export type Database = {
           recommended_task?: string | null
           series?: string | null
           status?: string | null
+          supabase_title?: string | null
           title?: string
           token_qube_id?: string | null
           updated_at?: string | null
@@ -8206,6 +8209,7 @@ export type Database = {
           pdf_lite_url: string | null
           series: string
           status: string | null
+          supabase_title: string | null
           title: string
           token_qube_id: string | null
           updated_at: string | null
@@ -8231,6 +8235,7 @@ export type Database = {
           pdf_lite_url?: string | null
           series?: string
           status?: string | null
+          supabase_title?: string | null
           title: string
           token_qube_id?: string | null
           updated_at?: string | null
@@ -8256,6 +8261,7 @@ export type Database = {
           pdf_lite_url?: string | null
           series?: string
           status?: string | null
+          supabase_title?: string | null
           title?: string
           token_qube_id?: string | null
           updated_at?: string | null
@@ -13349,6 +13355,60 @@ export type Database = {
         }
         Relationships: []
       }
+      store_skus: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          episode_numbers: number[] | null
+          extra_asset_ids: string[] | null
+          grants_character_cards: boolean | null
+          grants_episodes_motion: boolean | null
+          grants_episodes_print: boolean | null
+          grants_episodes_still: boolean | null
+          grants_gn: boolean | null
+          grants_lore: boolean | null
+          is_active: boolean | null
+          name: string
+          series: string | null
+          sku_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          episode_numbers?: number[] | null
+          extra_asset_ids?: string[] | null
+          grants_character_cards?: boolean | null
+          grants_episodes_motion?: boolean | null
+          grants_episodes_print?: boolean | null
+          grants_episodes_still?: boolean | null
+          grants_gn?: boolean | null
+          grants_lore?: boolean | null
+          is_active?: boolean | null
+          name: string
+          series?: string | null
+          sku_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          episode_numbers?: number[] | null
+          extra_asset_ids?: string[] | null
+          grants_character_cards?: boolean | null
+          grants_episodes_motion?: boolean | null
+          grants_episodes_print?: boolean | null
+          grants_episodes_still?: boolean | null
+          grants_gn?: boolean | null
+          grants_lore?: boolean | null
+          is_active?: boolean | null
+          name?: string
+          series?: string | null
+          sku_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       studio_artifacts: {
         Row: {
           applied_at: string | null
@@ -16175,6 +16235,9 @@ export type Database = {
         | "social_campaign_image"
         | "cover_pdf"
         | "cover_image"
+        | "ra_badge"
+        | "cover_motion"
+        | "bundle_pack"
       content_display_mode: "pdf" | "image" | "video" | "text_extract"
       content_modality: "read" | "watch" | "listen" | "interact"
       content_status: "draft" | "published" | "archived" | "scheduled"
@@ -16504,6 +16567,9 @@ export const Constants = {
         "social_campaign_image",
         "cover_pdf",
         "cover_image",
+        "ra_badge",
+        "cover_motion",
+        "bundle_pack",
       ],
       content_display_mode: ["pdf", "image", "video", "text_extract"],
       content_modality: ["read", "watch", "listen", "interact"],
