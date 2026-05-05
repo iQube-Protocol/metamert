@@ -36,7 +36,7 @@ export default function RuntimeFrame() {
 
     // Step 2: HANDOFF with token + AA credentials for runtime AA client
     if (config.iframe.handoff_token) {
-      const aaBaseUrl = import.meta.env.VITE_AIGENT_Z_AA_BASE || "https://aa.dev-beta.aigentz.me/aa/v1";
+      const aaBaseUrl = getRuntimeEnvConfig().aaPrimary;
       const aaToken = getToken();
       postToIframe(
         iframeRef.current,
