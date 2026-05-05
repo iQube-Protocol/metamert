@@ -185,6 +185,45 @@ function AdminGate({ children }: { children: React.ReactNode }) {
   );
 }
 
+function EnvSwitcher() {
+  const cfg = getRuntimeEnvConfig();
+  const envs: RuntimeEnv[] = ["dev", "staging", "production"];
+  const apply = (env: RuntimeEnv | null) => {
+    setRuntimeEnvOverride(env);
+    toast.success(env ? `Switched to ${env}. Reloading…` : "Cleared override. Reloading…");
+    setTimeout(() => window.location.reload(), 400);
+  };
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">Runtime Environment</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="text-xs text-muted-foreground space-y-0.5">
+          <div>Active: <code>{cfg.env}</code></div>
+          <div>Iframe: <code>{cfg.iframeHost}</code></div>
+          <div>AA primary: <code>{cfg.aaPrimary}</code></div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {envs.map((e) => (
+            <Button
+              key={e}
+              size="sm"
+              variant={cfg.env === e ? "default" : "outline"}
+              onClick={() => apply(e)}
+            >
+              {e}
+            </Button>
+          ))}
+          <Button size="sm" variant="ghost" onClick={() => apply(null)}>
+            Clear override
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DevDiagnostics() {
   const [activeThread, setActiveThread] = useState<QubeTalkThread>("ui-shell");
 
