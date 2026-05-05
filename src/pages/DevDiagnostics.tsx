@@ -199,6 +199,8 @@ export default function DevDiagnostics() {
             </p>
           </div>
 
+          <EnvSwitcher />
+
           <Tabs
             value={activeThread}
             onValueChange={(v) => setActiveThread(v as QubeTalkThread)}
