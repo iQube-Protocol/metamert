@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { checkAdminStatus, getDid, authenticate } from "@/lib/aa-client";
+import { getRuntimeEnvConfig, setRuntimeEnvOverride, type RuntimeEnv } from "@/lib/runtime-env";
 
 const THREADS: QubeTalkThread[] = ["spec", "api-wiring", "ui-shell", "dev-exec", "ops"];
 
