@@ -89,13 +89,13 @@ export function resolveEnv(): RuntimeEnv {
     } catch { /* ignore */ }
   }
 
-  // 3. build-time
-  const buildEnv = import.meta.env.VITE_RUNTIME_ENV;
-  if (isValid(buildEnv)) { cached = buildEnv; return buildEnv; }
-
-  // 4. hostname heuristic
+  // 3. hostname heuristic — domains are persistent doorways to platform tiers
   const h = fromHostname();
   if (h) { cached = h; return h; }
+
+  // 4. build-time hint (lower priority than hostname)
+  const buildEnv = import.meta.env.VITE_RUNTIME_ENV;
+  if (isValid(buildEnv)) { cached = buildEnv; return buildEnv; }
 
   // 5. default
   cached = "dev";
