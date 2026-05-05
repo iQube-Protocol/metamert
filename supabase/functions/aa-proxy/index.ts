@@ -269,15 +269,17 @@ function normalizeShellConfig(raw: any): any {
 async function upstreamFetch(
   path: string,
   init: RequestInit,
+  env: RuntimeEnv = "dev",
 ): Promise<Response> {
-  const url1 = `${AA_PRIMARY}${path}`;
+  const { primary, fallback } = BASES_BY_ENV[env];
+  const url1 = `${primary}${path}`;
   try {
     const res = await fetch(url1, init);
     if (res.ok) return res;
   } catch {
     // primary unreachable
   }
-  const url2 = `${AA_FALLBACK}${path}`;
+  const url2 = `${fallback}${path}`;
   return fetch(url2, init);
 }
 
@@ -291,7 +293,10 @@ serve(async (req) => {
   }
 
   try {
-    const { action, body: reqBody, token } = await req.json();
+    const { action, body: reqBody, token, env: envRaw } = await req.json();
+    const env = resolveEnv(envRaw);
+    const envIframeUrl = buildIframeUrl(env);
+    const envIframeOrigin = BASES_BY_ENV[env].iframeOrigin;
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
