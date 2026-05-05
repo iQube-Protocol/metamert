@@ -233,13 +233,13 @@ export default function SmartMenu() {
           {/* Right gap: inner half triggers Play, outer half extends Share activation */}
           <div className="flex-1 min-w-[8px] flex">
             <div
-              className="flex-1"
+              className="flex-[3]"
               onPointerEnter={handleGapPointerEnter}
               onPointerLeave={handleGapPointerLeave}
               onPointerUp={handleGapPointerUp}
             />
             <div
-              className="flex-1"
+              className="flex-[1]"
               onPointerEnter={() => handleNavHoverEnter("share")}
               onPointerLeave={handleNavHoverLeave}
               onPointerUp={(e) => {
