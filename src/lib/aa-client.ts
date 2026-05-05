@@ -8,6 +8,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { resolveEnv } from "@/lib/runtime-env";
 
 let cachedToken: string | null = null;
 let cachedDid: string | null = null;
