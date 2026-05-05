@@ -1,71 +1,64 @@
-# Compress Trust/Reliability dots to 3 on mobile
-
 ## Goal
-On the mobile breakpoint (`<768px`), render the **R** (Reliability) and **T** (Trust) indicators in `RuntimeHeader.tsx` as **3 dots** instead of 5, while preserving the same 0–10 underlying score semantics. Tablet and desktop continue to show 5 dots — no change.
 
-## Mapping: 0–10 score → 3 filled dots
+Map the shell to **dev / staging / production** versions of the metaMe platform (iframe host + AA-API base) without code edits per deploy, with a runtime override for QA.
 
-The current desktop function maps 0–10 to 0–5 dots via `Math.ceil(score / 2)`. For 3 dots we need a comparable banding so each dot represents a meaningful slice of the 0–10 range:
+## Confirmed environment matrix
 
-```text
-Score 0       → 0 dots  (none)
-Score 1–3.33  → 1 dot   (low band)
-Score 3.34–6.66 → 2 dots (mid band)
-Score 6.67–10 → 3 dots  (high band)
-```
+| Env        | Iframe / App host              | AA-API primary                      | AA-API fallback                                  | Shell domain          |
+|------------|--------------------------------|-------------------------------------|--------------------------------------------------|-----------------------|
+| dev        | `dev-beta.aigentz.me`          | `https://aa.dev-beta.aigentz.me/aa/v1` | `https://aigentzbeta-production.up.railway.app/aa/v1` | `metame.dev`          |
+| staging    | `staging-beta.aigentz.me`      | Railway (no `aa.` subdomain yet)    | Railway                                           | `runtime.metame.com`  |
+| production | `beta.aigentz.me`              | Railway (no `aa.` subdomain yet)    | Railway                                           | `metame.live`         |
 
-Formula:
-```ts
-function scoreToDots3(score: number | undefined, fallback: number): number {
-  if (score == null) return fallback;
-  const v = Math.min(10, Math.max(0, score));
-  if (v === 0) return 0;
-  return Math.min(3, Math.ceil(v / (10 / 3))); // ceil(v / 3.333)
-}
-```
+Iframe URL pattern: `https://<host>/metame/runtime?embed=1&shell=thin` (preserves existing `/metame/runtime` path — required by LAUNCH_CARTRIDGE memory rule).
 
-This keeps parity with the desktop visual intent:
-- Desktop default `reliability` fallback = 4/5 dots (high) → mobile fallback = 3/3
-- Desktop default `trust` fallback = 3/5 dots (mid)  → mobile fallback = 2/3
+## Design
 
-Color thresholds (alert/codex/earn) stay tied to the raw 0–10 score — unchanged.
+### 1. New env resolver — `src/lib/runtime-env.ts`
+- `type RuntimeEnv = "dev" | "staging" | "production"`
+- `ENV_CONFIG: Record<RuntimeEnv, { iframeHost, iframeUrl, iframeOrigin, aaPrimary, aaFallback }>` populated from the matrix above.
+- `resolveEnv()` precedence:
+  1. `?env=dev|staging|production` query param → persisted to `localStorage["mm_runtime_env"]`
+  2. `localStorage["mm_runtime_env"]`
+  3. `import.meta.env.VITE_RUNTIME_ENV`
+  4. Hostname heuristic: `metame.live` → production; `runtime.metame.com` → staging; `metame.dev` / `*.lovable.app` previews → dev
+  5. Default `dev`
+- `getRuntimeEnvConfig()` returns the resolved bundle.
 
-## Visual comparison
+### 2. Frontend wiring
+- `src/lib/embed-utils.ts` — replace hardcoded `EMBED_BASES_RAW` with `getRuntimeEnvConfig().iframeOrigin`.
+- `src/components/RuntimeFrame.tsx` — replace inline `VITE_AIGENT_Z_AA_BASE || "https://aa.dev-beta..."` with resolver value.
+- `src/lib/aa-client.ts` — `aaProxy()` adds `env` field to the body so the edge function knows which tier to hit.
 
-```text
-Desktop / Tablet (≥768px):   R ● ● ● ● ○   T ● ● ● ○ ○
-Mobile (<768px):              R ● ● ●       T ● ● ○
-```
+### 3. Edge function — `supabase/functions/aa-proxy/index.ts`
+- Replace constants with `BASES_BY_ENV`:
+  ```ts
+  const BASES_BY_ENV = {
+    dev:        { primary: "https://aa.dev-beta.aigentz.me/aa/v1",        fallback: RAILWAY },
+    staging:    { primary: RAILWAY,                                       fallback: RAILWAY },
+    production: { primary: RAILWAY,                                       fallback: RAILWAY },
+  };
+  ```
+- Pick by `body.env` (default `dev`).
+- `DEFAULT_SHELL_CONFIG.iframe.url` built from same map per request.
 
-Direction arrow (▲/▼) and flash ring behavior are preserved on all breakpoints.
+### 4. Build-time selection
+- Add `.env.development`, `.env.staging`, `.env.production` each setting `VITE_RUNTIME_ENV=...`.
+- Lovable preview → dev; published custom domains carry their own `VITE_RUNTIME_ENV` via project env.
 
-## Implementation
+### 5. Runtime override + visibility
+- `?env=staging` switches and persists for the browser.
+- Add env switcher + indicator to `src/pages/DevDiagnostics.tsx`.
+- Small corner badge ("DEV" / "STG") in `RuntimeHeader` when env ≠ production. Production: no badge.
 
-**File:** `src/components/RuntimeHeader.tsx`
+### 6. Memory + docs
+- New `mem://architecture/runtime-environments` describing the matrix, precedence, override.
+- Update `mem://integration/launch-cartridge-contract` to note iframe host is env-resolved (path stays `/metame/runtime`).
+- Append env matrix section to `docs/SHELL_CONTRACT.md`.
 
-1. Import `useIsMobile` from `@/hooks/use-mobile`.
-2. Add `scoreToDots3` helper next to existing `scoreToDots`.
-3. In the component:
-   - Call `const isMobile = useIsMobile();`
-   - Compute dot counts conditionally:
-     ```ts
-     const dotCount = isMobile ? 3 : 5;
-     const rScore = isMobile
-       ? scoreToDots3(trustScores.reliability, 3)
-       : scoreToDots(trustScores.reliability, 4);
-     const tScore = isMobile
-       ? scoreToDots3(trustScores.trust, 2)
-       : scoreToDots(trustScores.trust, 3);
-     ```
-4. Update `renderDots(filled, activeColor)` to accept a `total` argument (default 5) and iterate `[...Array(total)]`. Pass `dotCount` from the call sites.
-5. Tighten the R/T container spacing on mobile to recover horizontal room:
-   - Change `gap-4` → `gap-2 sm:gap-4` on the outer R/T wrapper
-   - Change `px-3 py-2` → `px-2 py-1.5 sm:px-3 sm:py-2`
-   - Keep dot size (`h-2 w-2`) and label font unchanged.
+## Files touched
 
-No other files touched. No changes to score semantics, colors, animations, message contracts, or memory.
+- New: `src/lib/runtime-env.ts`, `.env.development`, `.env.staging`, `.env.production`, `mem://architecture/runtime-environments`
+- Edit: `src/lib/embed-utils.ts`, `src/lib/aa-client.ts`, `src/components/RuntimeFrame.tsx`, `src/components/RuntimeHeader.tsx`, `src/pages/DevDiagnostics.tsx`, `supabase/functions/aa-proxy/index.ts`, `docs/SHELL_CONTRACT.md`, `mem://index.md`, `mem://integration/launch-cartridge-contract`
 
-## Out of scope
-- Hiding R/T entirely on very narrow screens
-- Changing the dot diameter or label
-- Changing color thresholds
+Approve and I'll implement.
