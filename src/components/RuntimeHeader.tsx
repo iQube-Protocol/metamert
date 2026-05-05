@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/popover";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getRuntimeEnvConfig, getEnvBadgeLabel } from "@/lib/runtime-env";
 
 /** Map a 0-10 score to 0-5 filled dots using ceil(score/2) */
 function scoreToDots(score: number | undefined, fallback: number): number {
