@@ -7,8 +7,40 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const AA_PRIMARY = "https://aa.dev-beta.aigentz.me/aa/v1";
-const AA_FALLBACK = "https://aigentzbeta-production.up.railway.app/aa/v1";
+const RAILWAY = "https://aigentzbeta-production.up.railway.app/aa/v1";
+
+type RuntimeEnv = "dev" | "staging" | "production";
+
+const BASES_BY_ENV: Record<RuntimeEnv, { primary: string; fallback: string; iframeOrigin: string }> = {
+  dev: {
+    primary: "https://aa.dev-beta.aigentz.me/aa/v1",
+    fallback: RAILWAY,
+    iframeOrigin: "https://dev-beta.aigentz.me",
+  },
+  staging: {
+    primary: RAILWAY,
+    fallback: RAILWAY,
+    iframeOrigin: "https://staging-beta.aigentz.me",
+  },
+  production: {
+    primary: RAILWAY,
+    fallback: RAILWAY,
+    iframeOrigin: "https://beta.aigentz.me",
+  },
+};
+
+function resolveEnv(v: unknown): RuntimeEnv {
+  if (v === "staging" || v === "production" || v === "dev") return v;
+  return "dev";
+}
+
+function buildIframeUrl(env: RuntimeEnv): string {
+  return `${BASES_BY_ENV[env].iframeOrigin}/metame/runtime?embed=1&shell=thin`;
+}
+
+// Legacy aliases — replaced by per-request env resolution below.
+const AA_PRIMARY = BASES_BY_ENV.dev.primary;
+const AA_FALLBACK = BASES_BY_ENV.dev.fallback;
 
 // Formula-based scoring from WS spec (latest QT #ui-shell):
 // trust  = clamp(base_score - processing_penalty, 1..10)
