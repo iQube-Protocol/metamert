@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/popover";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getRuntimeEnvConfig, getEnvBadgeLabel } from "@/lib/runtime-env";
 
 /** Map a 0-10 score to 0-5 filled dots using ceil(score/2) */
 function scoreToDots(score: number | undefined, fallback: number): number {
@@ -186,6 +187,23 @@ export default function RuntimeHeader() {
           borderBottom: 'var(--mm-border-hairline)',
         }}
       >
+        {(() => {
+          const envCfg = getRuntimeEnvConfig();
+          const label = getEnvBadgeLabel(envCfg.env);
+          if (!label) return null;
+          return (
+            <span
+              className="absolute top-0 right-0 z-50 px-1.5 py-0.5 text-[9px] font-bold tracking-wider rounded-bl-md pointer-events-none"
+              style={{
+                backgroundColor: envCfg.env === "staging" ? "#a855f7" : "#f59e0b",
+                color: "white",
+              }}
+              title={`Runtime env: ${envCfg.env} → ${envCfg.iframeHost}`}
+            >
+              {label}
+            </span>
+          );
+        })()}
         {/* Left: selectors */}
         <div className="flex items-center gap-2">
           {/* Aigent selector */}

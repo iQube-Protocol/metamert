@@ -7,8 +7,40 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const AA_PRIMARY = "https://aa.dev-beta.aigentz.me/aa/v1";
-const AA_FALLBACK = "https://aigentzbeta-production.up.railway.app/aa/v1";
+const RAILWAY = "https://aigentzbeta-production.up.railway.app/aa/v1";
+
+type RuntimeEnv = "dev" | "staging" | "production";
+
+const BASES_BY_ENV: Record<RuntimeEnv, { primary: string; fallback: string; iframeOrigin: string }> = {
+  dev: {
+    primary: "https://aa.dev-beta.aigentz.me/aa/v1",
+    fallback: RAILWAY,
+    iframeOrigin: "https://dev-beta.aigentz.me",
+  },
+  staging: {
+    primary: RAILWAY,
+    fallback: RAILWAY,
+    iframeOrigin: "https://staging-beta.aigentz.me",
+  },
+  production: {
+    primary: RAILWAY,
+    fallback: RAILWAY,
+    iframeOrigin: "https://beta.aigentz.me",
+  },
+};
+
+function resolveEnv(v: unknown): RuntimeEnv {
+  if (v === "staging" || v === "production" || v === "dev") return v;
+  return "dev";
+}
+
+function buildIframeUrl(env: RuntimeEnv): string {
+  return `${BASES_BY_ENV[env].iframeOrigin}/metame/runtime?embed=1&shell=thin`;
+}
+
+// Legacy aliases — replaced by per-request env resolution below.
+const AA_PRIMARY = BASES_BY_ENV.dev.primary;
+const AA_FALLBACK = BASES_BY_ENV.dev.fallback;
 
 // Formula-based scoring from WS spec (latest QT #ui-shell):
 // trust  = clamp(base_score - processing_penalty, 1..10)
@@ -237,15 +269,17 @@ function normalizeShellConfig(raw: any): any {
 async function upstreamFetch(
   path: string,
   init: RequestInit,
+  env: RuntimeEnv = "dev",
 ): Promise<Response> {
-  const url1 = `${AA_PRIMARY}${path}`;
+  const { primary, fallback } = BASES_BY_ENV[env];
+  const url1 = `${primary}${path}`;
   try {
     const res = await fetch(url1, init);
     if (res.ok) return res;
   } catch {
     // primary unreachable
   }
-  const url2 = `${AA_FALLBACK}${path}`;
+  const url2 = `${fallback}${path}`;
   return fetch(url2, init);
 }
 
@@ -259,13 +293,26 @@ serve(async (req) => {
   }
 
   try {
-    const { action, body: reqBody, token } = await req.json();
+    const { action, body: reqBody, token, env: envRaw } = await req.json();
+    const env = resolveEnv(envRaw);
+    const envIframeUrl = buildIframeUrl(env);
+    const envIframeOrigin = BASES_BY_ENV[env].iframeOrigin;
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
+
+    // Build env-aware default shell config (overrides hardcoded dev iframe URL)
+    const defaultShellConfigForEnv = {
+      ...DEFAULT_SHELL_CONFIG,
+      iframe: {
+        ...DEFAULT_SHELL_CONFIG.iframe,
+        url: envIframeUrl,
+        origin: envIframeOrigin,
+      },
+    };
 
     // ---- AUTH: challenge ----
     if (action === "challenge") {
@@ -274,7 +321,7 @@ serve(async (req) => {
           method: "POST",
           headers,
           body: JSON.stringify(reqBody),
-        });
+        }, env);
         if (res.ok) {
           const data = await res.json();
           return new Response(JSON.stringify(data), {
@@ -295,7 +342,7 @@ serve(async (req) => {
           method: "POST",
           headers,
           body: JSON.stringify(reqBody),
-        });
+        }, env);
         if (res.ok) {
           const data = await res.json();
           return new Response(JSON.stringify(data), {
@@ -315,7 +362,7 @@ serve(async (req) => {
         const res = await upstreamFetch("/runtime/shell-config", {
           method: "GET",
           headers,
-        });
+        }, env);
         if (res.ok) {
           const data = normalizeShellConfig(await res.json());
           // Inject provider-specific scores based on current LLM
@@ -337,7 +384,7 @@ serve(async (req) => {
         // upstream unavailable
       }
       console.log("[aa-proxy] shell-config upstream unavailable, returning default");
-      return new Response(JSON.stringify(DEFAULT_SHELL_CONFIG), {
+      return new Response(JSON.stringify(defaultShellConfigForEnv), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -349,7 +396,7 @@ serve(async (req) => {
           method: "POST",
           headers,
           body: JSON.stringify(reqBody),
-        });
+        }, env);
         if (res.ok) {
           // deno-lint-ignore no-explicit-any
           const data: any = await res.json();
@@ -387,9 +434,9 @@ serve(async (req) => {
       const fallback = {
         ok: true,
         shell_config: {
-          ...DEFAULT_SHELL_CONFIG,
+          ...defaultShellConfigForEnv,
           trust: {
-            ...DEFAULT_SHELL_CONFIG.trust,
+            ...defaultShellConfigForEnv.trust,
             level: "verified",
             signals: [`Trust ${scores.trust}/10`, `Reliability ${scores.reliability}/10`],
             scores,
@@ -408,7 +455,7 @@ serve(async (req) => {
           method: "POST",
           headers,
           body: JSON.stringify(reqBody),
-        });
+        }, env);
         if (res.ok) {
           const data = await res.json();
           return new Response(JSON.stringify(data), {
@@ -423,7 +470,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         menu_event: { action_id: itemId, intent: itemId, prompt: `Launching ${itemId}…` },
         iframe_event: { type: "MENU_ACTION", item_id: itemId, intent: itemId },
-        shell_config: DEFAULT_SHELL_CONFIG,
+        shell_config: defaultShellConfigForEnv,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -436,7 +483,7 @@ serve(async (req) => {
           method: "POST",
           headers,
           body: JSON.stringify(reqBody),
-        });
+        }, env);
         if (res.ok) {
           const data = await res.json();
           return new Response(JSON.stringify(data), {
@@ -469,7 +516,7 @@ serve(async (req) => {
           method: "POST",
           headers,
           body: JSON.stringify({ did }),
-        });
+        }, env);
         if (res.ok) {
           const data = await res.json();
           return new Response(JSON.stringify({

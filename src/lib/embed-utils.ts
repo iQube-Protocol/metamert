@@ -3,7 +3,8 @@
  * Handles URL probing, multi-base fallback, and cache-busting.
  */
 
-const EMBED_BASES_RAW = "https://dev-beta.aigentz.me";
+import { getRuntimeEnvConfig } from "@/lib/runtime-env";
+
 const LKG_KEY = "metame_embed_lkg_base";
 
 // ---------------------------------------------------------------------------
@@ -11,7 +12,7 @@ const LKG_KEY = "metame_embed_lkg_base";
 // ---------------------------------------------------------------------------
 
 export function getOrderedBases(): string[] {
-  const bases = EMBED_BASES_RAW.split(",").map((b) => b.trim());
+  const bases = [getRuntimeEnvConfig().iframeOrigin];
   const lkg = localStorage.getItem(LKG_KEY);
   if (lkg && bases.includes(lkg)) {
     return [lkg, ...bases.filter((b) => b !== lkg)];
