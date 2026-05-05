@@ -306,7 +306,7 @@ serve(async (req) => {
 
     // Build env-aware default shell config (overrides hardcoded dev iframe URL)
     const defaultShellConfigForEnv = {
-      ...defaultShellConfigForEnv,
+      ...DEFAULT_SHELL_CONFIG,
       iframe: {
         ...DEFAULT_SHELL_CONFIG.iframe,
         url: envIframeUrl,
