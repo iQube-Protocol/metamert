@@ -306,7 +306,7 @@ serve(async (req) => {
 
     // Build env-aware default shell config (overrides hardcoded dev iframe URL)
     const defaultShellConfigForEnv = {
-      ...DEFAULT_SHELL_CONFIG,
+      ...defaultShellConfigForEnv,
       iframe: {
         ...DEFAULT_SHELL_CONFIG.iframe,
         url: envIframeUrl,
@@ -384,7 +384,7 @@ serve(async (req) => {
         // upstream unavailable
       }
       console.log("[aa-proxy] shell-config upstream unavailable, returning default");
-      return new Response(JSON.stringify(DEFAULT_SHELL_CONFIG), {
+      return new Response(JSON.stringify(defaultShellConfigForEnv), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -434,9 +434,9 @@ serve(async (req) => {
       const fallback = {
         ok: true,
         shell_config: {
-          ...DEFAULT_SHELL_CONFIG,
+          ...defaultShellConfigForEnv,
           trust: {
-            ...DEFAULT_SHELL_CONFIG.trust,
+            ...defaultShellConfigForEnv.trust,
             level: "verified",
             signals: [`Trust ${scores.trust}/10`, `Reliability ${scores.reliability}/10`],
             scores,
@@ -470,7 +470,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         menu_event: { action_id: itemId, intent: itemId, prompt: `Launching ${itemId}…` },
         iframe_event: { type: "MENU_ACTION", item_id: itemId, intent: itemId },
-        shell_config: DEFAULT_SHELL_CONFIG,
+        shell_config: defaultShellConfigForEnv,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
