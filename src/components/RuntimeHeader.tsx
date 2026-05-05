@@ -139,7 +139,7 @@ export default function RuntimeHeader() {
       <span
         key={i}
         className={`inline-block h-2 w-2 rounded-full ${
-          inferring ? "animate-pulse duration-700" : "transition-all duration-300"
+          inferring ? "animate-dot-wave" : "transition-all duration-300"
         } ${i < filled ? activeColor : "bg-mm-ink-faint/30"}`}
         style={{
           ...(inferring ? { animationDelay: `${i * 150}ms` } : {}),
