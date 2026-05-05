@@ -121,6 +121,7 @@ async function aaProxy<T = unknown>(
       action,
       body,
       token: cachedToken,
+      env: resolveEnv(),
     },
   });
 
