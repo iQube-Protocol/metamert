@@ -304,6 +304,16 @@ serve(async (req) => {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
+    // Build env-aware default shell config (overrides hardcoded dev iframe URL)
+    const defaultShellConfigForEnv = {
+      ...DEFAULT_SHELL_CONFIG,
+      iframe: {
+        ...DEFAULT_SHELL_CONFIG.iframe,
+        url: envIframeUrl,
+        origin: envIframeOrigin,
+      },
+    };
+
     // ---- AUTH: challenge ----
     if (action === "challenge") {
       try {
