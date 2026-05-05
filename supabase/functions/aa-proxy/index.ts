@@ -311,7 +311,7 @@ serve(async (req) => {
           method: "POST",
           headers,
           body: JSON.stringify(reqBody),
-        });
+        }, env);
         if (res.ok) {
           const data = await res.json();
           return new Response(JSON.stringify(data), {
@@ -332,7 +332,7 @@ serve(async (req) => {
           method: "POST",
           headers,
           body: JSON.stringify(reqBody),
-        });
+        }, env);
         if (res.ok) {
           const data = await res.json();
           return new Response(JSON.stringify(data), {
@@ -352,7 +352,7 @@ serve(async (req) => {
         const res = await upstreamFetch("/runtime/shell-config", {
           method: "GET",
           headers,
-        });
+        }, env);
         if (res.ok) {
           const data = normalizeShellConfig(await res.json());
           // Inject provider-specific scores based on current LLM
@@ -386,7 +386,7 @@ serve(async (req) => {
           method: "POST",
           headers,
           body: JSON.stringify(reqBody),
-        });
+        }, env);
         if (res.ok) {
           // deno-lint-ignore no-explicit-any
           const data: any = await res.json();
@@ -445,7 +445,7 @@ serve(async (req) => {
           method: "POST",
           headers,
           body: JSON.stringify(reqBody),
-        });
+        }, env);
         if (res.ok) {
           const data = await res.json();
           return new Response(JSON.stringify(data), {
@@ -473,7 +473,7 @@ serve(async (req) => {
           method: "POST",
           headers,
           body: JSON.stringify(reqBody),
-        });
+        }, env);
         if (res.ok) {
           const data = await res.json();
           return new Response(JSON.stringify(data), {
@@ -506,7 +506,7 @@ serve(async (req) => {
           method: "POST",
           headers,
           body: JSON.stringify({ did }),
-        });
+        }, env);
         if (res.ok) {
           const data = await res.json();
           return new Response(JSON.stringify({
