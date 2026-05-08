@@ -339,7 +339,11 @@ function NavButton({
             />
           ) : <span className="h-5 w-5" />}
         </span>
-        <span style={{ color: 'var(--mm-ink-muted)' }}>{item.label}</span>
+        <span
+          className="truncate max-w-[4rem]"
+          style={{ color: 'var(--mm-ink-muted)' }}
+          title={labelOverride ?? item.label}
+        >{labelOverride ?? item.label}</span>
       </button>
     </div>
   );
