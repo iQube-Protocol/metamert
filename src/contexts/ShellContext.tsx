@@ -729,19 +729,46 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       if (!raw || typeof raw !== "object") return;
       if (raw.type !== "aa-persona-change-v1") return;
       const incoming = typeof raw.personaId === "string" ? raw.personaId : null;
-      if (!incoming) return;
-      setPersonaState(prev => {
-        if (prev.activePersonaId === incoming) return prev;
-        // Only accept ids the shell knows about (visible registry).
-        if (!prev.available.some(p => p.id === incoming)) return prev;
-        console.log("[Shell] persona sync from iframe:", incoming);
-        return { ...prev, activePersonaId: incoming };
-      });
-      // Per v1 contract: treat the message as a refetch trigger for the surface.
-      void fetchActivePersona().then(surface => {
-        const handle = surface?.displayLabel ?? surface?.ownFioHandle ?? undefined;
-        setPersonaState(prev => prev.activeHandle === handle ? prev : { ...prev, activeHandle: handle });
-      });
+      // Option A: read handle directly from the envelope (runtime forwards
+      // displayLabel / ownFioHandle alongside personaId). Fall back to a
+      // proxy fetch only if neither is present.
+      const inlineHandle =
+        (typeof raw.displayLabel === "string" && raw.displayLabel) ||
+        (typeof raw.ownFioHandle === "string" && raw.ownFioHandle) ||
+        (raw.surface && typeof raw.surface === "object"
+          ? (typeof raw.surface.displayLabel === "string" && raw.surface.displayLabel) ||
+            (typeof raw.surface.ownFioHandle === "string" && raw.surface.ownFioHandle)
+          : null) ||
+        null;
+
+      if (incoming) {
+        setPersonaState(prev => {
+          const next = { ...prev };
+          let changed = false;
+          if (prev.activePersonaId !== incoming && prev.available.some(p => p.id === incoming)) {
+            next.activePersonaId = incoming;
+            changed = true;
+            console.log("[Shell] persona sync from iframe:", incoming);
+          }
+          if (inlineHandle && prev.activeHandle !== inlineHandle) {
+            next.activeHandle = inlineHandle;
+            changed = true;
+            console.log("[Shell] persona handle from iframe:", inlineHandle);
+          }
+          return changed ? next : prev;
+        });
+      } else if (inlineHandle) {
+        setPersonaState(prev => prev.activeHandle === inlineHandle ? prev : { ...prev, activeHandle: inlineHandle });
+      }
+
+      // Fallback only if the runtime didn't include a handle in the envelope.
+      if (!inlineHandle) {
+        void fetchActivePersona().then(surface => {
+          const handle = surface?.displayLabel ?? surface?.ownFioHandle ?? undefined;
+          if (!handle) return;
+          setPersonaState(prev => prev.activeHandle === handle ? prev : { ...prev, activeHandle: handle });
+        });
+      }
     };
 
     window.addEventListener("message", handler);
