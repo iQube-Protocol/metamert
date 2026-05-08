@@ -737,6 +737,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         console.log("[Shell] persona sync from iframe:", incoming);
         return { ...prev, activePersonaId: incoming };
       });
+      // Per v1 contract: treat the message as a refetch trigger for the surface.
+      void fetchActivePersona().then(surface => {
+        const handle = surface?.displayLabel ?? surface?.ownFioHandle ?? undefined;
+        setPersonaState(prev => prev.activeHandle === handle ? prev : { ...prev, activeHandle: handle });
+      });
     };
 
     window.addEventListener("message", handler);
