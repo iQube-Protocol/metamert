@@ -222,6 +222,30 @@ export async function checkAdminStatus(did?: string | null): Promise<AdminCheckR
 }
 
 // ---------------------------------------------------------------------------
+// Active persona surface (v1 contract — /api/wallet/active-persona)
+// ---------------------------------------------------------------------------
+
+export interface ActivePersonaSurface {
+  identifiability?: "anonymous" | "semi_anonymous" | "semi_identifiable" | "identifiable";
+  cartridgeFlags?: { isAdmin?: boolean; isPartner?: boolean };
+  displayLabel?: string;
+  ownFioHandle?: string;
+  cohortMemberships?: string[];
+  sessionExpiresAt?: string;
+}
+
+/** Fetch active persona surface. Returns null when unauthenticated or on error. */
+export async function fetchActivePersona(): Promise<ActivePersonaSurface | null> {
+  try {
+    const data = await aaProxy<ActivePersonaSurface & { unauthenticated?: boolean }>("active-persona");
+    if (!data || data.unauthenticated) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Accessors
 // ---------------------------------------------------------------------------
 
