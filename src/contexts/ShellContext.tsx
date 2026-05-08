@@ -725,19 +725,37 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     // tinting, and submenu reflect the new persona. We do NOT echo
     // OPEN_PERSONA_IQUBE back to the iframe — that would loop.
     const personaSyncHandler = (e: MessageEvent) => {
-      const raw = e.data;
+      let raw = e.data;
+      if (typeof raw === "string") {
+        try { raw = JSON.parse(raw); } catch { return; }
+      }
       if (!raw || typeof raw !== "object") return;
-      if (raw.type !== "aa-persona-change-v1") return;
-      const incoming = typeof raw.personaId === "string" ? raw.personaId : null;
+      // Accept both raw envelope and bridge-wrapped { type, payload: {...} }
+      let type = raw.type;
+      let body: any = raw;
+      if (raw.payload && typeof raw.payload === "object") {
+        if (type === "aa-persona-change-v1") {
+          body = { ...raw.payload, ...raw };
+        } else if ((raw.payload as any).type === "aa-persona-change-v1") {
+          type = "aa-persona-change-v1";
+          body = raw.payload;
+        }
+      }
+      if (type !== "aa-persona-change-v1") return;
+      console.log("[Shell] aa-persona-change-v1 received", body);
+      const incoming = typeof body.personaId === "string" ? body.personaId : null;
       // Option A: read handle directly from the envelope (runtime forwards
       // displayLabel / ownFioHandle alongside personaId). Fall back to a
       // proxy fetch only if neither is present.
+      const surface = (body.surface && typeof body.surface === "object") ? body.surface : null;
       const inlineHandle =
-        (typeof raw.displayLabel === "string" && raw.displayLabel) ||
-        (typeof raw.ownFioHandle === "string" && raw.ownFioHandle) ||
-        (raw.surface && typeof raw.surface === "object"
-          ? (typeof raw.surface.displayLabel === "string" && raw.surface.displayLabel) ||
-            (typeof raw.surface.ownFioHandle === "string" && raw.surface.ownFioHandle)
+        (typeof body.displayLabel === "string" && body.displayLabel) ||
+        (typeof body.ownFioHandle === "string" && body.ownFioHandle) ||
+        (typeof body.handle === "string" && body.handle) ||
+        (surface
+          ? (typeof surface.displayLabel === "string" && surface.displayLabel) ||
+            (typeof surface.ownFioHandle === "string" && surface.ownFioHandle) ||
+            (typeof surface.handle === "string" && surface.handle)
           : null) ||
         null;
 
