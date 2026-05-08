@@ -262,6 +262,7 @@ function NavButton({
   isCenter = false,
   activeQAMode,
   accentOverride,
+  labelOverride,
   onPointerTap,
   onAction,
   onHoverEnter,
@@ -272,6 +273,7 @@ function NavButton({
   isCenter?: boolean;
   activeQAMode?: SmartMenuMode | null;
   accentOverride?: string;
+  labelOverride?: string;
   onPointerTap: (mode: SmartMenuMode, pointerType: string) => void;
   onAction: (id: string) => Promise<void>;
   onHoverEnter: (mode: SmartMenuMode) => void;
