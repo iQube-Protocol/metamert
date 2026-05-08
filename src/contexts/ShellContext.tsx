@@ -11,6 +11,7 @@ import {
   promptAction,
   authenticate,
   getToken,
+  fetchActivePersona,
 } from "@/lib/aa-client";
 import {
   postToIframe,
@@ -736,6 +737,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         console.log("[Shell] persona sync from iframe:", incoming);
         return { ...prev, activePersonaId: incoming };
       });
+      // Per v1 contract: treat the message as a refetch trigger for the surface.
+      void fetchActivePersona().then(surface => {
+        const handle = surface?.displayLabel ?? surface?.ownFioHandle ?? undefined;
+        setPersonaState(prev => prev.activeHandle === handle ? prev : { ...prev, activeHandle: handle });
+      });
     };
 
     window.addEventListener("message", handler);
@@ -785,6 +791,15 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     };
   }, [config]);
 
+  const refreshActivePersona = useCallback(async () => {
+    const surface = await fetchActivePersona();
+    setPersonaState(prev => {
+      const handle = surface?.displayLabel ?? surface?.ownFioHandle ?? undefined;
+      if (prev.activeHandle === handle) return prev;
+      return { ...prev, activeHandle: handle };
+    });
+  }, []);
+
   const hydrate = useCallback(async () => {
     setLoading(true);
     try {
@@ -798,12 +813,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       }
       const cfg = await fetchShellConfig();
       setConfig(cfg);
+      // Best-effort fetch of active persona surface (returns null when unauthenticated)
+      void refreshActivePersona();
     } catch (err) {
       console.error("[Shell] Hydration failed:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [refreshActivePersona]);
 
   const isLiveConfig = useCallback((cfg?: ShellConfig): boolean => {
     if (!cfg) return false;

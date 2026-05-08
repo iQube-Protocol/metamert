@@ -501,6 +501,39 @@ serve(async (req) => {
       });
     }
 
+    // ---- ACTIVE PERSONA (v1 contract: /api/wallet/active-persona) ----
+    if (action === "active-persona") {
+      const url = `${envIframeOrigin}/api/wallet/active-persona`;
+      try {
+        const res = await fetch(url, {
+          method: "GET",
+          headers: {
+            ...headers,
+            Accept: "application/json",
+          },
+        });
+        if (res.status === 401) {
+          return new Response(JSON.stringify({ unauthenticated: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (res.ok) {
+          const data = await res.json();
+          // Strip opaque session token defensively — shell never needs it.
+          if (data && typeof data === "object") delete data.personaSessionToken;
+          return new Response(JSON.stringify(data), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        console.log("[aa-proxy] active-persona upstream", res.status);
+      } catch (e) {
+        console.log("[aa-proxy] active-persona unreachable", String(e));
+      }
+      return new Response(JSON.stringify({ unauthenticated: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ---- ADMIN CHECK ----
     if (action === "admin-check") {
       const did = reqBody?.did;

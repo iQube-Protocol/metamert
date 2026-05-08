@@ -1,64 +1,78 @@
 ## Goal
 
-Map the shell to **dev / staging / production** versions of the metaMe platform (iframe host + AA-API base) without code edits per deploy, with a runtime override for QA.
+Replace the static **Be** label under the SmartMenu Be icon with the user's active persona handle, sourced from the platform's `GET /api/wallet/active-persona` endpoint per the v1 Active Persona Integration Contract. Fall back to `Be` when the user is unauthenticated, the endpoint 401s, or no handle is resolvable.
 
-## Confirmed environment matrix
+## Render rule
 
-| Env        | Iframe / App host              | AA-API primary                      | AA-API fallback                                  | Shell domain          |
-|------------|--------------------------------|-------------------------------------|--------------------------------------------------|-----------------------|
-| dev        | `dev-beta.aigentz.me`          | `https://aa.dev-beta.aigentz.me/aa/v1` | `https://aigentzbeta-production.up.railway.app/aa/v1` | `metame.dev`          |
-| staging    | `staging-beta.aigentz.me`      | Railway (no `aa.` subdomain yet)    | Railway                                           | `runtime.metame.com`  |
-| production | `beta.aigentz.me`              | Railway (no `aa.` subdomain yet)    | Railway                                           | `metame.live`         |
+```
+label = surface.displayLabel ?? surface.ownFioHandle ?? "Be"
+```
 
-Iframe URL pattern: `https://<host>/metame/runtime?embed=1&shell=thin` (preserves existing `/metame/runtime` path — required by LAUNCH_CARTRIDGE memory rule).
+(The contract suggests `(persona)` as anonymous fallback — we explicitly use `Be` to preserve current UX.)
 
-## Design
+## Architecture
 
-### 1. New env resolver — `src/lib/runtime-env.ts`
-- `type RuntimeEnv = "dev" | "staging" | "production"`
-- `ENV_CONFIG: Record<RuntimeEnv, { iframeHost, iframeUrl, iframeOrigin, aaPrimary, aaFallback }>` populated from the matrix above.
-- `resolveEnv()` precedence:
-  1. `?env=dev|staging|production` query param → persisted to `localStorage["mm_runtime_env"]`
-  2. `localStorage["mm_runtime_env"]`
-  3. `import.meta.env.VITE_RUNTIME_ENV`
-  4. Hostname heuristic: `metame.live` → production; `runtime.metame.com` → staging; `metame.dev` / `*.lovable.app` previews → dev
-  5. Default `dev`
-- `getRuntimeEnvConfig()` returns the resolved bundle.
+The shell never calls `dev-beta.aigentz.me` directly from the browser (CSP + custom-domain origin issues + project rule "all external comms via edge functions"). We add a new **`active-persona`** action to the existing `aa-proxy` edge function that proxies the contract endpoint and forwards the bearer token.
 
-### 2. Frontend wiring
-- `src/lib/embed-utils.ts` — replace hardcoded `EMBED_BASES_RAW` with `getRuntimeEnvConfig().iframeOrigin`.
-- `src/components/RuntimeFrame.tsx` — replace inline `VITE_AIGENT_Z_AA_BASE || "https://aa.dev-beta..."` with resolver value.
-- `src/lib/aa-client.ts` — `aaProxy()` adds `env` field to the body so the edge function knows which tier to hit.
+```text
+SmartMenu (Be label)
+   ↑ personaState.activeHandle
+ShellContext.fetchActivePersona()
+   ↓ supabase.functions.invoke("aa-proxy", { action: "active-persona", token, env })
+aa-proxy (Deno)
+   ↓ GET https://{iframeOrigin}/api/wallet/active-persona  Authorization: Bearer <token>
+Platform → ActivePersonaSurface JSON | 401
+```
 
-### 3. Edge function — `supabase/functions/aa-proxy/index.ts`
-- Replace constants with `BASES_BY_ENV`:
-  ```ts
-  const BASES_BY_ENV = {
-    dev:        { primary: "https://aa.dev-beta.aigentz.me/aa/v1",        fallback: RAILWAY },
-    staging:    { primary: RAILWAY,                                       fallback: RAILWAY },
-    production: { primary: RAILWAY,                                       fallback: RAILWAY },
-  };
+## Steps
+
+### 1. Edge function — `supabase/functions/aa-proxy/index.ts`
+- Add a new `active-persona` action.
+- Builds URL from the env-resolved iframe origin: `${BASES_BY_ENV[env].iframeOrigin}/api/wallet/active-persona`.
+- Forwards `Authorization: Bearer <token>` if present.
+- On 200: returns the surface JSON unchanged.
+- On 401 / network error: returns `{ unauthenticated: true }` with HTTP 200 so the shell handles it cleanly.
+- Strips `personaSessionToken` before returning to the browser (defence-in-depth — the shell never needs it).
+
+### 2. AA client — `src/lib/aa-client.ts`
+- Add `ActivePersonaSurface` type matching the contract (minus `personaSessionToken`).
+- Add `fetchActivePersona(): Promise<ActivePersonaSurface | null>` that invokes the proxy with the `cachedToken` and current env. Returns `null` on `unauthenticated` or any error.
+
+### 3. Shell context — `src/contexts/ShellContext.tsx`
+- Extend `PersonaState` (in `src/lib/smart-menu-config.ts`) with optional `activeHandle?: string`.
+- After hydrate (and whenever a token becomes available), call `fetchActivePersona()` and set `personaState.activeHandle = surface.displayLabel ?? surface.ownFioHandle ?? undefined`.
+- **Persona-change listener**: extend the existing `aa-persona-change-v1` handler so that *in addition to* its current id-mirroring, it triggers `fetchActivePersona()` and updates `activeHandle`. Keep the existing origin filter; do NOT use `personaId` from the payload as anything other than a refetch trigger (per contract §5).
+- Schedule a refresh `(sessionExpiresAt - 60s)` using `setTimeout` (cleared on unmount / re-fetch).
+
+### 4. SmartMenu — `src/components/SmartMenu.tsx`
+- In `NavButton`, when `item.id === "be"`, render the dynamic label:
+  ```tsx
+  const beLabel = personaState.activeHandle ?? "Be";
   ```
-- Pick by `body.env` (default `dev`).
-- `DEFAULT_SHELL_CONFIG.iframe.url` built from same map per request.
+  Pass it down (or compute locally via `useShell()`).
+- Add `truncate max-w-[3.75rem]` to the label `<span>` so longer handles like `aigentz@aigent` don't break layout. Title attribute carries the full handle for hover.
 
-### 4. Build-time selection
-- Add `.env.development`, `.env.staging`, `.env.production` each setting `VITE_RUNTIME_ENV=...`.
-- Lovable preview → dev; published custom domains carry their own `VITE_RUNTIME_ENV` via project env.
+### 5. Memory
+- Update `mem://features/persona-system` to record the Be-label binding.
+- Add `mem://integration/active-persona-surface` describing the v1 contract, endpoint, render fallback chain, and the proxy action.
 
-### 5. Runtime override + visibility
-- `?env=staging` switches and persists for the browser.
-- Add env switcher + indicator to `src/pages/DevDiagnostics.tsx`.
-- Small corner badge ("DEV" / "STG") in `RuntimeHeader` when env ≠ production. Production: no badge.
+## Privacy & safety
 
-### 6. Memory + docs
-- New `mem://architecture/runtime-environments` describing the matrix, precedence, override.
-- Update `mem://integration/launch-cartridge-contract` to note iframe host is env-resolved (path stays `/metame/runtime`).
-- Append env matrix section to `docs/SHELL_CONTRACT.md`.
+- Proxy strips `personaSessionToken` before returning to the browser.
+- Shell never persists `ownFioHandle` beyond React state.
+- Event-origin check on `aa-persona-change-v1` continues to pin to the env-resolved iframe origin.
+- `personaId` from the postMessage envelope is treated as a refetch trigger only; it is not stored or rendered.
+
+## Out of scope
+
+- Identifiability tone/colour on the Be icon (contract §1 fallback chain mentions it; we keep current accent rules and can layer this in later).
+- Auth provisioning of a Supabase JWT to the shell — we forward whatever bearer we have; if none, label stays `Be`.
 
 ## Files touched
 
-- New: `src/lib/runtime-env.ts`, `.env.development`, `.env.staging`, `.env.production`, `mem://architecture/runtime-environments`
-- Edit: `src/lib/embed-utils.ts`, `src/lib/aa-client.ts`, `src/components/RuntimeFrame.tsx`, `src/components/RuntimeHeader.tsx`, `src/pages/DevDiagnostics.tsx`, `supabase/functions/aa-proxy/index.ts`, `docs/SHELL_CONTRACT.md`, `mem://index.md`, `mem://integration/launch-cartridge-contract`
-
-Approve and I'll implement.
+- `supabase/functions/aa-proxy/index.ts`
+- `src/lib/aa-client.ts`
+- `src/lib/smart-menu-config.ts`
+- `src/contexts/ShellContext.tsx`
+- `src/components/SmartMenu.tsx`
+- `mem://features/persona-system`, `mem://integration/active-persona-surface`, `mem://index.md`

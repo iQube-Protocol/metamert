@@ -205,7 +205,7 @@ export default function SmartMenu() {
           onPointerUp={handleNavAreaPointerUp}
         >
           <div className="flex items-stretch">
-            <NavButton item={NAV_ITEMS[0]} accentOverride={personaAccent} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
+            <NavButton item={NAV_ITEMS[0]} accentOverride={personaAccent} labelOverride={personaState.activeHandle} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
           {/* Left gap: outer half extends Be activation, inner half triggers Play */}
           <div className="flex-1 min-w-[8px] flex">
@@ -262,6 +262,7 @@ function NavButton({
   isCenter = false,
   activeQAMode,
   accentOverride,
+  labelOverride,
   onPointerTap,
   onAction,
   onHoverEnter,
@@ -272,6 +273,7 @@ function NavButton({
   isCenter?: boolean;
   activeQAMode?: SmartMenuMode | null;
   accentOverride?: string;
+  labelOverride?: string;
   onPointerTap: (mode: SmartMenuMode, pointerType: string) => void;
   onAction: (id: string) => Promise<void>;
   onHoverEnter: (mode: SmartMenuMode) => void;
@@ -337,7 +339,11 @@ function NavButton({
             />
           ) : <span className="h-5 w-5" />}
         </span>
-        <span style={{ color: 'var(--mm-ink-muted)' }}>{item.label}</span>
+        <span
+          className="truncate max-w-[4rem]"
+          style={{ color: 'var(--mm-ink-muted)' }}
+          title={labelOverride ?? item.label}
+        >{labelOverride ?? item.label}</span>
       </button>
     </div>
   );

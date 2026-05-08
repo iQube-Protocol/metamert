@@ -67,6 +67,8 @@ export interface PersonaDef {
 export interface PersonaState {
   activePersonaId: string;
   available: PersonaDef[];
+  /** Live handle from /api/wallet/active-persona — displayLabel or ownFioHandle. */
+  activeHandle?: string;
 }
 
 /**
