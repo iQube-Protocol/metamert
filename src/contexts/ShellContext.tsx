@@ -21,6 +21,12 @@ import {
   isInferenceComplete,
 } from "@/lib/shell-messages";
 import { resolveIframeOrigin } from "@/lib/iframe-origin";
+import {
+  parseMetameEvent,
+  reduceCartridgeEvent,
+  postCartridgeClose,
+  type OpenCartridgeState,
+} from "@/lib/metame-protocol";
 import { toast } from "sonner";
 import {
   type SmartMenuMode,
