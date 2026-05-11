@@ -1052,6 +1052,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     inferCtrl.current?.complete(4_000);
   }, []);
 
+  const closeCartridge = useCallback((cartridgeId: string) => {
+    if (iframeRef.current && config) {
+      postCartridgeClose(iframeRef.current, cartridgeId, getIframeOrigin(config));
+    }
+    setOpenCartridges(prev => prev.filter(c => c.cartridgeId !== cartridgeId));
+  }, [config]);
+
 
   const ctxValue: ShellContextValue = useMemo(() => ({
     config, loading, authenticated, shellState,
@@ -1060,6 +1067,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     cartridgeOverlay, closeCartridgeOverlay,
     // Smart Menu state
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
+    // CartridgePresenceRegistry
+    openCartridges, activeCartridge, closeCartridge,
     // Runtime context
     runtimeContext, setRuntimeContext, applyRuntimeContextFromRuntime,
     // Actions
