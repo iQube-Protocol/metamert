@@ -18,6 +18,39 @@ describe("parseMetameEvent", () => {
     });
   });
 
+  it("preserves optional surface fields on persona-changed", () => {
+    expect(
+      parseMetameEvent({
+        type: "metame:persona-changed",
+        displayLabel: "alice@fio",
+        ownFioHandle: "alice@fio",
+      }),
+    ).toEqual({
+      type: "metame:persona-changed",
+      displayLabel: "alice@fio",
+      ownFioHandle: "alice@fio",
+    });
+  });
+
+  it("drops forbidden identity fields from persona-changed", () => {
+    const parsed = parseMetameEvent({
+      type: "metame:persona-changed",
+      personaId: "p_1",
+      authProfileId: "ap_1",
+      rootDid: "did:example:1",
+      kybeAttestation: "x",
+      displayLabel: "bob@fio",
+    });
+    expect(parsed).toEqual({
+      type: "metame:persona-changed",
+      displayLabel: "bob@fio",
+    });
+    expect(parsed).not.toHaveProperty("personaId");
+    expect(parsed).not.toHaveProperty("authProfileId");
+    expect(parsed).not.toHaveProperty("rootDid");
+    expect(parsed).not.toHaveProperty("kybeAttestation");
+  });
+
   it("parses bridge-wrapped envelope", () => {
     const env = {
       type: "metame:cartridge-opened",
