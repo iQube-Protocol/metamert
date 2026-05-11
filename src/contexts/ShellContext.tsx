@@ -731,82 +731,48 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       console.log("[Shell:CODEX_CLOSE_DIAG] METAME_CODEX_CLOSE_LAYER received", { origin: e.origin });
     };
 
-    // Persona sync FROM iframe → shell.
-    // The runtime (and codex embed bridge) broadcast the canonical
-    // `aa-persona-change-v1` envelope when the user switches persona inside an
-    // iframe. We listen raw (no source/origin filter beyond the runtime origin
-    // check below — broadcasts from PersonaContext are untagged on purpose) and
-    // mirror the change into local personaState so the "Be" pill, accent
-    // tinting, and submenu reflect the new persona. We do NOT echo
-    // OPEN_PERSONA_IQUBE back to the iframe — that would loop.
-    const personaSyncHandler = (e: MessageEvent) => {
-      let raw = e.data;
-      if (typeof raw === "string") {
-        try { raw = JSON.parse(raw); } catch { return; }
-      }
-      if (!raw || typeof raw !== "object") return;
-      // Accept both raw envelope and bridge-wrapped { type, payload: {...} }
-      let type = raw.type;
-      let body: any = raw;
-      if (raw.payload && typeof raw.payload === "object") {
-        if (type === "aa-persona-change-v1") {
-          body = { ...raw.payload, ...raw };
-        } else if ((raw.payload as any).type === "aa-persona-change-v1") {
-          type = "aa-persona-change-v1";
-          body = raw.payload;
+    // Canonical metame:* protocol from the embedded app:
+    //  - PersonaSpine: persona-changed (hint → re-fetch) / persona-revoked
+    //    (legacy alias `aa-persona-change-v1` kept for one release).
+    //  - CartridgePresenceRegistry: cartridge-opened / -tab-changed / -closed.
+    // Per CC contract, persona event payloads are HINTS only — never read
+    // identity fields off them; always re-fetch /api/wallet/active-persona.
+    const metameHandler = (e: MessageEvent) => {
+      const event = parseMetameEvent(e.data);
+      if (!event) return;
+      console.log("[Shell] metame event", event.type, event);
+
+      switch (event.type) {
+        case "metame:persona-changed": {
+          void fetchActivePersona().then(surface => {
+            if (!surface) return;
+            const handle = surface.displayLabel ?? surface.ownFioHandle ?? undefined;
+            if (!handle) return;
+            setPersonaState(prev => prev.activeHandle === handle ? prev : { ...prev, activeHandle: handle });
+          });
+          return;
         }
-      }
-      if (type !== "aa-persona-change-v1") return;
-      console.log("[Shell] aa-persona-change-v1 received", body);
-      const incoming = typeof body.personaId === "string" ? body.personaId : null;
-      // Option A: read handle directly from the envelope (runtime forwards
-      // displayLabel / ownFioHandle alongside personaId). Fall back to a
-      // proxy fetch only if neither is present.
-      const surface = (body.surface && typeof body.surface === "object") ? body.surface : null;
-      const inlineHandle =
-        (typeof body.displayLabel === "string" && body.displayLabel) ||
-        (typeof body.ownFioHandle === "string" && body.ownFioHandle) ||
-        (typeof body.handle === "string" && body.handle) ||
-        (surface
-          ? (typeof surface.displayLabel === "string" && surface.displayLabel) ||
-            (typeof surface.ownFioHandle === "string" && surface.ownFioHandle) ||
-            (typeof surface.handle === "string" && surface.handle)
-          : null) ||
-        null;
-
-      if (incoming) {
-        setPersonaState(prev => {
-          const next = { ...prev };
-          let changed = false;
-          if (prev.activePersonaId !== incoming && prev.available.some(p => p.id === incoming)) {
-            next.activePersonaId = incoming;
-            changed = true;
-            console.log("[Shell] persona sync from iframe:", incoming);
-          }
-          if (inlineHandle && prev.activeHandle !== inlineHandle) {
-            next.activeHandle = inlineHandle;
-            changed = true;
-            console.log("[Shell] persona handle from iframe:", inlineHandle);
-          }
-          return changed ? next : prev;
-        });
-      } else if (inlineHandle) {
-        setPersonaState(prev => prev.activeHandle === inlineHandle ? prev : { ...prev, activeHandle: inlineHandle });
-      }
-
-      // Fallback only if the runtime didn't include a handle in the envelope.
-      if (!inlineHandle) {
-        void fetchActivePersona().then(surface => {
-          const handle = surface?.displayLabel ?? surface?.ownFioHandle ?? undefined;
-          if (!handle) return;
-          setPersonaState(prev => prev.activeHandle === handle ? prev : { ...prev, activeHandle: handle });
-        });
+        case "metame:persona-revoked": {
+          setPersonaState(prev => {
+            if (!prev.activeHandle) return prev;
+            const next = { ...prev };
+            delete next.activeHandle;
+            return next;
+          });
+          return;
+        }
+        case "metame:cartridge-opened":
+        case "metame:cartridge-tab-changed":
+        case "metame:cartridge-closed": {
+          setOpenCartridges(prev => reduceCartridgeEvent(prev, event));
+          return;
+        }
       }
     };
 
     window.addEventListener("message", handler);
     window.addEventListener("message", codexCloseHandler);
-    window.addEventListener("message", personaSyncHandler);
+    window.addEventListener("message", metameHandler);
     return () => {
       window.removeEventListener("message", handler);
       window.removeEventListener("message", codexCloseHandler);
