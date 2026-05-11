@@ -25,6 +25,15 @@ export type MetameEventType =
 
 export interface MetamePersonaChanged {
   type: "metame:persona-changed";
+  /**
+   * Optional surface-only display fields. Per the strict contract these
+   * are hints and the shell SHOULD re-fetch /api/wallet/active-persona.
+   * They are preserved here so the shell can render a label immediately
+   * (transitional fallback). NEVER include personaId / authProfileId /
+   * rootDid / kybeAttestation here — those are forbidden.
+   */
+  displayLabel?: string;
+  ownFioHandle?: string;
 }
 export interface MetamePersonaRevoked {
   type: "metame:persona-revoked";
