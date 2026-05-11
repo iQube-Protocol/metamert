@@ -373,6 +373,69 @@ export type Database = {
           },
         ]
       }
+      assistant_sessions: {
+        Row: {
+          active_cartridge: string | null
+          context_summary: string | null
+          created_at: string | null
+          ended_at: string | null
+          experience_model_id: string | null
+          id: string
+          mode: string
+          nbe_plan_id: string | null
+          persona_id: string
+          policy_envelope_id: string | null
+          started_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          active_cartridge?: string | null
+          context_summary?: string | null
+          created_at?: string | null
+          ended_at?: string | null
+          experience_model_id?: string | null
+          id?: string
+          mode?: string
+          nbe_plan_id?: string | null
+          persona_id: string
+          policy_envelope_id?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          active_cartridge?: string | null
+          context_summary?: string | null
+          created_at?: string | null
+          ended_at?: string | null
+          experience_model_id?: string | null
+          id?: string
+          mode?: string
+          nbe_plan_id?: string | null
+          persona_id?: string
+          policy_envelope_id?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_sessions_experience_model_id_fkey"
+            columns: ["experience_model_id"]
+            isOneToOne: false
+            referencedRelation: "experience_models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_sessions_nbe_plan_id_fkey"
+            columns: ["nbe_plan_id"]
+            isOneToOne: false
+            referencedRelation: "nbe_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       avl_comms_packs: {
         Row: {
           active: boolean
@@ -1440,6 +1503,7 @@ export type Database = {
           asset_kind: Database["public"]["Enums"]["codex_asset_kind"]
           auto_drive_cid: string
           blak_qube_id: string | null
+          content_state: string | null
           cover_thumb_url: string | null
           created_at: string | null
           display_mode:
@@ -1450,6 +1514,7 @@ export type Database = {
           encryption_alg: string
           encryption_auth_tag: string | null
           encryption_iv: string
+          encryption_key_id: string | null
           episode_number: number | null
           extracted_text: string | null
           file_size: number | null
@@ -1457,6 +1522,7 @@ export type Database = {
           is_shareable: boolean | null
           meta_qube_id: string | null
           mime_type: string
+          mint_status: string
           page_count: number | null
           pages_count: number | null
           pages_ready: boolean | null
@@ -1471,11 +1537,13 @@ export type Database = {
           token_qube_id: string | null
           updated_at: string | null
           variant_name: string | null
+          wip_storage_url: string | null
         }
         Insert: {
           asset_kind: Database["public"]["Enums"]["codex_asset_kind"]
           auto_drive_cid: string
           blak_qube_id?: string | null
+          content_state?: string | null
           cover_thumb_url?: string | null
           created_at?: string | null
           display_mode?:
@@ -1486,6 +1554,7 @@ export type Database = {
           encryption_alg?: string
           encryption_auth_tag?: string | null
           encryption_iv: string
+          encryption_key_id?: string | null
           episode_number?: number | null
           extracted_text?: string | null
           file_size?: number | null
@@ -1493,6 +1562,7 @@ export type Database = {
           is_shareable?: boolean | null
           meta_qube_id?: string | null
           mime_type: string
+          mint_status?: string
           page_count?: number | null
           pages_count?: number | null
           pages_ready?: boolean | null
@@ -1507,11 +1577,13 @@ export type Database = {
           token_qube_id?: string | null
           updated_at?: string | null
           variant_name?: string | null
+          wip_storage_url?: string | null
         }
         Update: {
           asset_kind?: Database["public"]["Enums"]["codex_asset_kind"]
           auto_drive_cid?: string
           blak_qube_id?: string | null
+          content_state?: string | null
           cover_thumb_url?: string | null
           created_at?: string | null
           display_mode?:
@@ -1522,6 +1594,7 @@ export type Database = {
           encryption_alg?: string
           encryption_auth_tag?: string | null
           encryption_iv?: string
+          encryption_key_id?: string | null
           episode_number?: number | null
           extracted_text?: string | null
           file_size?: number | null
@@ -1529,6 +1602,7 @@ export type Database = {
           is_shareable?: boolean | null
           meta_qube_id?: string | null
           mime_type?: string
+          mint_status?: string
           page_count?: number | null
           pages_count?: number | null
           pages_ready?: boolean | null
@@ -1543,6 +1617,7 @@ export type Database = {
           token_qube_id?: string | null
           updated_at?: string | null
           variant_name?: string | null
+          wip_storage_url?: string | null
         }
         Relationships: [
           {
@@ -2957,6 +3032,7 @@ export type Database = {
           reviewed_by_persona_id: string | null
           scoring_breakdown: Json | null
           source: string | null
+          source_event_id: string | null
           status: string | null
           task_template_id: string | null
           tenant_id: string
@@ -2987,6 +3063,7 @@ export type Database = {
           reviewed_by_persona_id?: string | null
           scoring_breakdown?: Json | null
           source?: string | null
+          source_event_id?: string | null
           status?: string | null
           task_template_id?: string | null
           tenant_id: string
@@ -3017,6 +3094,7 @@ export type Database = {
           reviewed_by_persona_id?: string | null
           scoring_breakdown?: Json | null
           source?: string | null
+          source_event_id?: string | null
           status?: string | null
           task_template_id?: string | null
           tenant_id?: string
@@ -3050,6 +3128,13 @@ export type Database = {
             columns: ["reviewed_by_persona_id"]
             isOneToOne: false
             referencedRelation: "crm_personas_with_identity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_contributions_source_event_id_fkey"
+            columns: ["source_event_id"]
+            isOneToOne: false
+            referencedRelation: "orchestration_events"
             referencedColumns: ["id"]
           },
           {
@@ -4125,6 +4210,7 @@ export type Database = {
         Row: {
           amount: number
           chain_id: string | null
+          claim_id: string | null
           contribution_id: string | null
           created_at: string
           id: string
@@ -4136,6 +4222,7 @@ export type Database = {
           pokw_score_used: number
           reputation_bucket: number | null
           reputation_multiplier: number | null
+          source_event_id: string | null
           status: string
           task_template_id: string | null
           tenant_id: string
@@ -4146,6 +4233,7 @@ export type Database = {
         Insert: {
           amount: number
           chain_id?: string | null
+          claim_id?: string | null
           contribution_id?: string | null
           created_at?: string
           id?: string
@@ -4157,6 +4245,7 @@ export type Database = {
           pokw_score_used: number
           reputation_bucket?: number | null
           reputation_multiplier?: number | null
+          source_event_id?: string | null
           status?: string
           task_template_id?: string | null
           tenant_id: string
@@ -4167,6 +4256,7 @@ export type Database = {
         Update: {
           amount?: number
           chain_id?: string | null
+          claim_id?: string | null
           contribution_id?: string | null
           created_at?: string
           id?: string
@@ -4178,6 +4268,7 @@ export type Database = {
           pokw_score_used?: number
           reputation_bucket?: number | null
           reputation_multiplier?: number | null
+          source_event_id?: string | null
           status?: string
           task_template_id?: string | null
           tenant_id?: string
@@ -4205,6 +4296,13 @@ export type Database = {
             columns: ["persona_id"]
             isOneToOne: false
             referencedRelation: "crm_personas_with_identity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_rewards_source_event_id_fkey"
+            columns: ["source_event_id"]
+            isOneToOne: false
+            referencedRelation: "orchestration_events"
             referencedColumns: ["id"]
           },
           {
@@ -4295,6 +4393,7 @@ export type Database = {
       crm_task_templates: {
         Row: {
           category: string
+          cohort_id: string | null
           created_at: string | null
           created_by_persona_id: string | null
           current_claims: number | null
@@ -4329,6 +4428,7 @@ export type Database = {
         }
         Insert: {
           category: string
+          cohort_id?: string | null
           created_at?: string | null
           created_by_persona_id?: string | null
           current_claims?: number | null
@@ -4363,6 +4463,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          cohort_id?: string | null
           created_at?: string | null
           created_by_persona_id?: string | null
           current_claims?: number | null
@@ -5330,6 +5431,62 @@ export type Database = {
             columns: ["strategy_id"]
             isOneToOne: false
             referencedRelation: "experience_strategies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experience_qubes: {
+        Row: {
+          active_cartridges: string[]
+          blak_qube: Json
+          confidentiality_default: string
+          created_at: string
+          current_stage: string
+          experience_model_id: string | null
+          experience_name: string | null
+          experience_type: string
+          id: string
+          persona_id: string
+          primary_goal: string | null
+          progress_model: string
+          updated_at: string
+        }
+        Insert: {
+          active_cartridges?: string[]
+          blak_qube?: Json
+          confidentiality_default?: string
+          created_at?: string
+          current_stage?: string
+          experience_model_id?: string | null
+          experience_name?: string | null
+          experience_type?: string
+          id?: string
+          persona_id: string
+          primary_goal?: string | null
+          progress_model?: string
+          updated_at?: string
+        }
+        Update: {
+          active_cartridges?: string[]
+          blak_qube?: Json
+          confidentiality_default?: string
+          created_at?: string
+          current_stage?: string
+          experience_model_id?: string | null
+          experience_name?: string | null
+          experience_type?: string
+          id?: string
+          persona_id?: string
+          primary_goal?: string | null
+          progress_model?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experience_qubes_experience_model_id_fkey"
+            columns: ["experience_model_id"]
+            isOneToOne: false
+            referencedRelation: "experience_models"
             referencedColumns: ["id"]
           },
         ]
@@ -8191,6 +8348,7 @@ export type Database = {
         Row: {
           auto_drive_cid: string
           blak_qube_id: string | null
+          content_state: string | null
           content_type: Database["public"]["Enums"]["master_content_type"]
           cover_thumb_url: string | null
           created_at: string | null
@@ -8198,11 +8356,13 @@ export type Database = {
           encryption_alg: string
           encryption_auth_tag: string | null
           encryption_iv: string
+          encryption_key_id: string | null
           episode_number: number
           file_size: number | null
           id: string
           meta_qube_id: string | null
           mime_type: string
+          mint_status: string
           page_count: number | null
           pages_count: number | null
           pages_ready: boolean | null
@@ -8213,10 +8373,12 @@ export type Database = {
           title: string
           token_qube_id: string | null
           updated_at: string | null
+          wip_storage_url: string | null
         }
         Insert: {
           auto_drive_cid: string
           blak_qube_id?: string | null
+          content_state?: string | null
           content_type: Database["public"]["Enums"]["master_content_type"]
           cover_thumb_url?: string | null
           created_at?: string | null
@@ -8224,11 +8386,13 @@ export type Database = {
           encryption_alg?: string
           encryption_auth_tag?: string | null
           encryption_iv: string
+          encryption_key_id?: string | null
           episode_number: number
           file_size?: number | null
           id: string
           meta_qube_id?: string | null
           mime_type: string
+          mint_status?: string
           page_count?: number | null
           pages_count?: number | null
           pages_ready?: boolean | null
@@ -8239,10 +8403,12 @@ export type Database = {
           title: string
           token_qube_id?: string | null
           updated_at?: string | null
+          wip_storage_url?: string | null
         }
         Update: {
           auto_drive_cid?: string
           blak_qube_id?: string | null
+          content_state?: string | null
           content_type?: Database["public"]["Enums"]["master_content_type"]
           cover_thumb_url?: string | null
           created_at?: string | null
@@ -8250,11 +8416,13 @@ export type Database = {
           encryption_alg?: string
           encryption_auth_tag?: string | null
           encryption_iv?: string
+          encryption_key_id?: string | null
           episode_number?: number
           file_size?: number | null
           id?: string
           meta_qube_id?: string | null
           mime_type?: string
+          mint_status?: string
           page_count?: number | null
           pages_count?: number | null
           pages_ready?: boolean | null
@@ -8265,6 +8433,7 @@ export type Database = {
           title?: string
           token_qube_id?: string | null
           updated_at?: string | null
+          wip_storage_url?: string | null
         }
         Relationships: [
           {
@@ -10355,41 +10524,62 @@ export type Database = {
       orchestration_events: {
         Row: {
           active_cartridge: string | null
+          active_codex: string | null
+          actor_alias_commitment: string | null
+          cohort_id: string | null
           created_at: string | null
           event_id: string
           event_type: string
           from_role: string
           id: string
+          inscribed_at: string | null
+          inscription_id: string | null
           journey_stage: string | null
           metadata: Json | null
+          on_chain_tx_id: string | null
           reason: string | null
           receipt_eligible: boolean | null
+          receipt_mode: string | null
           to_role: string
         }
         Insert: {
           active_cartridge?: string | null
+          active_codex?: string | null
+          actor_alias_commitment?: string | null
+          cohort_id?: string | null
           created_at?: string | null
           event_id: string
           event_type: string
           from_role: string
           id?: string
+          inscribed_at?: string | null
+          inscription_id?: string | null
           journey_stage?: string | null
           metadata?: Json | null
+          on_chain_tx_id?: string | null
           reason?: string | null
           receipt_eligible?: boolean | null
+          receipt_mode?: string | null
           to_role: string
         }
         Update: {
           active_cartridge?: string | null
+          active_codex?: string | null
+          actor_alias_commitment?: string | null
+          cohort_id?: string | null
           created_at?: string | null
           event_id?: string
           event_type?: string
           from_role?: string
           id?: string
+          inscribed_at?: string | null
+          inscription_id?: string | null
           journey_stage?: string | null
           metadata?: Json | null
+          on_chain_tx_id?: string | null
           reason?: string | null
           receipt_eligible?: boolean | null
+          receipt_mode?: string | null
           to_role?: string
         }
         Relationships: []
@@ -11294,6 +11484,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "purchases_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "purchases_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -11635,6 +11832,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      referral_clicks: {
+        Row: {
+          created_at: string
+          id: number
+          ref_code: string
+          referer: string | null
+          referrer_persona_id: string | null
+          source: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          ref_code: string
+          referer?: string | null
+          referrer_persona_id?: string | null
+          source?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          ref_code?: string
+          referer?: string | null
+          referrer_persona_id?: string | null
+          source?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          epoch: string
+          persona_id: string
+          source: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          epoch?: string
+          persona_id: string
+          source: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          epoch?: string
+          persona_id?: string
+          source?: string
+        }
+        Relationships: []
       }
       referral_events: {
         Row: {
@@ -13907,35 +14158,7 @@ export type Database = {
             foreignKeyName: "user_entitlements_persona_id_fkey"
             columns: ["persona_id"]
             isOneToOne: false
-            referencedRelation: "crm_personas_with_identity"
-            referencedColumns: ["identity_id"]
-          },
-          {
-            foreignKeyName: "user_entitlements_persona_id_fkey"
-            columns: ["persona_id"]
-            isOneToOne: false
-            referencedRelation: "persona"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_entitlements_persona_id_fkey"
-            columns: ["persona_id"]
-            isOneToOne: false
-            referencedRelation: "persona_legacy_20260125"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_entitlements_persona_id_fkey"
-            columns: ["persona_id"]
-            isOneToOne: false
-            referencedRelation: "persona_with_fio_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_entitlements_persona_id_fkey"
-            columns: ["persona_id"]
-            isOneToOne: false
-            referencedRelation: "persona_with_reputation"
+            referencedRelation: "personas"
             referencedColumns: ["id"]
           },
         ]
