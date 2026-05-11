@@ -1085,7 +1085,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     runtimeHints, iframeReadiness, knytOnboarding,
     cartridgeOverlay, closeCartridgeOverlay,
     viewState, activeMode, submenuType, submenuVisibility, interactionState, cartridgeState, personaState,
-    runtimeContext, setRuntimeContext, applyRuntimeContextFromRuntime,
+    openCartridges, activeCartridge, closeCartridge,
     toggleQuickLinks, hydrate, selectAigent, selectLLM, handleMenuAction, sendIframeAction,
     submitPrompt, resetToWelcome, updateTrust, iframeRef,
     activateMode, activateQuickActions, deactivateMode, setSubmenuType, toggleSubmenu,
