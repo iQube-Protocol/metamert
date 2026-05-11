@@ -104,6 +104,13 @@ interface ShellContextValue {
   cartridgeState: CartridgeState;
   personaState: PersonaState;
 
+  // CartridgePresenceRegistry — open cartridges as broadcast by the app via
+  // metame:cartridge-* events. The most-recently-opened entry is "active".
+  openCartridges: OpenCartridgeState[];
+  activeCartridge: OpenCartridgeState | null;
+  /** Post canonical metame:cartridge-closed into the iframe and update local state. */
+  closeCartridge: (cartridgeId: string) => void;
+
   // Runtime context (metaMe ↔ KNYT) — drives the header lightning color
   // and the play menu's central context-toggle quick action.
   runtimeContext: RuntimeContext;
