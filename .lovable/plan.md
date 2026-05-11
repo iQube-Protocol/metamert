@@ -1,51 +1,43 @@
-# Adopt the canonical `metame:*` client protocol
+# Render cartridge indicator + persona handle in shell header
 
-CC has shipped two app→shell protocols on `dev-beta.aigentz.me`:
+You're right — I wired the protocol state into context but didn't surface it visually. Two gaps to close:
 
-1. **PersonaSpine** — `metame:persona-changed` / `metame:persona-revoked` (with `aa-persona-change-v1` kept as a one-release alias).
-2. **CartridgePresenceRegistry** — `metame:cartridge-opened` / `-tab-changed` / `-closed` (bidirectional close).
+1. **Cartridge indicator + close button.** `openCartridges` is populated by `metame:cartridge-opened/-tab-changed/-closed`, but `RuntimeHeader` only renders the legacy `cartridgeOverlay` chip (driven by a different runtime path). Need a new tile per open cartridge with the right icon, accent color, label, and an X that calls `closeCartridge(id)` (which already posts the canonical `metame:cartridge-closed` envelope back into the iframe).
 
-The shell already partially handles the legacy persona alias. We need to (a) generalize the listener to the canonical names, (b) re-fetch persona from `/api/wallet/active-persona` on every persona event (don't trust event payloads), (c) track open cartridges, and (d) post `metame:cartridge-closed` back into the iframe when the user dismisses a cartridge in shell chrome.
+2. **"Be" pill not updating.** The pill already reads `personaState.activeHandle`. The new `metame:persona-changed` handler ONLY calls `fetchActivePersona()` (server re-fetch), per the strict contract. If that proxy returns null/unauth (which it likely is — aa-proxy `active-persona` requires a valid bearer that the shell may not have when only the iframe is signed in), the handle never updates. Need diagnostics + a pragmatic fallback that still respects the privacy boundary.
 
 ## Scope
 
-### 1. Shared metame protocol module — `src/lib/metame-protocol.ts` (new)
-- Types: `MetamePersonaChanged`, `MetamePersonaRevoked`, `MetameCartridgeOpened`, `MetameCartridgeTabChanged`, `MetameCartridgeClosed`, `CartridgeState`.
-- `parseMetameEvent(raw): MetameEvent | null` — accept raw or bridge-wrapped `{type, payload}` shapes; require `type.startsWith("metame:")` OR equal `"aa-persona-change-v1"` (legacy alias treated as `metame:persona-changed`).
-- `postCartridgeClose(iframe, cartridgeId, origin)` helper that posts the canonical `{ type: "metame:cartridge-closed", cartridgeId, schemaVersion: 1 }`.
+### 1. New header tile component — `src/components/CartridgeIndicator.tsx`
+- Reads `openCartridges`, `closeCartridge` from `useShell()`.
+- Renders one chip per open cartridge in the order they were opened. Each chip: cartridge accent-colored icon (look up via `cartridgeState.available` for `accentHex`/`icon`; fallback to `Save`/`Box` and `var(--mm-ink-secondary)`), short `displayLabel` (truncated, hidden on mobile), and an `X` close button with `aria-label`.
+- Tooltip shows full label + current `tab`/`subTab` when present.
+- Uses existing `--mm-*` tokens — same chip styling as the current `cartridgeOverlay` indicator (variant background, hairline border, radius-xs).
 
-### 2. PersonaSpine wiring — `src/contexts/ShellContext.tsx`
-- Replace the existing `personaSyncHandler` (lines ~727–790) with one that switches on `metame:persona-changed | aa-persona-change-v1 | metame:persona-revoked`.
-- On **changed**: call `fetchActivePersona()` (server-authoritative) and update `personaState.activeHandle` + `activePersonaId` from the surface. Stop reading `displayLabel`/`ownFioHandle` off the event payload — the new contract is "hint only, re-fetch".
-- On **revoked**: clear `activeHandle` + `activePersonaId` so SmartMenu's "Be" pill falls back to the default unauthenticated label.
-- Keep the existing origin check (filter to runtime origin).
-- Preserve the `[Shell] aa-persona-change-v1 received` style debug log under both names.
+### 2. Wire into `RuntimeHeader`
+- Pull `openCartridges`, `closeCartridge` from `useShell()` and mount `<CartridgeIndicator />` in the right-hand cluster, immediately to the LEFT of the existing `cartridgeOverlay` chip (so canonical metame chips sit before the legacy floppy chip; both can coexist during transition).
+- No changes to the center lightning bolt or the legacy overlay path.
 
-### 3. CartridgePresenceRegistry — `src/contexts/ShellContext.tsx`
-- Add `openCartridges: CartridgeState[]` to context state with reducer-style updates per the brief (open replaces same id and pushes to end; tab-changed mutates entry; closed filters out).
-- Add a second message handler that calls `parseMetameEvent` and dispatches the three cartridge events.
-- Expose `openCartridges`, `activeCartridge` (last entry), and `closeCartridge(cartridgeId)` via the `useShell()` context. `closeCartridge` posts the canonical event into the iframe AND optimistically removes the entry locally (the existing `cartridgeState`/`cartridgeOverlay` flow stays untouched — this is additive).
+### 3. Persona handle — diagnose + transitional fallback in `ShellContext.tsx`
+- On `metame:persona-changed`, log the fetch result clearly: `[Shell] persona fetch →` with surface or `null`/error reason.
+- Add a transitional fallback: if the event payload carries `displayLabel` or `ownFioHandle` (some versions of the runtime still inline these alongside the canonical event), apply them immediately while the proxy fetch resolves. Log `[Shell] persona handle from event payload (transitional)` so we can see it firing. Strictly avoid reading any forbidden field (`personaId`, `authProfileId`, `rootDid`, `kybeAttestation`).
+- On `metame:persona-revoked` keep current behaviour (clear handle).
+- Update `parseMetameEvent` to preserve `displayLabel` / `ownFioHandle` on the persona-changed variant (currently dropped) — surface-only fields, contract-safe.
 
-### 4. UI surfacing (minimal, additive)
-- No new chrome component in this pass beyond what already exists. The brief's icon stack/breadcrumb is optional; we'll expose the state via context so a future header tile can render it. Confirm with the user before adding visible chrome — ask in follow-up.
-- One concrete consumer now: when a `metame:cartridge-closed` arrives from the app for a cartridge that matches the current `cartridgeState.cartridgeId`, dispatch the existing `deactivateMode()` / overlay close path so shell chrome stays in sync.
+### 4. Tests
+- Extend `src/test/metame-protocol.test.ts`:
+  - persona-changed parser preserves optional `displayLabel`/`ownFioHandle`.
+  - persona-changed parser still drops forbidden fields (`personaId`, `authProfileId`, `rootDid`, `kybeAttestation`).
 
-### 5. Tests — `src/test/metame-protocol.test.ts` (new)
-- `parseMetameEvent` accepts raw + envelope shapes, rejects foreign types, treats `aa-persona-change-v1` as persona-changed.
-- Reducer logic for cartridge open/tab/close (order preserved, dedupe on open, tab merge).
-
-## Out of scope (call out, don't build)
-- Header avatar/breadcrumb/icon-stack rendering — needs design input; ask user separately.
-- Removing the `aa-persona-change-v1` alias — keep until CC announces removal.
-- Any inbound persona event from shell→app — explicitly forbidden by the contract.
-- Reserved future families (notifications, receipts, approvals, capsules).
-
-## Technical notes
-- Origin enforcement: continue to use `resolveIframeOrigin(config)` for both directions; CC requires our shell origin (`*.lovable.app`, custom domains) to be on `authAllowedOrigins` — flag to user that prod custom domains (`metame.dev`, `metame.live`, `runtime.metame.com`, `metamert.lovable.app`) must be confirmed allowlisted before close-intent will work in prod.
-- Privacy: never log or store `personaId`/`authProfileId`/`rootDid` from events (we already only consume `displayLabel`/`personaId` hint — drop the latter on the new path since we re-fetch).
-- Schema version: include `schemaVersion: 1` on outbound `metame:cartridge-closed`.
+### 5. Out of scope
+- Breadcrumb showing `tab`/`subTab` in main header — only in tooltip for now.
+- Avatar imagery — text label only.
+- Replacing or removing the legacy `cartridgeOverlay` floppy chip.
 
 ## Verification
 1. `bunx vitest run src/test/metame-protocol.test.ts`.
-2. Manual: in dev preview, watch console for `metame:persona-changed` / `metame:cartridge-opened` and confirm "Be" pill updates after sign-in and after persona switch.
-3. Manual: open KNYT codex → confirm `openCartridges` populated (logged via `[Shell] cartridge opened …`).
+2. Manual: open KNYT codex inside the runtime → expect a KNYT-amber chip to appear in the header with close button. Click X → chip vanishes and the runtime tears down (for layered cartridges) or no-ops (codex-shell URLs).
+3. Manual: switch persona inside the iframe → console shows the metame event AND the fetch result; "Be" pill updates either from the inline label (transitional) or the proxy result, whichever arrives first.
+
+## Open question (we may need CC to confirm)
+- Does `/api/wallet/active-persona` work when the SHELL has no bearer of its own (i.e., only the iframe is signed in)? If not, we'll need either a shell-side handoff or to permanently rely on the inline `displayLabel`/`ownFioHandle` in the event. The transitional fallback above keeps us functional either way.

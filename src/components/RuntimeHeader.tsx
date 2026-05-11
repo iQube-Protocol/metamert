@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Bot, ChevronDown, Check, Zap, Sun, Moon, Save, X } from "lucide-react";
 import ProviderIcon from "@/components/ProviderIcon";
+import CartridgeIndicator from "@/components/CartridgeIndicator";
 import {
   Popover,
   PopoverContent,
@@ -324,6 +325,7 @@ export default function RuntimeHeader() {
         </div>
         {/* Right: cartridge overlay indicator + trust dots */}
         <div className="flex items-center justify-end ml-auto gap-2">
+          <CartridgeIndicator />
           {cartridgeOverlay && (
             <Tooltip>
               <TooltipTrigger asChild>

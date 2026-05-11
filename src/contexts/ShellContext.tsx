@@ -744,12 +744,22 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
       switch (event.type) {
         case "metame:persona-changed": {
+          // Transitional fallback: if the event carries surface display fields,
+          // apply immediately so the "Be" pill updates without waiting for the
+          // server-authoritative re-fetch (which may fail when only the iframe
+          // is signed in). Strictly surface-only — no identity fields touched.
+          const inlineHandle = event.displayLabel ?? event.ownFioHandle;
+          if (inlineHandle) {
+            console.log("[Shell] persona handle from event payload (transitional):", inlineHandle);
+            setPersonaState(prev => prev.activeHandle === inlineHandle ? prev : { ...prev, activeHandle: inlineHandle });
+          }
           void fetchActivePersona().then(surface => {
+            console.log("[Shell] persona fetch →", surface ?? null);
             if (!surface) return;
             const handle = surface.displayLabel ?? surface.ownFioHandle ?? undefined;
             if (!handle) return;
             setPersonaState(prev => prev.activeHandle === handle ? prev : { ...prev, activeHandle: handle });
-          });
+          }).catch(err => console.warn("[Shell] persona fetch failed", err));
           return;
         }
         case "metame:persona-revoked": {
