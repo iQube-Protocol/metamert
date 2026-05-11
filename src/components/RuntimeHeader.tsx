@@ -325,6 +325,7 @@ export default function RuntimeHeader() {
         </div>
         {/* Right: cartridge overlay indicator + trust dots */}
         <div className="flex items-center justify-end ml-auto gap-2">
+          <CartridgeIndicator />
           {cartridgeOverlay && (
             <Tooltip>
               <TooltipTrigger asChild>
