@@ -776,7 +776,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     return () => {
       window.removeEventListener("message", handler);
       window.removeEventListener("message", codexCloseHandler);
-      window.removeEventListener("message", personaSyncHandler);
+      window.removeEventListener("message", metameHandler);
     };
   }, [config]);
 
