@@ -100,15 +100,23 @@ export function parseMetameEvent(raw: unknown): MetameEvent | null {
   }
   if (typeof type !== "string") return null;
 
+  // Surface-only persona fields (hint to render before the proxy fetch resolves).
+  const personaSurface = (): Pick<MetamePersonaChanged, "displayLabel" | "ownFioHandle"> => {
+    const out: Pick<MetamePersonaChanged, "displayLabel" | "ownFioHandle"> = {};
+    if (typeof body.displayLabel === "string" && body.displayLabel) out.displayLabel = body.displayLabel;
+    if (typeof body.ownFioHandle === "string" && body.ownFioHandle) out.ownFioHandle = body.ownFioHandle;
+    return out;
+  };
+
   // Legacy alias normalised to canonical.
   if (type === LEGACY_PERSONA_ALIAS) {
-    return { type: "metame:persona-changed" };
+    return { type: "metame:persona-changed", ...personaSurface() };
   }
   if (!type.startsWith("metame:")) return null;
 
   switch (type) {
     case "metame:persona-changed":
-      return { type: "metame:persona-changed" };
+      return { type: "metame:persona-changed", ...personaSurface() };
     case "metame:persona-revoked":
       return { type: "metame:persona-revoked" };
     case "metame:cartridge-opened": {
