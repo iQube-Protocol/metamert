@@ -1057,8 +1057,18 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     if (iframeRef.current && config) {
       postCartridgeClose(iframeRef.current, cartridgeId, getIframeOrigin(config));
     }
-    setOpenCartridges(prev => prev.filter(c => c.cartridgeId !== cartridgeId));
+    // Pattern: soft-hide. Wait ≤500ms for the iframe's metame:cartridge-closed
+    // ack (which the reducer will apply via the metameHandler). If no ack
+    // arrives, force-remove locally so the chip doesn't get stuck.
+    setTimeout(() => {
+      setOpenCartridges(prev => {
+        if (!prev.some(c => c.cartridgeId === cartridgeId)) return prev;
+        console.warn("[Shell] cartridge close ack timeout — force-removing", cartridgeId);
+        return prev.filter(c => c.cartridgeId !== cartridgeId);
+      });
+    }, 500);
   }, [config]);
+
 
 
   const ctxValue: ShellContextValue = useMemo(() => ({
