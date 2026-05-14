@@ -732,11 +732,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     };
 
     // Canonical metame:* protocol from the embedded app:
-    //  - PersonaSpine: persona-changed (hint → re-fetch) / persona-revoked
-    //    (legacy alias `aa-persona-change-v1` kept for one release).
+     //  - PersonaSpine (Pattern A, CC commit 6a912c00 confirmed live):
+    //    metame:persona-changed carries the full T1 surface inline
+    //    (displayLabel, ownFioHandle). Render directly — NO server re-fetch.
+    //    Legacy alias `aa-persona-change-v1` accepted for one release.
     //  - CartridgePresenceRegistry: cartridge-opened / -tab-changed / -closed.
-    // Per CC contract, persona event payloads are HINTS only — never read
-    // identity fields off them; always re-fetch /api/wallet/active-persona.
+    // Forbidden fields (personaId, authProfileId, rootDid, kybeAttestation)
+    // are stripped by parseMetameEvent and never read.
     const metameHandler = (e: MessageEvent) => {
       const event = parseMetameEvent(e.data);
       if (!event) return;
@@ -744,22 +746,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
       switch (event.type) {
         case "metame:persona-changed": {
-          // Transitional fallback: if the event carries surface display fields,
-          // apply immediately so the "Be" pill updates without waiting for the
-          // server-authoritative re-fetch (which may fail when only the iframe
-          // is signed in). Strictly surface-only — no identity fields touched.
+          // Pattern A: render directly from inline T1 surface fields.
           const inlineHandle = event.displayLabel ?? event.ownFioHandle;
           if (inlineHandle) {
-            console.log("[Shell] persona handle from event payload (transitional):", inlineHandle);
             setPersonaState(prev => prev.activeHandle === inlineHandle ? prev : { ...prev, activeHandle: inlineHandle });
           }
-          void fetchActivePersona().then(surface => {
-            console.log("[Shell] persona fetch →", surface ?? null);
-            if (!surface) return;
-            const handle = surface.displayLabel ?? surface.ownFioHandle ?? undefined;
-            if (!handle) return;
-            setPersonaState(prev => prev.activeHandle === handle ? prev : { ...prev, activeHandle: handle });
-          }).catch(err => console.warn("[Shell] persona fetch failed", err));
           return;
         }
         case "metame:persona-revoked": {
@@ -1066,8 +1057,18 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     if (iframeRef.current && config) {
       postCartridgeClose(iframeRef.current, cartridgeId, getIframeOrigin(config));
     }
-    setOpenCartridges(prev => prev.filter(c => c.cartridgeId !== cartridgeId));
+    // Pattern: soft-hide. Wait ≤500ms for the iframe's metame:cartridge-closed
+    // ack (which the reducer will apply via the metameHandler). If no ack
+    // arrives, force-remove locally so the chip doesn't get stuck.
+    setTimeout(() => {
+      setOpenCartridges(prev => {
+        if (!prev.some(c => c.cartridgeId === cartridgeId)) return prev;
+        console.warn("[Shell] cartridge close ack timeout — force-removing", cartridgeId);
+        return prev.filter(c => c.cartridgeId !== cartridgeId);
+      });
+    }, 500);
   }, [config]);
+
 
 
   const ctxValue: ShellContextValue = useMemo(() => ({

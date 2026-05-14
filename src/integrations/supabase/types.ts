@@ -2355,6 +2355,351 @@ export type Database = {
           },
         ]
       }
+      content_qube_access_policies: {
+        Row: {
+          content_qube_id: string
+          created_at: string
+          gating_kind: string
+          id: string
+          min_identity_level: string | null
+          price_qc: number | null
+          required_sku: string[]
+          updated_at: string
+        }
+        Insert: {
+          content_qube_id: string
+          created_at?: string
+          gating_kind?: string
+          id?: string
+          min_identity_level?: string | null
+          price_qc?: number | null
+          required_sku?: string[]
+          updated_at?: string
+        }
+        Update: {
+          content_qube_id?: string
+          created_at?: string
+          gating_kind?: string
+          id?: string
+          min_identity_level?: string | null
+          price_qc?: number | null
+          required_sku?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_qube_access_policies_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: true
+            referencedRelation: "content_qubes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_qube_cartridge_bindings: {
+        Row: {
+          codex_slug: string
+          content_qube_id: string
+          context_meta: Json | null
+          created_at: string
+          display_order: number | null
+          id: string
+          tab_slug: string | null
+        }
+        Insert: {
+          codex_slug: string
+          content_qube_id: string
+          context_meta?: Json | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          tab_slug?: string | null
+        }
+        Update: {
+          codex_slug?: string
+          content_qube_id?: string
+          context_meta?: Json | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          tab_slug?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_qube_cartridge_bindings_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
+            referencedRelation: "content_qubes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_qube_dvn_receipts: {
+        Row: {
+          anchored_at: string
+          content_qube_id: string
+          created_at: string
+          icp_receipt_id: string | null
+          id: string
+          receipt_kind: string
+          receipt_payload: Json
+          t2_alias_commitment: string | null
+        }
+        Insert: {
+          anchored_at?: string
+          content_qube_id: string
+          created_at?: string
+          icp_receipt_id?: string | null
+          id?: string
+          receipt_kind: string
+          receipt_payload?: Json
+          t2_alias_commitment?: string | null
+        }
+        Update: {
+          anchored_at?: string
+          content_qube_id?: string
+          created_at?: string
+          icp_receipt_id?: string | null
+          id?: string
+          receipt_kind?: string
+          receipt_payload?: Json
+          t2_alias_commitment?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_qube_dvn_receipts_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
+            referencedRelation: "content_qubes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_qube_editions: {
+        Row: {
+          base_token_id: string | null
+          chain_minted_at: string | null
+          chain_tx_hash: string | null
+          content_qube_id: string
+          created_at: string
+          edition_number: number
+          id: string
+          issued_at: string | null
+          persona_id: string | null
+          rarity: string
+        }
+        Insert: {
+          base_token_id?: string | null
+          chain_minted_at?: string | null
+          chain_tx_hash?: string | null
+          content_qube_id: string
+          created_at?: string
+          edition_number: number
+          id?: string
+          issued_at?: string | null
+          persona_id?: string | null
+          rarity: string
+        }
+        Update: {
+          base_token_id?: string | null
+          chain_minted_at?: string | null
+          chain_tx_hash?: string | null
+          content_qube_id?: string
+          created_at?: string
+          edition_number?: number
+          id?: string
+          issued_at?: string | null
+          persona_id?: string | null
+          rarity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_qube_editions_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
+            referencedRelation: "content_qubes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_qube_relationships: {
+        Row: {
+          created_at: string
+          id: string
+          relationship_meta: Json | null
+          relationship_type: string
+          source_qube_id: string
+          target_qube_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          relationship_meta?: Json | null
+          relationship_type: string
+          source_qube_id: string
+          target_qube_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          relationship_meta?: Json | null
+          relationship_type?: string
+          source_qube_id?: string
+          target_qube_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_qube_relationships_source_qube_id_fkey"
+            columns: ["source_qube_id"]
+            isOneToOne: false
+            referencedRelation: "content_qubes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_qube_relationships_target_qube_id_fkey"
+            columns: ["target_qube_id"]
+            isOneToOne: false
+            referencedRelation: "content_qubes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_qube_storage: {
+        Row: {
+          content_qube_id: string
+          content_state: string | null
+          created_at: string
+          encryption_auth_tag: string | null
+          encryption_iv: string | null
+          encryption_key_id: string | null
+          file_size_bytes: number | null
+          id: string
+          is_primary: boolean
+          mime_type: string | null
+          storage_kind: string
+          storage_url: string
+        }
+        Insert: {
+          content_qube_id: string
+          content_state?: string | null
+          created_at?: string
+          encryption_auth_tag?: string | null
+          encryption_iv?: string | null
+          encryption_key_id?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          is_primary?: boolean
+          mime_type?: string | null
+          storage_kind: string
+          storage_url: string
+        }
+        Update: {
+          content_qube_id?: string
+          content_state?: string | null
+          created_at?: string
+          encryption_auth_tag?: string | null
+          encryption_iv?: string | null
+          encryption_key_id?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          is_primary?: boolean
+          mime_type?: string | null
+          storage_kind?: string
+          storage_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_qube_storage_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
+            referencedRelation: "content_qubes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_qube_versions: {
+        Row: {
+          author_persona_id: string | null
+          change_summary: string | null
+          content_qube_id: string
+          created_at: string
+          id: string
+          snapshot_meta: Json | null
+          version: number
+        }
+        Insert: {
+          author_persona_id?: string | null
+          change_summary?: string | null
+          content_qube_id: string
+          created_at?: string
+          id?: string
+          snapshot_meta?: Json | null
+          version: number
+        }
+        Update: {
+          author_persona_id?: string | null
+          change_summary?: string | null
+          content_qube_id?: string
+          created_at?: string
+          id?: string
+          snapshot_meta?: Json | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_qube_versions_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
+            referencedRelation: "content_qubes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_qubes: {
+        Row: {
+          content_kind: string
+          content_type: string
+          created_at: string
+          description: string | null
+          display_number: number | null
+          id: string
+          lifecycle_state: string
+          master_qube_id: string | null
+          media_asset_id: string | null
+          series: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          content_kind: string
+          content_type: string
+          created_at?: string
+          description?: string | null
+          display_number?: number | null
+          id?: string
+          lifecycle_state?: string
+          master_qube_id?: string | null
+          media_asset_id?: string | null
+          series: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content_kind?: string
+          content_type?: string
+          created_at?: string
+          description?: string | null
+          display_number?: number | null
+          id?: string
+          lifecycle_state?: string
+          master_qube_id?: string | null
+          media_asset_id?: string | null
+          series?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       content_revisions: {
         Row: {
           content_id: string | null
@@ -4392,6 +4737,8 @@ export type Database = {
       }
       crm_task_templates: {
         Row: {
+          cap_max_per_period: number | null
+          cap_period_days: number | null
           category: string
           cohort_id: string | null
           created_at: string | null
@@ -4427,6 +4774,8 @@ export type Database = {
           verification_mode: string
         }
         Insert: {
+          cap_max_per_period?: number | null
+          cap_period_days?: number | null
           category: string
           cohort_id?: string | null
           created_at?: string | null
@@ -4462,6 +4811,8 @@ export type Database = {
           verification_mode?: string
         }
         Update: {
+          cap_max_per_period?: number | null
+          cap_period_days?: number | null
           category?: string
           cohort_id?: string | null
           created_at?: string | null
@@ -10894,6 +11245,45 @@ export type Database = {
         }
         Relationships: []
       }
+      persona_google_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string | null
+          google_account_email: string | null
+          id: string
+          persona_id: string
+          refresh_token: string | null
+          scopes: string[]
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at?: string | null
+          google_account_email?: string | null
+          id?: string
+          persona_id: string
+          refresh_token?: string | null
+          scopes?: string[]
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string | null
+          google_account_email?: string | null
+          id?: string
+          persona_id?: string
+          refresh_token?: string | null
+          scopes?: string[]
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       persona_legacy_20260125: {
         Row: {
           app_origin: string | null
@@ -11783,6 +12173,30 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_counters: {
+        Row: {
+          created_at: string
+          endpoint_key: string
+          id: number
+          scope: string
+          scope_value: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint_key: string
+          id?: number
+          scope: string
+          scope_value: string
+        }
+        Update: {
+          created_at?: string
+          endpoint_key?: string
+          id?: number
+          scope?: string
+          scope_value?: string
+        }
+        Relationships: []
+      }
       recommendation_history: {
         Row: {
           confidence_score: number | null
@@ -11832,6 +12246,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      referral_attributions: {
+        Row: {
+          created_at: string
+          first_conversion_at: string | null
+          id: number
+          new_persona_id: string
+          ref_code: string | null
+          referrer_persona_id: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          first_conversion_at?: string | null
+          id?: number
+          new_persona_id: string
+          ref_code?: string | null
+          referrer_persona_id: string
+          source: string
+        }
+        Update: {
+          created_at?: string
+          first_conversion_at?: string | null
+          id?: number
+          new_persona_id?: string
+          ref_code?: string | null
+          referrer_persona_id?: string
+          source?: string
+        }
+        Relationships: []
       }
       referral_clicks: {
         Row: {
@@ -13613,13 +14057,19 @@ export type Database = {
           episode_numbers: number[] | null
           extra_asset_ids: string[] | null
           grants_character_cards: boolean | null
+          grants_collector_card: boolean | null
           grants_episodes_motion: boolean | null
           grants_episodes_print: boolean | null
           grants_episodes_still: boolean | null
           grants_gn: boolean | null
+          grants_gn_hardcover: boolean | null
+          grants_gn_leatherbound: boolean | null
+          grants_gn_paperback: boolean | null
           grants_lore: boolean | null
+          grants_order_access: boolean | null
           is_active: boolean | null
           name: string
+          physical_qty_multiplier: number | null
           series: string | null
           sku_id: string
           updated_at: string | null
@@ -13630,13 +14080,19 @@ export type Database = {
           episode_numbers?: number[] | null
           extra_asset_ids?: string[] | null
           grants_character_cards?: boolean | null
+          grants_collector_card?: boolean | null
           grants_episodes_motion?: boolean | null
           grants_episodes_print?: boolean | null
           grants_episodes_still?: boolean | null
           grants_gn?: boolean | null
+          grants_gn_hardcover?: boolean | null
+          grants_gn_leatherbound?: boolean | null
+          grants_gn_paperback?: boolean | null
           grants_lore?: boolean | null
+          grants_order_access?: boolean | null
           is_active?: boolean | null
           name: string
+          physical_qty_multiplier?: number | null
           series?: string | null
           sku_id: string
           updated_at?: string | null
@@ -13647,13 +14103,19 @@ export type Database = {
           episode_numbers?: number[] | null
           extra_asset_ids?: string[] | null
           grants_character_cards?: boolean | null
+          grants_collector_card?: boolean | null
           grants_episodes_motion?: boolean | null
           grants_episodes_print?: boolean | null
           grants_episodes_still?: boolean | null
           grants_gn?: boolean | null
+          grants_gn_hardcover?: boolean | null
+          grants_gn_leatherbound?: boolean | null
+          grants_gn_paperback?: boolean | null
           grants_lore?: boolean | null
+          grants_order_access?: boolean | null
           is_active?: boolean | null
           name?: string
+          physical_qty_multiplier?: number | null
           series?: string | null
           sku_id?: string
           updated_at?: string | null
@@ -13768,6 +14230,42 @@ export type Database = {
           status?: string
           sync_type?: string
           tenant_id?: string
+        }
+        Relationships: []
+      }
+      system_rate_limits: {
+        Row: {
+          created_at: string
+          endpoint_key: string
+          id: string
+          is_active: boolean
+          max_requests: number
+          notes: string | null
+          scope: string
+          updated_at: string
+          window_seconds: number
+        }
+        Insert: {
+          created_at?: string
+          endpoint_key: string
+          id?: string
+          is_active?: boolean
+          max_requests: number
+          notes?: string | null
+          scope: string
+          updated_at?: string
+          window_seconds: number
+        }
+        Update: {
+          created_at?: string
+          endpoint_key?: string
+          id?: string
+          is_active?: boolean
+          max_requests?: number
+          notes?: string | null
+          scope?: string
+          updated_at?: string
+          window_seconds?: number
         }
         Relationships: []
       }
@@ -15972,6 +16470,10 @@ export type Database = {
         Args: { days_old?: number }
         Returns: number
       }
+      cleanup_rate_limit_counters: {
+        Args: { retention_days?: number }
+        Returns: number
+      }
       create_payment_request: {
         Args: {
           p_amount: number
@@ -16596,7 +17098,11 @@ export type Database = {
         | "decision"
         | "memo"
         | "proof_build"
-      master_content_type: "episode_still" | "episode_motion" | "episode_print"
+      master_content_type:
+        | "episode_still"
+        | "episode_motion"
+        | "episode_print"
+        | "gn_still"
       order_tier: "NONE" | "KETA" | "KEJI" | "FIRST" | "ZERO" | "SAT"
       payment_currency:
         | "QCT"
@@ -16944,7 +17450,12 @@ export const Constants = {
         "memo",
         "proof_build",
       ],
-      master_content_type: ["episode_still", "episode_motion", "episode_print"],
+      master_content_type: [
+        "episode_still",
+        "episode_motion",
+        "episode_print",
+        "gn_still",
+      ],
       order_tier: ["NONE", "KETA", "KEJI", "FIRST", "ZERO", "SAT"],
       payment_currency: ["QCT", "QOYN", "KNYT", "USDC", "ETH", "BTC", "sats"],
       pricing_kind: [
