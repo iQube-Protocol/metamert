@@ -818,14 +818,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     };
   }, [config]);
 
-  const refreshActivePersona = useCallback(async () => {
-    const surface = await fetchActivePersona();
-    setPersonaState(prev => {
-      const handle = surface?.displayLabel ?? surface?.ownFioHandle ?? undefined;
-      if (prev.activeHandle === handle) return prev;
-      return { ...prev, activeHandle: handle };
-    });
-  }, []);
+  // NOTE: Pattern A (CC commit 6a912c00) — the iframe is the source of truth
+  // for the active persona. The shell does NOT fetch /api/wallet/active-persona
+  // because the shell auths as `did:metame:dev-shell` (a different identity from
+  // the actual signed-in user inside the iframe), so that fetch returns the
+  // wrong persona (e.g. "devagent" instead of the iframe's active "arkagent@knyt").
+  // The persona handle is set strictly from inline T1 surface fields on
+  // metame:persona-changed events broadcast by the runtime.
 
   const hydrate = useCallback(async () => {
     setLoading(true);
@@ -840,14 +839,12 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       }
       const cfg = await fetchShellConfig();
       setConfig(cfg);
-      // Best-effort fetch of active persona surface (returns null when unauthenticated)
-      void refreshActivePersona();
     } catch (err) {
       console.error("[Shell] Hydration failed:", err);
     } finally {
       setLoading(false);
     }
-  }, [refreshActivePersona]);
+  }, []);
 
   const isLiveConfig = useCallback((cfg?: ShellConfig): boolean => {
     if (!cfg) return false;
