@@ -52,6 +52,81 @@ export type Database = {
           },
         ]
       }
+      activity_receipts: {
+        Row: {
+          action_type: string
+          active_cartridge: string
+          agents_invoked: string[]
+          approvals_granted: string[]
+          artifacts_created: string[]
+          context_shared: string[]
+          created_at: string
+          dvn_receipt_id: string | null
+          id: string
+          intent_id: string | null
+          iqubes_used: string[]
+          persona_id: string
+          policy_envelope_id: string | null
+          receipt_status: string
+          session_id: string | null
+          summary: string
+          tools_used: string[]
+        }
+        Insert: {
+          action_type: string
+          active_cartridge?: string
+          agents_invoked?: string[]
+          approvals_granted?: string[]
+          artifacts_created?: string[]
+          context_shared?: string[]
+          created_at?: string
+          dvn_receipt_id?: string | null
+          id?: string
+          intent_id?: string | null
+          iqubes_used?: string[]
+          persona_id: string
+          policy_envelope_id?: string | null
+          receipt_status?: string
+          session_id?: string | null
+          summary: string
+          tools_used?: string[]
+        }
+        Update: {
+          action_type?: string
+          active_cartridge?: string
+          agents_invoked?: string[]
+          approvals_granted?: string[]
+          artifacts_created?: string[]
+          context_shared?: string[]
+          created_at?: string
+          dvn_receipt_id?: string | null
+          id?: string
+          intent_id?: string | null
+          iqubes_used?: string[]
+          persona_id?: string
+          policy_envelope_id?: string | null
+          receipt_status?: string
+          session_id?: string | null
+          summary?: string
+          tools_used?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_receipts_intent_id_fkey"
+            columns: ["intent_id"]
+            isOneToOne: false
+            referencedRelation: "nbe_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_receipts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "assistant_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_environment: {
         Row: {
           activated_at: string | null
@@ -2394,6 +2469,13 @@ export type Database = {
             referencedRelation: "content_qubes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "content_qube_access_policies_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: true
+            referencedRelation: "v_content_qube_registry"
+            referencedColumns: ["id"]
+          },
         ]
       }
       content_qube_cartridge_bindings: {
@@ -2430,6 +2512,13 @@ export type Database = {
             columns: ["content_qube_id"]
             isOneToOne: false
             referencedRelation: "content_qubes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_qube_cartridge_bindings_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
+            referencedRelation: "v_content_qube_registry"
             referencedColumns: ["id"]
           },
         ]
@@ -2471,6 +2560,13 @@ export type Database = {
             columns: ["content_qube_id"]
             isOneToOne: false
             referencedRelation: "content_qubes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_qube_dvn_receipts_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
+            referencedRelation: "v_content_qube_registry"
             referencedColumns: ["id"]
           },
         ]
@@ -2520,6 +2616,13 @@ export type Database = {
             referencedRelation: "content_qubes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "content_qube_editions_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
+            referencedRelation: "v_content_qube_registry"
+            referencedColumns: ["id"]
+          },
         ]
       }
       content_qube_relationships: {
@@ -2556,10 +2659,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "content_qube_relationships_source_qube_id_fkey"
+            columns: ["source_qube_id"]
+            isOneToOne: false
+            referencedRelation: "v_content_qube_registry"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "content_qube_relationships_target_qube_id_fkey"
             columns: ["target_qube_id"]
             isOneToOne: false
             referencedRelation: "content_qubes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_qube_relationships_target_qube_id_fkey"
+            columns: ["target_qube_id"]
+            isOneToOne: false
+            referencedRelation: "v_content_qube_registry"
             referencedColumns: ["id"]
           },
         ]
@@ -2615,6 +2732,13 @@ export type Database = {
             referencedRelation: "content_qubes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "content_qube_storage_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
+            referencedRelation: "v_content_qube_registry"
+            referencedColumns: ["id"]
+          },
         ]
       }
       content_qube_versions: {
@@ -2651,6 +2775,13 @@ export type Database = {
             columns: ["content_qube_id"]
             isOneToOne: false
             referencedRelation: "content_qubes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_qube_versions_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
+            referencedRelation: "v_content_qube_registry"
             referencedColumns: ["id"]
           },
         ]
@@ -16268,6 +16399,41 @@ export type Database = {
             referencedColumns: ["program_id"]
           },
         ]
+      }
+      v_content_qube_registry: {
+        Row: {
+          chain_minted_count: number | null
+          codex_slugs: string[] | null
+          content_kind: string | null
+          content_type: string | null
+          created_at: string | null
+          description: string | null
+          display_number: number | null
+          epic_count: number | null
+          gating_kind: string | null
+          id: string | null
+          issued_count: number | null
+          legendary_count: number | null
+          lifecycle_state: string | null
+          master_qube_id: string | null
+          media_asset_id: string | null
+          min_identity_level: string | null
+          price_qc: number | null
+          primary_content_state: string | null
+          primary_file_size_bytes: number | null
+          primary_mime_type: string | null
+          primary_storage_kind: string | null
+          primary_storage_url: string | null
+          rare_count: number | null
+          required_sku: string[] | null
+          secret_black_rare_count: number | null
+          series: string | null
+          storage_kinds: string[] | null
+          title: string | null
+          total_editions: number | null
+          updated_at: string | null
+        }
+        Relationships: []
       }
       v_marketa_today: {
         Row: {
