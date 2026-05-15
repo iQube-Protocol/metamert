@@ -68,6 +68,7 @@ describe("parseMetameEvent", () => {
     expect(parseMetameEvent({ type: "metame:persona-revoked" })).toEqual({
       type: "metame:persona-revoked",
     });
+  });
 
   it("parses bridge-wrapped envelope", () => {
     const env = {
