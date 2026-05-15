@@ -11,7 +11,6 @@ import {
   promptAction,
   authenticate,
   getToken,
-  fetchActivePersona,
 } from "@/lib/aa-client";
 import {
   postToIframe,
