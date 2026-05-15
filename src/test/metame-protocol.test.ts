@@ -64,6 +64,23 @@ describe("parseMetameEvent", () => {
     });
   });
 
+  it("prefers runtime payload type and payload surface over outer bridge fields", () => {
+    expect(
+      parseMetameEvent({
+        type: "MESSAGE",
+        displayLabel: "devagent",
+        payload: {
+          type: "metame:persona-changed",
+          surface: { activePersona: { displayLabel: "Kn0w1", fio_handle: "kn0w1@knyt" } },
+        },
+      }),
+    ).toEqual({
+      type: "metame:persona-changed",
+      displayLabel: "Kn0w1",
+      ownFioHandle: "kn0w1@knyt",
+    });
+  });
+
   it("parses persona-revoked sign-out", () => {
     expect(parseMetameEvent({ type: "metame:persona-revoked" })).toEqual({
       type: "metame:persona-revoked",
