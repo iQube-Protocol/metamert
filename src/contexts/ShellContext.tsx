@@ -748,15 +748,28 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         case "metame:persona-changed": {
           // Pattern A: render directly from inline T1 surface fields.
           const inlineHandle = event.displayLabel ?? event.ownFioHandle;
-          if (inlineHandle) {
-            setPersonaState(prev => prev.activeHandle === inlineHandle ? prev : { ...prev, activeHandle: inlineHandle });
-          }
+          // Infer persona id from handle so the Be icon accent + active pill update.
+          const handleLower = (inlineHandle ?? "").toLowerCase();
+          const inferredId = handleLower.includes("knyt")
+            ? "knyt-persona"
+            : handleLower.includes("qripto") || handleLower.includes("qrypto")
+              ? "qripto-persona"
+              : null;
+          setPersonaState(prev => {
+            const nextHandle = inlineHandle ?? prev.activeHandle;
+            const nextActiveId = inferredId ?? prev.activePersonaId;
+            if (prev.activeHandle === nextHandle && prev.activePersonaId === nextActiveId) return prev;
+            return { ...prev, activeHandle: nextHandle, activePersonaId: nextActiveId };
+          });
           return;
         }
         case "metame:persona-revoked": {
+          // Sign-out / persona cleared: return Be nav to its default state.
           setPersonaState(prev => {
-            if (!prev.activeHandle) return prev;
-            const next = { ...prev };
+            const fallback = DEFAULT_PERSONAS.find(p => p.id === DEFAULT_ACTIVE_PERSONA_ID)
+              ? DEFAULT_ACTIVE_PERSONA_ID
+              : DEFAULT_PERSONAS[0]?.id ?? prev.activePersonaId;
+            const next = { ...prev, activePersonaId: fallback };
             delete next.activeHandle;
             return next;
           });
