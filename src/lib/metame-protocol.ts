@@ -8,8 +8,8 @@
  *   - CartridgePresenceRegistry: metame:cartridge-opened | -tab-changed | -closed
  *
  * Contract rules honoured here:
- *   - Persona events are HINTS — never read identity fields off the payload.
- *     The shell must re-fetch /api/wallet/active-persona after any hint.
+ *   - Persona events carry Pattern A T1 surface inline. Read only surface
+ *     display fields; never re-fetch shell-auth active persona.
  *   - Cartridge events carry only surface identity (cartridgeId, displayLabel,
  *     tab, subTab). Never parse or store personaId / authProfileId / rootDid.
  *   - Outbound `metame:cartridge-closed` from shell → app must include
@@ -88,15 +88,19 @@ export function parseMetameEvent(raw: unknown): MetameEvent | null {
   if (!data || typeof data !== "object") return null;
   const obj = data as Record<string, unknown>;
 
-  // Accept envelope: lift type from payload, merge fields.
+  // Accept envelope: lift canonical metame/legacy type from payload when the
+  // outer bridge type is generic, then merge payload fields with precedence.
   let type = obj.type;
   let body: Record<string, unknown> = obj;
   if (obj.payload && typeof obj.payload === "object" && !Array.isArray(obj.payload)) {
     const payload = obj.payload as Record<string, unknown>;
-    if (typeof type !== "string" && typeof payload.type === "string") {
+    const payloadType = typeof payload.type === "string" ? payload.type : null;
+    if (payloadType && (payloadType === LEGACY_PERSONA_ALIAS || payloadType.startsWith("metame:"))) {
+      type = payload.type;
+    } else if (typeof type !== "string" && payloadType) {
       type = payload.type;
     }
-    body = { ...payload, ...obj };
+    body = { ...obj, ...payload };
   }
   if (typeof type !== "string") return null;
 
@@ -107,12 +111,24 @@ export function parseMetameEvent(raw: unknown): MetameEvent | null {
     const nested = (body.surface && typeof body.surface === "object" && !Array.isArray(body.surface))
       ? (body.surface as Record<string, unknown>)
       : {};
-    const displayLabel = (typeof body.displayLabel === "string" && body.displayLabel)
-      ? body.displayLabel
-      : (typeof nested.displayLabel === "string" && nested.displayLabel ? nested.displayLabel : "");
-    const ownFioHandle = (typeof body.ownFioHandle === "string" && body.ownFioHandle)
-      ? body.ownFioHandle
-      : (typeof nested.ownFioHandle === "string" && nested.ownFioHandle ? nested.ownFioHandle : "");
+    const activeNested = (nested.activePersona && typeof nested.activePersona === "object" && !Array.isArray(nested.activePersona))
+      ? (nested.activePersona as Record<string, unknown>)
+      : {};
+    const stringFrom = (source: Record<string, unknown>, keys: string[]): string => {
+      for (const key of keys) {
+        const value = source[key];
+        if (typeof value === "string" && value.trim()) return value.trim();
+      }
+      return "";
+    };
+    const displayKeys = ["displayLabel", "display_label", "label"];
+    const handleKeys = ["ownFioHandle", "own_fio_handle", "fioHandle", "fio_handle", "handle"];
+    const displayLabel = stringFrom(activeNested, displayKeys)
+      || stringFrom(nested, displayKeys)
+      || stringFrom(body, displayKeys);
+    const ownFioHandle = stringFrom(activeNested, handleKeys)
+      || stringFrom(nested, handleKeys)
+      || stringFrom(body, handleKeys);
     if (displayLabel) out.displayLabel = displayLabel;
     if (ownFioHandle) out.ownFioHandle = ownFioHandle;
     return out;
