@@ -204,6 +204,14 @@ function createInferenceController(
   return { start, complete, cleanup };
 }
 
+function inferPersonaIdFromSurface(surface?: string): string | null {
+  const value = (surface ?? "").toLowerCase();
+  if (!value) return null;
+  if (value.includes("knyt")) return "knyt-persona";
+  if (value.includes("qripto") || value.includes("qrypto")) return "qripto-persona";
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
@@ -746,14 +754,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       switch (event.type) {
         case "metame:persona-changed": {
           // Pattern A: render directly from inline T1 surface fields.
-          const inlineHandle = event.displayLabel ?? event.ownFioHandle;
-          // Infer persona id from handle so the Be icon accent + active pill update.
-          const handleLower = (inlineHandle ?? "").toLowerCase();
-          const inferredId = handleLower.includes("knyt")
-            ? "knyt-persona"
-            : handleLower.includes("qripto") || handleLower.includes("qrypto")
-              ? "qripto-persona"
-              : null;
+          const inlineHandle = event.ownFioHandle ?? event.displayLabel;
+          // Infer persona id from handle/label so the Be icon accent + active pill update.
+          const inferredId = inferPersonaIdFromSurface(inlineHandle);
           setPersonaState(prev => {
             const nextHandle = inlineHandle ?? prev.activeHandle;
             const nextActiveId = inferredId ?? prev.activePersonaId;
