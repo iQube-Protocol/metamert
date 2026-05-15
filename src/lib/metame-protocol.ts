@@ -100,11 +100,21 @@ export function parseMetameEvent(raw: unknown): MetameEvent | null {
   }
   if (typeof type !== "string") return null;
 
-  // Surface-only persona fields (hint to render before the proxy fetch resolves).
+  // Surface-only persona fields (Pattern A T1 surface). Accept either flat
+  // top-level shape or nested `surface: { displayLabel, ownFioHandle }`.
   const personaSurface = (): Pick<MetamePersonaChanged, "displayLabel" | "ownFioHandle"> => {
     const out: Pick<MetamePersonaChanged, "displayLabel" | "ownFioHandle"> = {};
-    if (typeof body.displayLabel === "string" && body.displayLabel) out.displayLabel = body.displayLabel;
-    if (typeof body.ownFioHandle === "string" && body.ownFioHandle) out.ownFioHandle = body.ownFioHandle;
+    const nested = (body.surface && typeof body.surface === "object" && !Array.isArray(body.surface))
+      ? (body.surface as Record<string, unknown>)
+      : {};
+    const displayLabel = (typeof body.displayLabel === "string" && body.displayLabel)
+      ? body.displayLabel
+      : (typeof nested.displayLabel === "string" && nested.displayLabel ? nested.displayLabel : "");
+    const ownFioHandle = (typeof body.ownFioHandle === "string" && body.ownFioHandle)
+      ? body.ownFioHandle
+      : (typeof nested.ownFioHandle === "string" && nested.ownFioHandle ? nested.ownFioHandle : "");
+    if (displayLabel) out.displayLabel = displayLabel;
+    if (ownFioHandle) out.ownFioHandle = ownFioHandle;
     return out;
   };
 

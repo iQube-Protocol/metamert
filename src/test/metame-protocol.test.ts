@@ -51,6 +51,25 @@ describe("parseMetameEvent", () => {
     expect(parsed).not.toHaveProperty("kybeAttestation");
   });
 
+  it("reads persona surface fields from nested `surface` payload", () => {
+    expect(
+      parseMetameEvent({
+        type: "metame:persona-changed",
+        surface: { displayLabel: "arkagent@knyt", ownFioHandle: "arkagent@knyt" },
+      }),
+    ).toEqual({
+      type: "metame:persona-changed",
+      displayLabel: "arkagent@knyt",
+      ownFioHandle: "arkagent@knyt",
+    });
+  });
+
+  it("parses persona-revoked sign-out", () => {
+    expect(parseMetameEvent({ type: "metame:persona-revoked" })).toEqual({
+      type: "metame:persona-revoked",
+    });
+  });
+
   it("parses bridge-wrapped envelope", () => {
     const env = {
       type: "metame:cartridge-opened",
