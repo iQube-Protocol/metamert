@@ -13,7 +13,7 @@ describe("parseMetameEvent", () => {
   });
 
   it("treats legacy aa-persona-change-v1 as persona-changed", () => {
-    expect(parseMetameEvent({ type: "aa-persona-change-v1", personaId: "p_1" })).toEqual({
+    expect(parseMetameEvent({ type: "aa-persona-change-v1" })).toEqual({
       type: "metame:persona-changed",
     });
   });
