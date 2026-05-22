@@ -6,7 +6,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import { useBrowserOptional } from "@/contexts/BrowserContext";
-import { MODE_CONFIGS, type QuickActionDef, type SmartMenuMode } from "@/lib/smart-menu-config";
+import { MODE_CONFIGS, DRAWER_ONLY_ACTION_IDS, type QuickActionDef, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
 import { SMART_MENU_ICON_DEFAULTS } from "@/lib/smart-menu-icons";
 import { Check, Globe, ArrowRight } from "lucide-react";
