@@ -738,14 +738,41 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       console.log("[Shell:CODEX_CLOSE_DIAG] METAME_CODEX_CLOSE_LAYER received", { origin: e.origin });
     };
 
-    // Canonical metame:* protocol from the embedded app:
-     //  - PersonaSpine (Pattern A, CC commit 6a912c00 confirmed live):
-    //    metame:persona-changed carries the full T1 surface inline
-    //    (displayLabel, ownFioHandle). Render directly — NO server re-fetch.
-    //    Legacy alias `aa-persona-change-v1` accepted for one release.
-    //  - CartridgePresenceRegistry: cartridge-opened / -tab-changed / -closed.
-    // Forbidden fields (personaId, authProfileId, rootDid, kybeAttestation)
-    // are stripped by parseMetameEvent and never read.
+    // RUNTIME_READY: ask the runtime to (re)broadcast the active persona surface
+    // so the Be label hydrates after sign-in or iframe remount.
+    const runtimeReadyHandler = (e: MessageEvent) => {
+      const raw = e.data;
+      if (!raw || typeof raw !== "object") return;
+      const t = (raw as any).type;
+      if (t !== "RUNTIME_READY" && t !== "aa-auth-context-ready-v1") return;
+      if (!iframeRef.current) return;
+      try {
+        iframeRef.current.contentWindow?.postMessage(
+          { type: "REQUEST_ACTIVE_PERSONA", source: "shell" },
+          "*",
+        );
+        console.log("[Shell] requested active persona resync after", t);
+      } catch (err) {
+        console.warn("[Shell] persona resync post failed", err);
+      }
+    };
+
+    window.addEventListener("message", handler);
+    window.addEventListener("message", codexCloseHandler);
+    window.addEventListener("message", runtimeReadyHandler);
+    return () => {
+      window.removeEventListener("message", handler);
+      window.removeEventListener("message", codexCloseHandler);
+      window.removeEventListener("message", runtimeReadyHandler);
+    };
+  }, [config]);
+
+  // Canonical metame:* protocol listener — ALWAYS mounted, independent of
+  // shell-config hydration. The runtime can broadcast persona-changed at any
+  // time (including before /aa/v1/runtime/shell-config resolves), so we must
+  // not gate this listener on `config`. Forbidden T0 fields are stripped by
+  // parseMetameEvent and never read.
+  useEffect(() => {
     const metameHandler = (e: MessageEvent) => {
       const event = parseMetameEvent(e.data);
       if (!event) return;
@@ -754,10 +781,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       switch (event.type) {
         case "metame:persona-changed": {
           // Pattern A: render directly from inline T1 surface fields.
-          // Label precedence per platform contract: displayLabel (user-chosen pet
-          // name) first, fall back to ownFioHandle. NEVER display personaId.
+          // displayLabel (user-chosen pet name) wins over ownFioHandle.
+          // NEVER display personaId or any dev-only fallback like "devagent".
           const inlineHandle = event.displayLabel ?? event.ownFioHandle;
-          // Infer persona id from handle/label so the Be icon accent + active pill update.
           const inferredId = inferPersonaIdFromSurface(event.ownFioHandle ?? event.displayLabel);
           setPersonaState(prev => {
             const nextHandle = inlineHandle ?? prev.activeHandle;
@@ -768,12 +794,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         case "metame:persona-revoked": {
-          // Sign-out / persona cleared: return Be nav to its default state.
+          // Sign-out / persona cleared: return Be nav to its default state
+          // (literal "Be" label, default visible persona id).
           setPersonaState(prev => {
             const fallback = DEFAULT_PERSONAS.find(p => p.id === DEFAULT_ACTIVE_PERSONA_ID)
               ? DEFAULT_ACTIVE_PERSONA_ID
               : DEFAULT_PERSONAS[0]?.id ?? prev.activePersonaId;
-            const next = { ...prev, activePersonaId: fallback };
+            const next: PersonaState = { ...prev, activePersonaId: fallback };
             delete next.activeHandle;
             return next;
           });
@@ -788,15 +815,9 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    window.addEventListener("message", handler);
-    window.addEventListener("message", codexCloseHandler);
     window.addEventListener("message", metameHandler);
-    return () => {
-      window.removeEventListener("message", handler);
-      window.removeEventListener("message", codexCloseHandler);
-      window.removeEventListener("message", metameHandler);
-    };
-  }, [config]);
+    return () => window.removeEventListener("message", metameHandler);
+  }, []);
 
   // Send DEVICE_CONTEXT_UPDATE to iframe on viewport resize
   useEffect(() => {

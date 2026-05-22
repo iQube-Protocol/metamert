@@ -1,57 +1,26 @@
-# Drawer quick actions → UI-only overlay (no inference)
+Root cause: the shell only updates the Be/persona label when it receives a parsed `metame:persona-changed` / `aa-persona-change-v1` message. The live console has no `[Shell] metame event` entries, so the active persona event is either not arriving, arriving before the listener is mounted, or arriving in a shape the parser does not accept. Because there is no resync request on `RUNTIME_READY`, the shell can remain stuck on the runtime/dev fallback label (`devagent`).
 
-## Problem
+Plan:
 
-When the user taps Wallet, Reward, Offer, Task, Goal, Settings, or Connections, the shell currently fires two things:
+1. Make persona sync listener always active
+   - Move persona protocol handling into a listener that does not depend on `config` being loaded.
+   - This prevents losing early active-persona broadcasts during iframe boot/sign-in hydration.
 
-1. `MENU_ACTION { action_id }` — opens the drawer in the runtime ✅
-2. A `PROMPT_SUBMIT` (and for `wallet`, an AA-API `menu-action` roundtrip that returns a `prompt`) — triggers inference and resets runtime state ❌
+2. Add an explicit runtime persona resync
+   - When the iframe sends `RUNTIME_READY` or auth/context readiness, post a small request such as `REQUEST_PERSONA_SURFACE` / `REQUEST_ACTIVE_PERSONA` to the runtime.
+   - The runtime can respond with the canonical `metame:persona-changed` payload containing `displayLabel` and `ownFioHandle`.
 
-Per Lovable-side instruction from the runtime team, these actions must be pure UI overlays. Persona / Identity / Memory are already drawer-only via dedicated openers; the rest are not.
+3. Harden parser + fallback behavior
+   - Accept the observed nested surface shapes already used by runtime payloads.
+   - Treat `devagent` as a developer/internal fallback label, not a browser-safe persona label.
+   - If no valid T1 display field exists, show literal `Be`, never `devagent`.
 
-## Target action ids
+4. Add regression coverage
+   - Test that `displayLabel: "Kn0w1"` beats any outer `devagent` field.
+   - Test that revoked/sign-out clears the label back to `Be`.
+   - Test that early/wrapped persona messages update `personaState.activeHandle`.
 
-Drawer-only (no inference, no AA roundtrip, no prompt):
-`wallet, reward, offer, task, goal, settings, connections, identity, persona, memory`
-
-(`identity`, `persona`, `memory` already correct — keep as-is.)
-
-## Changes
-
-### 1. `src/lib/smart-menu-config.ts`
-Convert the following quick actions to `kind: "system-only"`, `triggersInference: false`, and remove `prompt` / `apiAction` fields:
-
-- `EARN_ACTIONS`: `goal`, `task`, `wallet` (drop `apiAction: "wallet"`), `reward`, `offer`
-- `BE_ACTIONS`: `connections`, `settings`
-
-Persona/identity/memory already correct.
-
-### 2. `src/components/SmartMenuSubmenu.tsx`
-Add an explicit drawer-only branch in `onAction` (before the `action.prompt` block):
-
-```ts
-const DRAWER_ONLY_ACTIONS = new Set([
-  "wallet","reward","offer","task","goal","settings","connections",
-]);
-if (DRAWER_ONLY_ACTIONS.has(action.id)) {
-  sendIframeAction(action.id);   // postMessage MENU_ACTION { action_id } only
-  resetIdleTimer("quickAction");
-  return;
-}
-```
-
-This routes through the existing `sendIframeAction` in `ShellContext` (which already sends `{ type: "MENU_ACTION", action_id }` with no prompt and no AA call).
-
-No changes needed in `ShellContext.handleMenuAction` — we simply stop calling it for these ids.
-
-### 3. `src/test/persona-flow.test.ts` (or new `drawer-actions.test.ts`)
-Add a regression test: tapping each drawer-only id results in exactly one outbound `MENU_ACTION` with no `prompt` field, and no `PROMPT_SUBMIT` is dispatched.
-
-### 4. Docs
-Update `docs/SHELL_CONTRACT.md` §2 outbound table note: drawer-only `action_id`s are sent without `prompt` and bypass AA `menu-action`.
-
-## Out of scope
-
-- Runtime-side handling (already early-returns for these ids per the instruction).
-- Any change to inference-driving actions (`read`, `listen`, `watch`, `create`, etc.).
-- Persona/Identity/Memory openers — already drawer-only.
+5. Validate in preview
+   - Confirm console shows the parsed persona event.
+   - Confirm Be label renders `Kn0w1` when that persona is active.
+   - Confirm sign-out/persona revoke returns the nav label to `Be`.

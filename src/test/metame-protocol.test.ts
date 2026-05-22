@@ -81,6 +81,32 @@ describe("parseMetameEvent", () => {
     });
   });
 
+  it("strips dev-only 'devagent' fallback from displayLabel and ownFioHandle", () => {
+    expect(
+      parseMetameEvent({
+        type: "metame:persona-changed",
+        displayLabel: "devagent",
+        ownFioHandle: "DEVAGENT",
+      }),
+    ).toEqual({ type: "metame:persona-changed" });
+  });
+
+  it("falls through to real surface fields when outer label is 'devagent'", () => {
+    expect(
+      parseMetameEvent({
+        type: "metame:persona-changed",
+        displayLabel: "devagent",
+        surface: { displayLabel: "Kn0w1", ownFioHandle: "kn0w1@knyt" },
+      }),
+    ).toEqual({
+      type: "metame:persona-changed",
+      displayLabel: "Kn0w1",
+      ownFioHandle: "kn0w1@knyt",
+    });
+  });
+
+
+
   it("parses persona-revoked sign-out", () => {
     expect(parseMetameEvent({ type: "metame:persona-revoked" })).toEqual({
       type: "metame:persona-revoked",
