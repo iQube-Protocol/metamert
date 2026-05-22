@@ -122,15 +122,23 @@ export function parseMetameEvent(raw: unknown): MetameEvent | null {
   // The `isActive` flag is set when the event explicitly identifies the active
   // persona: presence of `activePersona` wrapper, or `active: true` / `isActive: true`.
   const personaSurface = (): Pick<MetamePersonaChanged, "displayLabel" | "ownFioHandle" | "personaId" | "isActive"> => {
-    const nested = (body.surface && typeof body.surface === "object" && !Array.isArray(body.surface))
-      ? (body.surface as Record<string, unknown>)
-      : {};
-    const surfaceActive = (nested.activePersona && typeof nested.activePersona === "object" && !Array.isArray(nested.activePersona))
-      ? (nested.activePersona as Record<string, unknown>)
-      : null;
-    const bodyActive = (body.activePersona && typeof body.activePersona === "object" && !Array.isArray(body.activePersona))
-      ? (body.activePersona as Record<string, unknown>)
-      : null;
+    const asObj = (v: unknown): Record<string, unknown> | null =>
+      v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+
+    const nested = asObj(body.surface) ?? {};
+    // Aliases used by various runtime emitters for the wrapper holding the
+    // currently-active persona.
+    const ACTIVE_KEYS = ["activePersona", "active_persona", "currentPersona", "current_persona", "selectedPersona", "selected_persona", "persona"];
+    const collectActive = (src: Record<string, unknown>): Record<string, unknown>[] => {
+      const out: Record<string, unknown>[] = [];
+      for (const k of ACTIVE_KEYS) {
+        const o = asObj(src[k]);
+        if (o) out.push(o);
+      }
+      return out;
+    };
+    const surfaceActives = collectActive(nested);
+    const bodyActives = collectActive(body);
 
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const stringFrom = (source: Record<string, unknown>, keys: string[], stripUuid = false): string => {
@@ -144,16 +152,17 @@ export function parseMetameEvent(raw: unknown): MetameEvent | null {
       }
       return "";
     };
-    const displayKeys = ["displayLabel", "display_label", "label"];
-    const handleKeys = ["ownFioHandle", "own_fio_handle", "fioHandle", "fio_handle", "handle"];
-    const idKeys = ["personaId", "persona_id", "personaSlug", "persona_slug"];
+    const displayKeys = ["displayLabel", "display_label", "label", "displayName", "display_name", "name"];
+    const handleKeys = ["ownFioHandle", "own_fio_handle", "fioHandle", "fio_handle", "fio", "handle"];
+    const idKeys = ["personaId", "persona_id", "personaSlug", "persona_slug", "slug", "id"];
 
-    // Ordered sources: most-trusted (explicitly active) first
-    const sources: Array<Record<string, unknown>> = [];
-    if (surfaceActive) sources.push(surfaceActive);
-    if (bodyActive) sources.push(bodyActive);
-    sources.push(nested);
-    sources.push(body);
+    // Ordered sources: most-trusted (explicitly active wrappers) first
+    const sources: Array<Record<string, unknown>> = [
+      ...surfaceActives,
+      ...bodyActives,
+      nested,
+      body,
+    ];
 
     let displayLabel = "", ownFioHandle = "", personaId = "";
     for (const src of sources) {
@@ -162,9 +171,12 @@ export function parseMetameEvent(raw: unknown): MetameEvent | null {
       if (!personaId) personaId = stringFrom(src, idKeys, true);
     }
 
-    const explicitActiveMarker = body.active === true || body.isActive === true
-      || nested.active === true || nested.isActive === true;
-    const isActive = Boolean(surfaceActive || bodyActive || explicitActiveMarker);
+    const markerIn = (src: Record<string, unknown>): boolean =>
+      src.active === true || src.isActive === true || src.is_active === true;
+    const explicitActiveMarker =
+      markerIn(body) || markerIn(nested) ||
+      surfaceActives.some(markerIn) || bodyActives.some(markerIn);
+    const isActive = Boolean(surfaceActives.length || bodyActives.length || explicitActiveMarker);
 
     const out: Pick<MetamePersonaChanged, "displayLabel" | "ownFioHandle" | "personaId" | "isActive"> = {};
     if (displayLabel) out.displayLabel = displayLabel;
