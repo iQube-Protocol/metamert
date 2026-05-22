@@ -780,27 +780,28 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
       switch (event.type) {
         case "metame:persona-changed": {
-          // Accept any persona-changed event that carries a usable T1 display
-          // surface. EXCEPTION: a plain `devagent` surface without an explicit
-          // active marker is the shell/account fallback for the dev-shell DID
-          // and must NOT overwrite the Be label — it's an ambiguous default
-          // attached to an account that may host multiple personas. `devagent`
-          // still renders when the runtime explicitly marks it active.
+          // Confidence model:
+          //   - Explicit active events (isActive === true) always win.
+          //   - Non-devagent runtime surfaces update the Be label even without
+          //     an explicit active marker (runtime is source of truth).
+          //   - Plain `devagent` (no active marker) is the dev-shell account
+          //     fallback. It only wins when there is no current runtime handle.
           const inlineHandle = event.displayLabel ?? event.ownFioHandle;
           if (!inlineHandle) {
             console.log("[Shell] persona-changed without display surface — ignoring", event);
             return;
           }
-          const isDevagentFallback =
-            !event.isActive &&
-            /devagent/i.test(`${event.displayLabel ?? ""} ${event.ownFioHandle ?? ""}`);
-          if (isDevagentFallback) {
-            console.log("[Shell] ignoring ambiguous devagent fallback (no active marker)", event);
-            return;
-          }
+          const isDevagent = /devagent/i.test(`${event.displayLabel ?? ""} ${event.ownFioHandle ?? ""}`);
           const inferredId = event.personaId
             ?? inferPersonaIdFromSurface(event.ownFioHandle ?? event.displayLabel);
           setPersonaState(prev => {
+            const hasCurrentRuntimeHandle = Boolean(prev.activeHandle);
+            // Block devagent fallback only when we already have a runtime
+            // handle and the incoming event is not explicitly active.
+            if (isDevagent && !event.isActive && hasCurrentRuntimeHandle) {
+              console.log("[Shell] ignoring ambiguous devagent fallback (have active runtime handle)", { current: prev.activeHandle, event });
+              return prev;
+            }
             const nextActiveId = inferredId ?? prev.activePersonaId;
             if (prev.activeHandle === inlineHandle && prev.activePersonaId === nextActiveId) return prev;
             console.log("[Shell] persona-changed → updating Be label", { handle: inlineHandle, personaId: nextActiveId, isActive: event.isActive });
