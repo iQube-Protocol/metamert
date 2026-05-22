@@ -26,14 +26,25 @@ export type MetameEventType =
 export interface MetamePersonaChanged {
   type: "metame:persona-changed";
   /**
-   * Optional surface-only display fields. Per the strict contract these
-   * are hints and the shell SHOULD re-fetch /api/wallet/active-persona.
-   * They are preserved here so the shell can render a label immediately
-   * (transitional fallback). NEVER include personaId / authProfileId /
-   * rootDid / kybeAttestation here — those are forbidden.
+   * Optional surface-only display fields. NEVER include personaId UUIDs /
+   * authProfileId / rootDid / kybeAttestation here — those are forbidden
+   * and stripped by parseMetameEvent.
    */
   displayLabel?: string;
   ownFioHandle?: string;
+  /**
+   * T1-safe persona slug (e.g. `knyt-persona`, `qripto-persona`,
+   * `metame-persona`, or a user-defined slug). UUIDs are stripped.
+   */
+  personaId?: string;
+  /**
+   * True when the event's surface explicitly identifies the active persona
+   * (via `surface.activePersona`, `payload.activePersona`, or top-level
+   * `active: true` / `isActive: true`). When false/absent the shell must
+   * NOT overwrite the current active label — the surface describes a
+   * candidate persona, not a confirmed transition.
+   */
+  isActive?: boolean;
 }
 export interface MetamePersonaRevoked {
   type: "metame:persona-revoked";
