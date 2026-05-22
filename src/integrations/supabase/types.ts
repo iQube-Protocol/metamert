@@ -2466,6 +2466,13 @@ export type Database = {
             foreignKeyName: "content_qube_access_policies_content_qube_id_fkey"
             columns: ["content_qube_id"]
             isOneToOne: true
+            referencedRelation: "activation_tab_qubes"
+            referencedColumns: ["qube_id"]
+          },
+          {
+            foreignKeyName: "content_qube_access_policies_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: true
             referencedRelation: "content_qubes"
             referencedColumns: ["id"]
           },
@@ -2507,6 +2514,13 @@ export type Database = {
           tab_slug?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "content_qube_cartridge_bindings_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
+            referencedRelation: "activation_tab_qubes"
+            referencedColumns: ["qube_id"]
+          },
           {
             foreignKeyName: "content_qube_cartridge_bindings_content_qube_id_fkey"
             columns: ["content_qube_id"]
@@ -2559,6 +2573,13 @@ export type Database = {
             foreignKeyName: "content_qube_dvn_receipts_content_qube_id_fkey"
             columns: ["content_qube_id"]
             isOneToOne: false
+            referencedRelation: "activation_tab_qubes"
+            referencedColumns: ["qube_id"]
+          },
+          {
+            foreignKeyName: "content_qube_dvn_receipts_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
             referencedRelation: "content_qubes"
             referencedColumns: ["id"]
           },
@@ -2583,6 +2604,7 @@ export type Database = {
           issued_at: string | null
           persona_id: string | null
           rarity: string
+          released_at: string | null
         }
         Insert: {
           base_token_id?: string | null
@@ -2595,6 +2617,7 @@ export type Database = {
           issued_at?: string | null
           persona_id?: string | null
           rarity: string
+          released_at?: string | null
         }
         Update: {
           base_token_id?: string | null
@@ -2607,8 +2630,16 @@ export type Database = {
           issued_at?: string | null
           persona_id?: string | null
           rarity?: string
+          released_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "content_qube_editions_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
+            referencedRelation: "activation_tab_qubes"
+            referencedColumns: ["qube_id"]
+          },
           {
             foreignKeyName: "content_qube_editions_content_qube_id_fkey"
             columns: ["content_qube_id"]
@@ -2655,6 +2686,13 @@ export type Database = {
             foreignKeyName: "content_qube_relationships_source_qube_id_fkey"
             columns: ["source_qube_id"]
             isOneToOne: false
+            referencedRelation: "activation_tab_qubes"
+            referencedColumns: ["qube_id"]
+          },
+          {
+            foreignKeyName: "content_qube_relationships_source_qube_id_fkey"
+            columns: ["source_qube_id"]
+            isOneToOne: false
             referencedRelation: "content_qubes"
             referencedColumns: ["id"]
           },
@@ -2664,6 +2702,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_content_qube_registry"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_qube_relationships_target_qube_id_fkey"
+            columns: ["target_qube_id"]
+            isOneToOne: false
+            referencedRelation: "activation_tab_qubes"
+            referencedColumns: ["qube_id"]
           },
           {
             foreignKeyName: "content_qube_relationships_target_qube_id_fkey"
@@ -2729,6 +2774,13 @@ export type Database = {
             foreignKeyName: "content_qube_storage_content_qube_id_fkey"
             columns: ["content_qube_id"]
             isOneToOne: false
+            referencedRelation: "activation_tab_qubes"
+            referencedColumns: ["qube_id"]
+          },
+          {
+            foreignKeyName: "content_qube_storage_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
             referencedRelation: "content_qubes"
             referencedColumns: ["id"]
           },
@@ -2770,6 +2822,13 @@ export type Database = {
           version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "content_qube_versions_content_qube_id_fkey"
+            columns: ["content_qube_id"]
+            isOneToOne: false
+            referencedRelation: "activation_tab_qubes"
+            referencedColumns: ["qube_id"]
+          },
           {
             foreignKeyName: "content_qube_versions_content_qube_id_fkey"
             columns: ["content_qube_id"]
@@ -5920,6 +5979,7 @@ export type Database = {
       experience_qubes: {
         Row: {
           active_cartridges: string[]
+          auto_progress: boolean
           blak_qube: Json
           confidentiality_default: string
           created_at: string
@@ -5928,6 +5988,8 @@ export type Database = {
           experience_name: string | null
           experience_type: string
           id: string
+          inferred_at: string | null
+          inferred_strategy: Json | null
           persona_id: string
           primary_goal: string | null
           progress_model: string
@@ -5935,6 +5997,7 @@ export type Database = {
         }
         Insert: {
           active_cartridges?: string[]
+          auto_progress?: boolean
           blak_qube?: Json
           confidentiality_default?: string
           created_at?: string
@@ -5943,6 +6006,8 @@ export type Database = {
           experience_name?: string | null
           experience_type?: string
           id?: string
+          inferred_at?: string | null
+          inferred_strategy?: Json | null
           persona_id: string
           primary_goal?: string | null
           progress_model?: string
@@ -5950,6 +6015,7 @@ export type Database = {
         }
         Update: {
           active_cartridges?: string[]
+          auto_progress?: boolean
           blak_qube?: Json
           confidentiality_default?: string
           created_at?: string
@@ -5958,6 +6024,8 @@ export type Database = {
           experience_name?: string | null
           experience_type?: string
           id?: string
+          inferred_at?: string | null
+          inferred_strategy?: Json | null
           persona_id?: string
           primary_goal?: string | null
           progress_model?: string
@@ -9013,6 +9081,80 @@ export type Database = {
         }
         Relationships: []
       }
+      mycanvas_entries: {
+        Row: {
+          body_md: string
+          created_at: string
+          entry_type: string
+          id: string
+          meta_json: Json
+          persona_id: string
+          tags: string[]
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          body_md?: string
+          created_at?: string
+          entry_type?: string
+          id?: string
+          meta_json?: Json
+          persona_id: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          body_md?: string
+          created_at?: string
+          entry_type?: string
+          id?: string
+          meta_json?: Json
+          persona_id?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
+      mycanvas_invites: {
+        Row: {
+          accepted_at: string | null
+          entry_id: string
+          id: string
+          invited_at: string
+          invited_persona_id: string
+          role: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          entry_id: string
+          id?: string
+          invited_at?: string
+          invited_persona_id: string
+          role?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          entry_id?: string
+          id?: string
+          invited_at?: string
+          invited_persona_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mycanvas_invites_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "mycanvas_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nakamoto_agent_branches: {
         Row: {
           agent_site_id: string
@@ -11279,6 +11421,45 @@ export type Database = {
           pages_count?: number
           source_pdf_lite_url?: string
           width?: number
+        }
+        Relationships: []
+      }
+      persona_activations: {
+        Row: {
+          activation_id: string
+          cohort_id: string | null
+          granted_at: string
+          granted_via: string
+          id: string
+          inviter_persona_id: string | null
+          persona_id: string
+          revoked_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          activation_id: string
+          cohort_id?: string | null
+          granted_at?: string
+          granted_via?: string
+          id?: string
+          inviter_persona_id?: string | null
+          persona_id: string
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          activation_id?: string
+          cohort_id?: string | null
+          granted_at?: string
+          granted_via?: string
+          id?: string
+          inviter_persona_id?: string | null
+          persona_id?: string
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -14181,6 +14362,42 @@ export type Database = {
         }
         Relationships: []
       }
+      stage_transitions: {
+        Row: {
+          created_at: string
+          criteria_snapshot: Json | null
+          from_stage: string
+          id: string
+          persona_id: string
+          progress_snapshot: Json | null
+          reason: string | null
+          to_stage: string
+          trigger: string
+        }
+        Insert: {
+          created_at?: string
+          criteria_snapshot?: Json | null
+          from_stage: string
+          id?: string
+          persona_id: string
+          progress_snapshot?: Json | null
+          reason?: string | null
+          to_stage: string
+          trigger?: string
+        }
+        Update: {
+          created_at?: string
+          criteria_snapshot?: Json | null
+          from_stage?: string
+          id?: string
+          persona_id?: string
+          progress_snapshot?: Json | null
+          reason?: string | null
+          to_stage?: string
+          trigger?: string
+        }
+        Relationships: []
+      }
       store_skus: {
         Row: {
           created_at: string | null
@@ -15881,6 +16098,21 @@ export type Database = {
       }
     }
     Views: {
+      activation_tab_qubes: {
+        Row: {
+          activation_id: string | null
+          created_at: string | null
+          gating_kind: string | null
+          label: string | null
+          long_description: string | null
+          price_qc: number | null
+          qube_id: string | null
+          required_sku: string[] | null
+          source_cartridge: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
       codex_kb_document_stats: {
         Row: {
           content_category: string | null
