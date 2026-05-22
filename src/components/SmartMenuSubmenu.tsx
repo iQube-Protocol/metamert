@@ -6,7 +6,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useShell } from "@/contexts/ShellContext";
 import { useBrowserOptional } from "@/contexts/BrowserContext";
-import { MODE_CONFIGS, type QuickActionDef, type SmartMenuMode } from "@/lib/smart-menu-config";
+import { MODE_CONFIGS, DRAWER_ONLY_ACTION_IDS, type QuickActionDef, type SmartMenuMode } from "@/lib/smart-menu-config";
 import { resolveIcon } from "@/lib/icon-utils";
 import { SMART_MENU_ICON_DEFAULTS } from "@/lib/smart-menu-icons";
 import { Check, Globe, ArrowRight } from "lucide-react";
@@ -127,6 +127,15 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
     if (action.id === "memory") {
       // Memory has no sub-sub menu — open the MemoryIQubeDrawer in the runtime.
       openMemoryIQube();
+      resetIdleTimer("quickAction");
+      return;
+    }
+
+    // Drawer-only quick actions: pure UI overlays in the runtime. Send a single
+    // MENU_ACTION with no prompt, no AA roundtrip, no PROMPT_SUBMIT — the
+    // runtime drawer must not disturb chat/inference state.
+    if (DRAWER_ONLY_ACTION_IDS.has(action.id)) {
+      sendIframeAction(action.id);
       resetIdleTimer("quickAction");
       return;
     }
