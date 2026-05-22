@@ -103,6 +103,9 @@ describe("parseMetameEvent", () => {
       displayLabel: "Kn0w1",
       ownFioHandle: "kn0w1@knyt",
     });
+  });
+
+
 
   it("parses persona-revoked sign-out", () => {
     expect(parseMetameEvent({ type: "metame:persona-revoked" })).toEqual({
