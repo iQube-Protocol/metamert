@@ -46,11 +46,13 @@ export default function SmartMenu() {
     activateMode,
     activateQuickActions,
     handleMenuAction,
+    sendIframeAction,
     submenuVisibility,
     pauseIdleTimer,
     resumeIdleTimer,
     personaState,
   } = useShell();
+
 
   // Active persona accent — drives the Be icon tint when a persona is selected.
   const activePersona = personaState.available.find(p => p.id === personaState.activePersonaId);
