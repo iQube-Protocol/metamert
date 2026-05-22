@@ -160,15 +160,6 @@ export interface ModeConfig {
 
 export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
   {
-    id: "metame-codex",
-    label: "metaMe",
-    icon: "box",
-    accentHex: "#10B981",
-    default_codex_id: "metame-codex",
-    codexes: [{ id: "metame-codex", label: "metaMe Codex" }],
-    agents: ["metame-agent"],
-  },
-  {
     id: "qripto-codex",
     label: "Qriptopian",
     icon: "box",
@@ -181,6 +172,15 @@ export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
     agents: ["moneypenny", "know1"],
   },
   {
+    id: "metame-codex",
+    label: "metaMe",
+    icon: "box",
+    accentHex: "#10B981",
+    default_codex_id: "metame-codex",
+    codexes: [{ id: "metame-codex", label: "metaMe Codex" }],
+    agents: ["metame-agent"],
+  },
+  {
     id: "knyt-codex",
     label: "KNYT",
     icon: "box",
@@ -190,6 +190,7 @@ export const DEFAULT_CARTRIDGES: CartridgeDef[] = [
     agents: ["moneypenny", "know1", "nakamoto"],
   },
 ];
+
 
 // ---------------------------------------------------------------------------
 // Per-mode quick action configs
