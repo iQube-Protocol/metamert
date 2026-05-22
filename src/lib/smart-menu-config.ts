@@ -227,6 +227,22 @@ const EARN_ACTIONS: QuickActionDef[] = [
   { id: "offer",       label: "Offer",       icon: "tag",          kind: "system-only", triggersInference: false },
 ];
 
+/**
+ * Drawer-only quick actions: pure UI overlays in the runtime. These must be
+ * dispatched as a single MENU_ACTION { action_id } with no prompt, no AA
+ * roundtrip, and no PROMPT_SUBMIT — the runtime drawer must not disturb the
+ * current chat/inference state.
+ */
+export const DRAWER_ONLY_ACTION_IDS = new Set<string>([
+  "wallet",
+  "reward",
+  "offer",
+  "task",
+  "goal",
+  "settings",
+  "connections",
+]);
+
 const MAKE_ACTIONS: QuickActionDef[] = [
   { id: "create",  label: "Create",  icon: "sparkles",  kind: "llm+menu", triggersInference: true, prompt: "Help me create something new" },
   { id: "design",  label: "Design",  icon: "palette",   kind: "llm+menu", triggersInference: true, prompt: "Help me design something creative" },
