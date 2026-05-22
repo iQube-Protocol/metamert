@@ -145,11 +145,6 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
-    if (action.id === "browse") {
-      setSubmenuType("browserSelector");
-      return;
-    }
-
     // Runtime context toggle (metaMe ↔ KNYT) lives on the play menu's central slot.
     if (action.id === "knyt" && effectiveMode === "play") {
       const next = runtimeContext === "knyt" ? "metame" : "knyt";
