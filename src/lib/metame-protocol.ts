@@ -26,14 +26,25 @@ export type MetameEventType =
 export interface MetamePersonaChanged {
   type: "metame:persona-changed";
   /**
-   * Optional surface-only display fields. Per the strict contract these
-   * are hints and the shell SHOULD re-fetch /api/wallet/active-persona.
-   * They are preserved here so the shell can render a label immediately
-   * (transitional fallback). NEVER include personaId / authProfileId /
-   * rootDid / kybeAttestation here — those are forbidden.
+   * Optional surface-only display fields. NEVER include personaId UUIDs /
+   * authProfileId / rootDid / kybeAttestation here — those are forbidden
+   * and stripped by parseMetameEvent.
    */
   displayLabel?: string;
   ownFioHandle?: string;
+  /**
+   * T1-safe persona slug (e.g. `knyt-persona`, `qripto-persona`,
+   * `metame-persona`, or a user-defined slug). UUIDs are stripped.
+   */
+  personaId?: string;
+  /**
+   * True when the event's surface explicitly identifies the active persona
+   * (via `surface.activePersona`, `payload.activePersona`, or top-level
+   * `active: true` / `isActive: true`). When false/absent the shell must
+   * NOT overwrite the current active label — the surface describes a
+   * candidate persona, not a confirmed transition.
+   */
+  isActive?: boolean;
 }
 export interface MetamePersonaRevoked {
   type: "metame:persona-revoked";
@@ -104,39 +115,62 @@ export function parseMetameEvent(raw: unknown): MetameEvent | null {
   }
   if (typeof type !== "string") return null;
 
-  // Surface-only persona fields (Pattern A T1 surface). Accept either flat
-  // top-level shape or nested `surface: { displayLabel, ownFioHandle }`.
-  const personaSurface = (): Pick<MetamePersonaChanged, "displayLabel" | "ownFioHandle"> => {
-    const out: Pick<MetamePersonaChanged, "displayLabel" | "ownFioHandle"> = {};
+  // Surface-only persona fields (Pattern A T1 surface). Extracts displayLabel,
+  // ownFioHandle, personaId (slug only, never UUIDs), and isActive flag.
+  //
+  // Priority: surface.activePersona.* > payload.activePersona.* > surface.* > body.*
+  // The `isActive` flag is set when the event explicitly identifies the active
+  // persona: presence of `activePersona` wrapper, or `active: true` / `isActive: true`.
+  const personaSurface = (): Pick<MetamePersonaChanged, "displayLabel" | "ownFioHandle" | "personaId" | "isActive"> => {
     const nested = (body.surface && typeof body.surface === "object" && !Array.isArray(body.surface))
       ? (body.surface as Record<string, unknown>)
       : {};
-    const activeNested = (nested.activePersona && typeof nested.activePersona === "object" && !Array.isArray(nested.activePersona))
+    const surfaceActive = (nested.activePersona && typeof nested.activePersona === "object" && !Array.isArray(nested.activePersona))
       ? (nested.activePersona as Record<string, unknown>)
-      : {};
-    const stringFrom = (source: Record<string, unknown>, keys: string[]): string => {
+      : null;
+    const bodyActive = (body.activePersona && typeof body.activePersona === "object" && !Array.isArray(body.activePersona))
+      ? (body.activePersona as Record<string, unknown>)
+      : null;
+
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const stringFrom = (source: Record<string, unknown>, keys: string[], stripUuid = false): string => {
       for (const key of keys) {
         const value = source[key];
         if (typeof value !== "string") continue;
         const trimmed = value.trim();
         if (!trimmed) continue;
-        // Dev-only/internal fallback labels are never browser-safe to display.
-        // The shell falls back to literal "Be" instead of leaking these.
-        if (/^devagent$/i.test(trimmed)) continue;
+        if (stripUuid && UUID_RE.test(trimmed)) continue;
         return trimmed;
       }
       return "";
     };
     const displayKeys = ["displayLabel", "display_label", "label"];
     const handleKeys = ["ownFioHandle", "own_fio_handle", "fioHandle", "fio_handle", "handle"];
-    const displayLabel = stringFrom(activeNested, displayKeys)
-      || stringFrom(nested, displayKeys)
-      || stringFrom(body, displayKeys);
-    const ownFioHandle = stringFrom(activeNested, handleKeys)
-      || stringFrom(nested, handleKeys)
-      || stringFrom(body, handleKeys);
+    const idKeys = ["personaId", "persona_id", "personaSlug", "persona_slug"];
+
+    // Ordered sources: most-trusted (explicitly active) first
+    const sources: Array<Record<string, unknown>> = [];
+    if (surfaceActive) sources.push(surfaceActive);
+    if (bodyActive) sources.push(bodyActive);
+    sources.push(nested);
+    sources.push(body);
+
+    let displayLabel = "", ownFioHandle = "", personaId = "";
+    for (const src of sources) {
+      if (!displayLabel) displayLabel = stringFrom(src, displayKeys);
+      if (!ownFioHandle) ownFioHandle = stringFrom(src, handleKeys);
+      if (!personaId) personaId = stringFrom(src, idKeys, true);
+    }
+
+    const explicitActiveMarker = body.active === true || body.isActive === true
+      || nested.active === true || nested.isActive === true;
+    const isActive = Boolean(surfaceActive || bodyActive || explicitActiveMarker);
+
+    const out: Pick<MetamePersonaChanged, "displayLabel" | "ownFioHandle" | "personaId" | "isActive"> = {};
     if (displayLabel) out.displayLabel = displayLabel;
     if (ownFioHandle) out.ownFioHandle = ownFioHandle;
+    if (personaId) out.personaId = personaId;
+    if (isActive) out.isActive = true;
     return out;
   };
 
