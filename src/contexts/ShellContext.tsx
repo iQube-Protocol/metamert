@@ -781,12 +781,21 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       switch (event.type) {
         case "metame:persona-changed": {
           // Accept any persona-changed event that carries a usable T1 display
-          // surface. The runtime is the source of truth for the active persona;
-          // when it broadcasts a label, the shell mirrors it. devagent renders
-          // when it is the runtime's active persona, just like any other.
+          // surface. EXCEPTION: a plain `devagent` surface without an explicit
+          // active marker is the shell/account fallback for the dev-shell DID
+          // and must NOT overwrite the Be label — it's an ambiguous default
+          // attached to an account that may host multiple personas. `devagent`
+          // still renders when the runtime explicitly marks it active.
           const inlineHandle = event.displayLabel ?? event.ownFioHandle;
           if (!inlineHandle) {
             console.log("[Shell] persona-changed without display surface — ignoring", event);
+            return;
+          }
+          const isDevagentFallback =
+            !event.isActive &&
+            /devagent/i.test(`${event.displayLabel ?? ""} ${event.ownFioHandle ?? ""}`);
+          if (isDevagentFallback) {
+            console.log("[Shell] ignoring ambiguous devagent fallback (no active marker)", event);
             return;
           }
           const inferredId = event.personaId
