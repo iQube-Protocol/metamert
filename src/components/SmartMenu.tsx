@@ -108,7 +108,12 @@ export default function SmartMenu() {
     } else {
       activateMode(mode);
     }
-  }, [activateMode, activateQuickActions, viewState, activeMode]);
+    // Earn nav also opens the wallet drawer in the runtime (drawer-only, no LLM).
+    if (mode === "earn") {
+      sendIframeAction("wallet");
+    }
+  }, [activateMode, activateQuickActions, viewState, activeMode, sendIframeAction]);
+
 
   // Empty nav area tap: show Play quick actions (touch only)
   const handleNavAreaPointerUp = useCallback((e: React.PointerEvent) => {
