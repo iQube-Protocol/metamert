@@ -164,7 +164,7 @@ const EmbedFrame = forwardRef<HTMLIFrameElement, EmbedFrameProps>(
           ref={ref}
           src={src}
           className="absolute inset-0 h-full w-full border-0"
-          allow="clipboard-write; clipboard-read"
+          allow="microphone; clipboard-read; clipboard-write; fullscreen"
           onLoad={handleIframeLoad}
           title="metaMe Runtime"
         />
