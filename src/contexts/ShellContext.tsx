@@ -780,26 +780,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
       switch (event.type) {
         case "metame:persona-changed": {
-          // Only accept events that explicitly identify the active persona.
-          // One auth profile can own multiple personas (e.g. dele@metame.com
-          // owns devagent + Kn0w1 + ...); account-level or candidate-persona
-          // broadcasts arrive without an active marker and must NOT overwrite
-          // the current Be label.
-          if (!event.isActive) {
-            console.log("[Shell] persona-changed ignored (no active marker)", event);
-            return;
-          }
+          // Accept any persona-changed event that carries a usable T1 display
+          // surface. The runtime is the source of truth for the active persona;
+          // when it broadcasts a label, the shell mirrors it. devagent renders
+          // when it is the runtime's active persona, just like any other.
           const inlineHandle = event.displayLabel ?? event.ownFioHandle;
           if (!inlineHandle) {
-            // Active transition with no resolvable surface — clear stale label
-            // so SmartMenu falls back to literal "Be" instead of leaking a
-            // previous persona's name.
-            setPersonaState(prev => {
-              if (prev.activeHandle === undefined) return prev;
-              const next: PersonaState = { ...prev };
-              delete next.activeHandle;
-              return next;
-            });
+            console.log("[Shell] persona-changed without display surface — ignoring", event);
             return;
           }
           const inferredId = event.personaId
@@ -807,6 +794,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
           setPersonaState(prev => {
             const nextActiveId = inferredId ?? prev.activePersonaId;
             if (prev.activeHandle === inlineHandle && prev.activePersonaId === nextActiveId) return prev;
+            console.log("[Shell] persona-changed → updating Be label", { handle: inlineHandle, personaId: nextActiveId, isActive: event.isActive });
             return { ...prev, activeHandle: inlineHandle, activePersonaId: nextActiveId };
           });
           return;
