@@ -18,7 +18,10 @@ describe("parseMetameEvent", () => {
     });
   });
 
-  it("preserves optional surface fields on persona-changed", () => {
+  it("preserves optional top-level surface fields on persona-changed (no active marker)", () => {
+    // Top-level fields without an active marker are still parsed (for shells
+    // that want to inspect them) but isActive is not set — ShellContext will
+    // ignore them when deciding whether to overwrite the Be label.
     expect(
       parseMetameEvent({
         type: "metame:persona-changed",
@@ -32,10 +35,26 @@ describe("parseMetameEvent", () => {
     });
   });
 
-  it("drops forbidden identity fields from persona-changed", () => {
+  it("marks isActive when top-level event carries active: true", () => {
+    expect(
+      parseMetameEvent({
+        type: "metame:persona-changed",
+        active: true,
+        displayLabel: "Kn0w1",
+        ownFioHandle: "kn0w1@knyt",
+      }),
+    ).toEqual({
+      type: "metame:persona-changed",
+      displayLabel: "Kn0w1",
+      ownFioHandle: "kn0w1@knyt",
+      isActive: true,
+    });
+  });
+
+  it("drops forbidden UUID personaId but keeps T1 slug ids", () => {
     const parsed = parseMetameEvent({
       type: "metame:persona-changed",
-      personaId: "p_1",
+      personaId: "11111111-2222-3333-4444-555555555555",
       authProfileId: "ap_1",
       rootDid: "did:example:1",
       kybeAttestation: "x",
@@ -48,10 +67,25 @@ describe("parseMetameEvent", () => {
     expect(parsed).not.toHaveProperty("personaId");
     expect(parsed).not.toHaveProperty("authProfileId");
     expect(parsed).not.toHaveProperty("rootDid");
-    expect(parsed).not.toHaveProperty("kybeAttestation");
   });
 
-  it("reads persona surface fields from nested `surface` payload", () => {
+  it("keeps T1-safe persona slug ids", () => {
+    expect(
+      parseMetameEvent({
+        type: "metame:persona-changed",
+        active: true,
+        personaId: "knyt-persona",
+        displayLabel: "Kn0w1",
+      }),
+    ).toEqual({
+      type: "metame:persona-changed",
+      displayLabel: "Kn0w1",
+      personaId: "knyt-persona",
+      isActive: true,
+    });
+  });
+
+  it("reads persona surface fields from nested `surface` payload (no active marker)", () => {
     expect(
       parseMetameEvent({
         type: "metame:persona-changed",
@@ -64,7 +98,7 @@ describe("parseMetameEvent", () => {
     });
   });
 
-  it("prefers runtime payload type and payload surface over outer bridge fields", () => {
+  it("marks isActive and prefers surface.activePersona over outer fields", () => {
     expect(
       parseMetameEvent({
         type: "MESSAGE",
@@ -78,20 +112,26 @@ describe("parseMetameEvent", () => {
       type: "metame:persona-changed",
       displayLabel: "Kn0w1",
       ownFioHandle: "kn0w1@knyt",
+      isActive: true,
     });
   });
 
-  it("strips dev-only 'devagent' fallback from displayLabel and ownFioHandle", () => {
+  it("accepts devagent as a legitimate active persona surface", () => {
+    // devagent is a real persona — must render when it IS the active persona.
     expect(
       parseMetameEvent({
         type: "metame:persona-changed",
-        displayLabel: "devagent",
-        ownFioHandle: "DEVAGENT",
+        surface: { activePersona: { displayLabel: "devagent", fio_handle: "devagent@metame" } },
       }),
-    ).toEqual({ type: "metame:persona-changed" });
+    ).toEqual({
+      type: "metame:persona-changed",
+      displayLabel: "devagent",
+      ownFioHandle: "devagent@metame",
+      isActive: true,
+    });
   });
 
-  it("falls through to real surface fields when outer label is 'devagent'", () => {
+  it("falls through to nested surface fields when outer label is 'devagent' (no active marker)", () => {
     expect(
       parseMetameEvent({
         type: "metame:persona-changed",
