@@ -131,6 +131,20 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
       return;
     }
 
+    // Drawer-only quick actions: pure UI overlays in the runtime. Send a single
+    // MENU_ACTION with no prompt, no AA roundtrip, no PROMPT_SUBMIT — the
+    // runtime drawer must not disturb chat/inference state.
+    if (DRAWER_ONLY_ACTION_IDS.has(action.id)) {
+      sendIframeAction(action.id);
+      resetIdleTimer("quickAction");
+      return;
+    }
+
+    if (action.id === "browse") {
+      setSubmenuType("browserSelector");
+      return;
+    }
+
     if (action.id === "browse") {
       setSubmenuType("browserSelector");
       return;
