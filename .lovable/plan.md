@@ -1,26 +1,46 @@
-Root cause: the shell only updates the Be/persona label when it receives a parsed `metame:persona-changed` / `aa-persona-change-v1` message. The live console has no `[Shell] metame event` entries, so the active persona event is either not arriving, arriving before the listener is mounted, or arriving in a shape the parser does not accept. Because there is no resync request on `RUNTIME_READY`, the shell can remain stuck on the runtime/dev fallback label (`devagent`).
+## Diagnosis
 
-Plan:
+One auth account (e.g. `dele@metame.com`) can own several personas. The shell is currently labelling the Be button from whichever persona surface arrives first or whichever surface the shell-auth context resolves to — that is often `devagent`, an account-level/default persona for the email, not the persona the user actually activated inside the runtime.
 
-1. Make persona sync listener always active
-   - Move persona protocol handling into a listener that does not depend on `config` being loaded.
-   - This prevents losing early active-persona broadcasts during iframe boot/sign-in hydration.
+Two real causes:
 
-2. Add an explicit runtime persona resync
-   - When the iframe sends `RUNTIME_READY` or auth/context readiness, post a small request such as `REQUEST_PERSONA_SURFACE` / `REQUEST_ACTIVE_PERSONA` to the runtime.
-   - The runtime can respond with the canonical `metame:persona-changed` payload containing `displayLabel` and `ownFioHandle`.
+1. The shell still treats any `displayLabel` / `ownFioHandle` on a persona-changed event as "the active persona", with no requirement that the event mark itself active. Account-level or default-persona payloads therefore overwrite the true active label.
+2. The recent change made `devagent` unrenderable even when it is the active persona, which is wrong — `devagent` is a real persona and must render when the user has it active.
 
-3. Harden parser + fallback behavior
-   - Accept the observed nested surface shapes already used by runtime payloads.
-   - Treat `devagent` as a developer/internal fallback label, not a browser-safe persona label.
-   - If no valid T1 display field exists, show literal `Be`, never `devagent`.
+## Plan
 
-4. Add regression coverage
-   - Test that `displayLabel: "Kn0w1"` beats any outer `devagent` field.
-   - Test that revoked/sign-out clears the label back to `Be`.
-   - Test that early/wrapped persona messages update `personaState.activeHandle`.
+1. Revert the global `devagent` filter
+   - Remove the `/^devagent$/i` skip in `src/lib/metame-protocol.ts` and its tests.
+   - `devagent` is a normal persona handle; the parser must not strip it.
 
-5. Validate in preview
-   - Confirm console shows the parsed persona event.
-   - Confirm Be label renders `Kn0w1` when that persona is active.
-   - Confirm sign-out/persona revoke returns the nav label to `Be`.
+2. Only accept persona surfaces that are marked active
+   - In `parseMetameEvent`, prefer surface paths that explicitly identify the active persona: `surface.activePersona.{displayLabel,fio_handle,ownFioHandle}`, then `payload.activePersona.*`, then top-level only when the event carries `active: true` or `isActive: true`.
+   - Account-level / candidate personas (no active marker) are ignored for label purposes.
+
+3. Always carry persona id alongside the label
+   - Extend `MetamePersonaChanged` to optionally include `personaId` (T1-safe id only, e.g. `knyt-persona`, `qripto-persona`, `metame-persona`, custom slug).
+   - In `ShellContext`, key `personaState.activeHandle` on `{ personaId, handle }`. Only overwrite when the incoming event matches the active persona id, or when the event explicitly transitions the active persona.
+
+4. Clear stale labels on persona transitions
+   - On persona-changed with no resolvable active surface, do NOT keep the previous handle. Reset `activeHandle` to undefined so SmartMenu falls back to literal `Be`.
+   - On `metame:persona-revoked` and on auth sign-out/sign-in transitions, reset `activeHandle` and re-request active persona from the runtime.
+
+5. Bind label to runtime, not shell-auth
+   - Keep the rule that the shell does NOT fetch `/api/wallet/active-persona` (shell auth differs from user auth).
+   - On `RUNTIME_READY` and on detected auth changes inside the iframe, post `REQUEST_ACTIVE_PERSONA` and only adopt the response when it is an active-marked surface.
+
+6. Regression tests
+   - `devagent` renders when it arrives as `surface.activePersona.displayLabel`.
+   - An account-level event with `displayLabel: "devagent"` and no active marker is ignored while `Kn0w1` is the confirmed active persona.
+   - Logging in as a different user clears the previous active handle and adopts the new one.
+   - Multiple personas under one email: switching active persona inside the runtime updates Be to the new persona’s handle and never reverts to a sibling persona's label.
+
+7. Validate
+   - Run focused metame-protocol + persona-flow tests.
+   - In preview, sign in as `dele@metame.com`, switch among personas, confirm Be reflects only the active persona, including when active is `devagent`.
+
+## Technical Notes
+
+- Files touched: `src/lib/metame-protocol.ts`, `src/contexts/ShellContext.tsx`, `src/test/metame-protocol.test.ts`, possibly `src/lib/smart-menu-config.ts` (PersonaState shape).
+- Contract reminder: only T1 surface fields (`displayLabel`, `ownFioHandle`, persona slug id) cross the boundary — never `authProfileId`, `rootDid`, or internal `personaId` UUIDs.
+- Active-marker keys accepted (any of): `active: true`, `isActive: true`, presence under `surface.activePersona` / `payload.activePersona`.
