@@ -754,9 +754,11 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       switch (event.type) {
         case "metame:persona-changed": {
           // Pattern A: render directly from inline T1 surface fields.
-          const inlineHandle = event.ownFioHandle ?? event.displayLabel;
+          // Label precedence per platform contract: displayLabel (user-chosen pet
+          // name) first, fall back to ownFioHandle. NEVER display personaId.
+          const inlineHandle = event.displayLabel ?? event.ownFioHandle;
           // Infer persona id from handle/label so the Be icon accent + active pill update.
-          const inferredId = inferPersonaIdFromSurface(inlineHandle);
+          const inferredId = inferPersonaIdFromSurface(event.ownFioHandle ?? event.displayLabel);
           setPersonaState(prev => {
             const nextHandle = inlineHandle ?? prev.activeHandle;
             const nextActiveId = inferredId ?? prev.activePersonaId;
