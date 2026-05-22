@@ -780,16 +780,34 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
       switch (event.type) {
         case "metame:persona-changed": {
-          // Pattern A: render directly from inline T1 surface fields.
-          // displayLabel (user-chosen pet name) wins over ownFioHandle.
-          // NEVER display personaId or any dev-only fallback like "devagent".
+          // Only accept events that explicitly identify the active persona.
+          // One auth profile can own multiple personas (e.g. dele@metame.com
+          // owns devagent + Kn0w1 + ...); account-level or candidate-persona
+          // broadcasts arrive without an active marker and must NOT overwrite
+          // the current Be label.
+          if (!event.isActive) {
+            console.log("[Shell] persona-changed ignored (no active marker)", event);
+            return;
+          }
           const inlineHandle = event.displayLabel ?? event.ownFioHandle;
-          const inferredId = inferPersonaIdFromSurface(event.ownFioHandle ?? event.displayLabel);
+          if (!inlineHandle) {
+            // Active transition with no resolvable surface — clear stale label
+            // so SmartMenu falls back to literal "Be" instead of leaking a
+            // previous persona's name.
+            setPersonaState(prev => {
+              if (prev.activeHandle === undefined) return prev;
+              const next: PersonaState = { ...prev };
+              delete next.activeHandle;
+              return next;
+            });
+            return;
+          }
+          const inferredId = event.personaId
+            ?? inferPersonaIdFromSurface(event.ownFioHandle ?? event.displayLabel);
           setPersonaState(prev => {
-            const nextHandle = inlineHandle ?? prev.activeHandle;
             const nextActiveId = inferredId ?? prev.activePersonaId;
-            if (prev.activeHandle === nextHandle && prev.activePersonaId === nextActiveId) return prev;
-            return { ...prev, activeHandle: nextHandle, activePersonaId: nextActiveId };
+            if (prev.activeHandle === inlineHandle && prev.activePersonaId === nextActiveId) return prev;
+            return { ...prev, activeHandle: inlineHandle, activePersonaId: nextActiveId };
           });
           return;
         }
