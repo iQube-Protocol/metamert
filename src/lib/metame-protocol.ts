@@ -117,7 +117,13 @@ export function parseMetameEvent(raw: unknown): MetameEvent | null {
     const stringFrom = (source: Record<string, unknown>, keys: string[]): string => {
       for (const key of keys) {
         const value = source[key];
-        if (typeof value === "string" && value.trim()) return value.trim();
+        if (typeof value !== "string") continue;
+        const trimmed = value.trim();
+        if (!trimmed) continue;
+        // Dev-only/internal fallback labels are never browser-safe to display.
+        // The shell falls back to literal "Be" instead of leaking these.
+        if (/^devagent$/i.test(trimmed)) continue;
+        return trimmed;
       }
       return "";
     };
