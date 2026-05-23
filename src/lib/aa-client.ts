@@ -116,12 +116,20 @@ async function aaProxy<T = unknown>(
   action: string,
   body?: Record<string, unknown>,
 ): Promise<T> {
+  let personaId: string | null = null;
+  try {
+    personaId = typeof localStorage !== "undefined"
+      ? localStorage.getItem("currentPersonaId")
+      : null;
+  } catch { /* ignore */ }
+
   const { data, error } = await supabase.functions.invoke("aa-proxy", {
     body: {
       action,
       body,
       token: cachedToken,
       env: resolveEnv(),
+      persona_id: personaId,
     },
   });
 
