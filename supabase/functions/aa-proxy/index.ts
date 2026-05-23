@@ -293,7 +293,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, body: reqBody, token, env: envRaw } = await req.json();
+    const { action, body: reqBody, token, env: envRaw, persona_id: personaId } = await req.json();
     const env = resolveEnv(envRaw);
     const envIframeUrl = buildIframeUrl(env);
     const envIframeOrigin = BASES_BY_ENV[env].iframeOrigin;
@@ -302,6 +302,9 @@ serve(async (req) => {
     };
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
+    }
+    if (personaId && typeof personaId === "string") {
+      headers["x-persona-id"] = personaId;
     }
 
     // Build env-aware default shell config (overrides hardcoded dev iframe URL)

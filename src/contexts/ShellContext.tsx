@@ -552,6 +552,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setPersonaState(prev => ({ ...prev, activePersonaId: personaId }));
+    try { localStorage.setItem("currentPersonaId", personaId); } catch { /* SSR / privacy mode */ }
 
     sendRuntimeMessage("OPEN_PERSONA_IQUBE", { iqube_type: iqubeType });
 
