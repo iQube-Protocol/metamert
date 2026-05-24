@@ -3459,6 +3459,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          default_persona_id: string | null
           display_name: string | null
           email: string
           email_verified: boolean
@@ -3474,6 +3475,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          default_persona_id?: string | null
           display_name?: string | null
           email: string
           email_verified?: boolean
@@ -3489,6 +3491,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          default_persona_id?: string | null
           display_name?: string | null
           email?: string
           email_verified?: boolean
@@ -3501,7 +3504,15 @@ export type Database = {
           root_did_proxy_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "crm_auth_profiles_default_persona_id_fkey"
+            columns: ["default_persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_category_defaults: {
         Row: {
