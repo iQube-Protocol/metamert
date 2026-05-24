@@ -316,10 +316,14 @@ function NavButton({
     if (e.pointerType === "touch") {
       onPointerTap(item.id, "touch");
     } else {
-      onAction(item.id);
+      // Earn is drawer-only — never dispatch the AA-API menu-action / LLM prompt.
+      if (item.id !== "earn") {
+        onAction(item.id);
+      }
       onPointerTap(item.id, e.pointerType);
     }
   };
+
 
   return (
     <div className="relative flex flex-col items-center">
