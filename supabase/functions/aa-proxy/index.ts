@@ -200,6 +200,20 @@ function normalizeShellConfig(raw: any): any {
   if (raw.selectors?.llm?.current?.id)
     raw.selectors.llm.current = raw.selectors.llm.current.id;
 
+  // 1b. Alias aigent-z → aigent-me (label "aigentMe") per trinity rename.
+  // Upstream still emits the legacy id/label; shell must render the new identity.
+  if (raw.selectors?.aigent) {
+    const ag = raw.selectors.aigent;
+    for (const opt of ag.options ?? []) {
+      if (opt.id === "aigent-z") {
+        opt.id = "aigent-me";
+        opt.label = "aigentMe";
+        opt.tooltip = "Your personal aigentMe — draws from your metaMe cartridge";
+      }
+    }
+    if (ag.current === "aigent-z") ag.current = "aigent-me";
+  }
+
   // 2. Rename provider_id -> provider in LLM options
   for (const opt of raw.selectors?.llm?.options ?? [])
     if (opt.provider_id && !opt.provider) { opt.provider = opt.provider_id; }
