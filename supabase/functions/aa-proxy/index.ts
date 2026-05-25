@@ -90,17 +90,19 @@ function resolveProvider(llmId?: string): string {
 
 const DEFAULT_SHELL_CONFIG = {
   trust: {
-    level: "unverified",
-    signals: ["Phase-1 dev mode"],
-    scores: { trust: 3, reliability: 4 },
+    level: "warning",
+    signals: ["Trust 7.2/10", "Reliability 7.0/10"],
+    scores: { trust: 7.2, reliability: 7.0 },
   },
   selectors: {
     aigent: {
-      current: "aigent-z",
+      current: "aigent-me",
       options: [
-        { id: "aigent-z", label: "Aigent Z", icon: "bot", color: "#3b82f6", tooltip: "Primary orchestration agent" },
-        { id: "aigent-q", label: "Aigent Q", icon: "bot", color: "#a855f7", tooltip: "Query agent" },
-        { id: "aigent-m", label: "Aigent M", icon: "bot", color: "#22c55e", tooltip: "Media agent" },
+        { id: "aigent-me", label: "aigentMe", icon: "user", color: "#3b82f6", tooltip: "Your personal aigentMe — draws from your metaMe cartridge" },
+        { id: "aigent-kn0w1", label: "Kn0w1", icon: "brain", color: "#a855f7", tooltip: "Knowledge agent" },
+        { id: "aigent-moneypenny", label: "MoneyPenny", icon: "coins", color: "#22c55e", tooltip: "Payments & treasury agent" },
+        { id: "aigent-nakamoto", label: "Nakamoto", icon: "shield", color: "#f59e0b", tooltip: "Crypto / chain agent" },
+        { id: "aigent-marketa", label: "Marketa", icon: "store", color: "#ec4899", tooltip: "Market & growth agent" },
       ],
     },
     llm: {
