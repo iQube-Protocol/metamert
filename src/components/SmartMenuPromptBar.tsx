@@ -103,12 +103,6 @@ export default function SmartMenuPromptBar() {
     promptInputFocused = true;
     pauseIdleTimer();
     setInteractionState("focused");
-    const scrollToInput = () => {
-      inputRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
-    };
-    requestAnimationFrame(scrollToInput);
-    setTimeout(scrollToInput, 300);
-    setTimeout(scrollToInput, 600);
   };
 
   const handleBlur = () => {
