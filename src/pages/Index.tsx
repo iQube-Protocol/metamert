@@ -60,15 +60,17 @@ function ShellLayout() {
     <BrowserProvider iframeRef={iframeRef} config={config}>
       <div className="relative flex h-dvh flex-col" style={{ backgroundColor: 'var(--mm-canvas-base)' }}>
         {showHeader && <RuntimeHeader />}
-        <div className="relative flex-1 overflow-hidden" style={{ paddingBottom: '4.25rem' }}>
+        <div className="relative flex-1 overflow-hidden">
           {menuActive && (
             <div
               className="absolute inset-0 z-40"
               onClick={deactivateMode}
             />
           )}
-          <RuntimeFrame key={resetKey} />
-          <BrowserSurfaceHost />
+          <div className="relative h-[calc(100%-4.25rem)] overflow-hidden">
+            <RuntimeFrame key={resetKey} />
+            <BrowserSurfaceHost />
+          </div>
           <div className="absolute inset-x-0 bottom-0 z-50 pointer-events-auto">
             <SmartMenu />
           </div>
