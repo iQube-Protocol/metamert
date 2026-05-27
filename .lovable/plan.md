@@ -1,57 +1,35 @@
-# Update aa-proxy fallback to match aigentMe trinity
+## Goal
 
-Railway upstream is back up; while it was down, the shell exposed a stale `Aigent Z / Q / M` list with red trust scores. The platform has renamed the user-facing agent to **aigentMe** (canonical id `aigent-me`, with `aigent-z` / `aigent-c` as aliases) and added Kn0w1, MoneyPenny, Nakamoto, Marketa. We need the fallback in `supabase/functions/aa-proxy/index.ts` to mirror the real upstream list so a future outage degrades gracefully instead of showing the old labels in alarming red.
+Stop runtime fallbacks from clobbering the live `shell_config` when an upstream AA endpoint (other than `shell-config` itself) is unavailable. Today, tapping "Be" (or any menu item) when `/aa/v1/runtime/menu-action` is down causes `aa-proxy` to return its hard-coded fallback `shell_config`, which the Shell merges in — overwriting the good agent list, trust pills, and cartridges with stale fallback values.
 
-## Changes
+## Changes — `supabase/functions/aa-proxy/index.ts`
 
-### 1. `supabase/functions/aa-proxy/index.ts` — `DEFAULT_SHELL_CONFIG`
+### 1. `menu-action` fallback
+- Remove the `shell_config` block from the fallback response.
+- Keep `menu_event` and `iframe_event` so the tap still feels responsive (intent routed, iframe nudged), but the Shell's existing config stays intact.
 
-**Replace the agent selector** options + default:
+### 2. `prompt-action` fallback
+- Same treatment: drop `shell_config` from the fallback; keep `iframe_event` only.
 
-```ts
-selectors: {
-  aigent: {
-    current: "aigent-me",
-    options: [
-      { id: "aigent-me",        label: "aigentMe",   icon: "user",   color: "#3b82f6", tooltip: "Your personal aigentMe — draws from your metaMe cartridge" },
-      { id: "aigent-kn0w1",     label: "Kn0w1",      icon: "brain",  color: "#a855f7", tooltip: "Knowledge agent" },
-      { id: "aigent-moneypenny",label: "MoneyPenny", icon: "coins",  color: "#22c55e", tooltip: "Payments & treasury agent" },
-      { id: "aigent-nakamoto",  label: "Nakamoto",   icon: "shield", color: "#f59e0b", tooltip: "Crypto / chain agent" },
-      { id: "aigent-marketa",   label: "Marketa",    icon: "store",  color: "#ec4899", tooltip: "Market & growth agent" },
-    ],
-  },
-  llm: { /* unchanged */ },
-},
-```
+### 3. `selectors` fallback
+- Drop `shell_config` from the fallback. A failed selector change should leave the current config untouched rather than silently rewriting agents/LLM lists. The client will surface the error via the existing error path.
 
-**Replace the trust block** with healthier defaults so the fallback no longer renders red:
+### 4. Leave `shell-config` alone
+- `shell-config` is the *only* action that legitimately produces a full config. Its existing `DEFAULT_SHELL_CONFIG` fallback (with the aigentMe roster + warning trust) stays as-is — that's the correct degraded experience on cold start when upstream is fully down.
 
-```ts
-trust: {
-  level: "warning",
-  signals: [
-    { key: "trust",       label: "Trust 7.2/10",       state: "warn" },
-    { key: "reliability", label: "Reliability 7.0/10", state: "warn" },
-  ],
-  scores: { trust: 7.2, reliability: 7.0 },
-},
-```
+## Non-goals
 
-(Note: existing `trust.signals` were `string[]`; the new shape uses objects with `key/label/state`. The `normalizeShellConfig` step already coerces signal objects to strings for downstream consumers — leave that normalisation intact; it only runs on upstream payloads, not on the fallback we return directly. If the shell's `ShellConfig` type strictly requires `string[]`, fall back to `["Trust 7.2/10", "Reliability 7.0/10"]` instead.)
-
-### 2. No other files
-
-- `aigent-z` → `aigent-me` aliasing is handled server-side. Persisted user selection logic stays as-is.
-- Chat body (`aigentId`, `personaId`) is unchanged — `personaId` is already forwarded via the `x-persona-id` work from the previous loop.
-- Provider score table, persona persistence, header tinting — untouched.
+- No client-side changes. `menuAction()` / `promptAction()` / `updateSelector()` already treat `shell_config` as optional; omitting it is a no-op for callers.
+- No change to the `aigent-z → aigent-me` alias mapping in `normalizeShellConfig`.
+- No change to upstream contract; this only hardens the proxy's local fallbacks.
 
 ## Verification
 
-1. Force the fallback path (temporarily point `RAILWAY` to a bad host, or just read the response shape) and confirm the shell renders **aigentMe** in slot 1 with amber/warn trust pills, not red.
-2. Revert the probe, hit the real upstream, and confirm normalised upstream values still pass through unchanged (the change only touches `DEFAULT_SHELL_CONFIG`, not the upstream branch).
-3. Run `src/test/persona-flow.test.ts` to make sure the canonical id map and persona-pill behaviour are unaffected.
+1. With Railway up, tap Be/Earn/Play/Make/Share — header agent dropdown, trust pills, and cartridge state should remain stable (no flicker to fallback values).
+2. Temporarily break the `menu-action` upstream path — taps should still feel responsive, and the Shell must keep the live config from the prior `shell-config` hydration (no red trust, no stale "Aigent Z" labels).
+3. Cold-load with upstream fully down — `shell-config` fallback still kicks in and renders aigentMe + amber trust (unchanged behavior).
+4. `src/test/persona-flow.test.ts` should still pass — no client paths touched.
 
-## Risks
+## Risk
 
-- If the shell's `ShellConfig` TypeScript type narrows `trust.signals` to `string[]`, the object-form signals will fail to typecheck on the fallback path. Mitigation: use the `string[]` form shown above as a fallback.
-- The new agent ids (`aigent-kn0w1`, etc.) must match what the runtime iframe expects in `SELECTOR_CHANGE` envelopes — confirmed against the handoff note, but worth a quick smoke test after deploy.
+Low. We're narrowing fallback payloads, not widening them. Worst case: a future client somewhere actually depended on the fallback `shell_config` from `menu-action` — none exist today (`menuAction` callers only read `menu_event`/`iframe_event`).
