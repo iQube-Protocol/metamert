@@ -446,23 +446,10 @@ serve(async (req) => {
       } catch {
         // upstream unavailable
       }
-      console.log("[aa-proxy] selectors upstream unavailable, returning fallback");
-      // Return provider-specific scores from canonical map
-      const providerId = reqBody?.provider_id ?? resolveProvider(reqBody?.id);
-      const scores = computeScores(providerId);
-      const fallback = {
-        ok: true,
-        shell_config: {
-          ...defaultShellConfigForEnv,
-          trust: {
-            ...defaultShellConfigForEnv.trust,
-            level: "verified",
-            signals: [`Trust ${scores.trust}/10`, `Reliability ${scores.reliability}/10`],
-            scores,
-          },
-        },
-      };
-      return new Response(JSON.stringify(fallback), {
+      console.log("[aa-proxy] selectors upstream unavailable, returning fallback (no shell_config)");
+      // Do NOT include shell_config — that would overwrite the live config the
+      // shell already has from the last successful shell-config hydration.
+      return new Response(JSON.stringify({ ok: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
