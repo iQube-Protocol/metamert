@@ -471,12 +471,13 @@ serve(async (req) => {
       } catch {
         // upstream unavailable
       }
-      console.log("[aa-proxy] menu-action upstream unavailable, returning fallback");
+      console.log("[aa-proxy] menu-action upstream unavailable, returning fallback (no shell_config)");
       const itemId = reqBody?.item_id ?? "unknown";
+      // Do NOT include shell_config — that would overwrite the live config the
+      // shell already has from the last successful shell-config hydration.
       return new Response(JSON.stringify({
         menu_event: { action_id: itemId, intent: itemId, prompt: `Launching ${itemId}…` },
         iframe_event: { type: "MENU_ACTION", item_id: itemId, intent: itemId },
-        shell_config: defaultShellConfigForEnv,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
