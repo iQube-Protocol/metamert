@@ -69,11 +69,13 @@ function ShellLayout() {
           )}
           <RuntimeFrame key={resetKey} />
           <BrowserSurfaceHost />
+          <div className="absolute inset-x-0 bottom-0 z-50 pointer-events-auto">
+            <SmartMenu />
+          </div>
         </div>
         <BrowserSessionPanel />
         <BrowserHistoryDrawer />
         <BrowserMinimizedPill />
-        <SmartMenu />
       </div>
     </BrowserProvider>
   );
