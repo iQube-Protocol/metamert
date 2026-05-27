@@ -127,6 +127,57 @@ export type Database = {
           },
         ]
       }
+      admin_access_requests: {
+        Row: {
+          auth_profile_id: string | null
+          decided_at: string | null
+          decided_by_persona_id: string | null
+          decision_reason: string | null
+          granted_role_id: string | null
+          id: string
+          message: string | null
+          persona_id: string
+          requested_at: string
+          requested_cartridge_slug: string | null
+          requester_display_label: string | null
+          requester_email: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          auth_profile_id?: string | null
+          decided_at?: string | null
+          decided_by_persona_id?: string | null
+          decision_reason?: string | null
+          granted_role_id?: string | null
+          id?: string
+          message?: string | null
+          persona_id: string
+          requested_at?: string
+          requested_cartridge_slug?: string | null
+          requester_display_label?: string | null
+          requester_email?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          auth_profile_id?: string | null
+          decided_at?: string | null
+          decided_by_persona_id?: string | null
+          decision_reason?: string | null
+          granted_role_id?: string | null
+          id?: string
+          message?: string | null
+          persona_id?: string
+          requested_at?: string
+          requested_cartridge_slug?: string | null
+          requester_display_label?: string | null
+          requester_email?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       agent_environment: {
         Row: {
           activated_at: string | null
@@ -1912,6 +1963,7 @@ export type Database = {
       community_generated_content: {
         Row: {
           article_body: string | null
+          cartridge: string
           created_at: string
           creator_persona_id: string
           generation_index: number
@@ -1934,6 +1986,7 @@ export type Database = {
         }
         Insert: {
           article_body?: string | null
+          cartridge?: string
           created_at?: string
           creator_persona_id: string
           generation_index?: number
@@ -1956,6 +2009,7 @@ export type Database = {
         }
         Update: {
           article_body?: string | null
+          cartridge?: string
           created_at?: string
           creator_persona_id?: string
           generation_index?: number
@@ -11607,6 +11661,65 @@ export type Database = {
         }
         Relationships: []
       }
+      persona_iqube_holdings: {
+        Row: {
+          acquired_at: string
+          asset_class: string
+          capacity_unit_label: string | null
+          capacity_units: number | null
+          id: string
+          instance_anchor: string | null
+          metadata: Json
+          persona_id: string
+          registry_asset_id: string
+          revoked_at: string | null
+          source: string
+          status: string
+          trust_band: string | null
+          updated_at: string
+        }
+        Insert: {
+          acquired_at?: string
+          asset_class: string
+          capacity_unit_label?: string | null
+          capacity_units?: number | null
+          id?: string
+          instance_anchor?: string | null
+          metadata?: Json
+          persona_id: string
+          registry_asset_id: string
+          revoked_at?: string | null
+          source?: string
+          status?: string
+          trust_band?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acquired_at?: string
+          asset_class?: string
+          capacity_unit_label?: string | null
+          capacity_units?: number | null
+          id?: string
+          instance_anchor?: string | null
+          metadata?: Json
+          persona_id?: string
+          registry_asset_id?: string
+          revoked_at?: string | null
+          source?: string
+          status?: string
+          trust_band?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_iqube_holdings_registry_asset_id_fkey"
+            columns: ["registry_asset_id"]
+            isOneToOne: false
+            referencedRelation: "registry_assets"
+            referencedColumns: ["asset_id"]
+          },
+        ]
+      }
       persona_legacy_20260125: {
         Row: {
           app_origin: string | null
@@ -12323,6 +12436,104 @@ export type Database = {
           receipt_id?: string | null
           reward_grant_id?: string | null
           skill_id?: string | null
+        }
+        Relationships: []
+      }
+      qripto_publication_state_log: {
+        Row: {
+          actor_persona: string
+          autodrive_cid: string | null
+          created_at: string
+          from_state:
+            | Database["public"]["Enums"]["knyt_publication_state"]
+            | null
+          id: string
+          publication_id: string
+          reason: string | null
+          to_state: Database["public"]["Enums"]["knyt_publication_state"]
+        }
+        Insert: {
+          actor_persona: string
+          autodrive_cid?: string | null
+          created_at?: string
+          from_state?:
+            | Database["public"]["Enums"]["knyt_publication_state"]
+            | null
+          id?: string
+          publication_id: string
+          reason?: string | null
+          to_state: Database["public"]["Enums"]["knyt_publication_state"]
+        }
+        Update: {
+          actor_persona?: string
+          autodrive_cid?: string | null
+          created_at?: string
+          from_state?:
+            | Database["public"]["Enums"]["knyt_publication_state"]
+            | null
+          id?: string
+          publication_id?: string
+          reason?: string | null
+          to_state?: Database["public"]["Enums"]["knyt_publication_state"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qripto_publication_state_log_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "qripto_publication_states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qripto_publication_states: {
+        Row: {
+          autodrive_cid: string | null
+          autodrive_tx: string | null
+          branch: Database["public"]["Enums"]["knyt_canon_branch"]
+          created_at: string
+          elevated_at: string | null
+          elevated_by: string | null
+          id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          state: Database["public"]["Enums"]["knyt_publication_state"]
+          subject_id: string
+          subject_type: string
+          updated_at: string
+        }
+        Insert: {
+          autodrive_cid?: string | null
+          autodrive_tx?: string | null
+          branch?: Database["public"]["Enums"]["knyt_canon_branch"]
+          created_at?: string
+          elevated_at?: string | null
+          elevated_by?: string | null
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: Database["public"]["Enums"]["knyt_publication_state"]
+          subject_id: string
+          subject_type: string
+          updated_at?: string
+        }
+        Update: {
+          autodrive_cid?: string | null
+          autodrive_tx?: string | null
+          branch?: Database["public"]["Enums"]["knyt_canon_branch"]
+          created_at?: string
+          elevated_at?: string | null
+          elevated_by?: string | null
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: Database["public"]["Enums"]["knyt_publication_state"]
+          subject_id?: string
+          subject_type?: string
+          updated_at?: string
         }
         Relationships: []
       }
