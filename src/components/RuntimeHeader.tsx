@@ -357,25 +357,21 @@ export default function RuntimeHeader() {
           <Tooltip>
             <TooltipTrigger asChild>
               <div
-                className={`relative flex items-center gap-2 sm:gap-4 px-2 py-1.5 sm:px-3 sm:py-2 text-[11px] cursor-default transition-all duration-300 ${trustFlash ? "ring-1 ring-mm-accent-runtime/40 scale-105" : ""}`}
-                style={{
-                  borderRadius: 'var(--mm-radius-xs)',
-                  color: 'var(--mm-ink-muted)',
-                }}
+                className="relative flex items-center gap-2 px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] cursor-default"
+                style={{ color: 'var(--mm-ink-muted)' }}
               >
-                {/* Background layer behind content so dots stay vivid */}
-                <div className="absolute inset-0 bg-mm-canvas-variant/40" style={{ borderRadius: 'inherit' }} />
                 <div className="relative flex items-center gap-0.5">
-                  <span className="font-medium mr-1" style={{ color: 'var(--mm-ink-secondary)' }}>R</span>
+                  <span className="font-medium mr-1 text-[10px]" style={{ color: 'var(--mm-ink-secondary)' }}>R</span>
                   {renderDots(rScore, rColor, dotTotal)}
                   {reliabilityDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${reliabilityDir === "up" ? "text-mm-accent-earn" : "text-mm-accent-alert"}`}>{reliabilityDir === "up" ? "▲" : "▼"}</span>}
                 </div>
                 <div className="relative flex items-center gap-0.5">
-                  <span className="font-medium mr-1" style={{ color: 'var(--mm-ink-secondary)' }}>T</span>
+                  <span className="font-medium mr-1 text-[10px]" style={{ color: 'var(--mm-ink-secondary)' }}>T</span>
                   {renderDots(tScore, tColor, dotTotal)}
                   {trustDir && <span className={`ml-0.5 text-[10px] transition-opacity duration-300 ${trustDir === "up" ? "text-mm-accent-earn" : "text-mm-accent-alert"}`}>{trustDir === "up" ? "▲" : "▼"}</span>}
                 </div>
               </div>
+
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <p className="text-xs">{(trust.signals ?? []).join(" · ") || trust.level}</p>
