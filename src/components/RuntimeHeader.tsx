@@ -136,18 +136,19 @@ export default function RuntimeHeader() {
   const tColor = trustDotColor(trustScores.trust);
 
   const renderDots = (filled: number, activeColor: string, total: number = 5) =>
-    [...Array(total)].map((_, i) => (
-      <span
-        key={i}
-        className={`inline-block h-2 w-2 rounded-full ${
-          inferring ? "animate-pulse duration-700" : "transition-all duration-300"
-        } ${i < filled ? activeColor : "bg-mm-ink-faint/30"}`}
-        style={{
-          ...(inferring ? { animationDelay: `${i * 150}ms` } : {}),
-          ...(i < filled ? { opacity: 1, filter: 'saturate(2) brightness(1.1)' } : {}),
-        }}
-      />
-    ));
+    [...Array(total)].map((_, i) => {
+      const lit = i < filled;
+      const colorClass = lit ? activeColor : "bg-slate-600";
+      return (
+        <span
+          key={i}
+          className={`inline-block h-1.5 w-1.5 rounded-full ${colorClass} ${
+            inferring ? "animate-pulse" : "transition-all duration-300"
+          }`}
+          style={inferring ? { animationDelay: `${i * 0.15}s` } : undefined}
+        />
+      );
+    });
 
   const activeAigent = config.selectors.aigent.options.find(o => o.id === config.selectors.aigent.current);
   const activeLLM = config.selectors.llm.options.find(o => o.id === config.selectors.llm.current);
