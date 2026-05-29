@@ -106,11 +106,9 @@ export default function RuntimeHeader() {
     const prev = prevScoresRef.current;
     if (prev.trust !== trustScores.trust || prev.reliability !== trustScores.reliability) {
       if (prev.trust !== undefined || prev.reliability !== undefined) {
-        setTrustFlash(true);
         setTrustDir(scoreDirection(prev.trust, trustScores.trust));
         setReliabilityDir(scoreDirection(prev.reliability, trustScores.reliability));
         const timer = setTimeout(() => {
-          setTrustFlash(false);
           setTrustDir(null);
           setReliabilityDir(null);
         }, 3000);
