@@ -213,7 +213,7 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
   return (
     <div
       className="glass-float relative shadow-mm-low animate-in fade-in slide-in-from-bottom-2"
-      style={{ animationDuration: '350ms', borderRadius: 'var(--mm-radius-sm)' }}
+      style={{ animationDuration: '350ms' }}
       onPointerEnter={pauseIdleTimer}
     >
       <div
@@ -235,24 +235,10 @@ function QuickActionsCarousel({ overrideMode }: { overrideMode?: SmartMenuMode }
           );
         })}
       </div>
-      {/* Edge fade indicators — parchment tinted */}
-      <div
-        className="pointer-events-none absolute inset-y-0 left-0 w-4"
-        style={{
-          background: 'linear-gradient(to right, var(--mm-surface-1), transparent)',
-          borderRadius: 'var(--mm-radius-sm) 0 0 var(--mm-radius-sm)',
-        }}
-      />
-      <div
-        className="pointer-events-none absolute inset-y-0 right-0 w-4"
-        style={{
-          background: 'linear-gradient(to left, var(--mm-surface-1), transparent)',
-          borderRadius: '0 var(--mm-radius-sm) var(--mm-radius-sm) 0',
-        }}
-      />
     </div>
   );
 }
+
 
 // ---------------------------------------------------------------------------
 // Quick Action Button (grey passive, mode-accent on hover/active)
