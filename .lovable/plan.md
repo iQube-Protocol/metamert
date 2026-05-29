@@ -1,36 +1,56 @@
-## Problem
+# Update R/T Scoring Dots — Animation & Colour Spec
 
-The previous fix made `SmartMenu` `absolute` inside the runtime container so its submenu overlays the iframe. Side effect: the iframe now stretches to the full container height (the nav bar no longer reserves any layout space), so `RuntimeFrame` is taller than before and its content has shifted/sized differently than the original.
+Align the header's Reliability/Trust dot strips in `src/components/RuntimeHeader.tsx` with the canonical metaMe spec.
 
-## Fix — `src/pages/Index.tsx`
+## Changes (single file: `src/components/RuntimeHeader.tsx`)
 
-Reserve the nav bar's vertical space at the bottom of the runtime container so the iframe occupies the same region it did before, while the absolutely-positioned `SmartMenu` still floats above for its expanded submenu/prompt states.
+### 1. Dot count math
+- Desktop: keep `Math.ceil(value/2)` out of 5 dots (already matches spec).
+- Mobile (`useIsMobile`): retain 3-dot strip per existing product decision; apply same animation/colour rules.
 
-Change the runtime container wrapper to add bottom padding equal to the nav bar height (`4.25rem`, matching `SmartMenu`'s `<nav>` height):
+### 2. Colour ramps (lit dots only)
+Replace current `trustDotColor` / `reliabilityDotColor` with spec bands:
 
+- Reliability:
+  - `≤ 3` → `bg-red-500`
+  - `3.01–6` → `bg-yellow-500`
+  - `> 6` → `bg-purple-500`
+- Trust:
+  - `≤ 3` → `bg-red-500`
+  - `3.01–6` → `bg-yellow-500`
+  - `> 6` → `bg-green-500`
+
+Unlit dots: `bg-slate-600` (replacing `bg-mm-ink-faint/30`).
+
+### 3. Dot geometry
+- Each dot: `h-1.5 w-1.5 rounded-full` (down from `h-2 w-2`).
+- Strip wrapper: `flex items-center gap-0.5`.
+- Label `R` / `T`: `text-[10px]`, separated from strip by `gap-2` on the parent.
+
+### 4. Busy-pulse animation
+Define `isBusy` from existing `inferring` flag (chat round-trip in flight). TTS state is not currently tracked in the shell, so `isBusy = inferring` for now; leave a TODO if a TTS hook is later wired in.
+
+When `isBusy`:
 ```tsx
-<div className="relative flex-1 overflow-hidden" style={{ paddingBottom: '4.25rem' }}>
-  {menuActive && <div className="absolute inset-0 z-40" onClick={deactivateMode} />}
-  <RuntimeFrame key={resetKey} />
-  <BrowserSurfaceHost />
-  <div className="absolute inset-x-0 bottom-0 z-50 pointer-events-auto">
-    <SmartMenu />
-  </div>
-</div>
+className={`h-1.5 w-1.5 rounded-full ${colorClass} animate-pulse`}
+style={{ animationDelay: `${i * 0.15}s` }}
+```
+When idle:
+```tsx
+className={`h-1.5 w-1.5 rounded-full ${colorClass} transition-all duration-300`}
 ```
 
-Notes:
-- `RuntimeFrame` and `BrowserSurfaceHost` render inside the padded region → identical sizing to the pre-overlay layout.
-- `SmartMenu` stays `absolute bottom-0`, so its collapsed nav bar (4.25rem) sits exactly where the reserved padding ends, and its expanded submenu/prompt-bar grows upward as an overlay over the iframe — no layout shift.
-- `BrowserSurfaceHost` uses `absolute inset-0` and will fill the padded region, which is consistent with previous behavior (it already sat above the menu via `z-50` in its own component, and the nav remained visible underneath only when collapsed).
+Apply to both lit and unlit dots so the whole strip ripples.
 
-## Non-goals
+### 5. Placement
+Keep current right-side header placement, R before T. Remove the saturation/brightness filter and the `ring`/`scale-105` flash wrapper added previously — spec says passive glance indicator with no extra emphasis. Keep direction arrows (▲▼) as they were already part of the shell — they're additive and don't conflict.
 
-- No changes to `SmartMenu` internals, `RuntimeFrame`, `BrowserSurfaceHost`, or the proxy fallback work from earlier turns.
-- No change to focus-mode logic (`runtimeHints.focusMode` still hides the header).
+### 6. Cleanup
+- Drop unused `trustFlash` state and 3s timer (replaced by pulse driven by `inferring`).
+- Keep `trustDir` / `reliabilityDir` arrows intact.
+- Keep mobile 3-dot scaling helper (`scoreToDots3`) but feed it into the same renderer.
 
-## Verification
-
-1. Welcome/home screen: iframe content position and size match the pre-overlay baseline.
-2. Tap Be/Earn/Play/Make/Share: submenu/prompt bar expands upward as an overlay; iframe does not resize or shift.
-3. Header hide via focus mode still works (padding stays at bottom, container grows in height).
+## Out of scope
+- No layout/positioning changes to header.
+- No changes to AA-API payloads or trust score plumbing.
+- TTS busy-state hook not added (no existing TTS state in shell).
