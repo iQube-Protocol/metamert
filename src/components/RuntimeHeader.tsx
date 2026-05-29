@@ -32,18 +32,18 @@ function scoreToDots3(score: number | undefined, fallback: number): number {
   return Math.min(3, Math.ceil(v / (10 / 3)));
 }
 
-function trustDotColor(score: number | undefined): string {
-  const v = score ?? 5;
-  if (v <= 3) return "bg-mm-accent-alert";
-  if (v <= 6) return "bg-mm-accent-codex";
-  return "bg-mm-accent-earn";
-}
-
 function reliabilityDotColor(score: number | undefined): string {
   const v = score ?? 5;
-  if (v <= 3) return "bg-mm-accent-alert";
-  if (v <= 6) return "bg-mm-accent-codex";
-  return "bg-mm-accent-runtime";
+  if (v <= 3) return "bg-red-500";
+  if (v <= 6) return "bg-yellow-500";
+  return "bg-purple-500";
+}
+
+function trustDotColor(score: number | undefined): string {
+  const v = score ?? 5;
+  if (v <= 3) return "bg-red-500";
+  if (v <= 6) return "bg-yellow-500";
+  return "bg-green-500";
 }
 
 /** Returns "up", "down", or null for score direction */
