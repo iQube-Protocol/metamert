@@ -59,7 +59,6 @@ export default function RuntimeHeader() {
   const isMobile = useIsMobile();
   const [aigentOpen, setAigentOpen] = useState(false);
   const [llmOpen, setLlmOpen] = useState(false);
-  const [trustFlash, setTrustFlash] = useState(false);
   const prevScoresRef = useRef<Record<string, number | undefined>>({});
 
   // Theme toggle state — default dark, check URL param
