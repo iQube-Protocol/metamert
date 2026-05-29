@@ -185,7 +185,7 @@ export default function SmartMenu() {
         {/* Submenu — single slot for all states */}
         {showSubmenu && (
           <div
-            className="px-2 pb-1.5 animate-in fade-in slide-in-from-bottom-2"
+            className="pb-1.5 animate-in fade-in slide-in-from-bottom-2"
             style={{ animationDuration: '300ms' }}
             onPointerEnter={hoverPreviewMode ? () => handleNavHoverEnter(hoverPreviewMode) : undefined}
             onPointerLeave={hoverPreviewMode ? handleNavHoverLeave : undefined}

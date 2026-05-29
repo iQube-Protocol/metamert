@@ -11862,6 +11862,98 @@ export type Database = {
         }
         Relationships: []
       }
+      persona_upload_index: {
+        Row: {
+          content_json: Json | null
+          content_md: string | null
+          error: string | null
+          indexed_at: string
+          schema_meta: Json | null
+          summary: string | null
+          tokens_estimate: number
+          upload_id: string
+        }
+        Insert: {
+          content_json?: Json | null
+          content_md?: string | null
+          error?: string | null
+          indexed_at?: string
+          schema_meta?: Json | null
+          summary?: string | null
+          tokens_estimate?: number
+          upload_id: string
+        }
+        Update: {
+          content_json?: Json | null
+          content_md?: string | null
+          error?: string | null
+          indexed_at?: string
+          schema_meta?: Json | null
+          summary?: string | null
+          tokens_estimate?: number
+          upload_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_upload_index_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: true
+            referencedRelation: "persona_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      persona_uploads: {
+        Row: {
+          archived_at: string | null
+          auth_profile_id: string | null
+          created_at: string
+          filename: string
+          id: string
+          label: string | null
+          mime_type: string
+          persona_id: string
+          size_bytes: number
+          status: string
+          storage_path: string
+          tags: string[]
+          updated_at: string
+          use_kind: string
+        }
+        Insert: {
+          archived_at?: string | null
+          auth_profile_id?: string | null
+          created_at?: string
+          filename: string
+          id?: string
+          label?: string | null
+          mime_type: string
+          persona_id: string
+          size_bytes: number
+          status?: string
+          storage_path: string
+          tags?: string[]
+          updated_at?: string
+          use_kind?: string
+        }
+        Update: {
+          archived_at?: string | null
+          auth_profile_id?: string | null
+          created_at?: string
+          filename?: string
+          id?: string
+          label?: string | null
+          mime_type?: string
+          persona_id?: string
+          size_bytes?: number
+          status?: string
+          storage_path?: string
+          tags?: string[]
+          updated_at?: string
+          use_kind?: string
+        }
+        Relationships: []
+      }
       personas: {
         Row: {
           app_origin: string | null
