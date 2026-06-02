@@ -38,7 +38,7 @@ export default function CartridgeIndicator() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1" data-tour="cartridge-indicator">
         {openCartridges.map(c => {
           const def = lookup(c.cartridgeId);
           const Icon =

@@ -8,12 +8,23 @@ import BrowserSurfaceHost from "@/components/browser/BrowserSurfaceHost";
 import BrowserMinimizedPill from "@/components/browser/BrowserMinimizedPill";
 import BrowserSessionPanel from "@/components/browser/BrowserSessionPanel";
 import BrowserHistoryDrawer from "@/components/browser/BrowserHistoryDrawer";
+import WelcomeModal from "@/components/tour/WelcomeModal";
+import VisitorTour from "@/components/tour/VisitorTour";
+import { useTourState } from "@/hooks/use-tour-state";
 
 import { Loader2 } from "lucide-react";
 
 function ShellLayout() {
   const shell = useShell();
   const { config, loading, hydrate, resetKey, viewState, deactivateMode, iframeRef, runtimeHints } = shell;
+  const tour = useTourState();
+
+  // Listen for the "?" help-button restart event from the header.
+  useEffect(() => {
+    const handler = () => tour.restart();
+    window.addEventListener("metame:tour:restart", handler);
+    return () => window.removeEventListener("metame:tour:restart", handler);
+  }, [tour]);
   
 
   // Reset scroll when mobile keyboard closes (viewport height increases)
@@ -67,7 +78,7 @@ function ShellLayout() {
               onClick={deactivateMode}
             />
           )}
-          <div className="relative h-[calc(100%-4.25rem)] overflow-hidden">
+          <div data-tour="runtime-area" className="relative h-[calc(100%-4.25rem)] overflow-hidden">
             <RuntimeFrame key={resetKey} />
             <BrowserSurfaceHost />
           </div>
@@ -79,6 +90,8 @@ function ShellLayout() {
         <BrowserSessionPanel />
         <BrowserHistoryDrawer />
         <BrowserMinimizedPill />
+        <WelcomeModal open={tour.showWelcome} onStart={tour.start} onSkip={tour.skip} />
+        <VisitorTour run={tour.running} onFinish={tour.complete} />
       </div>
     </BrowserProvider>
   );

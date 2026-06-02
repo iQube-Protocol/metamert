@@ -201,6 +201,7 @@ export default function SmartMenu() {
 
         {/* Nav bar — parchment surface with hairline top */}
         <nav
+          data-tour="smart-menu"
           className="flex items-stretch px-2 pt-3 pb-2 transition-all"
           style={{
             display: isPromptMode ? 'none' : 'flex',
@@ -211,7 +212,7 @@ export default function SmartMenu() {
           }}
           onPointerUp={handleNavAreaPointerUp}
         >
-          <div className="flex items-stretch">
+          <div className="flex items-stretch" data-tour="persona-nav">
             <NavButton item={NAV_ITEMS[0]} accentOverride={personaAccent} labelOverride={personaState.activeHandle} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
           {/* Left gap: outer half extends Be activation, inner half triggers Play */}
