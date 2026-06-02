@@ -303,7 +303,7 @@ export const MODE_CONFIGS: Record<SmartMenuMode, ModeConfig> = {
     accentHex: "#22C55E",
     promptPlaceholder: "Ask about rewards, tasks, offers, value, or opportunities…",
     defaultCenteredQuickActionId: "wallet",
-    mobileVisibleFold: ["goal", "task", "wallet", "reward", "offer"],
+    mobileVisibleFold: ["goal", "task", "wallet", "reward", "payments", "signin"],
     quickActions: EARN_ACTIONS,
   },
   play: {
