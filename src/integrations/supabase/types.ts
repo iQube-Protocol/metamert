@@ -455,6 +455,48 @@ export type Database = {
         }
         Relationships: []
       }
+      anchor_history: {
+        Row: {
+          anchor_txid: string | null
+          batch_id: string | null
+          created_at: string
+          cycle_action: string
+          decision_reason: string
+          drift_after: number | null
+          drift_before: number | null
+          duration_ms: number | null
+          error: string | null
+          id: string
+          receipt_count: number
+        }
+        Insert: {
+          anchor_txid?: string | null
+          batch_id?: string | null
+          created_at?: string
+          cycle_action: string
+          decision_reason: string
+          drift_after?: number | null
+          drift_before?: number | null
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          receipt_count?: number
+        }
+        Update: {
+          anchor_txid?: string | null
+          batch_id?: string | null
+          created_at?: string
+          cycle_action?: string
+          decision_reason?: string
+          drift_after?: number | null
+          drift_before?: number | null
+          duration_ms?: number | null
+          error?: string | null
+          id?: string
+          receipt_count?: number
+        }
+        Relationships: []
+      }
       asset_policies: {
         Row: {
           asset_id: string
@@ -895,6 +937,129 @@ export type Database = {
           },
         ]
       }
+      cartridge_activations: {
+        Row: {
+          actions_json: Json
+          approved_at: string | null
+          cartridge_slug: string
+          catalog_id: string
+          created_at: string
+          metadata: Json
+          metrics_json: Json
+          mode: string
+          rejected_at: string | null
+          status: string
+          submitted_at: string
+          submitted_by: string | null
+          tab_slug: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          actions_json?: Json
+          approved_at?: string | null
+          cartridge_slug: string
+          catalog_id: string
+          created_at?: string
+          metadata?: Json
+          metrics_json?: Json
+          mode?: string
+          rejected_at?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          tab_slug: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          actions_json?: Json
+          approved_at?: string | null
+          cartridge_slug?: string
+          catalog_id?: string
+          created_at?: string
+          metadata?: Json
+          metrics_json?: Json
+          mode?: string
+          rejected_at?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          tab_slug?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
+      cartridge_codex_entries: {
+        Row: {
+          body_md: string
+          cartridge_slug: string
+          entry_id: string
+          metadata: Json
+          published_at: string
+          published_by: string | null
+          source: string
+          source_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body_md?: string
+          cartridge_slug: string
+          entry_id?: string
+          metadata?: Json
+          published_at?: string
+          published_by?: string | null
+          source?: string
+          source_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body_md?: string
+          cartridge_slug?: string
+          entry_id?: string
+          metadata?: Json
+          published_at?: string
+          published_by?: string | null
+          source?: string
+          source_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cartridge_memberships: {
+        Row: {
+          cartridge_slug: string
+          granted_at: string
+          granted_by: string | null
+          metadata: Json
+          persona_id: string
+          role: string
+        }
+        Insert: {
+          cartridge_slug: string
+          granted_at?: string
+          granted_by?: string | null
+          metadata?: Json
+          persona_id: string
+          role: string
+        }
+        Update: {
+          cartridge_slug?: string
+          granted_at?: string
+          granted_by?: string | null
+          metadata?: Json
+          persona_id?: string
+          role?: string
+        }
+        Relationships: []
+      }
       chat_history: {
         Row: {
           agent_id: string
@@ -1155,6 +1320,7 @@ export type Database = {
       }
       codex_configs: {
         Row: {
+          available_specialists: string[] | null
           created_at: string
           enabled: boolean | null
           id: string
@@ -1162,12 +1328,17 @@ export type Database = {
           metadata: Json
           name: string
           owner: string
+          owner_persona_id: string | null
           permissions: Json
+          primary_tab_slug: string | null
           slug: string
+          smart_triad_config: Json | null
+          token_whitelist: string[] | null
           updated_at: string
           version: string
         }
         Insert: {
+          available_specialists?: string[] | null
           created_at?: string
           enabled?: boolean | null
           id: string
@@ -1175,12 +1346,17 @@ export type Database = {
           metadata?: Json
           name: string
           owner: string
+          owner_persona_id?: string | null
           permissions?: Json
+          primary_tab_slug?: string | null
           slug: string
+          smart_triad_config?: Json | null
+          token_whitelist?: string[] | null
           updated_at?: string
           version?: string
         }
         Update: {
+          available_specialists?: string[] | null
           created_at?: string
           enabled?: boolean | null
           id?: string
@@ -1188,8 +1364,12 @@ export type Database = {
           metadata?: Json
           name?: string
           owner?: string
+          owner_persona_id?: string | null
           permissions?: Json
+          primary_tab_slug?: string | null
           slug?: string
+          smart_triad_config?: Json | null
+          token_whitelist?: string[] | null
           updated_at?: string
           version?: string
         }
@@ -1827,10 +2007,14 @@ export type Database = {
           created_at: string
           enabled: boolean | null
           id: string
+          invite_only: boolean
           label: string
+          member_only: boolean
           metadata: Json | null
           order: number
+          role_required: string | null
           slug: string
+          token_gated: Json | null
           type: string
           updated_at: string
         }
@@ -1840,10 +2024,14 @@ export type Database = {
           created_at?: string
           enabled?: boolean | null
           id: string
+          invite_only?: boolean
           label: string
+          member_only?: boolean
           metadata?: Json | null
           order: number
+          role_required?: string | null
           slug: string
+          token_gated?: Json | null
           type: string
           updated_at?: string
         }
@@ -1853,10 +2041,14 @@ export type Database = {
           created_at?: string
           enabled?: boolean | null
           id?: string
+          invite_only?: boolean
           label?: string
+          member_only?: boolean
           metadata?: Json | null
           order?: number
+          role_required?: string | null
           slug?: string
+          token_gated?: Json | null
           type?: string
           updated_at?: string
         }
@@ -2907,10 +3099,13 @@ export type Database = {
           description: string | null
           display_number: number | null
           id: string
+          internal_lifecycle: string | null
+          iqube_id: string | null
           lifecycle_state: string
           master_qube_id: string | null
           media_asset_id: string | null
           series: string
+          surface_lifecycle: string | null
           title: string | null
           updated_at: string
         }
@@ -2921,10 +3116,13 @@ export type Database = {
           description?: string | null
           display_number?: number | null
           id?: string
+          internal_lifecycle?: string | null
+          iqube_id?: string | null
           lifecycle_state?: string
           master_qube_id?: string | null
           media_asset_id?: string | null
           series: string
+          surface_lifecycle?: string | null
           title?: string | null
           updated_at?: string
         }
@@ -2935,10 +3133,13 @@ export type Database = {
           description?: string | null
           display_number?: number | null
           id?: string
+          internal_lifecycle?: string | null
+          iqube_id?: string | null
           lifecycle_state?: string
           master_qube_id?: string | null
           media_asset_id?: string | null
           series?: string
+          surface_lifecycle?: string | null
           title?: string | null
           updated_at?: string
         }
@@ -5541,6 +5742,92 @@ export type Database = {
         }
         Relationships: []
       }
+      dvn_receipt_block_items: {
+        Row: {
+          appended_at: string
+          block_id: string
+          item_hash: string
+          receipt_id: string
+          receipt_source: string
+          sequence_in_block: number
+        }
+        Insert: {
+          appended_at?: string
+          block_id: string
+          item_hash: string
+          receipt_id: string
+          receipt_source: string
+          sequence_in_block: number
+        }
+        Update: {
+          appended_at?: string
+          block_id?: string
+          item_hash?: string
+          receipt_id?: string
+          receipt_source?: string
+          sequence_in_block?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dvn_receipt_block_items_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "dvn_receipt_blocks"
+            referencedColumns: ["block_id"]
+          },
+        ]
+      }
+      dvn_receipt_blocks: {
+        Row: {
+          anchored_at: string | null
+          batch_hash: string | null
+          block_id: string
+          block_number: number
+          cartridge_scope: string
+          epoch: number
+          failure_reason: string | null
+          inscription_chain: string | null
+          inscription_id: string | null
+          merkle_root: string | null
+          opened_at: string
+          receipt_count: number
+          sealed_at: string | null
+          status: string
+        }
+        Insert: {
+          anchored_at?: string | null
+          batch_hash?: string | null
+          block_id?: string
+          block_number: number
+          cartridge_scope: string
+          epoch: number
+          failure_reason?: string | null
+          inscription_chain?: string | null
+          inscription_id?: string | null
+          merkle_root?: string | null
+          opened_at?: string
+          receipt_count?: number
+          sealed_at?: string | null
+          status?: string
+        }
+        Update: {
+          anchored_at?: string | null
+          batch_hash?: string | null
+          block_id?: string
+          block_number?: number
+          cartridge_scope?: string
+          epoch?: number
+          failure_reason?: string | null
+          inscription_chain?: string | null
+          inscription_id?: string | null
+          merkle_root?: string | null
+          opened_at?: string
+          receipt_count?: number
+          sealed_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       engagement_events: {
         Row: {
           content_id: string | null
@@ -6502,6 +6789,125 @@ export type Database = {
         }
         Relationships: []
       }
+      intent_chain_feedback: {
+        Row: {
+          chain_id: string
+          comment: string | null
+          feedback_id: string
+          rated_at: string
+          rated_by_alias_commitment: string | null
+          rated_by_persona_id: string
+          rating: string
+          receipt_event_id: string | null
+        }
+        Insert: {
+          chain_id: string
+          comment?: string | null
+          feedback_id?: string
+          rated_at?: string
+          rated_by_alias_commitment?: string | null
+          rated_by_persona_id: string
+          rating: string
+          receipt_event_id?: string | null
+        }
+        Update: {
+          chain_id?: string
+          comment?: string | null
+          feedback_id?: string
+          rated_at?: string
+          rated_by_alias_commitment?: string | null
+          rated_by_persona_id?: string
+          rating?: string
+          receipt_event_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intent_chain_feedback_chain_id_fkey"
+            columns: ["chain_id"]
+            isOneToOne: false
+            referencedRelation: "intent_chains"
+            referencedColumns: ["chain_id"]
+          },
+        ]
+      }
+      intent_chains: {
+        Row: {
+          cartridge: string | null
+          chain_id: string
+          charge_committed_at: string | null
+          charge_refunded_at: string | null
+          charge_status: string
+          context: Json
+          cost_qc: number
+          current_step_id: string | null
+          current_step_kind: string | null
+          current_step_started_at: string | null
+          initiated_by_alias_commitment: string | null
+          initiated_by_persona_id: string
+          initiating_nbe_id: string | null
+          last_event_id: string | null
+          scheduled_advance_at: string | null
+          started_at: string
+          status: string
+          template_id: string
+          template_version: string
+          terminated_at: string | null
+          termination_outcome: string | null
+          updated_at: string
+          wait_timeout_at: string | null
+        }
+        Insert: {
+          cartridge?: string | null
+          chain_id?: string
+          charge_committed_at?: string | null
+          charge_refunded_at?: string | null
+          charge_status?: string
+          context?: Json
+          cost_qc?: number
+          current_step_id?: string | null
+          current_step_kind?: string | null
+          current_step_started_at?: string | null
+          initiated_by_alias_commitment?: string | null
+          initiated_by_persona_id: string
+          initiating_nbe_id?: string | null
+          last_event_id?: string | null
+          scheduled_advance_at?: string | null
+          started_at?: string
+          status?: string
+          template_id: string
+          template_version: string
+          terminated_at?: string | null
+          termination_outcome?: string | null
+          updated_at?: string
+          wait_timeout_at?: string | null
+        }
+        Update: {
+          cartridge?: string | null
+          chain_id?: string
+          charge_committed_at?: string | null
+          charge_refunded_at?: string | null
+          charge_status?: string
+          context?: Json
+          cost_qc?: number
+          current_step_id?: string | null
+          current_step_kind?: string | null
+          current_step_started_at?: string | null
+          initiated_by_alias_commitment?: string | null
+          initiated_by_persona_id?: string
+          initiating_nbe_id?: string | null
+          last_event_id?: string | null
+          scheduled_advance_at?: string | null
+          started_at?: string
+          status?: string
+          template_id?: string
+          template_version?: string
+          terminated_at?: string | null
+          termination_outcome?: string | null
+          updated_at?: string
+          wait_timeout_at?: string | null
+        }
+        Relationships: []
+      }
       iq_blak_qubes: {
         Row: {
           checksum: string | null
@@ -6547,6 +6953,7 @@ export type Database = {
           description: string | null
           episode_number: number | null
           id: string
+          iqube_id: string | null
           metadata: Json | null
           name: string
           preview_url: string | null
@@ -6561,6 +6968,7 @@ export type Database = {
           description?: string | null
           episode_number?: number | null
           id?: string
+          iqube_id?: string | null
           metadata?: Json | null
           name: string
           preview_url?: string | null
@@ -6575,6 +6983,7 @@ export type Database = {
           description?: string | null
           episode_number?: number | null
           id?: string
+          iqube_id?: string | null
           metadata?: Json | null
           name?: string
           preview_url?: string | null
@@ -6660,6 +7069,53 @@ export type Database = {
           },
         ]
       }
+      iqube_canonization_requests: {
+        Row: {
+          decided_at: string | null
+          decided_by_persona_id: string | null
+          decision_notes: string | null
+          iqube_id: string
+          payment_authority_proposed: Json | null
+          receipt_id: string | null
+          request_id: string
+          requested_at: string
+          requester_persona_id: string
+          status: string
+        }
+        Insert: {
+          decided_at?: string | null
+          decided_by_persona_id?: string | null
+          decision_notes?: string | null
+          iqube_id: string
+          payment_authority_proposed?: Json | null
+          receipt_id?: string | null
+          request_id?: string
+          requested_at?: string
+          requester_persona_id: string
+          status?: string
+        }
+        Update: {
+          decided_at?: string | null
+          decided_by_persona_id?: string | null
+          decision_notes?: string | null
+          iqube_id?: string
+          payment_authority_proposed?: Json | null
+          receipt_id?: string | null
+          request_id?: string
+          requested_at?: string
+          requester_persona_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iqube_canonization_requests_iqube_id_fkey"
+            columns: ["iqube_id"]
+            isOneToOne: false
+            referencedRelation: "iqube_id_map"
+            referencedColumns: ["iqube_id"]
+          },
+        ]
+      }
       iqube_capabilities: {
         Row: {
           acl_delta_sig: string | null
@@ -6740,6 +7196,42 @@ export type Database = {
           },
         ]
       }
+      iqube_id_map: {
+        Row: {
+          created_at: string
+          iqube_id: string
+          legacy_primitive_type: string | null
+          notes: string | null
+          primitive_type: string
+          source: string
+          source_id: string
+          synthetic: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          iqube_id?: string
+          legacy_primitive_type?: string | null
+          notes?: string | null
+          primitive_type: string
+          source: string
+          source_id: string
+          synthetic?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          iqube_id?: string
+          legacy_primitive_type?: string | null
+          notes?: string | null
+          primitive_type?: string
+          source?: string
+          source_id?: string
+          synthetic?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       iqube_mint_stubs: {
         Row: {
           autonomys_cid: string | null
@@ -6784,6 +7276,65 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      iqube_scores: {
+        Row: {
+          accuracy: number | null
+          accuracy_source: string
+          derivation_strategy: string | null
+          derived_reliability: number | null
+          derived_trust: number | null
+          iqube_id: string
+          populated_at: string
+          risk: number | null
+          risk_source: string
+          sensitivity: number | null
+          sensitivity_source: string
+          updated_at: string
+          verifiability: number | null
+          verifiability_source: string
+        }
+        Insert: {
+          accuracy?: number | null
+          accuracy_source?: string
+          derivation_strategy?: string | null
+          derived_reliability?: number | null
+          derived_trust?: number | null
+          iqube_id: string
+          populated_at?: string
+          risk?: number | null
+          risk_source?: string
+          sensitivity?: number | null
+          sensitivity_source?: string
+          updated_at?: string
+          verifiability?: number | null
+          verifiability_source?: string
+        }
+        Update: {
+          accuracy?: number | null
+          accuracy_source?: string
+          derivation_strategy?: string | null
+          derived_reliability?: number | null
+          derived_trust?: number | null
+          iqube_id?: string
+          populated_at?: string
+          risk?: number | null
+          risk_source?: string
+          sensitivity?: number | null
+          sensitivity_source?: string
+          updated_at?: string
+          verifiability?: number | null
+          verifiability_source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iqube_scores_iqube_id_fkey"
+            columns: ["iqube_id"]
+            isOneToOne: true
+            referencedRelation: "iqube_id_map"
+            referencedColumns: ["iqube_id"]
+          },
+        ]
       }
       iqube_shares: {
         Row: {
@@ -9146,6 +9697,50 @@ export type Database = {
         }
         Relationships: []
       }
+      mint_sagas: {
+        Row: {
+          created_at: string
+          current_state: string
+          idempotency_keys: Json
+          initiated_by_persona_id: string | null
+          iqube_id: string | null
+          last_error: string | null
+          retry_count: number
+          saga_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_state?: string
+          idempotency_keys?: Json
+          initiated_by_persona_id?: string | null
+          iqube_id?: string | null
+          last_error?: string | null
+          retry_count?: number
+          saga_id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_state?: string
+          idempotency_keys?: Json
+          initiated_by_persona_id?: string | null
+          iqube_id?: string | null
+          last_error?: string | null
+          retry_count?: number
+          saga_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mint_sagas_iqube_id_fkey"
+            columns: ["iqube_id"]
+            isOneToOne: false
+            referencedRelation: "iqube_id_map"
+            referencedColumns: ["iqube_id"]
+          },
+        ]
+      }
       mycanvas_entries: {
         Row: {
           body_md: string
@@ -9219,6 +9814,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      myworkspace_entries: {
+        Row: {
+          body_md: string
+          created_at: string
+          entry_type: string
+          id: string
+          meta_json: Json
+          persona_id: string
+          tags: string[]
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          body_md?: string
+          created_at?: string
+          entry_type?: string
+          id?: string
+          meta_json?: Json
+          persona_id: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          body_md?: string
+          created_at?: string
+          entry_type?: string
+          id?: string
+          meta_json?: Json
+          persona_id?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
       }
       nakamoto_agent_branches: {
         Row: {
@@ -11210,6 +11844,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ops_anchor_config: {
+        Row: {
+          batch_size_k: number
+          cron_cadence_seconds: number
+          id: number
+          is_paused: boolean
+          max_age_minutes_t: number
+          updated_at: string
+          updated_by_persona_id: string | null
+        }
+        Insert: {
+          batch_size_k?: number
+          cron_cadence_seconds?: number
+          id?: number
+          is_paused?: boolean
+          max_age_minutes_t?: number
+          updated_at?: string
+          updated_by_persona_id?: string | null
+        }
+        Update: {
+          batch_size_k?: number
+          cron_cadence_seconds?: number
+          id?: number
+          is_paused?: boolean
+          max_age_minutes_t?: number
+          updated_at?: string
+          updated_by_persona_id?: string | null
+        }
+        Relationships: []
+      }
       orchestration_events: {
         Row: {
           active_cartridge: string | null
@@ -11223,6 +11887,7 @@ export type Database = {
           id: string
           inscribed_at: string | null
           inscription_id: string | null
+          iqube_id: string | null
           journey_stage: string | null
           metadata: Json | null
           on_chain_tx_id: string | null
@@ -11243,6 +11908,7 @@ export type Database = {
           id?: string
           inscribed_at?: string | null
           inscription_id?: string | null
+          iqube_id?: string | null
           journey_stage?: string | null
           metadata?: Json | null
           on_chain_tx_id?: string | null
@@ -11263,6 +11929,7 @@ export type Database = {
           id?: string
           inscribed_at?: string | null
           inscription_id?: string | null
+          iqube_id?: string | null
           journey_stage?: string | null
           metadata?: Json | null
           on_chain_tx_id?: string | null
@@ -11861,6 +12528,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      persona_token_qube_ownership: {
+        Row: {
+          acquired_at: string
+          chain_anchor: Json | null
+          iqube_id: string
+          ownership_id: string
+          persona_id: string
+          receipt_id: string | null
+          relinquished_at: string | null
+          source: string
+          token_qube_id: string
+        }
+        Insert: {
+          acquired_at?: string
+          chain_anchor?: Json | null
+          iqube_id: string
+          ownership_id?: string
+          persona_id: string
+          receipt_id?: string | null
+          relinquished_at?: string | null
+          source: string
+          token_qube_id: string
+        }
+        Update: {
+          acquired_at?: string
+          chain_anchor?: Json | null
+          iqube_id?: string
+          ownership_id?: string
+          persona_id?: string
+          receipt_id?: string | null
+          relinquished_at?: string | null
+          source?: string
+          token_qube_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_token_qube_ownership_iqube_id_fkey"
+            columns: ["iqube_id"]
+            isOneToOne: false
+            referencedRelation: "iqube_id_map"
+            referencedColumns: ["iqube_id"]
+          },
+        ]
       }
       persona_upload_index: {
         Row: {
@@ -13082,14 +13793,19 @@ export type Database = {
           icon_url: string | null
           intake_id: string | null
           interface_schema: Json
+          internal_lifecycle: string | null
+          iqube_id: string | null
           metadata: Json
           name: string
           policy_class: string
+          primitive_type: string | null
           publication_status: string
           slug: string
           source_id: string | null
+          surface_lifecycle: string | null
           tags: Json
           tenant_id: string
+          tool_subtype: string | null
           trust_band: string
           updated_at: string
           wrapper_strategy: string
@@ -13105,14 +13821,19 @@ export type Database = {
           icon_url?: string | null
           intake_id?: string | null
           interface_schema?: Json
+          internal_lifecycle?: string | null
+          iqube_id?: string | null
           metadata?: Json
           name: string
           policy_class?: string
+          primitive_type?: string | null
           publication_status?: string
           slug: string
           source_id?: string | null
+          surface_lifecycle?: string | null
           tags?: Json
           tenant_id: string
+          tool_subtype?: string | null
           trust_band?: string
           updated_at?: string
           wrapper_strategy?: string
@@ -13128,14 +13849,19 @@ export type Database = {
           icon_url?: string | null
           intake_id?: string | null
           interface_schema?: Json
+          internal_lifecycle?: string | null
+          iqube_id?: string | null
           metadata?: Json
           name?: string
           policy_class?: string
+          primitive_type?: string | null
           publication_status?: string
           slug?: string
           source_id?: string | null
+          surface_lifecycle?: string | null
           tags?: Json
           tenant_id?: string
+          tool_subtype?: string | null
           trust_band?: string
           updated_at?: string
           wrapper_strategy?: string
@@ -13156,6 +13882,33 @@ export type Database = {
             referencedColumns: ["source_id"]
           },
         ]
+      }
+      registry_config: {
+        Row: {
+          cartridge_scope: string | null
+          config_key: string
+          config_value: Json
+          description: string | null
+          updated_at: string
+          updated_by_persona_id: string | null
+        }
+        Insert: {
+          cartridge_scope?: string | null
+          config_key: string
+          config_value: Json
+          description?: string | null
+          updated_at?: string
+          updated_by_persona_id?: string | null
+        }
+        Update: {
+          cartridge_scope?: string | null
+          config_key?: string
+          config_value?: Json
+          description?: string | null
+          updated_at?: string
+          updated_by_persona_id?: string | null
+        }
+        Relationships: []
       }
       registry_dependencies: {
         Row: {
