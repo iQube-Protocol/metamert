@@ -1017,7 +1017,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }, [config, applyConfigUpdate, deactivateMode, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
 
   /** Send a MENU_ACTION directly to the iframe without API round-trip */
-  const sendIframeAction = useCallback((actionId: string) => {
+  const sendIframeAction = useCallback((actionId: string, deepLink?: import("@/lib/shell-messages").DeepLink) => {
     if (!iframeRef.current || !config) return;
     const origin = getIframeOrigin(config);
     postToIframe(iframeRef.current, {
@@ -1025,6 +1025,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
       action_id: actionId,
       cartridge_id: cartridgeState.activeCartridgeId,
       codex_id: cartridgeState.activeCodexId,
+      ...(deepLink ? { deep_link: deepLink } : {}),
     }, origin);
   }, [config, cartridgeState.activeCartridgeId, cartridgeState.activeCodexId]);
 
