@@ -354,6 +354,7 @@ export default function RuntimeHeader() {
           <Tooltip>
             <TooltipTrigger asChild>
               <div
+                data-tour="trust-dots"
                 className="relative flex items-center gap-2 px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] cursor-default"
                 style={{ color: 'var(--mm-ink-muted)' }}
               >
@@ -374,6 +375,7 @@ export default function RuntimeHeader() {
               <p className="text-xs">{(trust.signals ?? []).join(" · ") || trust.level}</p>
             </TooltipContent>
           </Tooltip>
+          <TourHelpButton onClick={() => window.dispatchEvent(new CustomEvent("metame:tour:restart"))} />
         </div>
       </header>
     </TooltipProvider>
