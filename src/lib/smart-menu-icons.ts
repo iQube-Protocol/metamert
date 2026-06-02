@@ -3,8 +3,8 @@
  * Supplements the existing icon-utils.ts DEFAULTS map.
  */
 import {
-  Lock, User, Sparkles, Shield, Fingerprint, Radio,
-  Target, CheckSquare, Star, Tag, Compass, Wallet,
+  Lock, User, UserPlus, Sparkles, Shield, Fingerprint, Radio,
+  Target, CheckSquare, Star, Tag, Compass, Wallet, CreditCard, LogIn,
   PenLine, Palette, Hammer, Pencil, Shuffle, Upload,
   Send, Download, Link, Truck, Box, Library, Globe, Save,
   type LucideIcon,
@@ -21,6 +21,9 @@ export const SMART_MENU_ICON_DEFAULTS: Record<string, LucideIcon> = {
   task: CheckSquare,
   reward: Star,
   offer: Tag,
+  payments: CreditCard,
+  signin: LogIn,
+  "persona-create": UserPlus,
   opportunity: Compass,
   wallet: Wallet,
   write: PenLine,
