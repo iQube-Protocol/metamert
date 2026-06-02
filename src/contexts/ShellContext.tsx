@@ -123,7 +123,7 @@ interface ShellContextValue {
   selectAigent: (id: string) => Promise<void>;
   selectLLM: (id: string) => Promise<void>;
   handleMenuAction: (itemId: string) => Promise<void>;
-  sendIframeAction: (actionId: string) => void;
+  sendIframeAction: (actionId: string, deepLink?: import("@/lib/shell-messages").DeepLink) => void;
   submitPrompt: (text: string) => void;
   resetToWelcome: () => void;
   updateTrust: (trust: { level: string; signals: string[]; scores?: Record<string, number> }) => void;
