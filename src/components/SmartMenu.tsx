@@ -313,15 +313,10 @@ function NavButton({
 
   const handlePointerUp = (e: React.PointerEvent) => {
     e.stopPropagation();
-    if (e.pointerType === "touch") {
-      onPointerTap(item.id, "touch");
-    } else {
-      // Earn is drawer-only — never dispatch the AA-API menu-action / LLM prompt.
-      if (item.id !== "earn") {
-        onAction(item.id);
-      }
-      onPointerTap(item.id, e.pointerType);
-    }
+    // Top-level nav buttons only open their submenu / prompt bar.
+    // They never dispatch an AA-API menu-action or LLM prompt — that
+    // would disrupt state mid-navigation. Submenu items keep dual dispatch.
+    onPointerTap(item.id, e.pointerType === "touch" ? "touch" : e.pointerType);
   };
 
 
