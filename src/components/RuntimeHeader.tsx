@@ -8,6 +8,7 @@ import {
 import { Bot, ChevronDown, Check, Zap, Sun, Moon, Save, X } from "lucide-react";
 import ProviderIcon from "@/components/ProviderIcon";
 import CartridgeIndicator from "@/components/CartridgeIndicator";
+import TourHelpButton from "@/components/tour/TourHelpButton";
 import {
   Popover,
   PopoverContent,
