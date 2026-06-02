@@ -8,6 +8,9 @@ import BrowserSurfaceHost from "@/components/browser/BrowserSurfaceHost";
 import BrowserMinimizedPill from "@/components/browser/BrowserMinimizedPill";
 import BrowserSessionPanel from "@/components/browser/BrowserSessionPanel";
 import BrowserHistoryDrawer from "@/components/browser/BrowserHistoryDrawer";
+import WelcomeModal from "@/components/tour/WelcomeModal";
+import VisitorTour from "@/components/tour/VisitorTour";
+import { useTourState } from "@/hooks/use-tour-state";
 
 import { Loader2 } from "lucide-react";
 
