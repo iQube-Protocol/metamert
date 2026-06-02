@@ -400,8 +400,14 @@ function CodexSelector() {
 // ---------------------------------------------------------------------------
 
 function PersonaSelector() {
-  const { personaState, selectPersona, setSubmenuType, pauseIdleTimer, resumeIdleTimer } = useShell();
+  const { personaState, selectPersona, setSubmenuType, pauseIdleTimer, resumeIdleTimer, sendIframeAction, resetIdleTimer } = useShell();
   const visible = personaState.available;
+
+  const handleCreatePersona = useCallback(() => {
+    const dl = DEEP_LINK_DISPATCH["persona-create"];
+    if (dl) sendIframeAction(dl.actionId, dl.deepLink);
+    resetIdleTimer("quickAction");
+  }, [sendIframeAction, resetIdleTimer]);
 
   return (
     <div
@@ -420,32 +426,37 @@ function PersonaSelector() {
           ← Back
         </button>
       </div>
-      {visible.length === 0 ? (
-        <div className="px-2 py-1 text-[11px]" style={{ color: 'var(--mm-ink-muted)' }}>
-          No personas available
-        </div>
-      ) : (
-        <div className="flex gap-1.5 justify-start">
-          {visible.map(persona => {
-            const isActive = persona.id === personaState.activePersonaId;
-            const Icon = resolveSmartIcon(persona.icon, persona.id);
-            return (
-              <CartridgePill
-                key={persona.id}
-                isActive={isActive}
-                accent={persona.accentHex}
-                onClick={() => selectPersona(persona.id)}
-              >
-                <div className="flex items-center gap-1">
-                  {Icon && <Icon className="h-3.5 w-3.5" />}
-                  <span className="font-medium whitespace-nowrap">{persona.label}</span>
-                  {isActive && <Check className="h-3 w-3" />}
-                </div>
-              </CartridgePill>
-            );
-          })}
-        </div>
-      )}
+      <div className="flex gap-1.5 justify-start items-center">
+        {visible.map(persona => {
+          const isActive = persona.id === personaState.activePersonaId;
+          const Icon = resolveSmartIcon(persona.icon, persona.id);
+          return (
+            <CartridgePill
+              key={persona.id}
+              isActive={isActive}
+              accent={persona.accentHex}
+              onClick={() => selectPersona(persona.id)}
+            >
+              <div className="flex items-center gap-1">
+                {Icon && <Icon className="h-3.5 w-3.5" />}
+                <span className="font-medium whitespace-nowrap">{persona.label}</span>
+                {isActive && <Check className="h-3 w-3" />}
+              </div>
+            </CartridgePill>
+          );
+        })}
+        {/* "+" pill — opens persona create wizard via deep-link */}
+        <CartridgePill
+          isActive={false}
+          accent="var(--mm-ink-muted)"
+          onClick={handleCreatePersona}
+        >
+          <div className="flex items-center gap-1" title="Create persona">
+            <Plus className="h-3.5 w-3.5" />
+            <span className="font-medium whitespace-nowrap">Add</span>
+          </div>
+        </CartridgePill>
+      </div>
     </div>
   );
 }
