@@ -17,6 +17,14 @@ import { Loader2 } from "lucide-react";
 function ShellLayout() {
   const shell = useShell();
   const { config, loading, hydrate, resetKey, viewState, deactivateMode, iframeRef, runtimeHints } = shell;
+  const tour = useTourState();
+
+  // Listen for the "?" help-button restart event from the header.
+  useEffect(() => {
+    const handler = () => tour.restart();
+    window.addEventListener("metame:tour:restart", handler);
+    return () => window.removeEventListener("metame:tour:restart", handler);
+  }, [tour]);
   
 
   // Reset scroll when mobile keyboard closes (viewport height increases)
