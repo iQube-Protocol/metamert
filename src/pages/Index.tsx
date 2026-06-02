@@ -78,7 +78,7 @@ function ShellLayout() {
               onClick={deactivateMode}
             />
           )}
-          <div className="relative h-[calc(100%-4.25rem)] overflow-hidden">
+          <div data-tour="runtime-area" className="relative h-[calc(100%-4.25rem)] overflow-hidden">
             <RuntimeFrame key={resetKey} />
             <BrowserSurfaceHost />
           </div>
@@ -90,6 +90,8 @@ function ShellLayout() {
         <BrowserSessionPanel />
         <BrowserHistoryDrawer />
         <BrowserMinimizedPill />
+        <WelcomeModal open={tour.showWelcome} onStart={tour.start} onSkip={tour.skip} />
+        <VisitorTour run={tour.running} onFinish={tour.complete} />
       </div>
     </BrowserProvider>
   );
