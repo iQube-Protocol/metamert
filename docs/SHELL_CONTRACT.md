@@ -53,6 +53,33 @@
 
 All outbound messages are wrapped in a bridge envelope: `{ type, msg_id, timestamp, source: "shell", payload }`.
 
+#### Deep-link envelope (MENU_ACTION)
+
+Drawer-opening menu actions may carry an optional `deep_link` field that routes the runtime to a specific wallet/persona tab + intent/flow:
+
+```ts
+deep_link?: {
+  module: "wallet" | "persona";
+  tab?:   "wallet" | "tasks" | "reputation" | "rewards" | "library" | "payments";
+  intent?: "signin" | "signup";
+  flow?:  "create-wizard" | "quick-add";
+}
+```
+
+Runtime side (MetaMeRuntimeClient) consumes `payload.deep_link` and sets `walletInitialTab`. Unknown tab values fall back silently to `"wallet"`. Current dispatch table:
+
+| Quick action     | action_id | deep_link                                                  |
+|------------------|-----------|------------------------------------------------------------|
+| Sign In (Earn)   | `wallet`  | `{ module: "wallet", tab: "wallet", intent: "signin" }`    |
+| Reward (Earn)    | `wallet`  | `{ module: "wallet", tab: "rewards" }`                     |
+| Task (Earn)      | `wallet`  | `{ module: "wallet", tab: "tasks" }`                       |
+| Payments (Earn)  | `wallet`  | `{ module: "wallet", tab: "payments" }`                    |
+| Reputation       | `wallet`  | `{ module: "wallet", tab: "reputation" }`                  |
+| + Create persona | `persona` | `{ module: "persona", flow: "create-wizard" }`             |
+
+The dispatch table lives in `src/lib/smart-menu-config.ts` (`DEEP_LINK_DISPATCH`).
+
+
 ### Iframe → Shell (inbound)
 
 | Type | Purpose | Shell response |
