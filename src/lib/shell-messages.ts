@@ -49,6 +49,19 @@ export interface MenuEvent {
   copilot_instruction?: string;
 }
 
+/**
+ * Deep-link envelope for MENU_ACTION. Routes drawer-opening actions to a
+ * specific tab/intent/flow inside the runtime-side wallet or persona modules.
+ * Runtime side: MetaMeRuntimeClient reads payload.deep_link → walletInitialTab.
+ * Unknown tab values fall back to "wallet" silently.
+ */
+export interface DeepLink {
+  module: "wallet" | "persona";
+  tab?: "wallet" | "tasks" | "reputation" | "rewards" | "library" | "payments";
+  intent?: "signin" | "signup";
+  flow?: "create-wizard" | "quick-add";
+}
+
 // iframe → Shell
 export type IframeInbound =
   | { type: "RUNTIME_READY" }
