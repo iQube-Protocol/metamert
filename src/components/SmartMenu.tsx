@@ -201,6 +201,7 @@ export default function SmartMenu() {
 
         {/* Nav bar — parchment surface with hairline top */}
         <nav
+          data-tour="smart-menu"
           className="flex items-stretch px-2 pt-3 pb-2 transition-all"
           style={{
             display: isPromptMode ? 'none' : 'flex',
