@@ -7,8 +7,8 @@ import {
   Coins, Play, Pencil, Users, Share2,
   Bot, Cpu, MessageSquare, Sparkles, Zap,
   Eye, Headphones, BookOpen, Search, RefreshCw, RotateCcw, XCircle,
-  Lock, User, Shield, Fingerprint, Radio, Settings,
-  Target, CheckSquare, Star, Tag, Compass, Wallet,
+  Lock, User, UserPlus, Shield, Fingerprint, Radio, Settings,
+  Target, CheckSquare, Star, Tag, Compass, Wallet, CreditCard, LogIn,
   PenLine, Palette, Hammer, Shuffle, Upload,
   Send, Download, Link, Truck, Box, Library, Save,
 } from "lucide-react";
