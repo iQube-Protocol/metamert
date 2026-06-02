@@ -221,28 +221,49 @@ const BE_ACTIONS: QuickActionDef[] = [
 ];
 
 const EARN_ACTIONS: QuickActionDef[] = [
-  { id: "goal",        label: "Goal",        icon: "target",       kind: "system-only", triggersInference: false },
-  { id: "task",        label: "Task",        icon: "check-square", kind: "system-only", triggersInference: false },
-  { id: "wallet",      label: "Wallet",      icon: "wallet",       kind: "system-only", triggersInference: false },
-  { id: "reward",      label: "Reward",      icon: "star",         kind: "system-only", triggersInference: false },
-  { id: "offer",       label: "Offer",       icon: "tag",          kind: "system-only", triggersInference: false },
+  { id: "goal",     label: "Goal",     icon: "target",       kind: "system-only", triggersInference: false },
+  { id: "task",     label: "Task",     icon: "check-square", kind: "system-only", triggersInference: false },
+  { id: "wallet",   label: "Wallet",   icon: "wallet",       kind: "system-only", triggersInference: false },
+  { id: "reward",   label: "Reward",   icon: "star",         kind: "system-only", triggersInference: false },
+  { id: "payments", label: "Payments", icon: "credit-card",  kind: "system-only", triggersInference: false },
+  { id: "signin",   label: "Sign In",  icon: "log-in",       kind: "system-only", triggersInference: false },
 ];
 
 /**
  * Drawer-only quick actions: pure UI overlays in the runtime. These must be
- * dispatched as a single MENU_ACTION { action_id } with no prompt, no AA
- * roundtrip, and no PROMPT_SUBMIT — the runtime drawer must not disturb the
- * current chat/inference state.
+ * dispatched as a single MENU_ACTION { action_id, deep_link? } with no prompt,
+ * no AA roundtrip, and no PROMPT_SUBMIT — the runtime drawer must not disturb
+ * the current chat/inference state.
  */
 export const DRAWER_ONLY_ACTION_IDS = new Set<string>([
   "wallet",
   "reward",
-  "offer",
+  "payments",
+  "signin",
+  "persona-create",
   "task",
   "goal",
   "settings",
   "connections",
 ]);
+
+/**
+ * Deep-link map: routes drawer-only quick actions to a specific wallet/persona
+ * tab + intent/flow inside the runtime. The runtime's MetaMeRuntimeClient
+ * consumes payload.deep_link and sets walletInitialTab accordingly.
+ *
+ * Keys are the *quick action id* the user clicks (e.g. "signin"). The runtime
+ * `action_id` and the deep_link envelope are encoded together. Items not in
+ * this map fall through to a plain MENU_ACTION { action_id }.
+ */
+export const DEEP_LINK_DISPATCH: Record<string, { actionId: string; deepLink: import("./shell-messages").DeepLink }> = {
+  signin:           { actionId: "wallet",  deepLink: { module: "wallet",  tab: "wallet",     intent: "signin" } },
+  reward:           { actionId: "wallet",  deepLink: { module: "wallet",  tab: "rewards" } },
+  task:             { actionId: "wallet",  deepLink: { module: "wallet",  tab: "tasks" } },
+  payments:         { actionId: "wallet",  deepLink: { module: "wallet",  tab: "payments" } },
+  reputation:       { actionId: "wallet",  deepLink: { module: "wallet",  tab: "reputation" } },
+  "persona-create": { actionId: "persona", deepLink: { module: "persona", flow: "create-wizard" } },
+};
 
 const MAKE_ACTIONS: QuickActionDef[] = [
   { id: "create",  label: "Create",  icon: "sparkles",  kind: "llm+menu", triggersInference: true, prompt: "Help me create something new" },
