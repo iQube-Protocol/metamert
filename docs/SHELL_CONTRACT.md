@@ -40,7 +40,7 @@
 |------|------|---------|
 | `SHELL_READY` | Iframe loads | `{ hide_chrome: true }` |
 | `HANDOFF` | After SHELL_READY | `{ handoff_token, aa_api_base_url, aa_api_token, context }` |
-| `MENU_ACTION` | Quick action or menu tap | `{ action_id, prompt?, menu_event?, cartridge_id?, codex_id?, mode? }` |
+| `MENU_ACTION` | Quick action or menu tap | `{ action_id, prompt?, menu_event?, cartridge_id?, codex_id?, mode?, deep_link? }` — see Deep-link envelope below |
 | `PROMPT_SUBMIT` | User submits prompt text | `{ text, cartridge_id?, codex_id?, mode? }` |
 | `SELECTOR_CHANGE` | User changes selector | `{ selector_type, id, iqube_id? }` |
 | `LAUNCH_CARTRIDGE` | Open a cartridge overlay in runtime | `{ cartridge_id, codex_id?, tab? }` (must be nested under `payload`) |
