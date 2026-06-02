@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
+import { Joyride, EVENTS, STATUS, type EventData, type Step } from "react-joyride";
 import { useShell } from "@/contexts/ShellContext";
 import { DEEP_LINK_DISPATCH } from "@/lib/smart-menu-config";
 
@@ -9,9 +9,9 @@ interface Props {
 }
 
 /**
- * Visitor Tour MVP. 10 lightweight steps anchored to shell-owned DOM via
- * `data-tour` attributes. Steps 6 and 7 dispatch deep-linked MENU_ACTIONs
- * to open runtime-side drawers (Create persona, Sign In). Joyride cannot
+ * Visitor Tour MVP. Lightweight steps anchored to shell-owned DOM via
+ * `data-tour` attributes. Two steps dispatch deep-linked MENU_ACTIONs to
+ * open runtime-side drawers (Create persona, Sign In). Joyride cannot
  * anchor inside the iframe, so those steps simply trigger and advance.
  */
 export default function VisitorTour({ run, onFinish }: Props) {
@@ -25,7 +25,6 @@ export default function VisitorTour({ run, onFinish }: Props) {
         title: "Welcome to your Runtime",
         content:
           "Explore freely. Create a persona to act. Add an ExperienceGuide when you want aigentMe to personalize your Runtime.",
-        disableBeacon: true,
       },
       {
         target: '[data-tour="smart-menu"]',
@@ -39,7 +38,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         placement: "bottom",
         title: "Cartridges",
         content:
-          "Cartridges are the experiences you launch — metaMe, KNYT, Qriptopian. Open cartridges show up here.",
+          "Cartridges are the experiences you launch — metaMe, KNYT, Qriptopian. Open cartridges appear here.",
       },
       {
         target: '[data-tour="smart-menu"]',
@@ -53,7 +52,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         placement: "top",
         title: "Your persona",
         content:
-          "The Be button is your active persona. Tap it to switch between Qripto and KNYT — or add a new one.",
+          "The Be button is your active persona. Tap it to switch between Qripto and KNYT — or add a new one with +.",
       },
       {
         target: '[data-tour="persona-nav"]',
@@ -89,19 +88,17 @@ export default function VisitorTour({ run, onFinish }: Props) {
     [],
   );
 
-  const handleCallback = (data: CallBackProps) => {
-    const { status, type, step, index } = data;
+  const handleEvent = (data: EventData) => {
+    const { status, type, step } = data;
 
-    // Side-effects when an actionable step is reached.
-    if (type === "step:after" && step?.data?.action) {
+    // Trigger side-effects after the user advances past an actionable step.
+    if (type === EVENTS.STEP_AFTER && step?.data?.action) {
       const action = step.data.action as "create-persona" | "signin";
-      if (action === "create-persona") {
-        const dl = DEEP_LINK_DISPATCH["persona-create"];
-        sendIframeAction("persona", dl);
-      } else if (action === "signin") {
-        const dl = DEEP_LINK_DISPATCH["signin"];
-        sendIframeAction("wallet", dl);
-      }
+      const entry =
+        action === "create-persona"
+          ? DEEP_LINK_DISPATCH["persona-create"]
+          : DEEP_LINK_DISPATCH["signin"];
+      if (entry) sendIframeAction(entry.actionId, entry.deepLink);
     }
 
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
@@ -114,28 +111,18 @@ export default function VisitorTour({ run, onFinish }: Props) {
       steps={steps}
       run={run}
       continuous
-      showProgress
-      showSkipButton
-      disableScrolling
-      callback={handleCallback}
-      styles={{
-        options: {
-          zIndex: 10000,
-          primaryColor: "hsl(var(--primary))",
-          backgroundColor: "var(--mm-surface-2)",
-          textColor: "var(--mm-ink-primary)",
-          arrowColor: "var(--mm-surface-2)",
-          overlayColor: "rgba(0,0,0,0.55)",
-        },
-        tooltip: {
-          borderRadius: 12,
-          border: "var(--mm-border-default)",
-        },
-        tooltipTitle: { color: "var(--mm-ink-primary)" },
-        tooltipContent: { color: "var(--mm-ink-secondary)" },
-        buttonNext: { borderRadius: 8 },
-        buttonBack: { color: "var(--mm-ink-muted)" },
-        buttonSkip: { color: "var(--mm-ink-muted)" },
+      onEvent={handleEvent}
+      options={{
+        showProgress: true,
+        skipBeacon: true,
+        skipScroll: true,
+        buttons: ["back", "close", "primary", "skip"],
+        primaryColor: "hsl(var(--primary))",
+        backgroundColor: "var(--mm-surface-2)",
+        arrowColor: "var(--mm-surface-2)",
+        textColor: "var(--mm-ink-primary)",
+        overlayColor: "rgba(0,0,0,0.55)",
+        zIndex: 10000,
       }}
       locale={{ last: "Finish", skip: "Skip" }}
     />
