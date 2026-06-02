@@ -212,7 +212,7 @@ export default function SmartMenu() {
           }}
           onPointerUp={handleNavAreaPointerUp}
         >
-          <div className="flex items-stretch">
+          <div className="flex items-stretch" data-tour="persona-nav">
             <NavButton item={NAV_ITEMS[0]} accentOverride={personaAccent} labelOverride={personaState.activeHandle} activeQAMode={isActiveMode ? activeMode : undefined} onPointerTap={handleNavPointerUp} onAction={handleMenuAction} onHoverEnter={handleNavHoverEnter} onHoverLeave={handleNavHoverLeave} />
           </div>
           {/* Left gap: outer half extends Be activation, inner half triggers Play */}
