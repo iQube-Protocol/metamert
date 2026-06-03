@@ -242,13 +242,13 @@ export default function VisitorTour({ run, onFinish }: Props) {
           lineHeight: 1.5,
           padding: 0,
         },
-        buttonNext: {
+        buttonPrimary: {
           background: "hsl(var(--primary))",
           color: "hsl(var(--primary-foreground))",
           borderRadius: "8px",
           fontSize: "13px",
           padding: "8px 14px",
-        } as any,
+        },
         buttonBack: {
           color: CARD_TEXT_MUTED,
           fontSize: "13px",
