@@ -299,3 +299,19 @@
   -webkit-backdrop-filter: blur(20px) saturate(1.5);
   border-color: hsl(217 33% 17% / 0.3);
 }
+
+/* First-visit pulse for the "?" help button (3s, then class is removed) */
+@keyframes tour-help-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsla(150, 70%, 50%, 0.55);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 6px hsla(150, 70%, 50%, 0);
+    transform: scale(1.12);
+  }
+}
+.tour-help-pulse {
+  animation: tour-help-pulse 0.9s ease-in-out 3;
+  border-radius: 9999px;
+}
