@@ -1,55 +1,27 @@
-## Why the tour jumps from "Smart Menu" to "Trust & Reliability"
+## Problems
 
-Joyride silently skips any step whose `target` selector is not in the DOM at the moment the step is rendered. Steps 2–8 all target elements that are only conditionally mounted:
+1. **Co-pilot prompt step** currently anchors to `[data-tour="smart-menu-prompt"]` and calls `activateMode("play")`, so the card opens at the bottom (pointing at the menu cluster) and then jumps up to the prompt bar overlay. It should stay anchored to the bottom menu cluster the whole time.
 
-- `[data-tour="cartridge-indicator"]` — in the header (should exist, but see below)
-- `[data-tour="smart-menu-prompt"]` — only rendered when `viewState === "promptMode"`
-- `[data-tour="quick-action-wallet"]` and `[data-tour="quick-action-settings"]` — only rendered inside `SmartMenuSubmenu`, which mounts when a submenu (be/earn/play/…) is active
+2. **Sign In step** is anchored to `[data-tour="quick-action-wallet"]` (the Earn pill on the floating menu). It should instead point at the dedicated **Sign In quick action** we added to the Earn submenu — `[data-tour="quick-action-signin"]` — and then open the SmartWallet drawer with the signin deep link.
 
-The current step effect runs on Joyride's `STEP_BEFORE` event and calls `clearShellSurfaces()` followed by `activateMode("earn")` / `activateMode("be")`. React schedules those state updates asynchronously, so when Joyride immediately measures the target it finds nothing — and rolls forward step by step until it lands on `trust-dots` (step 9), which is always in the DOM.
+## Fix (single file: `src/components/tour/VisitorTour.tsx`)
 
-The "loader animations" and "Replay welcome guide tooltip" churn visible in the replay between step 1 and step 9 are the side effects of those rapid mode toggles firing while Joyride fast-forwards.
+### Step 4 — Co-pilot prompt
+- Change `target` from `'[data-tour="smart-menu-prompt"]'` to `'[data-tour="smart-menu"]'`.
+- Change `placement` from `"top"` to `"top"` (unchanged) but keep card anchored to the bottom cluster.
+- Change `data.action` from `"show-prompt"` to `"reset"` so `runStepEffect` no longer calls `activateMode("play")`. The card stays put pointing at the bottom menu cluster.
+- Update copy slightly so it still makes sense without the prompt bar being visible (e.g. "Tap any menu item to open the prompt bar — that's where you talk to your aigent.").
 
-## Fix
+### Step 5 — Sign In
+- Change `target` to `'[data-tour="quick-action-signin"]'`.
+- Keep `placement: "top-end"`.
+- Keep `data.action: "signin"`. In `runStepEffect` the `"signin"` case already: clears surfaces → `activateMode("earn")` (opens the earn submenu containing the signin pill) → `openWalletSignIn()` (deep-links the wallet to the Sign-In tab).
+- Because `goToStep` waits for the anchor to mount before showing the card, the earn submenu will render first, then the card lands on the `quick-action-signin` pill, and the wallet drawer opens on the right with the Sign-In modal.
 
-Make the tour **wait for its anchor to be mounted** before showing each step, by switching `VisitorTour` to a controlled `stepIndex` and gating advancement on DOM readiness.
+### Other steps — no changes
+- Create Persona, Wallet, Settings, Activate Persona, Trust dots, Help — all stay as they are.
 
-### Steps
-
-1. **Controlled Joyride index in `src/components/tour/VisitorTour.tsx`**
-   - Track `stepIndex` in local state; pass it to `<Joyride stepIndex={stepIndex} />`.
-   - Handle `ACTIONS.NEXT` / `ACTIONS.PREV` (on `EVENTS.STEP_AFTER`) ourselves instead of letting Joyride auto-advance.
-
-2. **Pre-stage surfaces, then wait for the target**
-   - When advancing to step N: first run `runStepEffect(steps[N].data.action)` (clears shell surfaces and opens the correct drawer/submenu).
-   - Then `await waitForElement(steps[N].target, { timeout: 1500, interval: 50 })` — a small polling helper using `document.querySelector`.
-   - Only after the element resolves do we set `stepIndex = N`, so Joyride renders with a valid anchor.
-   - If the element never appears within the timeout, fall back to skipping that single step (advance to N+1) instead of cascading through every later step.
-
-3. **Reset state on restart**
-   - When `run` flips from false→true (or `runKey` changes), reset `stepIndex` to 0 and immediately run the pre-stage flow for step 0.
-
-4. **No changes needed to step definitions, anchors, or `DEEP_LINK_DISPATCH`** — the existing targets are correct; only the timing is broken.
-
-### Technical details
-
-- `react-joyride` exposes `ACTIONS`, `EVENTS`, and `STATUS`. We listen for `EVENTS.STEP_AFTER` + `ACTIONS.NEXT`/`ACTIONS.PREV` and for `ACTIONS.CLOSE`/`STATUS.FINISHED`/`STATUS.SKIPPED` to call `onFinish`.
-- `waitForElement` is a 20-line helper local to `VisitorTour.tsx`:
-
-```text
-waitForElement(selector, { timeout, interval }):
-  loop until found or timeout:
-    el = document.querySelector(selector)
-    if el and el.offsetParent !== null: return el
-    await sleep(interval)
-  return null
-```
-
-- We also check `offsetParent !== null` so we don't anchor onto a hidden node.
-- `pauseIdleTimer()` continues to be called once per transition so the SmartMenu doesn't auto-collapse mid-tour.
-
-### Out of scope
-
-- No design changes (cards, colors, arrows stay as they are).
-- No changes to `ShellContext`, the wallet deep-link contract, or any runtime postMessage payloads.
-- No changes to memory/index.md.
+## Out of scope
+- No design / card style changes.
+- No changes to `DEEP_LINK_DISPATCH`, `ShellContext`, or runtime postMessage payloads.
+- No changes to `SmartMenuSubmenu` (it already emits `data-tour="quick-action-${action.id}"`, so `quick-action-signin` is already in the DOM whenever the Earn submenu is open).
