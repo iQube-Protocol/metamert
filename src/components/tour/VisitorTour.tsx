@@ -213,7 +213,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
       run={run}
       continuous
       spotlightPadding={6}
-      options={{ disableOverlayClose: true, zIndex: 10000 }}
+      options={{ zIndex: 10000 }}
       onEvent={handleEvent}
       locale={{ last: "Finish", skip: "Skip" }}
       styles={{
