@@ -12,29 +12,27 @@ interface Props {
 }
 
 /**
- * Small "?" button that restarts the Visitor Tour. Mounted in the header.
- * On first arrival (no tour completed/skipped flag), pulses green for 3s
- * to draw the user's attention to the guide.
+ * Small "?" button that restarts the Visitor Tour.
+ * On first arrival per page load, an overlay ring pulses green for 3s.
+ * The ring is a sibling overlay (not the button's own box-shadow) so it
+ * can't be suppressed by inherited transitions or competing animations.
  */
 export default function TourHelpButton({ onClick }: Props) {
   const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
-    // Pulse once per full page load. Using a window-level flag (not storage)
-    // means it survives component remounts within the same page but resets on
-    // every fresh navigation/refresh — i.e. each time a user "arrives".
     const w = window as unknown as { __metameHelpPulsed?: boolean };
     if (w.__metameHelpPulsed) return;
     w.__metameHelpPulsed = true;
 
-    const raf = window.requestAnimationFrame(() => setPulse(true));
-    const t = window.setTimeout(() => setPulse(false), 3000);
+    // Delay slightly so it fires after header/runtime takeover animations.
+    const start = window.setTimeout(() => setPulse(true), 600);
+    const stop = window.setTimeout(() => setPulse(false), 600 + 3000);
     return () => {
-      window.cancelAnimationFrame(raf);
-      window.clearTimeout(t);
+      window.clearTimeout(start);
+      window.clearTimeout(stop);
     };
   }, []);
-
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -44,13 +42,14 @@ export default function TourHelpButton({ onClick }: Props) {
             data-tour="help-button"
             onClick={onClick}
             aria-label="Replay welcome guide"
-            className={`flex h-7 w-7 items-center justify-center transition-colors ${pulse ? "tour-help-pulse" : ""}`}
+            className="relative flex h-7 w-7 items-center justify-center transition-colors"
             style={{
-              color: pulse ? "hsl(150 70% 50%)" : "var(--mm-ink-muted)",
-              borderRadius: "var(--mm-radius-xs)",
+              color: pulse ? "hsl(150 70% 45%)" : "var(--mm-ink-muted)",
+              borderRadius: "9999px",
             }}
           >
-            <HelpCircle className="h-4 w-4" />
+            {pulse && <span className="metame-guide-pulse-ring" aria-hidden="true" />}
+            <HelpCircle className="h-4 w-4 relative" style={{ zIndex: 1 }} />
           </button>
         </TooltipTrigger>
         <TooltipContent side="bottom">Replay welcome guide</TooltipContent>
