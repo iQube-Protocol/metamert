@@ -169,7 +169,18 @@ export default function VisitorTour({ run, onFinish }: Props) {
       disableScrolling
       onEvent={handleEvent}
       locale={{ last: "Finish", skip: "Skip" }}
+      options={{
+        primaryColor: "hsl(var(--primary))",
+        textColor: "hsl(var(--foreground))",
+        backgroundColor: "hsl(var(--card) / 0.78)",
+        arrowColor: "hsl(var(--card) / 0.78)",
+        overlayColor: "hsla(0, 0%, 0%, 0.35)",
+        zIndex: 10000,
+      }}
       styles={{
+        overlay: {
+          backgroundColor: "hsla(0, 0%, 0%, 0.35)",
+        },
         tooltip: {
           backdropFilter: "blur(14px) saturate(140%)",
           WebkitBackdropFilter: "blur(14px) saturate(140%)",
@@ -186,7 +197,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         tooltipContent: {
           color: "hsl(var(--foreground) / 0.85)",
         },
-        buttonNext: {
+        buttonPrimary: {
           background: "hsl(var(--primary))",
           color: "hsl(var(--primary-foreground))",
           borderRadius: "var(--mm-radius-sm)",
