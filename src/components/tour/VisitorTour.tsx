@@ -187,6 +187,10 @@ export default function VisitorTour({ run, onFinish }: Props) {
         activateMode("be");
         break;
     }
+    // activateMode restarts the shell idle timer, which would auto-collapse
+    // the staged submenu after a few seconds and yank the tour anchor away.
+    // Re-pause it so the highlighted pill stays put for the whole step.
+    pauseIdleTimer();
   };
 
   // Controlled step index — we gate every advancement on the target being
