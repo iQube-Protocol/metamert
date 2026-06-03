@@ -68,21 +68,22 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "show-cartridges" satisfies TourAction },
       },
       {
-        target: '[data-tour="smart-menu-prompt"]',
+        target: '[data-tour="smart-menu"]',
         placement: "top",
         title: "Co-pilot prompt",
         content:
-          "Tap any menu item again to open the prompt bar. That's where you talk to your aigent.",
-        data: { action: "show-prompt" satisfies TourAction },
+          "Tap any menu item to open the prompt bar — that's where you talk to your aigent.",
+        data: { action: "reset" satisfies TourAction },
       },
       {
-        // Sign In — anchor at the Earn pill (which opens the SmartWallet).
-        // Wallet drawer opens on the right, deep-linked to Sign-In tab.
-        target: '[data-tour="quick-action-wallet"]',
+        // Sign In — anchor at the dedicated Sign In quick action inside the
+        // Earn submenu. Effect opens the SmartWallet drawer on the right,
+        // deep-linked to the Sign-In tab.
+        target: '[data-tour="quick-action-signin"]',
         placement: "top-end",
         title: "Sign in",
         content:
-          "Sign in from the SmartWallet on the right — the wallet is now open on the Sign-In tab. Once signed in you can remix, buy, earn, vote, save, publish and generate.",
+          "Tap Sign In here to open the SmartWallet on the right with the Sign-In modal. Once signed in you can remix, buy, earn, vote, save, publish and generate.",
         data: { action: "signin" satisfies TourAction },
       },
       {
