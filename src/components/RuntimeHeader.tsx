@@ -290,23 +290,34 @@ export default function RuntimeHeader() {
             </PopoverContent>
           </Popover>
 
-          {/* Theme toggle (next to LLM dropdown) */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={toggleTheme}
-                aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-mm-xs border border-transparent bg-transparent p-0 text-mm-ink-primary transition-colors hover:bg-mm-line-subtle focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-              >
-                {theme === "light" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p className="text-xs">{theme === "light" ? "Switch to dark mode" : "Switch to light mode"}</p>
-            </TooltipContent>
-          </Tooltip>
+          {/* Cartridge overlay indicator (moved from right) */}
+          {cartridgeOverlay && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className="flex items-center gap-1 px-2 py-1"
+                  style={{
+                    borderRadius: 'var(--mm-radius-xs)',
+                    backgroundColor: 'var(--mm-canvas-variant)',
+                    border: 'var(--mm-border-hairline)',
+                  }}
+                >
+                  <Save className="h-3.5 w-3.5" style={{ color: overlayAccent }} />
+                  <button
+                    type="button"
+                    onClick={closeCartridgeOverlay}
+                    aria-label={`Close ${cartridgeOverlay.title}`}
+                    className="inline-flex h-4 w-4 items-center justify-center rounded-mm-xs text-mm-ink-muted transition-colors hover:bg-mm-line-subtle hover:text-mm-ink-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs">Close {cartridgeOverlay.title}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
 
         {/* Center: Cartridge icon (dead center) */}
