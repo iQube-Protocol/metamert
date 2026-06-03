@@ -13,7 +13,8 @@ type TourAction =
   | "show-prompt"
   | "show-cartridges"
   | "signin"
-  | "create-persona"
+  | "create-persona-wallet"
+  | "create-persona-submenu"
   | "open-wallet"
   | "open-settings"
   | "show-trust"
@@ -22,13 +23,11 @@ type TourAction =
 /**
  * Visitor Tour.
  *
- * Each step's `data.action` drives shell state via `runStepEffect` *before*
- * the tooltip renders (STEP_BEFORE), and we clear shell surfaces on each
- * transition (STEP_AFTER) so we don't end up with stacked drawers/submenus.
- *
- * Drawer-opening steps (signin / persona / wallet / settings) use the
- * working shell primitives today AND emit the new deep_link envelope so the
- * runtime side lights up "for free" once it ships its half.
+ * Step effects fire on STEP_BEFORE. We clear shell-side surfaces (mode +
+ * submenu) on every transition so we never stack drawers. Sign-in & create-
+ * persona open the SmartWallet drawer (right side, runtime-owned) — NOT the
+ * IdentityIQube drawer (left). Settings opens the metaMe Settings drawer via
+ * the Be submenu's Settings quick action.
  */
 export default function VisitorTour({ run, onFinish }: Props) {
   const {
@@ -36,12 +35,9 @@ export default function VisitorTour({ run, onFinish }: Props) {
     activateMode,
     deactivateMode,
     setSubmenuType,
-    openPersonaIQube,
-    openIdentityIQube,
     pauseIdleTimer,
   } = useShell();
 
-  // Track current step index so STEP_AFTER can clean up correctly.
   const lastStepRef = useRef<number>(-1);
 
   const steps: Step[] = useMemo(
@@ -59,11 +55,14 @@ export default function VisitorTour({ run, onFinish }: Props) {
         placement: "top",
         title: "The Smart Menu",
         content:
-          "Be, Make, Play, Earn and Share — five lenses for everything you can do here. Browse identity, media, creation, rewards and sharing experiences.",
+          "Be, Make, Play, Earn and Share — five lenses for everything you can do here. Browse identity, media, creation, rewards and sharing.",
         data: { action: "reset" satisfies TourAction },
       },
       {
-        target: '[data-tour="smart-menu-shell"]',
+        // Target the prompt bar itself so the tooltip sits ABOVE the prompt
+        // input — overlaying the floating quick-action menu rather than being
+        // pushed above it.
+        target: '[data-tour="smart-menu-prompt"]',
         placement: "top",
         title: "Co-pilot prompt",
         content:
@@ -79,23 +78,35 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "show-cartridges" satisfies TourAction },
       },
       {
+        // Sign-in opens the SmartWallet on the right with the Sign-In tab
+        // active. Card sits bottom-left so the wallet stays visible.
         target: '[data-tour="smart-menu-shell"]',
-        placement: "top",
+        placement: "top-start",
         title: "Sign in",
         content:
-          "Sign in and create a Persona to remix, buy, earn, vote, save, publish or generate content. Opens the Sign In tab in your wallet.",
+          "Sign in from the SmartWallet to remix, buy, earn, vote, save, publish or generate. Use the Sign In option in the wallet on the right.",
         data: { action: "signin" satisfies TourAction },
       },
       {
-        target: '[data-tour="persona-nav"]',
-        placement: "top",
-        title: "Create a persona",
+        // Same wallet still open — point users at the Create Persona CTA.
+        target: '[data-tour="smart-menu-shell"]',
+        placement: "top-start",
+        title: "Create a persona — from the wallet",
         content:
-          "Use the Persona wizard to create, manage and switch between Qripto, KNYT or agent delegates — or add a new one with +.",
-        data: { action: "create-persona" satisfies TourAction },
+          "Tap Create Persona in the SmartWallet to launch the persona wizard and set up Qripto, KNYT or a delegate.",
+        data: { action: "create-persona-wallet" satisfies TourAction },
       },
       {
-        target: '[data-tour="smart-menu-shell"]',
+        // Alternate path: Be → persona submenu → + opens the wizard directly.
+        target: '[data-tour="quick-action-persona"]',
+        placement: "top",
+        title: "Create a persona — from Be",
+        content:
+          "You can also reach the persona wizard from Be → Persona. Tap + to add a new Qripto, KNYT or delegate persona.",
+        data: { action: "create-persona-submenu" satisfies TourAction },
+      },
+      {
+        target: '[data-tour="quick-action-wallet"]',
         placement: "top",
         title: "The SmartWallet",
         content:
@@ -103,11 +114,14 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "open-wallet" satisfies TourAction },
       },
       {
-        target: '[data-tour="smart-menu-shell"]',
-        placement: "top",
+        // Target the Settings quick action in Be so the arrow points at the
+        // right control. Card placed top-end so the settings drawer (left)
+        // remains visible.
+        target: '[data-tour="quick-action-settings"]',
+        placement: "top-end",
         title: "Settings",
         content:
-          "Set the rules by which your aigents can act, and how much autonomy and control you want them operating under.",
+          "Set the rules your aigents act under — autonomy, spend limits, approvals and skill scope.",
         data: { action: "open-settings" satisfies TourAction },
       },
       {
@@ -123,14 +137,14 @@ export default function VisitorTour({ run, onFinish }: Props) {
         placement: "bottom",
         title: "Restart anytime",
         content:
-          "You can re-run this guide whenever you like by clicking the ? button up here.",
+          "Re-run this guide any time by clicking the ? button up here.",
         data: { action: "show-help" satisfies TourAction },
       },
     ],
     [],
   );
 
-  /** Close any shell-side surface (mode, submenu) before the next step. */
+  /** Collapse shell-side overlays (mode + submenu) before staging the next. */
   const clearShellSurfaces = () => {
     setSubmenuType(null);
     deactivateMode();
@@ -151,20 +165,28 @@ export default function VisitorTour({ run, onFinish }: Props) {
         clearShellSurfaces();
         break;
       case "signin": {
+        // Open SmartWallet on Sign-In tab. Do NOT open IdentityIQube.
         clearShellSurfaces();
-        openIdentityIQube();
         const dl = DEEP_LINK_DISPATCH["signin"];
         if (dl) sendIframeAction(dl.actionId, dl.deepLink);
+        else sendIframeAction("wallet");
         break;
       }
-      case "create-persona": {
+      case "create-persona-wallet": {
+        // Keep SmartWallet open with sign-in context — user clicks "Create
+        // Persona" in the wallet UI to launch the wizard.
         clearShellSurfaces();
-        // Surface the persona selector in the shell so the + pill is visible.
+        const dl = DEEP_LINK_DISPATCH["signin"];
+        if (dl) sendIframeAction(dl.actionId, dl.deepLink);
+        else sendIframeAction("wallet");
+        break;
+      }
+      case "create-persona-submenu": {
+        // Alternate entry: Be → Persona submenu pill. + opens the wizard
+        // (already wired in SmartMenuSubmenu via DEEP_LINK_DISPATCH).
+        clearShellSurfaces();
         activateMode("be");
         setSubmenuType("personaSelector");
-        openPersonaIQube("qripto");
-        const dl = DEEP_LINK_DISPATCH["persona-create"];
-        if (dl) sendIframeAction(dl.actionId, dl.deepLink);
         break;
       }
       case "open-wallet":
@@ -200,12 +222,14 @@ export default function VisitorTour({ run, onFinish }: Props) {
     }
   };
 
-  // Light parchment surface for tour cards — legible in BOTH light and dark
-  // mode. Sits above the dark runtime canvas without disappearing into it.
-  const CARD_BG = "rgba(252, 250, 245, 0.94)";
-  const CARD_BORDER = "rgba(20, 20, 30, 0.12)";
-  const CARD_TEXT = "hsl(220 13% 18%)";
-  const CARD_TEXT_MUTED = "hsl(220 9% 38%)";
+  // Brand-tinted card surface — soft mint-cyan parchment that reads as part
+  // of the metaMe palette (vs. plain cream) while staying legible over the
+  // dark runtime canvas in both themes.
+  const CARD_BG = "hsla(186, 55%, 95%, 0.95)";
+  const CARD_BORDER = "hsla(186, 50%, 60%, 0.35)";
+  const CARD_TEXT = "hsl(200 30% 16%)";
+  const CARD_TEXT_MUTED = "hsl(200 18% 36%)";
+  const CARD_ACCENT = "hsl(186 70% 38%)";
 
   return (
     <Joyride
@@ -217,7 +241,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
       locale={{ last: "Finish", skip: "Skip" }}
       styles={{
         overlay: {
-          backgroundColor: "hsla(0, 0%, 0%, 0.45)",
+          backgroundColor: "hsla(0, 0%, 0%, 0.35)",
         },
         tooltip: {
           backdropFilter: "blur(10px) saturate(140%)",
@@ -225,7 +249,8 @@ export default function VisitorTour({ run, onFinish }: Props) {
           background: CARD_BG,
           border: `1px solid ${CARD_BORDER}`,
           borderRadius: "12px",
-          boxShadow: "0 18px 48px -16px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.2)",
+          boxShadow:
+            "0 18px 48px -16px rgba(0,0,0,0.55), 0 0 0 1px hsla(186,60%,60%,0.18), 0 2px 6px rgba(0,0,0,0.2)",
           color: CARD_TEXT,
           padding: "16px 18px",
         },
@@ -242,8 +267,8 @@ export default function VisitorTour({ run, onFinish }: Props) {
           padding: 0,
         },
         buttonPrimary: {
-          background: "hsl(var(--primary))",
-          color: "hsl(var(--primary-foreground))",
+          background: CARD_ACCENT,
+          color: "white",
           borderRadius: "8px",
           fontSize: "13px",
           padding: "8px 14px",
