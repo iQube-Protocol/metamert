@@ -352,6 +352,7 @@ export default function RuntimeHeader() {
               </TooltipContent>
             </Tooltip>
           )}
+          <TourHelpButton onClick={() => window.dispatchEvent(new CustomEvent("metame:tour:restart"))} />
           <Tooltip>
             <TooltipTrigger asChild>
               <div
@@ -376,7 +377,6 @@ export default function RuntimeHeader() {
               <p className="text-xs">{(trust.signals ?? []).join(" · ") || trust.level}</p>
             </TooltipContent>
           </Tooltip>
-          <TourHelpButton onClick={() => window.dispatchEvent(new CustomEvent("metame:tour:restart"))} />
         </div>
       </header>
     </TooltipProvider>
