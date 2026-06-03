@@ -124,7 +124,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         placement: "top-end",
         title: "Settings",
         content:
-          "Set the rules your aigents act under — autonomy, spend limits, approvals and skill scope. The Settings drawer is open on the right.",
+          "Set the rules your aigents act under — autonomy, spend limits, approvals and skill scope. The Settings drawer link is on the right of the 'Be' menu's sub menu bar.",
         data: { action: "open-settings" satisfies TourAction },
       },
       {
