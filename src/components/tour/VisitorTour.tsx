@@ -150,7 +150,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         placement: "bottom",
         title: "Trust & Reliability",
         content:
-          "These dots reflect your aigent's live Trust and Reliability scores. Watch them respond as you interact.",
+          "These dots reflect your aigent's live Reliability and Trust scores based on the model (AI), tools and data it is using. Watch them respond as you change these and interact.",
         data: { action: "show-trust" satisfies TourAction },
       },
       {
