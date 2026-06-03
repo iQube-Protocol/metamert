@@ -39,7 +39,9 @@ export default function VisitorTour({ run, onFinish }: Props) {
     pauseIdleTimer,
     activeMode,
     viewState,
+    handleMenuAction,
   } = useShell();
+
 
   // Live mirror of mode/viewState — useShell closures captured inside
   // runStepEffect would otherwise be stale across rapid step transitions
@@ -112,14 +114,16 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "create-persona" satisfies TourAction },
       },
       {
-        // SmartWallet — anchored to the Earn pill which also opens the wallet.
-        target: '[data-tour="quick-action-wallet"]',
-        placement: "top",
-        title: "The SmartWallet",
+        // SmartWallet → reframed as Active Persona cards anchored at the
+        // persona nav pill, so we don't repeat the Earn pill three times.
+        target: '[data-tour="persona-nav"]',
+        placement: "top-start",
+        title: "Active Persona",
         content:
-          "Your SmartWallet is where you manage personas, payments, rewards and reputation across every cartridge.",
+          "Your active persona card lives here on the left — tap it to switch between Qripto, KNYT or delegate personas. Whoever's active sets the identity your aigent acts as.",
         data: { action: "open-wallet" satisfies TourAction },
       },
+
       {
         // Settings — anchored at the Settings quick action in Be. Card
         // top-end so the settings drawer (right floating) stays in view.
@@ -203,8 +207,12 @@ export default function VisitorTour({ run, onFinish }: Props) {
         break;
       case "show-cartridges":
         ensureMode("play");
-        setSubmenuType("cartridgeSelector");
+        // Stay in Play quickActions so the [data-tour="quick-action-cartridge"]
+        // anchor remains mounted. Tapping the highlighted Cartridge pill is
+        // what opens the cartridge selector overlay.
+        setSubmenuType("quickActions");
         break;
+
       case "signin":
         ensureMode("earn");
         sendIframeAction("wallet", { module: "wallet", tab: "wallet", intent: "signin" });
