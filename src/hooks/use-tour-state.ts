@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const COMPLETED_KEY = "metame.tour.visitor.completed";
 const SKIPPED_KEY = "metame.tour.visitor.skipped";
@@ -25,6 +25,14 @@ export function useTourState(): TourState {
   const [hasSeen, setHasSeen] = useState<boolean>(() => readFlag(COMPLETED_KEY) || readFlag(SKIPPED_KEY));
   const [showWelcome, setShowWelcome] = useState<boolean>(false);
   const [running, setRunning] = useState<boolean>(false);
+  const startTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearStartTimer = useCallback(() => {
+    if (startTimerRef.current) {
+      clearTimeout(startTimerRef.current);
+      startTimerRef.current = null;
+    }
+  }, []);
 
   // Show welcome modal on first load if user has not seen the tour.
   useEffect(() => {
@@ -34,31 +42,40 @@ export function useTourState(): TourState {
     }
   }, [hasSeen]);
 
+  useEffect(() => () => clearStartTimer(), [clearStartTimer]);
+
   const start = useCallback(() => {
+    clearStartTimer();
     setShowWelcome(false);
-    setRunning(true);
-  }, []);
+    startTimerRef.current = setTimeout(() => {
+      startTimerRef.current = null;
+      setRunning(true);
+    }, 260);
+  }, [clearStartTimer]);
 
   const skip = useCallback(() => {
+    clearStartTimer();
     writeFlag(SKIPPED_KEY, true);
     setHasSeen(true);
     setShowWelcome(false);
     setRunning(false);
-  }, []);
+  }, [clearStartTimer]);
 
   const complete = useCallback(() => {
+    clearStartTimer();
     writeFlag(COMPLETED_KEY, true);
     setHasSeen(true);
     setRunning(false);
-  }, []);
+  }, [clearStartTimer]);
 
   const restart = useCallback(() => {
+    clearStartTimer();
     writeFlag(SKIPPED_KEY, false);
     writeFlag(COMPLETED_KEY, false);
     setHasSeen(false);
     setShowWelcome(false);
     setRunning(true);
-  }, []);
+  }, [clearStartTimer]);
 
   const dismissWelcome = useCallback(() => setShowWelcome(false), []);
 
