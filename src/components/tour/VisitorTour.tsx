@@ -46,7 +46,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
           "Explore freely. Create a persona to act. Add an ExperienceGuide when you want aigentMe to personalize your Runtime.",
       },
       {
-        target: '[data-tour="smart-menu"]',
+        target: '[data-tour="smart-menu-shell"]',
         placement: "top",
         title: "Smart Menu",
         content:
@@ -61,7 +61,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
           "Cartridges are the experiences you launch — metaMe, KNYT, Qriptopian. Open cartridges appear here.",
       },
       {
-        target: '[data-tour="smart-menu"]',
+        target: '[data-tour="smart-menu-shell"]',
         placement: "top",
         title: "Co-pilot prompt",
         content:
@@ -69,7 +69,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "show-prompt" satisfies TourAction },
       },
       {
-        target: '[data-tour="persona-nav"]',
+        target: '[data-tour="smart-menu-shell"]',
         placement: "top",
         title: "Your persona",
         content:
@@ -77,7 +77,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "show-persona-submenu" satisfies TourAction },
       },
       {
-        target: '[data-tour="persona-nav"]',
+        target: '[data-tour="smart-menu-shell"]',
         placement: "top",
         title: "Create a persona",
         content:
@@ -85,7 +85,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "create-persona" satisfies TourAction },
       },
       {
-        target: '[data-tour="smart-menu"]',
+        target: '[data-tour="smart-menu-shell"]',
         placement: "top",
         title: "Sign in",
         content:
@@ -121,6 +121,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         activateMode(activeMode ?? "earn");
         break;
       case "show-persona-submenu":
+        activateMode("be");
         setSubmenuType("personaSelector");
         break;
       case "create-persona": {
