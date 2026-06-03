@@ -163,6 +163,17 @@ export default function VisitorTour({ run, onFinish }: Props) {
   };
 
   /**
+   * Idempotently move the shell into a given mode + promptMode. If we are
+   * already there we do nothing — calling activateMode again with the same
+   * mode would hit the "tap-active-to-collapse" branch (stale closure) and
+   * fold the menu back to defaultNav, yanking the tour anchor away.
+   */
+  const ensureMode = (mode: "earn" | "be" | "play") => {
+    if (activeModeRef.current === mode && viewStateRef.current === "promptMode") return;
+    activateMode(mode);
+  };
+
+  /**
    * Pre-anchor staging only — make sure the DOM target for the step exists.
    *
    * IMPORTANT: We deliberately do NOT open the SmartWallet, Settings, or any
@@ -182,19 +193,16 @@ export default function VisitorTour({ run, onFinish }: Props) {
         clearShellSurfaces();
         break;
       case "show-prompt":
-        clearShellSurfaces();
-        activateMode("play");
+        ensureMode("play");
         break;
       case "signin":
       case "create-persona":
       case "activate-persona":
       case "open-wallet":
-        clearShellSurfaces();
-        activateMode("earn");
+        ensureMode("earn");
         break;
       case "open-settings":
-        clearShellSurfaces();
-        activateMode("be");
+        ensureMode("be");
         break;
     }
     // activateMode restarts the shell idle timer, which would auto-collapse
@@ -202,6 +210,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
     // Re-pause it so the highlighted pill stays put for the whole step.
     pauseIdleTimer();
   };
+
 
   // Controlled step index — we gate every advancement on the target being
   // present in the DOM, so async drawer/submenu mounts can't cause Joyride
