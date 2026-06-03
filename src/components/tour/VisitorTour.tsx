@@ -235,7 +235,6 @@ export default function VisitorTour({ run, onFinish }: Props) {
           backgroundColor: "hsla(0, 0%, 0%, 0.35)",
         },
         spotlight: {
-          borderRadius: "10px",
           boxShadow: `0 0 0 3px ${HALO}, 0 0 24px 6px ${HALO}`,
         },
         tooltip: {
