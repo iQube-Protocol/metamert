@@ -76,10 +76,9 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "show-prompt" satisfies TourAction },
       },
       {
-        // Sign In — arrow points at the persona / Be pill; card floats top-end
-        // so it sits in the middle-right of the screen and does not cover the
-        // SmartWallet drawer that opens on the right.
-        target: '[data-tour="persona-nav"]',
+        // Sign In — anchor at the Earn pill (which opens the SmartWallet).
+        // Wallet drawer opens on the right, deep-linked to Sign-In tab.
+        target: '[data-tour="quick-action-wallet"]',
         placement: "top-end",
         title: "Sign in",
         content:
@@ -87,14 +86,14 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "signin" satisfies TourAction },
       },
       {
-        // Create Persona — same anchor (persona / Be pill), still floats
-        // top-end. Wallet stays open on the Sign-In tab where the
-        // "Create Persona" CTA lives.
-        target: '[data-tour="persona-nav"]',
+        // Create Persona — anchor at the Earn pill (opens the wallet). The
+        // Create Persona badge lives inside the SmartWallet drawer on the
+        // right; tapping it launches the wizard.
+        target: '[data-tour="quick-action-wallet"]',
         placement: "top-end",
         title: "Create a persona",
         content:
-          "In the open SmartWallet, tap Create Persona to launch the wizard and set up Qripto, KNYT or a delegate persona.",
+          "In the open SmartWallet on the right, tap the Create Persona badge to launch the wizard and set up Qripto, KNYT or a delegate persona.",
         data: { action: "create-persona" satisfies TourAction },
       },
       {
@@ -117,13 +116,13 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "open-settings" satisfies TourAction },
       },
       {
-        // Persona activation happens inside the wallet — bring it back and
-        // anchor at the persona/Be pill so users know where to manage it.
-        target: '[data-tour="persona-nav"]',
+        // Persona activation happens inside the wallet — anchor at the Earn
+        // pill so users associate activation with the SmartWallet on the right.
+        target: '[data-tour="quick-action-wallet"]',
         placement: "top-end",
         title: "Activate a persona",
         content:
-          "Activating personas happens inside the SmartWallet. Choose Qripto, KNYT or a delegate to set the identity your aigent acts as.",
+          "Activating personas happens inside the SmartWallet on the right. Choose Qripto, KNYT or a delegate to set the identity your aigent acts as.",
         data: { action: "activate-persona" satisfies TourAction },
       },
       {
@@ -159,6 +158,13 @@ export default function VisitorTour({ run, onFinish }: Props) {
     else sendIframeAction("wallet");
   };
 
+  /** Open the SmartWallet and launch the Create Persona wizard. */
+  const openCreatePersonaWizard = () => {
+    const dl = DEEP_LINK_DISPATCH["persona-create"];
+    if (dl) sendIframeAction(dl.actionId, dl.deepLink);
+    else sendIframeAction("wallet");
+  };
+
   const runStepEffect = (action: TourAction | undefined) => {
     if (!action) return;
     pauseIdleTimer();
@@ -174,11 +180,19 @@ export default function VisitorTour({ run, onFinish }: Props) {
         activateMode("play");
         break;
       case "signin":
-      case "create-persona":
-      case "activate-persona":
-        // All three live inside the SmartWallet on the Sign-In tab.
         clearShellSurfaces();
+        activateMode("earn");
         openWalletSignIn();
+        break;
+      case "create-persona":
+        clearShellSurfaces();
+        activateMode("earn");
+        openCreatePersonaWizard();
+        break;
+      case "activate-persona":
+        clearShellSurfaces();
+        activateMode("earn");
+        sendIframeAction("wallet");
         break;
       case "open-wallet":
         clearShellSurfaces();
