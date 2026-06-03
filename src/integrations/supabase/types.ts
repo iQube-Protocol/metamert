@@ -1331,6 +1331,7 @@ export type Database = {
           owner_persona_id: string | null
           permissions: Json
           primary_tab_slug: string | null
+          published_to_cluster: boolean
           slug: string
           smart_triad_config: Json | null
           token_whitelist: string[] | null
@@ -1349,6 +1350,7 @@ export type Database = {
           owner_persona_id?: string | null
           permissions?: Json
           primary_tab_slug?: string | null
+          published_to_cluster?: boolean
           slug: string
           smart_triad_config?: Json | null
           token_whitelist?: string[] | null
@@ -1367,6 +1369,7 @@ export type Database = {
           owner_persona_id?: string | null
           permissions?: Json
           primary_tab_slug?: string | null
+          published_to_cluster?: boolean
           slug?: string
           smart_triad_config?: Json | null
           token_whitelist?: string[] | null
