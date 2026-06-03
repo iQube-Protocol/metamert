@@ -91,7 +91,7 @@ function ShellLayout() {
         <BrowserHistoryDrawer />
         <BrowserMinimizedPill />
         <WelcomeModal open={tour.showWelcome} onStart={tour.start} onSkip={tour.skip} />
-        <VisitorTour run={tour.running} onFinish={tour.complete} />
+        <VisitorTour key={tour.runKey} run={tour.running} onFinish={tour.complete} />
       </div>
     </BrowserProvider>
   );
