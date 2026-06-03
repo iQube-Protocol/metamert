@@ -70,11 +70,15 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "reset" satisfies TourAction },
       },
       {
-        target: '[data-tour="cartridge-indicator"]',
-        placement: "bottom",
+        // Cartridges — anchor at the Cartridge quick action inside Play.
+        // Effect stages Play mode and opens the cartridge selector overlay
+        // so the user sees the KNYT / Qriptopian / metaMe pills above the
+        // prompt bar while the tip is up.
+        target: '[data-tour="quick-action-cartridge"]',
+        placement: "top-end",
         title: "Cartridges",
         content:
-          "Cartridges are focused experience spaces holding public and personal content. Start with KNYT, The Qriptopian, or metaMe. The active cartridge is shown up here.",
+          "Cartridges are focused experience spaces holding public and personal content. Pick KNYT, The Qriptopian, or metaMe from the selector above the prompt bar.",
         data: { action: "show-cartridges" satisfies TourAction },
       },
       {
