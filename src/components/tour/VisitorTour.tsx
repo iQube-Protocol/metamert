@@ -217,14 +217,6 @@ export default function VisitorTour({ run, onFinish }: Props) {
       onEvent={handleEvent}
       locale={{ last: "Finish", skip: "Skip" }}
       styles={{
-        options: {
-          primaryColor: "hsl(var(--primary))",
-          textColor: CARD_TEXT,
-          backgroundColor: CARD_BG,
-          arrowColor: CARD_BG,
-          overlayColor: "hsla(0, 0%, 0%, 0.45)",
-          zIndex: 10000,
-        },
         overlay: {
           backgroundColor: "hsla(0, 0%, 0%, 0.45)",
         },
