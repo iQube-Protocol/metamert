@@ -178,20 +178,22 @@ export default function VisitorTour({ run, onFinish }: Props) {
   };
 
   /**
-   * Pre-anchor staging only — make sure the DOM target for the step exists.
+   * Pre-anchor staging — make sure the DOM target for the step exists AND
+   * open the runtime drawer/modal the card is describing. The tour is a
+   * first-class thin-client narrator: each card explains the surface it has
+   * just opened. We rely on the controlled `goToStep` settle delay (bumped
+   * for drawer-opening steps) to keep the tooltip from flipping while the
+   * drawer slides in.
    *
-   * IMPORTANT: We deliberately do NOT open the SmartWallet, Settings, or any
-   * runtime drawer here. Opening a right-side drawer while Joyride is trying
-   * to anchor to a bottom menu pill causes Popper to recompute and flip the
-   * tooltip up toward the header. The tour explains the action; the user
-   * triggers the drawer themselves by tapping the highlighted pill.
+   * Exceptions handled by the runtime itself (no shell drawer):
+   *   - signin           → wallet drawer w/ Sign-In modal (runtime owns modal)
+   *   - create-persona   → wallet drawer w/ Create Persona wizard (runtime)
    */
   const runStepEffect = (action: TourAction | undefined) => {
     if (!action) return;
     pauseIdleTimer();
     switch (action) {
       case "reset":
-      case "show-cartridges":
       case "show-trust":
       case "show-help":
         clearShellSurfaces();
@@ -199,14 +201,29 @@ export default function VisitorTour({ run, onFinish }: Props) {
       case "show-prompt":
         ensureMode("play");
         break;
+      case "show-cartridges":
+        ensureMode("play");
+        setSubmenuType("cartridgeSelector");
+        break;
       case "signin":
+        ensureMode("earn");
+        sendIframeAction("wallet", { module: "wallet", tab: "wallet", intent: "signin" });
+        break;
       case "create-persona":
-      case "activate-persona":
+        ensureMode("earn");
+        sendIframeAction("persona", { module: "persona", flow: "create-wizard" });
+        break;
       case "open-wallet":
         ensureMode("earn");
+        sendIframeAction("wallet");
+        break;
+      case "activate-persona":
+        ensureMode("earn");
+        sendIframeAction("wallet", { module: "wallet", tab: "reputation" });
         break;
       case "open-settings":
         ensureMode("be");
+        sendIframeAction("settings");
         break;
     }
     // activateMode restarts the shell idle timer, which would auto-collapse
