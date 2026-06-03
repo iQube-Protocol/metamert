@@ -152,20 +152,15 @@ export default function VisitorTour({ run, onFinish }: Props) {
     deactivateMode();
   };
 
-  /** Open the SmartWallet on the Sign-In tab (deep-linked). */
-  const openWalletSignIn = () => {
-    const dl = DEEP_LINK_DISPATCH["signin"];
-    if (dl) sendIframeAction(dl.actionId, dl.deepLink);
-    else sendIframeAction("wallet");
-  };
-
-  /** Open the SmartWallet and launch the Create Persona wizard. */
-  const openCreatePersonaWizard = () => {
-    const dl = DEEP_LINK_DISPATCH["persona-create"];
-    if (dl) sendIframeAction(dl.actionId, dl.deepLink);
-    else sendIframeAction("wallet");
-  };
-
+  /**
+   * Pre-anchor staging only — make sure the DOM target for the step exists.
+   *
+   * IMPORTANT: We deliberately do NOT open the SmartWallet, Settings, or any
+   * runtime drawer here. Opening a right-side drawer while Joyride is trying
+   * to anchor to a bottom menu pill causes Popper to recompute and flip the
+   * tooltip up toward the header. The tour explains the action; the user
+   * triggers the drawer themselves by tapping the highlighted pill.
+   */
   const runStepEffect = (action: TourAction | undefined) => {
     if (!action) return;
     pauseIdleTimer();
@@ -181,29 +176,15 @@ export default function VisitorTour({ run, onFinish }: Props) {
         activateMode("play");
         break;
       case "signin":
-        clearShellSurfaces();
-        activateMode("earn");
-        openWalletSignIn();
-        break;
       case "create-persona":
-        clearShellSurfaces();
-        activateMode("earn");
-        openCreatePersonaWizard();
-        break;
       case "activate-persona":
-        clearShellSurfaces();
-        activateMode("earn");
-        sendIframeAction("wallet");
-        break;
       case "open-wallet":
         clearShellSurfaces();
         activateMode("earn");
-        sendIframeAction("wallet");
         break;
       case "open-settings":
         clearShellSurfaces();
         activateMode("be");
-        sendIframeAction("settings");
         break;
     }
   };
