@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { Joyride, EVENTS, STATUS, type EventData, type Step } from "react-joyride";
 import { useShell } from "@/contexts/ShellContext";
 import { DEEP_LINK_DISPATCH } from "@/lib/smart-menu-config";
@@ -9,21 +9,26 @@ interface Props {
 }
 
 type TourAction =
-  | "show-earn-menu"
+  | "reset"
   | "show-prompt"
-  | "show-persona-submenu"
+  | "show-cartridges"
+  | "signin"
   | "create-persona"
-  | "signin";
+  | "open-wallet"
+  | "open-settings"
+  | "show-trust"
+  | "show-help";
 
 /**
- * Visitor Tour MVP.
+ * Visitor Tour.
  *
- * Steps anchor to shell-owned DOM via `data-tour` attributes. On each
- * STEP_BEFORE we drive shell state directly (open submenus, drawers) so the
- * user actually sees the surface the tooltip is describing. Drawer-open
- * steps additionally emit a MENU_ACTION with the new deep_link envelope —
- * this is a no-op today on the runtime side, but lights up "for free" once
- * the runtime team ships its half of the deep-link contract.
+ * Each step's `data.action` drives shell state via `runStepEffect` *before*
+ * the tooltip renders (STEP_BEFORE), and we clear shell surfaces on each
+ * transition (STEP_AFTER) so we don't end up with stacked drawers/submenus.
+ *
+ * Drawer-opening steps (signin / persona / wallet / settings) use the
+ * working shell primitives today AND emit the new deep_link envelope so the
+ * runtime side lights up "for free" once it ships its half.
  */
 export default function VisitorTour({ run, onFinish }: Props) {
   const {
@@ -33,10 +38,11 @@ export default function VisitorTour({ run, onFinish }: Props) {
     setSubmenuType,
     openPersonaIQube,
     openIdentityIQube,
-    activeMode,
-    viewState,
     pauseIdleTimer,
   } = useShell();
+
+  // Track current step index so STEP_AFTER can clean up correctly.
+  const lastStepRef = useRef<number>(-1);
 
   const steps: Step[] = useMemo(
     () => [
@@ -45,22 +51,16 @@ export default function VisitorTour({ run, onFinish }: Props) {
         placement: "center",
         title: "Welcome to your Runtime",
         content:
-          "Explore freely. Create a persona to act. Add an ExperienceGuide when you want aigentMe to personalize your Runtime.",
+          "This is metaMe Runtime — your entry into cartridges, content, co-pilots, experiences and community. Explore freely without signing in.",
+        data: { action: "reset" satisfies TourAction },
       },
       {
-        target: '[data-tour="smart-menu-shell"]',
+        target: '[data-tour="smart-menu"]',
         placement: "top",
-        title: "Smart Menu",
+        title: "The Smart Menu",
         content:
-          "Be, Make, Play, Earn and Share — five lenses for everything you can do here. Each opens a floating set of quick actions.",
-        data: { action: "show-earn-menu" satisfies TourAction },
-      },
-      {
-        target: '[data-tour="cartridge-indicator"]',
-        placement: "bottom",
-        title: "Cartridges",
-        content:
-          "Cartridges are the experiences you launch — metaMe, KNYT, Qriptopian. Open cartridges appear here.",
+          "Be, Make, Play, Earn and Share — five lenses for everything you can do here. Browse identity, media, creation, rewards and sharing experiences.",
+        data: { action: "reset" satisfies TourAction },
       },
       {
         target: '[data-tour="smart-menu-shell"]',
@@ -71,28 +71,44 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "show-prompt" satisfies TourAction },
       },
       {
-        target: '[data-tour="smart-menu-shell"]',
-        placement: "top",
-        title: "Your persona",
+        target: '[data-tour="cartridge-indicator"]',
+        placement: "bottom",
+        title: "Cartridges",
         content:
-          "The Be button is your active persona. Tap it to switch between Qripto and KNYT — or add a new one with +.",
-        data: { action: "show-persona-submenu" satisfies TourAction },
-      },
-      {
-        target: '[data-tour="smart-menu-shell"]',
-        placement: "top",
-        title: "Create a persona",
-        content:
-          "A persona lets your aigent act on your behalf. Let's open the create-persona flow.",
-        data: { action: "create-persona" satisfies TourAction },
+          "Cartridges are focused experience spaces. Start with KNYT, The Qriptopian, or metaMe. Open cartridges appear here.",
+        data: { action: "show-cartridges" satisfies TourAction },
       },
       {
         target: '[data-tour="smart-menu-shell"]',
         placement: "top",
         title: "Sign in",
         content:
-          "Sign in to unlock your wallet, rewards and reputation. Opens the Sign In tab in your wallet.",
+          "Sign in and create a Persona to remix, buy, earn, vote, save, publish or generate content. Opens the Sign In tab in your wallet.",
         data: { action: "signin" satisfies TourAction },
+      },
+      {
+        target: '[data-tour="persona-nav"]',
+        placement: "top",
+        title: "Create a persona",
+        content:
+          "Use the Persona wizard to create, manage and switch between Qripto, KNYT or agent delegates — or add a new one with +.",
+        data: { action: "create-persona" satisfies TourAction },
+      },
+      {
+        target: '[data-tour="smart-menu-shell"]',
+        placement: "top",
+        title: "The SmartWallet",
+        content:
+          "Activate personas, make payments and earn rewards across cartridges and runtime experiences.",
+        data: { action: "open-wallet" satisfies TourAction },
+      },
+      {
+        target: '[data-tour="smart-menu-shell"]',
+        placement: "top",
+        title: "Settings",
+        content:
+          "Set the rules by which your aigents can act, and how much autonomy and control you want them operating under.",
+        data: { action: "open-settings" satisfies TourAction },
       },
       {
         target: '[data-tour="trust-dots"]',
@@ -100,121 +116,151 @@ export default function VisitorTour({ run, onFinish }: Props) {
         title: "Trust & Reliability",
         content:
           "These dots reflect your aigent's live Trust and Reliability scores. Watch them respond as you interact.",
+        data: { action: "show-trust" satisfies TourAction },
       },
       {
         target: '[data-tour="help-button"]',
         placement: "bottom",
-        title: "Replay anytime",
+        title: "Restart anytime",
         content:
           "You can re-run this guide whenever you like by clicking the ? button up here.",
+        data: { action: "show-help" satisfies TourAction },
       },
     ],
     [],
   );
 
+  /** Close any shell-side surface (mode, submenu) before the next step. */
+  const clearShellSurfaces = () => {
+    setSubmenuType(null);
+    deactivateMode();
+  };
+
   const runStepEffect = (action: TourAction | undefined) => {
     if (!action) return;
+    pauseIdleTimer();
     switch (action) {
-      case "show-earn-menu":
-        if (activeMode !== "earn" || viewState !== "promptMode") activateMode("earn");
-        pauseIdleTimer();
+      case "reset":
+        clearShellSurfaces();
         break;
       case "show-prompt":
-        // Surface the prompt bar over whichever mode is active (default earn).
-        if (viewState !== "promptMode") activateMode(activeMode ?? "earn");
-        pauseIdleTimer();
+        clearShellSurfaces();
+        activateMode("play");
         break;
-      case "show-persona-submenu":
-        if (activeMode !== "be" || viewState !== "promptMode") activateMode("be");
-        setSubmenuType("personaSelector");
-        pauseIdleTimer();
+      case "show-cartridges":
+        clearShellSurfaces();
         break;
-      case "create-persona": {
-        // Open the persona drawer today via the working primitive…
-        openPersonaIQube("qripto");
-        // …and also emit the deep-link envelope so the runtime can route to
-        // the create-wizard tab once it supports MENU_ACTION.deep_link.
-        const dl = DEEP_LINK_DISPATCH["persona-create"];
-        if (dl) sendIframeAction(dl.actionId, dl.deepLink);
-        pauseIdleTimer();
-        break;
-      }
       case "signin": {
+        clearShellSurfaces();
         openIdentityIQube();
         const dl = DEEP_LINK_DISPATCH["signin"];
         if (dl) sendIframeAction(dl.actionId, dl.deepLink);
-        pauseIdleTimer();
         break;
       }
+      case "create-persona": {
+        clearShellSurfaces();
+        // Surface the persona selector in the shell so the + pill is visible.
+        activateMode("be");
+        setSubmenuType("personaSelector");
+        openPersonaIQube("qripto");
+        const dl = DEEP_LINK_DISPATCH["persona-create"];
+        if (dl) sendIframeAction(dl.actionId, dl.deepLink);
+        break;
+      }
+      case "open-wallet":
+        clearShellSurfaces();
+        activateMode("earn");
+        sendIframeAction("wallet");
+        break;
+      case "open-settings":
+        clearShellSurfaces();
+        activateMode("be");
+        sendIframeAction("settings");
+        break;
+      case "show-trust":
+      case "show-help":
+        clearShellSurfaces();
+        break;
     }
   };
 
   const handleEvent = (data: EventData) => {
-    const { status, type, step } = data;
-    const action = step?.data?.action as TourAction | undefined;
+    const { status, type, index } = data;
 
-    // Drive shell state *before* the tooltip renders so the target surface
-    // is visible when the user reads the card.
     if (type === EVENTS.STEP_BEFORE) {
-      runStepEffect(action);
+      const step = steps[index];
+      runStepEffect(step?.data?.action as TourAction | undefined);
+      lastStepRef.current = index;
     }
 
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
-      // Tidy up any shell state we opened.
-      setSubmenuType(null);
-      deactivateMode();
+      clearShellSurfaces();
+      lastStepRef.current = -1;
       onFinish();
     }
   };
+
+  // Light parchment surface for tour cards — legible in BOTH light and dark
+  // mode. Sits above the dark runtime canvas without disappearing into it.
+  const CARD_BG = "rgba(252, 250, 245, 0.94)";
+  const CARD_BORDER = "rgba(20, 20, 30, 0.12)";
+  const CARD_TEXT = "hsl(220 13% 18%)";
+  const CARD_TEXT_MUTED = "hsl(220 9% 38%)";
 
   return (
     <Joyride
       steps={steps}
       run={run}
       continuous
+      options={{ zIndex: 10000, spotlightPadding: 6 }}
       onEvent={handleEvent}
       locale={{ last: "Finish", skip: "Skip" }}
-      options={{
-        primaryColor: "hsl(var(--primary))",
-        textColor: "hsl(var(--foreground))",
-        backgroundColor: "hsl(var(--card) / 0.78)",
-        arrowColor: "hsl(var(--card) / 0.78)",
-        overlayColor: "hsla(0, 0%, 0%, 0.35)",
-        zIndex: 10000,
-      }}
       styles={{
         overlay: {
-          backgroundColor: "hsla(0, 0%, 0%, 0.35)",
+          backgroundColor: "hsla(0, 0%, 0%, 0.45)",
         },
         tooltip: {
-          backdropFilter: "blur(14px) saturate(140%)",
-          WebkitBackdropFilter: "blur(14px) saturate(140%)",
-          background: "hsl(var(--card) / 0.78)",
-          border: "1px solid hsl(var(--border) / 0.6)",
-          borderRadius: "var(--mm-radius-md)",
-          boxShadow: "var(--mm-shadow-panel)",
-          color: "hsl(var(--foreground))",
+          backdropFilter: "blur(10px) saturate(140%)",
+          WebkitBackdropFilter: "blur(10px) saturate(140%)",
+          background: CARD_BG,
+          border: `1px solid ${CARD_BORDER}`,
+          borderRadius: "12px",
+          boxShadow: "0 18px 48px -16px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.2)",
+          color: CARD_TEXT,
+          padding: "16px 18px",
         },
         tooltipTitle: {
-          color: "hsl(var(--foreground))",
+          color: CARD_TEXT,
           fontWeight: 600,
+          fontSize: "15px",
+          marginBottom: "6px",
         },
         tooltipContent: {
-          color: "hsl(var(--foreground) / 0.85)",
+          color: CARD_TEXT_MUTED,
+          fontSize: "13.5px",
+          lineHeight: 1.5,
+          padding: 0,
         },
         buttonPrimary: {
           background: "hsl(var(--primary))",
           color: "hsl(var(--primary-foreground))",
-          borderRadius: "var(--mm-radius-sm)",
+          borderRadius: "8px",
+          fontSize: "13px",
+          padding: "8px 14px",
         },
         buttonBack: {
-          color: "hsl(var(--foreground) / 0.7)",
+          color: CARD_TEXT_MUTED,
+          fontSize: "13px",
+          marginRight: "8px",
         },
         buttonSkip: {
-          color: "hsl(var(--foreground) / 0.55)",
+          color: CARD_TEXT_MUTED,
+          fontSize: "12px",
         },
         buttonClose: {
-          color: "hsl(var(--foreground) / 0.55)",
+          color: CARD_TEXT_MUTED,
+          height: "10px",
+          width: "10px",
         },
       }}
     />
