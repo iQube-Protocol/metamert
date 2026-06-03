@@ -36,11 +36,11 @@ export function useTourState(): TourState {
 
   // Show welcome modal on first load if user has not seen the tour.
   useEffect(() => {
-    if (!hasSeen) {
+    if (!hasSeen && !running) {
       const t = setTimeout(() => setShowWelcome(true), 600);
       return () => clearTimeout(t);
     }
-  }, [hasSeen]);
+  }, [hasSeen, running]);
 
   useEffect(() => () => clearStartTimer(), [clearStartTimer]);
 
