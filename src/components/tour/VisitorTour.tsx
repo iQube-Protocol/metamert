@@ -37,7 +37,17 @@ export default function VisitorTour({ run, onFinish }: Props) {
     deactivateMode,
     setSubmenuType,
     pauseIdleTimer,
+    activeMode,
+    viewState,
   } = useShell();
+
+  // Live mirror of mode/viewState — useShell closures captured inside
+  // runStepEffect would otherwise be stale across rapid step transitions
+  // and could collapse the menu instead of activating it.
+  const activeModeRef = useRef(activeMode);
+  const viewStateRef = useRef(viewState);
+  useEffect(() => { activeModeRef.current = activeMode; }, [activeMode]);
+  useEffect(() => { viewStateRef.current = viewState; }, [viewState]);
 
   const lastStepRef = useRef<number>(-1);
 
