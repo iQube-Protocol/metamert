@@ -164,9 +164,6 @@ export default function VisitorTour({ run, onFinish }: Props) {
       steps={steps}
       run={run}
       continuous
-      showProgress
-      showSkipButton
-      disableScrolling
       onEvent={handleEvent}
       locale={{ last: "Finish", skip: "Skip" }}
       options={{
