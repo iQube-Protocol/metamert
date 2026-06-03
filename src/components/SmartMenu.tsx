@@ -176,6 +176,7 @@ export default function SmartMenu() {
   return (
     <TooltipProvider delayDuration={300}>
       <div
+        data-tour="smart-menu-shell"
         className="flex flex-col"
         onPointerEnter={isActiveMode ? handlePointerEnter : undefined}
         onPointerLeave={isActiveMode ? resumeIdleTimer : undefined}
@@ -185,6 +186,7 @@ export default function SmartMenu() {
         {/* Submenu — single slot for all states */}
         {showSubmenu && (
           <div
+            data-tour="smart-menu-submenu"
             className="pb-1.5 animate-in fade-in slide-in-from-bottom-2"
             style={{ animationDuration: '300ms' }}
             onPointerEnter={hoverPreviewMode ? () => handleNavHoverEnter(hoverPreviewMode) : undefined}

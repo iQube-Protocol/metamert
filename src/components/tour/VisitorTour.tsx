@@ -34,6 +34,8 @@ export default function VisitorTour({ run, onFinish }: Props) {
     openPersonaIQube,
     openIdentityIQube,
     activeMode,
+    viewState,
+    pauseIdleTimer,
   } = useShell();
 
   const steps: Step[] = useMemo(
@@ -46,7 +48,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
           "Explore freely. Create a persona to act. Add an ExperienceGuide when you want aigentMe to personalize your Runtime.",
       },
       {
-        target: '[data-tour="smart-menu"]',
+        target: '[data-tour="smart-menu-shell"]',
         placement: "top",
         title: "Smart Menu",
         content:
@@ -61,7 +63,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
           "Cartridges are the experiences you launch — metaMe, KNYT, Qriptopian. Open cartridges appear here.",
       },
       {
-        target: '[data-tour="smart-menu"]',
+        target: '[data-tour="smart-menu-shell"]',
         placement: "top",
         title: "Co-pilot prompt",
         content:
@@ -69,7 +71,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "show-prompt" satisfies TourAction },
       },
       {
-        target: '[data-tour="persona-nav"]',
+        target: '[data-tour="smart-menu-shell"]',
         placement: "top",
         title: "Your persona",
         content:
@@ -77,7 +79,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "show-persona-submenu" satisfies TourAction },
       },
       {
-        target: '[data-tour="persona-nav"]',
+        target: '[data-tour="smart-menu-shell"]',
         placement: "top",
         title: "Create a persona",
         content:
@@ -85,7 +87,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "create-persona" satisfies TourAction },
       },
       {
-        target: '[data-tour="smart-menu"]',
+        target: '[data-tour="smart-menu-shell"]',
         placement: "top",
         title: "Sign in",
         content:
@@ -114,14 +116,18 @@ export default function VisitorTour({ run, onFinish }: Props) {
     if (!action) return;
     switch (action) {
       case "show-earn-menu":
-        activateMode("earn");
+        if (activeMode !== "earn" || viewState !== "promptMode") activateMode("earn");
+        pauseIdleTimer();
         break;
       case "show-prompt":
         // Surface the prompt bar over whichever mode is active (default earn).
-        activateMode(activeMode ?? "earn");
+        if (viewState !== "promptMode") activateMode(activeMode ?? "earn");
+        pauseIdleTimer();
         break;
       case "show-persona-submenu":
+        if (activeMode !== "be" || viewState !== "promptMode") activateMode("be");
         setSubmenuType("personaSelector");
+        pauseIdleTimer();
         break;
       case "create-persona": {
         // Open the persona drawer today via the working primitive…
@@ -130,12 +136,14 @@ export default function VisitorTour({ run, onFinish }: Props) {
         // the create-wizard tab once it supports MENU_ACTION.deep_link.
         const dl = DEEP_LINK_DISPATCH["persona-create"];
         if (dl) sendIframeAction(dl.actionId, dl.deepLink);
+        pauseIdleTimer();
         break;
       }
       case "signin": {
         openIdentityIQube();
         const dl = DEEP_LINK_DISPATCH["signin"];
         if (dl) sendIframeAction(dl.actionId, dl.deepLink);
+        pauseIdleTimer();
         break;
       }
     }
