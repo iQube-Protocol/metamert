@@ -70,11 +70,15 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "reset" satisfies TourAction },
       },
       {
-        target: '[data-tour="cartridge-indicator"]',
-        placement: "bottom",
+        // Cartridges — anchor at the Cartridge quick action inside Play.
+        // Effect stages Play mode and opens the cartridge selector overlay
+        // so the user sees the KNYT / Qriptopian / metaMe pills above the
+        // prompt bar while the tip is up.
+        target: '[data-tour="quick-action-cartridge"]',
+        placement: "top-end",
         title: "Cartridges",
         content:
-          "Cartridges are focused experience spaces holding public and personal content. Start with KNYT, The Qriptopian, or metaMe. The active cartridge is shown up here.",
+          "Cartridges are focused experience spaces holding public and personal content. Pick KNYT, The Qriptopian, or metaMe from the selector above the prompt bar.",
         data: { action: "show-cartridges" satisfies TourAction },
       },
       {
@@ -174,20 +178,22 @@ export default function VisitorTour({ run, onFinish }: Props) {
   };
 
   /**
-   * Pre-anchor staging only — make sure the DOM target for the step exists.
+   * Pre-anchor staging — make sure the DOM target for the step exists AND
+   * open the runtime drawer/modal the card is describing. The tour is a
+   * first-class thin-client narrator: each card explains the surface it has
+   * just opened. We rely on the controlled `goToStep` settle delay (bumped
+   * for drawer-opening steps) to keep the tooltip from flipping while the
+   * drawer slides in.
    *
-   * IMPORTANT: We deliberately do NOT open the SmartWallet, Settings, or any
-   * runtime drawer here. Opening a right-side drawer while Joyride is trying
-   * to anchor to a bottom menu pill causes Popper to recompute and flip the
-   * tooltip up toward the header. The tour explains the action; the user
-   * triggers the drawer themselves by tapping the highlighted pill.
+   * Exceptions handled by the runtime itself (no shell drawer):
+   *   - signin           → wallet drawer w/ Sign-In modal (runtime owns modal)
+   *   - create-persona   → wallet drawer w/ Create Persona wizard (runtime)
    */
   const runStepEffect = (action: TourAction | undefined) => {
     if (!action) return;
     pauseIdleTimer();
     switch (action) {
       case "reset":
-      case "show-cartridges":
       case "show-trust":
       case "show-help":
         clearShellSurfaces();
@@ -195,14 +201,29 @@ export default function VisitorTour({ run, onFinish }: Props) {
       case "show-prompt":
         ensureMode("play");
         break;
+      case "show-cartridges":
+        ensureMode("play");
+        setSubmenuType("cartridgeSelector");
+        break;
       case "signin":
+        ensureMode("earn");
+        sendIframeAction("wallet", { module: "wallet", tab: "wallet", intent: "signin" });
+        break;
       case "create-persona":
-      case "activate-persona":
+        ensureMode("earn");
+        sendIframeAction("persona", { module: "persona", flow: "create-wizard" });
+        break;
       case "open-wallet":
         ensureMode("earn");
+        sendIframeAction("wallet");
+        break;
+      case "activate-persona":
+        ensureMode("earn");
+        sendIframeAction("wallet", { module: "wallet", tab: "reputation" });
         break;
       case "open-settings":
         ensureMode("be");
+        sendIframeAction("settings");
         break;
     }
     // activateMode restarts the shell idle timer, which would auto-collapse
@@ -257,8 +278,18 @@ export default function VisitorTour({ run, onFinish }: Props) {
             try { found.scrollIntoView({ block: "nearest", inline: "center" }); } catch { /* noop */ }
           }
           // Settle delay: let menu open/scroll animations finish before
-          // Joyride measures the anchor and positions the tooltip.
-          await sleep(220);
+          // Joyride measures the anchor and positions the tooltip. Drawer-
+          // opening steps need a longer settle so the right-side runtime
+          // drawer is mounted before Popper computes placement.
+          const action = step?.data?.action as TourAction | undefined;
+          const isDrawerStep =
+            action === "signin" ||
+            action === "create-persona" ||
+            action === "open-wallet" ||
+            action === "activate-persona" ||
+            action === "open-settings" ||
+            action === "show-cartridges";
+          await sleep(isDrawerStep ? 420 : 220);
           setStepIndex(idx);
           lastStepRef.current = idx;
           return;
