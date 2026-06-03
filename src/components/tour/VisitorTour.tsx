@@ -121,7 +121,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         activateMode(activeMode ?? "earn");
         break;
       case "show-persona-submenu":
-        setSubmenuType("persona");
+        setSubmenuType("personaSelector");
         break;
       case "create-persona": {
         // Open the persona drawer today via the working primitive…
@@ -170,14 +170,6 @@ export default function VisitorTour({ run, onFinish }: Props) {
       onEvent={handleEvent}
       locale={{ last: "Finish", skip: "Skip" }}
       styles={{
-        options: {
-          primaryColor: "hsl(var(--primary))",
-          textColor: "hsl(var(--foreground))",
-          backgroundColor: "hsl(var(--card) / 0.78)",
-          arrowColor: "hsl(var(--card) / 0.78)",
-          overlayColor: "hsla(0, 0%, 0%, 0.35)",
-          zIndex: 10000,
-        },
         tooltip: {
           backdropFilter: "blur(14px) saturate(140%)",
           WebkitBackdropFilter: "blur(14px) saturate(140%)",
