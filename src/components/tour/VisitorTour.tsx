@@ -34,6 +34,8 @@ export default function VisitorTour({ run, onFinish }: Props) {
     openPersonaIQube,
     openIdentityIQube,
     activeMode,
+    viewState,
+    pauseIdleTimer,
   } = useShell();
 
   const steps: Step[] = useMemo(
@@ -114,15 +116,18 @@ export default function VisitorTour({ run, onFinish }: Props) {
     if (!action) return;
     switch (action) {
       case "show-earn-menu":
-        activateMode("earn");
+        if (activeMode !== "earn" || viewState !== "promptMode") activateMode("earn");
+        pauseIdleTimer();
         break;
       case "show-prompt":
         // Surface the prompt bar over whichever mode is active (default earn).
-        activateMode(activeMode ?? "earn");
+        if (viewState !== "promptMode") activateMode(activeMode ?? "earn");
+        pauseIdleTimer();
         break;
       case "show-persona-submenu":
-        activateMode("be");
+        if (activeMode !== "be" || viewState !== "promptMode") activateMode("be");
         setSubmenuType("personaSelector");
+        pauseIdleTimer();
         break;
       case "create-persona": {
         // Open the persona drawer today via the working primitive…
@@ -131,12 +136,14 @@ export default function VisitorTour({ run, onFinish }: Props) {
         // the create-wizard tab once it supports MENU_ACTION.deep_link.
         const dl = DEEP_LINK_DISPATCH["persona-create"];
         if (dl) sendIframeAction(dl.actionId, dl.deepLink);
+        pauseIdleTimer();
         break;
       }
       case "signin": {
         openIdentityIQube();
         const dl = DEEP_LINK_DISPATCH["signin"];
         if (dl) sendIframeAction(dl.actionId, dl.deepLink);
+        pauseIdleTimer();
         break;
       }
     }
