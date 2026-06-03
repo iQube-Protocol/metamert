@@ -227,9 +227,15 @@ export default function VisitorTour({ run, onFinish }: Props) {
         const selector =
           typeof step.target === "string" ? step.target : "";
         const found = selector
-          ? await waitForElement(selector, { timeout: 1500, interval: 50 })
+          ? await waitForElement(selector, { timeout: 2000, interval: 50 })
           : null;
         if (found || !selector) {
+          if (found) {
+            try { found.scrollIntoView({ block: "nearest", inline: "center" }); } catch { /* noop */ }
+          }
+          // Settle delay: let menu open/scroll animations finish before
+          // Joyride measures the anchor and positions the tooltip.
+          await sleep(220);
           setStepIndex(idx);
           lastStepRef.current = idx;
           return;
