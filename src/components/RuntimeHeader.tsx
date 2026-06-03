@@ -290,41 +290,7 @@ export default function RuntimeHeader() {
             </PopoverContent>
           </Popover>
 
-          {/* Theme toggle (next to LLM dropdown) */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={toggleTheme}
-                aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-mm-xs border border-transparent bg-transparent p-0 text-mm-ink-primary transition-colors hover:bg-mm-line-subtle focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-              >
-                {theme === "light" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p className="text-xs">{theme === "light" ? "Switch to dark mode" : "Switch to light mode"}</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-
-        {/* Center: Cartridge icon (dead center) */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center" data-tour="cartridge-indicator">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center cursor-default">
-                <Zap className="h-[19px] w-[19px]" style={theme === "light" ? { color: cartridgeColor, stroke: cartridgeColor, fill: 'white', strokeWidth: 1.8 } : { color: cartridgeColor }} />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p className="text-xs">{activeCodex?.label ?? activeCart?.label ?? "No cartridge"}</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-        {/* Right: cartridge overlay indicator + trust dots */}
-        <div className="flex items-center justify-end ml-auto gap-2">
-          <CartridgeIndicator />
+          {/* Cartridge overlay indicator (moved from right) */}
           {cartridgeOverlay && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -352,6 +318,41 @@ export default function RuntimeHeader() {
               </TooltipContent>
             </Tooltip>
           )}
+        </div>
+
+        {/* Center: Cartridge icon (dead center) */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center" data-tour="cartridge-indicator">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center cursor-default">
+                <Zap className="h-[19px] w-[19px]" style={theme === "light" ? { color: cartridgeColor, stroke: cartridgeColor, fill: 'white', strokeWidth: 1.8 } : { color: cartridgeColor }} />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-xs">{activeCodex?.label ?? activeCart?.label ?? "No cartridge"}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        {/* Right: cartridge indicator + theme toggle + help + trust dots */}
+        <div className="flex items-center justify-end ml-auto gap-2">
+          <CartridgeIndicator />
+          {/* Theme toggle (moved from left) */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-mm-xs border border-transparent bg-transparent p-0 text-mm-ink-primary transition-colors hover:bg-mm-line-subtle focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+              >
+                {theme === "light" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-xs">{theme === "light" ? "Switch to dark mode" : "Switch to light mode"}</p>
+            </TooltipContent>
+          </Tooltip>
           <TourHelpButton onClick={() => window.dispatchEvent(new CustomEvent("metame:tour:restart"))} />
           <Tooltip>
             <TooltipTrigger asChild>

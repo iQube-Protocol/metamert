@@ -72,12 +72,21 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "reset" satisfies TourAction },
       },
       {
+        // Runtime Focus toggle — lightning bolt in the Play submenu.
+        target: '[data-tour="quick-action-knyt"]',
+        placement: "top",
+        title: "Runtime Focus",
+        content:
+          "The Runtime Focus is the primary lens through which your runtime is focused. Toggle between metaMe (the default) and the KNYT current focus campaign.",
+        data: { action: "show-cartridges" satisfies TourAction },
+      },
+      {
         // Cartridges — anchored at the Cartridge quick action inside Play.
         target: '[data-tour="quick-action-cartridge"]',
         placement: "top-end",
         title: "Cartridges",
         content:
-          "Cartridges are focused experience spaces holding public and personal content. Pick KNYT, The Qriptopian, or metaMe from the selector above the prompt bar.",
+          "Cartridges are rich experience spaces holding public and private content. Pick KNYT, The Qriptopian, or metaMe from the selector above the prompt bar. An icon beside the AI selector at the top of the runtime signals cartridge activation and the x closes it.",
         data: { action: "show-cartridges" satisfies TourAction },
       },
       {
@@ -141,7 +150,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         placement: "bottom",
         title: "Trust & Reliability",
         content:
-          "These dots reflect your aigent's live Trust and Reliability scores. Watch them respond as you interact.",
+          "These dots reflect your aigent's live Reliability and Trust scores based on the model (AI), tools and data it is using. Watch them respond as you change these and interact.",
         data: { action: "show-trust" satisfies TourAction },
       },
       {
