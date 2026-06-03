@@ -266,6 +266,16 @@ export default function VisitorTour({ run, onFinish }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run]);
 
+  // While the tour is running, continuously suppress the shell idle timer so
+  // the staged submenu (Earn / Be) can't auto-collapse between steps when the
+  // pointer isn't hovering over the menu cluster.
+  useEffect(() => {
+    if (!run) return;
+    pauseIdleTimer();
+    const id = window.setInterval(() => pauseIdleTimer(), 800);
+    return () => window.clearInterval(id);
+  }, [run, pauseIdleTimer]);
+
   const handleEvent = (data: EventData) => {
     const { status, type, action, index } = data;
 
