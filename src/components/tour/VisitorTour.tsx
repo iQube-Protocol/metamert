@@ -314,6 +314,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
     <Joyride
       steps={steps}
       run={run}
+      stepIndex={stepIndex}
       continuous
       options={{
         zIndex: 10000,
