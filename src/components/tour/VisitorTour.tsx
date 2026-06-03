@@ -240,6 +240,19 @@ export default function VisitorTour({ run, onFinish }: Props) {
     pauseIdleTimer();
   };
 
+  /**
+   * End-of-tour cleanup: collapse shell surfaces AND trigger the runtime
+   * Reset action so the iframe + shell land on a fresh slate. Safe to call
+   * from FINISHED, SKIPPED, or CLOSE paths.
+   */
+  const finalizeTour = () => {
+    clearShellSurfaces();
+    lastStepRef.current = -1;
+    try { void handleMenuAction("reset"); } catch { /* noop */ }
+    onFinish();
+  };
+
+
 
   // Controlled step index — we gate every advancement on the target being
   // present in the DOM, so async drawer/submenu mounts can't cause Joyride
@@ -305,10 +318,10 @@ export default function VisitorTour({ run, onFinish }: Props) {
         // Anchor never materialised — skip this single step.
         idx += 1;
       }
-      // Ran past the end → finish.
-      clearShellSurfaces();
-      lastStepRef.current = -1;
-      onFinish();
+      // Ran past the end → finish with a full shell reset so the user lands
+      // on a clean slate (no lingering drawers, submenus, or modes).
+      finalizeTour();
+
     } finally {
       stagingRef.current = false;
     }
@@ -347,18 +360,15 @@ export default function VisitorTour({ run, onFinish }: Props) {
         return;
       }
       if (action === ACTIONS.CLOSE) {
-        clearShellSurfaces();
-        lastStepRef.current = -1;
-        onFinish();
+        finalizeTour();
         return;
       }
     }
 
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
-      clearShellSurfaces();
-      lastStepRef.current = -1;
-      onFinish();
+      finalizeTour();
     }
+
   };
 
   // Brand-tinted card surface — mint-cyan parchment continuous with the
