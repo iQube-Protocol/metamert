@@ -7,6 +7,8 @@ export type TourState = {
   hasSeen: boolean;
   showWelcome: boolean;
   running: boolean;
+  /** Incremented on every (re)start so consumers can force-remount the tour. */
+  runKey: number;
   start: () => void;
   skip: () => void;
   complete: () => void;
@@ -25,6 +27,7 @@ export function useTourState(): TourState {
   const [hasSeen, setHasSeen] = useState<boolean>(() => readFlag(COMPLETED_KEY) || readFlag(SKIPPED_KEY));
   const [showWelcome, setShowWelcome] = useState<boolean>(false);
   const [running, setRunning] = useState<boolean>(false);
+  const [runKey, setRunKey] = useState<number>(0);
   const startTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearStartTimer = useCallback(() => {
@@ -47,6 +50,8 @@ export function useTourState(): TourState {
   const start = useCallback(() => {
     clearStartTimer();
     setShowWelcome(false);
+    setRunning(false);
+    setRunKey((k) => k + 1);
     startTimerRef.current = setTimeout(() => {
       startTimerRef.current = null;
       setRunning(true);
@@ -74,10 +79,17 @@ export function useTourState(): TourState {
     writeFlag(COMPLETED_KEY, false);
     setHasSeen(false);
     setShowWelcome(false);
-    setRunning(true);
+    // Force a clean remount of the Joyride instance so a previously
+    // finished tour can be restarted cleanly from step 0.
+    setRunning(false);
+    setRunKey((k) => k + 1);
+    startTimerRef.current = setTimeout(() => {
+      startTimerRef.current = null;
+      setRunning(true);
+    }, 120);
   }, [clearStartTimer]);
 
   const dismissWelcome = useCallback(() => setShowWelcome(false), []);
 
-  return { hasSeen, showWelcome, running, start, skip, complete, restart, dismissWelcome };
+  return { hasSeen, showWelcome, running, runKey, start, skip, complete, restart, dismissWelcome };
 }

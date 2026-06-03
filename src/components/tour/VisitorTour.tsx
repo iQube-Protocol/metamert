@@ -13,21 +13,22 @@ type TourAction =
   | "show-prompt"
   | "show-cartridges"
   | "signin"
-  | "create-persona-wallet"
-  | "create-persona-submenu"
+  | "create-persona"
   | "open-wallet"
   | "open-settings"
+  | "activate-persona"
   | "show-trust"
   | "show-help";
 
 /**
  * Visitor Tour.
  *
- * Step effects fire on STEP_BEFORE. We clear shell-side surfaces (mode +
- * submenu) on every transition so we never stack drawers. Sign-in & create-
- * persona open the SmartWallet drawer (right side, runtime-owned) — NOT the
- * IdentityIQube drawer (left). Settings opens the metaMe Settings drawer via
- * the Be submenu's Settings quick action.
+ * - Cards use the same mint-cyan parchment as the Welcome modal, with the
+ *   Joyride arrow + spotlight halo recoloured to match.
+ * - Step effects fire on STEP_BEFORE. We collapse shell-side surfaces
+ *   (mode + submenu) on every transition so we never stack drawers.
+ * - Sign-in opens the SmartWallet drawer (right side, runtime-owned) with the
+ *   Sign-In tab deep-linked. The arrow points at the persona / Be nav pill.
  */
 export default function VisitorTour({ run, onFinish }: Props) {
   const {
@@ -59,9 +60,14 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "reset" satisfies TourAction },
       },
       {
-        // Target the prompt bar itself so the tooltip sits ABOVE the prompt
-        // input — overlaying the floating quick-action menu rather than being
-        // pushed above it.
+        target: '[data-tour="cartridge-indicator"]',
+        placement: "bottom",
+        title: "Cartridges",
+        content:
+          "Cartridges are focused experience spaces holding public and personal content. Start with KNYT, The Qriptopian, or metaMe. The active cartridge is shown up here.",
+        data: { action: "show-cartridges" satisfies TourAction },
+      },
+      {
         target: '[data-tour="smart-menu-prompt"]',
         placement: "top",
         title: "Co-pilot prompt",
@@ -70,59 +76,55 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "show-prompt" satisfies TourAction },
       },
       {
-        target: '[data-tour="cartridge-indicator"]',
-        placement: "bottom",
-        title: "Cartridges",
-        content:
-          "Cartridges are focused experience spaces. Start with KNYT, The Qriptopian, or metaMe. Open cartridges appear here.",
-        data: { action: "show-cartridges" satisfies TourAction },
-      },
-      {
-        // Sign-in opens the SmartWallet on the right with the Sign-In tab
-        // active. Card sits bottom-left so the wallet stays visible.
-        target: '[data-tour="smart-menu-shell"]',
-        placement: "top-start",
+        // Sign In — arrow points at the persona / Be pill; card floats top-end
+        // so it sits in the middle-right of the screen and does not cover the
+        // SmartWallet drawer that opens on the right.
+        target: '[data-tour="persona-nav"]',
+        placement: "top-end",
         title: "Sign in",
         content:
-          "Sign in from the SmartWallet to remix, buy, earn, vote, save, publish or generate. Use the Sign In option in the wallet on the right.",
+          "Sign in from the SmartWallet on the right — the wallet is now open on the Sign-In tab. Once signed in you can remix, buy, earn, vote, save, publish and generate.",
         data: { action: "signin" satisfies TourAction },
       },
       {
-        // Same wallet still open — point users at the Create Persona CTA.
-        target: '[data-tour="smart-menu-shell"]',
-        placement: "top-start",
-        title: "Create a persona — from the wallet",
+        // Create Persona — same anchor (persona / Be pill), still floats
+        // top-end. Wallet stays open on the Sign-In tab where the
+        // "Create Persona" CTA lives.
+        target: '[data-tour="persona-nav"]',
+        placement: "top-end",
+        title: "Create a persona",
         content:
-          "Tap Create Persona in the SmartWallet to launch the persona wizard and set up Qripto, KNYT or a delegate.",
-        data: { action: "create-persona-wallet" satisfies TourAction },
+          "In the open SmartWallet, tap Create Persona to launch the wizard and set up Qripto, KNYT or a delegate persona.",
+        data: { action: "create-persona" satisfies TourAction },
       },
       {
-        // Alternate path: Be → persona submenu → + opens the wizard directly.
-        target: '[data-tour="quick-action-persona"]',
-        placement: "top",
-        title: "Create a persona — from Be",
-        content:
-          "You can also reach the persona wizard from Be → Persona. Tap + to add a new Qripto, KNYT or delegate persona.",
-        data: { action: "create-persona-submenu" satisfies TourAction },
-      },
-      {
+        // SmartWallet — anchored to the Earn pill which also opens the wallet.
         target: '[data-tour="quick-action-wallet"]',
         placement: "top",
         title: "The SmartWallet",
         content:
-          "Activate personas, make payments and earn rewards across cartridges and runtime experiences.",
+          "Your SmartWallet is where you manage personas, payments, rewards and reputation across every cartridge.",
         data: { action: "open-wallet" satisfies TourAction },
       },
       {
-        // Target the Settings quick action in Be so the arrow points at the
-        // right control. Card placed top-end so the settings drawer (left)
-        // remains visible.
+        // Settings — anchored at the Settings quick action in Be. Card
+        // top-end so the settings drawer (right floating) stays in view.
         target: '[data-tour="quick-action-settings"]',
         placement: "top-end",
         title: "Settings",
         content:
-          "Set the rules your aigents act under — autonomy, spend limits, approvals and skill scope.",
+          "Set the rules your aigents act under — autonomy, spend limits, approvals and skill scope. The Settings drawer is open on the right.",
         data: { action: "open-settings" satisfies TourAction },
+      },
+      {
+        // Persona activation happens inside the wallet — bring it back and
+        // anchor at the persona/Be pill so users know where to manage it.
+        target: '[data-tour="persona-nav"]',
+        placement: "top-end",
+        title: "Activate a persona",
+        content:
+          "Activating personas happens inside the SmartWallet. Choose Qripto, KNYT or a delegate to set the identity your aigent acts as.",
+        data: { action: "activate-persona" satisfies TourAction },
       },
       {
         target: '[data-tour="trust-dots"]',
@@ -150,45 +152,34 @@ export default function VisitorTour({ run, onFinish }: Props) {
     deactivateMode();
   };
 
+  /** Open the SmartWallet on the Sign-In tab (deep-linked). */
+  const openWalletSignIn = () => {
+    const dl = DEEP_LINK_DISPATCH["signin"];
+    if (dl) sendIframeAction(dl.actionId, dl.deepLink);
+    else sendIframeAction("wallet");
+  };
+
   const runStepEffect = (action: TourAction | undefined) => {
     if (!action) return;
     pauseIdleTimer();
     switch (action) {
       case "reset":
+      case "show-cartridges":
+      case "show-trust":
+      case "show-help":
         clearShellSurfaces();
         break;
       case "show-prompt":
         clearShellSurfaces();
         activateMode("play");
         break;
-      case "show-cartridges":
+      case "signin":
+      case "create-persona":
+      case "activate-persona":
+        // All three live inside the SmartWallet on the Sign-In tab.
         clearShellSurfaces();
+        openWalletSignIn();
         break;
-      case "signin": {
-        // Open SmartWallet on Sign-In tab. Do NOT open IdentityIQube.
-        clearShellSurfaces();
-        const dl = DEEP_LINK_DISPATCH["signin"];
-        if (dl) sendIframeAction(dl.actionId, dl.deepLink);
-        else sendIframeAction("wallet");
-        break;
-      }
-      case "create-persona-wallet": {
-        // Keep SmartWallet open with sign-in context — user clicks "Create
-        // Persona" in the wallet UI to launch the wizard.
-        clearShellSurfaces();
-        const dl = DEEP_LINK_DISPATCH["signin"];
-        if (dl) sendIframeAction(dl.actionId, dl.deepLink);
-        else sendIframeAction("wallet");
-        break;
-      }
-      case "create-persona-submenu": {
-        // Alternate entry: Be → Persona submenu pill. + opens the wizard
-        // (already wired in SmartMenuSubmenu via DEEP_LINK_DISPATCH).
-        clearShellSurfaces();
-        activateMode("be");
-        setSubmenuType("personaSelector");
-        break;
-      }
       case "open-wallet":
         clearShellSurfaces();
         activateMode("earn");
@@ -198,10 +189,6 @@ export default function VisitorTour({ run, onFinish }: Props) {
         clearShellSurfaces();
         activateMode("be");
         sendIframeAction("settings");
-        break;
-      case "show-trust":
-      case "show-help":
-        clearShellSurfaces();
         break;
     }
   };
@@ -222,26 +209,34 @@ export default function VisitorTour({ run, onFinish }: Props) {
     }
   };
 
-  // Brand-tinted card surface — soft mint-cyan parchment that reads as part
-  // of the metaMe palette (vs. plain cream) while staying legible over the
-  // dark runtime canvas in both themes.
+  // Brand-tinted card surface — mint-cyan parchment continuous with the
+  // Welcome modal, with arrow + spotlight halo recoloured to match.
   const CARD_BG = "hsla(186, 55%, 95%, 0.95)";
   const CARD_BORDER = "hsla(186, 50%, 60%, 0.35)";
   const CARD_TEXT = "hsl(200 30% 16%)";
   const CARD_TEXT_MUTED = "hsl(200 18% 36%)";
   const CARD_ACCENT = "hsl(186 70% 38%)";
+  const HALO = "hsla(186, 70%, 60%, 0.55)";
 
   return (
     <Joyride
       steps={steps}
       run={run}
       continuous
-      options={{ zIndex: 10000, spotlightPadding: 6 }}
+      options={{
+        zIndex: 10000,
+        spotlightPadding: 6,
+        arrowColor: CARD_BG,
+      }}
       onEvent={handleEvent}
       locale={{ last: "Finish", skip: "Skip" }}
       styles={{
         overlay: {
           backgroundColor: "hsla(0, 0%, 0%, 0.35)",
+        },
+        spotlight: {
+          stroke: HALO,
+          strokeWidth: 3,
         },
         tooltip: {
           backdropFilter: "blur(10px) saturate(140%)",
