@@ -72,12 +72,21 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "reset" satisfies TourAction },
       },
       {
+        // Runtime Focus toggle — lightning bolt in the Play submenu.
+        target: '[data-tour="quick-action-knyt"]',
+        placement: "top",
+        title: "Runtime Focus",
+        content:
+          "The Runtime Focus is the primary lens through which your runtime is focused. Toggle between metaMe (the default) and the KNYT current focus campaign.",
+        data: { action: "show-cartridges" satisfies TourAction },
+      },
+      {
         // Cartridges — anchored at the Cartridge quick action inside Play.
         target: '[data-tour="quick-action-cartridge"]',
         placement: "top-end",
         title: "Cartridges",
         content:
-          "Cartridges are focused experience spaces holding public and personal content. Pick KNYT, The Qriptopian, or metaMe from the selector above the prompt bar.",
+          "Cartridges are rich experience spaces holding public and private content. Pick KNYT, The Qriptopian, or metaMe from the selector above the prompt bar. An icon beside the AI selector at the top of the runtime signals cartridge activation and the x closes it.",
         data: { action: "show-cartridges" satisfies TourAction },
       },
       {
