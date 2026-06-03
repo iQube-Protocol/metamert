@@ -1,75 +1,55 @@
-## Why the tour cards don't open anything
+## Why the tour jumps from "Smart Menu" to "Trust & Reliability"
 
-The tour dispatches `MENU_ACTION` envelopes with the new `deep_link` payload (correctly — console logs confirm they are sent to `dev-beta.aigentz.me`). But the runtime opens the Wallet/Persona drawers via **dedicated envelopes**, not `MENU_ACTION`:
+Joyride silently skips any step whose `target` selector is not in the DOM at the moment the step is rendered. Steps 2–8 all target elements that are only conditionally mounted:
 
-- Persona drawer → `OPEN_PERSONA_IQUBE { iqube_type }`
-- Identity / Sign-in drawer → `OPEN_IDENTITY_IQUBE`
+- `[data-tour="cartridge-indicator"]` — in the header (should exist, but see below)
+- `[data-tour="smart-menu-prompt"]` — only rendered when `viewState === "promptMode"`
+- `[data-tour="quick-action-wallet"]` and `[data-tour="quick-action-settings"]` — only rendered inside `SmartMenuSubmenu`, which mounts when a submenu (be/earn/play/…) is active
 
-The `deep_link` contract from Claude's spec is **new and not yet wired on the runtime side**. Until the runtime team ships its half of the deep-link handler, sending `MENU_ACTION { action_id: "wallet", deep_link: {...} }` is a no-op on the iframe. That's why the tour cards fire messages but nothing opens.
+The current step effect runs on Joyride's `STEP_BEFORE` event and calls `clearShellSurfaces()` followed by `activateMode("earn")` / `activateMode("be")`. React schedules those state updates asynchronously, so when Joyride immediately measures the target it finds nothing — and rolls forward step by step until it lands on `trust-dots` (step 9), which is always in the DOM.
 
-The shell already has working primitives (`openPersonaIQube`, `openIdentityIQube`) used by the live menus today. The tour should call those, and *also* keep emitting the `deep_link` MENU_ACTION so it lights up automatically once the runtime adds support.
+The "loader animations" and "Replay welcome guide tooltip" churn visible in the replay between step 1 and step 9 are the side effects of those rapid mode toggles firing while Joyride fast-forwards.
 
-Separately, several "tell" steps (Smart Menu, Cartridges, Co-pilot prompt, Your persona) only point at a target but never open the thing they're describing — so the user sees a tooltip on an empty menu.
+## Fix
 
-## Plan
+Make the tour **wait for its anchor to be mounted** before showing each step, by switching `VisitorTour` to a controlled `stepIndex` and gating advancement on DOM readiness.
 
-### 1. Fix tour actions (open drawers + submenus for real)
+### Steps
 
-Edit `src/components/tour/VisitorTour.tsx` to drive shell state directly via `useShell()` instead of relying solely on the deep-link envelope:
+1. **Controlled Joyride index in `src/components/tour/VisitorTour.tsx`**
+   - Track `stepIndex` in local state; pass it to `<Joyride stepIndex={stepIndex} />`.
+   - Handle `ACTIONS.NEXT` / `ACTIONS.PREV` (on `EVENTS.STEP_AFTER`) ourselves instead of letting Joyride auto-advance.
 
-| Step | New behavior |
-|---|---|
-| 2 — Smart Menu | call `activateMode("earn")` (or similar) on step enter so the Earn submenu is visible behind the card |
-| 3 — Cartridges | no shell-side open available; leave as informational (the indicator is already in the header) |
-| 4 — Co-pilot prompt | call `activateMode(currentMode)` to surface the prompt bar |
-| 5 — Your persona | call `setSubmenuType("persona")` so the Qripto/KNYT/+ pills are visible |
-| 6 — Create persona | call `openPersonaIQube("qripto")` (opens the drawer today) **and** still emit the `persona` + `create-wizard` deep-link so the runtime can route to the wizard once support lands |
-| 7 — Sign in | call `openIdentityIQube()` **and** still emit the `wallet` + `signin` deep-link |
+2. **Pre-stage surfaces, then wait for the target**
+   - When advancing to step N: first run `runStepEffect(steps[N].data.action)` (clears shell surfaces and opens the correct drawer/submenu).
+   - Then `await waitForElement(steps[N].target, { timeout: 1500, interval: 50 })` — a small polling helper using `document.querySelector`.
+   - Only after the element resolves do we set `stepIndex = N`, so Joyride renders with a valid anchor.
+   - If the element never appears within the timeout, fall back to skipping that single step (advance to N+1) instead of cascading through every later step.
 
-Add a small "step enter" hook using `EVENTS.STEP_BEFORE` so the side-effect fires before the tooltip renders.
+3. **Reset state on restart**
+   - When `run` flips from false→true (or `runKey` changes), reset `stepIndex` to 0 and immediately run the pre-stage flow for step 0.
 
-Add the relevant context methods (`activateMode`, `setSubmenuType`, `openPersonaIQube`, `openIdentityIQube`) to the `useShell()` destructure in `VisitorTour`.
+4. **No changes needed to step definitions, anchors, or `DEEP_LINK_DISPATCH`** — the existing targets are correct; only the timing is broken.
 
-When tour finishes/skips, call `deactivateMode()` and `setSubmenuType(null)` to clean up.
+### Technical details
 
-### 2. Lighter, translucent tour card styling
+- `react-joyride` exposes `ACTIONS`, `EVENTS`, and `STATUS`. We listen for `EVENTS.STEP_AFTER` + `ACTIONS.NEXT`/`ACTIONS.PREV` and for `ACTIONS.CLOSE`/`STATUS.FINISHED`/`STATUS.SKIPPED` to call `onFinish`.
+- `waitForElement` is a 20-line helper local to `VisitorTour.tsx`:
 
-Replace the current Joyride `options` block (note: it's actually `styles`, not `options` — the current `options` prop is being ignored, which is part of why the cards look like the default dark theme) with a proper `styles` config:
-
-```ts
-styles={{
-  options: {
-    primaryColor: "hsl(var(--primary))",
-    textColor: "hsl(var(--foreground))",
-    backgroundColor: "hsl(var(--background) / 0.72)",
-    arrowColor: "hsl(var(--background) / 0.72)",
-    overlayColor: "hsla(0, 0%, 0%, 0.35)", // lighter, more translucent
-    zIndex: 10000,
-  },
-  tooltip: {
-    backdropFilter: "blur(14px) saturate(140%)",
-    background: "hsl(var(--card) / 0.78)",
-    border: "1px solid hsl(var(--border) / 0.6)",
-    borderRadius: "var(--mm-radius-md)",
-    boxShadow: "var(--mm-shadow-panel)",
-    color: "hsl(var(--foreground))",
-  },
-  tooltipTitle: { color: "hsl(var(--foreground))" },
-  tooltipContent: { color: "hsl(var(--foreground) / 0.85)" },
-  buttonNext: { background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" },
-  buttonBack: { color: "hsl(var(--foreground) / 0.7)" },
-  buttonSkip: { color: "hsl(var(--foreground) / 0.6)" },
-}}
+```text
+waitForElement(selector, { timeout, interval }):
+  loop until found or timeout:
+    el = document.querySelector(selector)
+    if el and el.offsetParent !== null: return el
+    await sleep(interval)
+  return null
 ```
 
-Uses semantic tokens (per design system) — no raw hex/rgb. Works in both light and dark themes because everything is HSL with alpha on top of theme-driven `--background` / `--card`.
+- We also check `offsetParent !== null` so we don't anchor onto a hidden node.
+- `pauseIdleTimer()` continues to be called once per transition so the SmartMenu doesn't auto-collapse mid-tour.
 
-### 3. No coordination needed for this step
+### Out of scope
 
-This fix is entirely shell-side. The deep-link MENU_ACTION envelopes already match Claude's spec and stay in place — they'll start working "for free" once the runtime team ships their half. The Claude loop can continue in parallel; nothing about this change blocks them.
-
-## Files touched
-
-- `src/components/tour/VisitorTour.tsx` — rewire step side-effects + replace `options` prop with `styles`
-
-No other files change.
+- No design changes (cards, colors, arrows stay as they are).
+- No changes to `ShellContext`, the wallet deep-link contract, or any runtime postMessage payloads.
+- No changes to memory/index.md.

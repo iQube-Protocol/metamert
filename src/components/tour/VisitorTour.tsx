@@ -1,5 +1,5 @@
-import { useMemo, useRef } from "react";
-import { Joyride, EVENTS, STATUS, type EventData, type Step } from "react-joyride";
+import { useMemo, useRef, useState, useEffect } from "react";
+import { Joyride, ACTIONS, EVENTS, STATUS, type EventData, type Step } from "react-joyride";
 import { useShell } from "@/contexts/ShellContext";
 import { DEEP_LINK_DISPATCH } from "@/lib/smart-menu-config";
 
@@ -207,13 +207,91 @@ export default function VisitorTour({ run, onFinish }: Props) {
     }
   };
 
-  const handleEvent = (data: EventData) => {
-    const { status, type, index } = data;
+  // Controlled step index — we gate every advancement on the target being
+  // present in the DOM, so async drawer/submenu mounts can't cause Joyride
+  // to silently skip past steps whose anchors haven't rendered yet.
+  const [stepIndex, setStepIndex] = useState(0);
+  const stagingRef = useRef(false);
 
-    if (type === EVENTS.STEP_BEFORE) {
-      const step = steps[index];
-      runStepEffect(step?.data?.action as TourAction | undefined);
-      lastStepRef.current = index;
+  const sleep = (ms: number) =>
+    new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+  const waitForElement = async (
+    selector: string,
+    { timeout = 1500, interval = 50 }: { timeout?: number; interval?: number } = {},
+  ): Promise<HTMLElement | null> => {
+    const deadline = Date.now() + timeout;
+    while (Date.now() < deadline) {
+      const el = document.querySelector(selector) as HTMLElement | null;
+      if (el && el.offsetParent !== null) return el;
+      await sleep(interval);
+    }
+    return null;
+  };
+
+  /**
+   * Move to step `target`, pre-staging shell surfaces and waiting for the
+   * anchor to appear before handing control back to Joyride. If the anchor
+   * never appears we skip that single step instead of cascading forward.
+   */
+  const goToStep = async (target: number) => {
+    if (stagingRef.current) return;
+    stagingRef.current = true;
+    try {
+      let idx = target;
+      while (idx >= 0 && idx < steps.length) {
+        const step = steps[idx];
+        runStepEffect(step?.data?.action as TourAction | undefined);
+        const selector =
+          typeof step.target === "string" ? step.target : "";
+        const found = selector
+          ? await waitForElement(selector, { timeout: 1500, interval: 50 })
+          : null;
+        if (found || !selector) {
+          setStepIndex(idx);
+          lastStepRef.current = idx;
+          return;
+        }
+        // Anchor never materialised — skip this single step.
+        idx += 1;
+      }
+      // Ran past the end → finish.
+      clearShellSurfaces();
+      lastStepRef.current = -1;
+      onFinish();
+    } finally {
+      stagingRef.current = false;
+    }
+  };
+
+  // Kick off / reset whenever the tour starts (also covers runKey remounts
+  // since this component is keyed in Index.tsx).
+  useEffect(() => {
+    if (run) {
+      setStepIndex(0);
+      void goToStep(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [run]);
+
+  const handleEvent = (data: EventData) => {
+    const { status, type, action, index } = data;
+
+    if (type === EVENTS.STEP_AFTER) {
+      if (action === ACTIONS.NEXT) {
+        void goToStep(index + 1);
+        return;
+      }
+      if (action === ACTIONS.PREV) {
+        void goToStep(index - 1);
+        return;
+      }
+      if (action === ACTIONS.CLOSE) {
+        clearShellSurfaces();
+        lastStepRef.current = -1;
+        onFinish();
+        return;
+      }
     }
 
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
@@ -236,6 +314,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
     <Joyride
       steps={steps}
       run={run}
+      stepIndex={stepIndex}
       continuous
       options={{
         zIndex: 10000,
