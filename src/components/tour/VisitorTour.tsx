@@ -116,13 +116,13 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "open-settings" satisfies TourAction },
       },
       {
-        // Persona activation happens inside the wallet — bring it back and
-        // anchor at the persona/Be pill so users know where to manage it.
-        target: '[data-tour="persona-nav"]',
+        // Persona activation happens inside the wallet — anchor at the Earn
+        // pill so users associate activation with the SmartWallet on the right.
+        target: '[data-tour="quick-action-wallet"]',
         placement: "top-end",
         title: "Activate a persona",
         content:
-          "Activating personas happens inside the SmartWallet. Choose Qripto, KNYT or a delegate to set the identity your aigent acts as.",
+          "Activating personas happens inside the SmartWallet on the right. Choose Qripto, KNYT or a delegate to set the identity your aigent acts as.",
         data: { action: "activate-persona" satisfies TourAction },
       },
       {
