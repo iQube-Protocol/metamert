@@ -20,21 +20,21 @@ export default function TourHelpButton({ onClick }: Props) {
   const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
-    const PULSE_KEY = "metame.tour.helpPulse.shown";
-    let shouldPulse = true;
-    try {
-      if (sessionStorage.getItem(PULSE_KEY) === "1") shouldPulse = false;
-    } catch { /* noop */ }
-    if (!shouldPulse) return;
-    // Defer one frame so the animation reliably attaches after mount.
+    // Pulse once per full page load. Using a window-level flag (not storage)
+    // means it survives component remounts within the same page but resets on
+    // every fresh navigation/refresh — i.e. each time a user "arrives".
+    const w = window as unknown as { __metameHelpPulsed?: boolean };
+    if (w.__metameHelpPulsed) return;
+    w.__metameHelpPulsed = true;
+
     const raf = window.requestAnimationFrame(() => setPulse(true));
-    try { sessionStorage.setItem(PULSE_KEY, "1"); } catch { /* noop */ }
     const t = window.setTimeout(() => setPulse(false), 3000);
     return () => {
       window.cancelAnimationFrame(raf);
       window.clearTimeout(t);
     };
   }, []);
+
 
   return (
     <TooltipProvider delayDuration={300}>
