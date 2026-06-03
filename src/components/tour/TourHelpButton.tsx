@@ -20,16 +20,20 @@ export default function TourHelpButton({ onClick }: Props) {
   const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
-    let firstVisit = true;
+    const PULSE_KEY = "metame.tour.helpPulse.shown";
+    let shouldPulse = true;
     try {
-      firstVisit =
-        localStorage.getItem("metame.tour.visitor.completed") !== "1" &&
-        localStorage.getItem("metame.tour.visitor.skipped") !== "1";
+      if (sessionStorage.getItem(PULSE_KEY) === "1") shouldPulse = false;
     } catch { /* noop */ }
-    if (!firstVisit) return;
-    setPulse(true);
+    if (!shouldPulse) return;
+    // Defer one frame so the animation reliably attaches after mount.
+    const raf = window.requestAnimationFrame(() => setPulse(true));
+    try { sessionStorage.setItem(PULSE_KEY, "1"); } catch { /* noop */ }
     const t = window.setTimeout(() => setPulse(false), 3000);
-    return () => window.clearTimeout(t);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.clearTimeout(t);
+    };
   }, []);
 
   return (
