@@ -248,7 +248,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
           borderRadius: "8px",
           fontSize: "13px",
           padding: "8px 14px",
-        },
+        } as any,
         buttonBack: {
           color: CARD_TEXT_MUTED,
           fontSize: "13px",
