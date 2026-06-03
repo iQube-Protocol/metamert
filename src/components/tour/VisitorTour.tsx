@@ -278,8 +278,18 @@ export default function VisitorTour({ run, onFinish }: Props) {
             try { found.scrollIntoView({ block: "nearest", inline: "center" }); } catch { /* noop */ }
           }
           // Settle delay: let menu open/scroll animations finish before
-          // Joyride measures the anchor and positions the tooltip.
-          await sleep(220);
+          // Joyride measures the anchor and positions the tooltip. Drawer-
+          // opening steps need a longer settle so the right-side runtime
+          // drawer is mounted before Popper computes placement.
+          const action = step?.data?.action as TourAction | undefined;
+          const isDrawerStep =
+            action === "signin" ||
+            action === "create-persona" ||
+            action === "open-wallet" ||
+            action === "activate-persona" ||
+            action === "open-settings" ||
+            action === "show-cartridges";
+          await sleep(isDrawerStep ? 420 : 220);
           setStepIndex(idx);
           lastStepRef.current = idx;
           return;
