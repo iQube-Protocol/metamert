@@ -116,6 +116,7 @@ export default function SmartMenuPromptBar() {
   return (
     <div
       ref={barRef}
+      data-tour="smart-menu-prompt"
       className="flex items-center px-2 pt-3 pb-2 gap-1 transition-all animate-in fade-in slide-in-from-bottom-2"
       style={{
         animationDuration: '300ms',

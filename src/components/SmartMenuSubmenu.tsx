@@ -274,6 +274,7 @@ function QuickActionButton({
       onClick={handleClick}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
+      data-tour={`quick-action-${action.id}`}
       className="flex flex-col items-center justify-center gap-0.5 py-1.5 transition-all duration-150 active:scale-95 shrink-0"
       style={{
         scrollSnapAlign: "center",
