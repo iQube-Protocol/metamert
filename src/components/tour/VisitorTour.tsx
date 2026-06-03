@@ -76,10 +76,9 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "show-prompt" satisfies TourAction },
       },
       {
-        // Sign In — arrow points at the persona / Be pill; card floats top-end
-        // so it sits in the middle-right of the screen and does not cover the
-        // SmartWallet drawer that opens on the right.
-        target: '[data-tour="persona-nav"]',
+        // Sign In — anchor at the Earn pill (which opens the SmartWallet).
+        // Wallet drawer opens on the right, deep-linked to Sign-In tab.
+        target: '[data-tour="quick-action-wallet"]',
         placement: "top-end",
         title: "Sign in",
         content:
@@ -87,14 +86,14 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "signin" satisfies TourAction },
       },
       {
-        // Create Persona — same anchor (persona / Be pill), still floats
-        // top-end. Wallet stays open on the Sign-In tab where the
-        // "Create Persona" CTA lives.
-        target: '[data-tour="persona-nav"]',
+        // Create Persona — anchor at the Earn pill (opens the wallet). The
+        // Create Persona badge lives inside the SmartWallet drawer on the
+        // right; tapping it launches the wizard.
+        target: '[data-tour="quick-action-wallet"]',
         placement: "top-end",
         title: "Create a persona",
         content:
-          "In the open SmartWallet, tap Create Persona to launch the wizard and set up Qripto, KNYT or a delegate persona.",
+          "In the open SmartWallet on the right, tap the Create Persona badge to launch the wizard and set up Qripto, KNYT or a delegate persona.",
         data: { action: "create-persona" satisfies TourAction },
       },
       {
