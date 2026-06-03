@@ -158,6 +158,13 @@ export default function VisitorTour({ run, onFinish }: Props) {
     else sendIframeAction("wallet");
   };
 
+  /** Open the SmartWallet and launch the Create Persona wizard. */
+  const openCreatePersonaWizard = () => {
+    const dl = DEEP_LINK_DISPATCH["persona-create"];
+    if (dl) sendIframeAction(dl.actionId, dl.deepLink);
+    else sendIframeAction("wallet");
+  };
+
   const runStepEffect = (action: TourAction | undefined) => {
     if (!action) return;
     pauseIdleTimer();
@@ -173,11 +180,19 @@ export default function VisitorTour({ run, onFinish }: Props) {
         activateMode("play");
         break;
       case "signin":
-      case "create-persona":
-      case "activate-persona":
-        // All three live inside the SmartWallet on the Sign-In tab.
         clearShellSurfaces();
+        activateMode("earn");
         openWalletSignIn();
+        break;
+      case "create-persona":
+        clearShellSurfaces();
+        activateMode("earn");
+        openCreatePersonaWizard();
+        break;
+      case "activate-persona":
+        clearShellSurfaces();
+        activateMode("earn");
+        sendIframeAction("wallet");
         break;
       case "open-wallet":
         clearShellSurfaces();
