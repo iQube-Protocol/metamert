@@ -109,10 +109,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "create-persona" satisfies TourAction },
       },
       {
-        // Active Persona — anchored at the persona nav pill on the left of
-        // the nav bar. persona-nav is hidden when the menu is in promptMode
-        // (display:none), so we MUST run a plain reset effect here to keep
-        // the nav bar visible — otherwise this step silently fails.
+        // SmartWallet — anchored at the Earn pill (opens the wallet drawer).
         target: '[data-tour="quick-action-wallet"]',
         placement: "top-end",
         title: "The SmartWallet",
