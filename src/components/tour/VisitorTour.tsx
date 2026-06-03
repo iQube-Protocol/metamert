@@ -37,7 +37,17 @@ export default function VisitorTour({ run, onFinish }: Props) {
     deactivateMode,
     setSubmenuType,
     pauseIdleTimer,
+    activeMode,
+    viewState,
   } = useShell();
+
+  // Live mirror of mode/viewState — useShell closures captured inside
+  // runStepEffect would otherwise be stale across rapid step transitions
+  // and could collapse the menu instead of activating it.
+  const activeModeRef = useRef(activeMode);
+  const viewStateRef = useRef(viewState);
+  useEffect(() => { activeModeRef.current = activeMode; }, [activeMode]);
+  useEffect(() => { viewStateRef.current = viewState; }, [viewState]);
 
   const lastStepRef = useRef<number>(-1);
 
@@ -152,20 +162,26 @@ export default function VisitorTour({ run, onFinish }: Props) {
     deactivateMode();
   };
 
-  /** Open the SmartWallet on the Sign-In tab (deep-linked). */
-  const openWalletSignIn = () => {
-    const dl = DEEP_LINK_DISPATCH["signin"];
-    if (dl) sendIframeAction(dl.actionId, dl.deepLink);
-    else sendIframeAction("wallet");
+  /**
+   * Idempotently move the shell into a given mode + promptMode. If we are
+   * already there we do nothing — calling activateMode again with the same
+   * mode would hit the "tap-active-to-collapse" branch (stale closure) and
+   * fold the menu back to defaultNav, yanking the tour anchor away.
+   */
+  const ensureMode = (mode: "earn" | "be" | "play") => {
+    if (activeModeRef.current === mode && viewStateRef.current === "promptMode") return;
+    activateMode(mode);
   };
 
-  /** Open the SmartWallet and launch the Create Persona wizard. */
-  const openCreatePersonaWizard = () => {
-    const dl = DEEP_LINK_DISPATCH["persona-create"];
-    if (dl) sendIframeAction(dl.actionId, dl.deepLink);
-    else sendIframeAction("wallet");
-  };
-
+  /**
+   * Pre-anchor staging only — make sure the DOM target for the step exists.
+   *
+   * IMPORTANT: We deliberately do NOT open the SmartWallet, Settings, or any
+   * runtime drawer here. Opening a right-side drawer while Joyride is trying
+   * to anchor to a bottom menu pill causes Popper to recompute and flip the
+   * tooltip up toward the header. The tour explains the action; the user
+   * triggers the drawer themselves by tapping the highlighted pill.
+   */
   const runStepEffect = (action: TourAction | undefined) => {
     if (!action) return;
     pauseIdleTimer();
@@ -177,36 +193,24 @@ export default function VisitorTour({ run, onFinish }: Props) {
         clearShellSurfaces();
         break;
       case "show-prompt":
-        clearShellSurfaces();
-        activateMode("play");
+        ensureMode("play");
         break;
       case "signin":
-        clearShellSurfaces();
-        activateMode("earn");
-        openWalletSignIn();
-        break;
       case "create-persona":
-        clearShellSurfaces();
-        activateMode("earn");
-        openCreatePersonaWizard();
-        break;
       case "activate-persona":
-        clearShellSurfaces();
-        activateMode("earn");
-        sendIframeAction("wallet");
-        break;
       case "open-wallet":
-        clearShellSurfaces();
-        activateMode("earn");
-        sendIframeAction("wallet");
+        ensureMode("earn");
         break;
       case "open-settings":
-        clearShellSurfaces();
-        activateMode("be");
-        sendIframeAction("settings");
+        ensureMode("be");
         break;
     }
+    // activateMode restarts the shell idle timer, which would auto-collapse
+    // the staged submenu after a few seconds and yank the tour anchor away.
+    // Re-pause it so the highlighted pill stays put for the whole step.
+    pauseIdleTimer();
   };
+
 
   // Controlled step index — we gate every advancement on the target being
   // present in the DOM, so async drawer/submenu mounts can't cause Joyride
@@ -246,9 +250,15 @@ export default function VisitorTour({ run, onFinish }: Props) {
         const selector =
           typeof step.target === "string" ? step.target : "";
         const found = selector
-          ? await waitForElement(selector, { timeout: 1500, interval: 50 })
+          ? await waitForElement(selector, { timeout: 2000, interval: 50 })
           : null;
         if (found || !selector) {
+          if (found) {
+            try { found.scrollIntoView({ block: "nearest", inline: "center" }); } catch { /* noop */ }
+          }
+          // Settle delay: let menu open/scroll animations finish before
+          // Joyride measures the anchor and positions the tooltip.
+          await sleep(220);
           setStepIndex(idx);
           lastStepRef.current = idx;
           return;
@@ -274,6 +284,16 @@ export default function VisitorTour({ run, onFinish }: Props) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run]);
+
+  // While the tour is running, continuously suppress the shell idle timer so
+  // the staged submenu (Earn / Be) can't auto-collapse between steps when the
+  // pointer isn't hovering over the menu cluster.
+  useEffect(() => {
+    if (!run) return;
+    pauseIdleTimer();
+    const id = window.setInterval(() => pauseIdleTimer(), 800);
+    return () => window.clearInterval(id);
+  }, [run, pauseIdleTimer]);
 
   const handleEvent = (data: EventData) => {
     const { status, type, action, index } = data;
