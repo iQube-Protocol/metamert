@@ -1,5 +1,5 @@
-import { useMemo, useRef } from "react";
-import { Joyride, EVENTS, STATUS, type EventData, type Step } from "react-joyride";
+import { useMemo, useRef, useState, useEffect } from "react";
+import { Joyride, ACTIONS, EVENTS, STATUS, type EventData, type Step } from "react-joyride";
 import { useShell } from "@/contexts/ShellContext";
 import { DEEP_LINK_DISPATCH } from "@/lib/smart-menu-config";
 
