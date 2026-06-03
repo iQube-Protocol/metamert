@@ -312,6 +312,7 @@
   }
 }
 .tour-help-pulse {
-  animation: tour-help-pulse 0.9s ease-in-out 3;
+  animation: tour-help-pulse 1s ease-in-out 3;
   border-radius: 9999px;
 }
+
