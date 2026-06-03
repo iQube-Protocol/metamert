@@ -60,7 +60,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         placement: "center",
         title: "Welcome to your Runtime",
         content:
-          "This is metaMe Runtime — your entry into cartridges, content, co-pilots, experiences and community. Explore freely without signing in.",
+          "This is metaMe Runtime — your entry into agentic cartridges, content, co-pilots, experiences and community. Explore freely without signing in.",
         data: { action: "reset" satisfies TourAction },
       },
       {
@@ -72,10 +72,7 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "reset" satisfies TourAction },
       },
       {
-        // Cartridges — anchor at the Cartridge quick action inside Play.
-        // Effect stages Play mode and opens the cartridge selector overlay
-        // so the user sees the KNYT / Qriptopian / metaMe pills above the
-        // prompt bar while the tip is up.
+        // Cartridges — anchored at the Cartridge quick action inside Play.
         target: '[data-tour="quick-action-cartridge"]',
         placement: "top-end",
         title: "Cartridges",
@@ -84,28 +81,26 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "show-cartridges" satisfies TourAction },
       },
       {
-        target: '[data-tour="smart-menu"]',
+        // Co-pilot prompt — show the prompt input bar (not the nav) so the
+        // user sees what they'll type into. Anchored on the prompt bar.
+        target: '[data-tour="smart-menu-prompt"]',
         placement: "top",
         title: "Co-pilot prompt",
         content:
           "Tap any menu item to open the prompt bar — that's where you talk to your aigent.",
-        data: { action: "reset" satisfies TourAction },
+        data: { action: "show-prompt" satisfies TourAction },
       },
       {
-        // Sign In — anchor at the dedicated Sign In quick action inside the
-        // Earn submenu. Effect opens the SmartWallet drawer on the right,
-        // deep-linked to the Sign-In tab.
+        // Sign In — dedicated Sign In quick action inside Earn submenu.
         target: '[data-tour="quick-action-signin"]',
         placement: "top-end",
         title: "Sign in",
         content:
-          "Tap Sign In here to open the SmartWallet on the right with the Sign-In modal. Once signed in you can remix, buy, earn, vote, save, publish and generate.",
+          "Tap Sign In here to open the SmartWallet and tap the chevron at the top next to the blue figure to Sign-In or Sign-up. Once signed in you can remix, buy, earn, vote, save, publish and generate.",
         data: { action: "signin" satisfies TourAction },
       },
       {
-        // Create Persona — anchor at the Earn pill (opens the wallet). The
-        // Create Persona badge lives inside the SmartWallet drawer on the
-        // right; tapping it launches the wizard.
+        // Create Persona — anchored at the Earn pill (opens the wallet).
         target: '[data-tour="quick-action-wallet"]',
         placement: "top-end",
         title: "Create a persona",
@@ -114,19 +109,20 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "create-persona" satisfies TourAction },
       },
       {
-        // SmartWallet → reframed as Active Persona cards anchored at the
-        // persona nav pill, so we don't repeat the Earn pill three times.
+        // Active Persona — anchored at the persona nav pill on the left of
+        // the nav bar. persona-nav is hidden when the menu is in promptMode
+        // (display:none), so we MUST run a plain reset effect here to keep
+        // the nav bar visible — otherwise this step silently fails.
         target: '[data-tour="persona-nav"]',
         placement: "top-start",
         title: "Active Persona",
         content:
           "Your active persona card lives here on the left — tap it to switch between Qripto, KNYT or delegate personas. Whoever's active sets the identity your aigent acts as.",
-        data: { action: "open-wallet" satisfies TourAction },
+        data: { action: "reset" satisfies TourAction },
       },
 
       {
-        // Settings — anchored at the Settings quick action in Be. Card
-        // top-end so the settings drawer (right floating) stays in view.
+        // Settings — Settings quick action in Be.
         target: '[data-tour="quick-action-settings"]',
         placement: "top-end",
         title: "Settings",
@@ -135,13 +131,12 @@ export default function VisitorTour({ run, onFinish }: Props) {
         data: { action: "open-settings" satisfies TourAction },
       },
       {
-        // Persona activation happens inside the wallet — anchor at the Earn
-        // pill so users associate activation with the SmartWallet on the right.
+        // Persona activation happens inside the wallet.
         target: '[data-tour="quick-action-wallet"]',
         placement: "top-end",
         title: "Activate a persona",
         content:
-          "Activating personas happens inside the SmartWallet on the right. Choose Qripto, KNYT or a delegate to set the identity your aigent acts as.",
+          "Activating personas happens inside the SmartWallet on the right. Choose the persona you wish to use or a delegate to an aigent you want to act on your behalf.",
         data: { action: "activate-persona" satisfies TourAction },
       },
       {
