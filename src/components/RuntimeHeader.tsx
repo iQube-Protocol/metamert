@@ -310,7 +310,7 @@ export default function RuntimeHeader() {
         </div>
 
         {/* Center: Cartridge icon (dead center) */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center" data-tour="cartridge-indicator">
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center cursor-default">
