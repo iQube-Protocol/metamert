@@ -54,6 +54,9 @@ export type Database = {
       }
       activity_receipts: {
         Row: {
+          action_connector_id: string | null
+          action_connector_label: string | null
+          action_input: Json | null
           action_type: string
           active_cartridge: string
           agents_invoked: string[]
@@ -69,10 +72,14 @@ export type Database = {
           policy_envelope_id: string | null
           receipt_status: string
           session_id: string | null
+          specialist_response: Json | null
           summary: string
           tools_used: string[]
         }
         Insert: {
+          action_connector_id?: string | null
+          action_connector_label?: string | null
+          action_input?: Json | null
           action_type: string
           active_cartridge?: string
           agents_invoked?: string[]
@@ -88,10 +95,14 @@ export type Database = {
           policy_envelope_id?: string | null
           receipt_status?: string
           session_id?: string | null
+          specialist_response?: Json | null
           summary: string
           tools_used?: string[]
         }
         Update: {
+          action_connector_id?: string | null
+          action_connector_label?: string | null
+          action_input?: Json | null
           action_type?: string
           active_cartridge?: string
           agents_invoked?: string[]
@@ -107,6 +118,7 @@ export type Database = {
           policy_envelope_id?: string | null
           receipt_status?: string
           session_id?: string | null
+          specialist_response?: Json | null
           summary?: string
           tools_used?: string[]
         }
@@ -988,6 +1000,60 @@ export type Database = {
           tab_slug?: string
           updated_at?: string
           visibility?: string
+        }
+        Relationships: []
+      }
+      cartridge_catalogue_requests: {
+        Row: {
+          auth_profile_id: string | null
+          cartridge_slug: string
+          cartridge_title: string
+          created_at: string
+          decided_at: string | null
+          decided_by_persona_id: string | null
+          decision_reason: string | null
+          id: string
+          message: string | null
+          persona_id: string
+          requested_at: string
+          requester_display_label: string | null
+          requester_email: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          auth_profile_id?: string | null
+          cartridge_slug: string
+          cartridge_title: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by_persona_id?: string | null
+          decision_reason?: string | null
+          id?: string
+          message?: string | null
+          persona_id: string
+          requested_at?: string
+          requester_display_label?: string | null
+          requester_email?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          auth_profile_id?: string | null
+          cartridge_slug?: string
+          cartridge_title?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by_persona_id?: string | null
+          decision_reason?: string | null
+          id?: string
+          message?: string | null
+          persona_id?: string
+          requested_at?: string
+          requester_display_label?: string | null
+          requester_email?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -12054,6 +12120,278 @@ export type Database = {
         }
         Relationships: []
       }
+      passport_citizen_privileges: {
+        Row: {
+          active_restrictions: Json
+          created_at: string
+          id: string
+          passport_not_revoked_for_reputation: boolean
+          passport_record_id: string
+          passport_remains_valid: boolean
+          personhood_not_revoked: boolean
+          privilege_status: string
+          reputation_standing: string | null
+          restriction_count: number
+          restrictions_apply_only_to_privileges: boolean
+          updated_at: string
+        }
+        Insert: {
+          active_restrictions?: Json
+          created_at?: string
+          id?: string
+          passport_not_revoked_for_reputation?: boolean
+          passport_record_id: string
+          passport_remains_valid?: boolean
+          personhood_not_revoked?: boolean
+          privilege_status?: string
+          reputation_standing?: string | null
+          restriction_count?: number
+          restrictions_apply_only_to_privileges?: boolean
+          updated_at?: string
+        }
+        Update: {
+          active_restrictions?: Json
+          created_at?: string
+          id?: string
+          passport_not_revoked_for_reputation?: boolean
+          passport_record_id?: string
+          passport_remains_valid?: boolean
+          personhood_not_revoked?: boolean
+          privilege_status?: string
+          reputation_standing?: string | null
+          restriction_count?: number
+          restrictions_apply_only_to_privileges?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_citizen_privileges_passport_record_id_fkey"
+            columns: ["passport_record_id"]
+            isOneToOne: false
+            referencedRelation: "polity_passport_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passport_infractions: {
+        Row: {
+          citizen_passport_revocation_allowed: boolean
+          consequences_applied: Json
+          created_at: string
+          description: string | null
+          evidence_refs: Json
+          holder_type: string
+          id: string
+          infraction_id: string
+          infraction_type: string
+          passport_record_id: string | null
+          receipt_ref: string | null
+          reported_at: string
+          reported_by: string | null
+          reputation_binding_id: string | null
+          resolved_at: string | null
+          reviewed_by: string | null
+          severity: string
+          standing_after: string | null
+          standing_before: string | null
+        }
+        Insert: {
+          citizen_passport_revocation_allowed?: boolean
+          consequences_applied?: Json
+          created_at?: string
+          description?: string | null
+          evidence_refs?: Json
+          holder_type: string
+          id?: string
+          infraction_id: string
+          infraction_type: string
+          passport_record_id?: string | null
+          receipt_ref?: string | null
+          reported_at?: string
+          reported_by?: string | null
+          reputation_binding_id?: string | null
+          resolved_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+          standing_after?: string | null
+          standing_before?: string | null
+        }
+        Update: {
+          citizen_passport_revocation_allowed?: boolean
+          consequences_applied?: Json
+          created_at?: string
+          description?: string | null
+          evidence_refs?: Json
+          holder_type?: string
+          id?: string
+          infraction_id?: string
+          infraction_type?: string
+          passport_record_id?: string | null
+          receipt_ref?: string | null
+          reported_at?: string
+          reported_by?: string | null
+          reputation_binding_id?: string | null
+          resolved_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+          standing_after?: string | null
+          standing_before?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_infractions_passport_record_id_fkey"
+            columns: ["passport_record_id"]
+            isOneToOne: false
+            referencedRelation: "polity_passport_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passport_infractions_reputation_binding_id_fkey"
+            columns: ["reputation_binding_id"]
+            isOneToOne: false
+            referencedRelation: "passport_reputation_bindings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passport_reputation_bindings: {
+        Row: {
+          active_restriction_count: number
+          citizen_passport_irrevocable: boolean
+          created_at: string
+          holder_type: string
+          id: string
+          infraction_count: number
+          last_reputation_check_at: string | null
+          passport_record_id: string | null
+          persona_id: string | null
+          private_score_ref: string | null
+          privilege_standing_id: string | null
+          public_score: number | null
+          reputation_binding_id: string
+          reputation_system_ref: string
+          root_identity_id: string | null
+          standing_status: string
+          updated_at: string
+        }
+        Insert: {
+          active_restriction_count?: number
+          citizen_passport_irrevocable?: boolean
+          created_at?: string
+          holder_type: string
+          id?: string
+          infraction_count?: number
+          last_reputation_check_at?: string | null
+          passport_record_id?: string | null
+          persona_id?: string | null
+          private_score_ref?: string | null
+          privilege_standing_id?: string | null
+          public_score?: number | null
+          reputation_binding_id: string
+          reputation_system_ref: string
+          root_identity_id?: string | null
+          standing_status?: string
+          updated_at?: string
+        }
+        Update: {
+          active_restriction_count?: number
+          citizen_passport_irrevocable?: boolean
+          created_at?: string
+          holder_type?: string
+          id?: string
+          infraction_count?: number
+          last_reputation_check_at?: string | null
+          passport_record_id?: string | null
+          persona_id?: string | null
+          private_score_ref?: string | null
+          privilege_standing_id?: string | null
+          public_score?: number | null
+          reputation_binding_id?: string
+          reputation_system_ref?: string
+          root_identity_id?: string | null
+          standing_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_reputation_bindings_passport_record_id_fkey"
+            columns: ["passport_record_id"]
+            isOneToOne: false
+            referencedRelation: "polity_passport_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passport_reputation_bindings_privilege_standing_id_fkey"
+            columns: ["privilege_standing_id"]
+            isOneToOne: false
+            referencedRelation: "passport_citizen_privileges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passport_reputation_bindings_root_identity_id_fkey"
+            columns: ["root_identity_id"]
+            isOneToOne: false
+            referencedRelation: "root_identity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passport_status_transitions: {
+        Row: {
+          actor_id: string | null
+          actor_type: string
+          evidence_refs: Json
+          evidence_type: string | null
+          from_status: string
+          id: string
+          passport_class: string
+          passport_record_id: string
+          reason: string | null
+          receipt_action: string | null
+          receipt_ref: string | null
+          to_status: string
+          transitioned_at: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_type: string
+          evidence_refs?: Json
+          evidence_type?: string | null
+          from_status: string
+          id?: string
+          passport_class: string
+          passport_record_id: string
+          reason?: string | null
+          receipt_action?: string | null
+          receipt_ref?: string | null
+          to_status: string
+          transitioned_at?: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_type?: string
+          evidence_refs?: Json
+          evidence_type?: string | null
+          from_status?: string
+          id?: string
+          passport_class?: string
+          passport_record_id?: string
+          reason?: string | null
+          receipt_action?: string | null
+          receipt_ref?: string | null
+          to_status?: string
+          transitioned_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_status_transitions_passport_record_id_fkey"
+            columns: ["passport_record_id"]
+            isOneToOne: false
+            referencedRelation: "polity_passport_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_requests: {
         Row: {
           amount: number
@@ -12909,6 +13247,265 @@ export type Database = {
           workflow_ref?: string | null
         }
         Relationships: []
+      }
+      polity_passport_applications: {
+        Row: {
+          agent_card_url: string | null
+          agent_iqube_ref: string | null
+          agent_protocol: string | null
+          application_payload: Json | null
+          application_status: string
+          assigned_steward_id: string | null
+          being_declarations: Json | null
+          consents: Json
+          created_at: string
+          decided_at: string | null
+          did_persona_id: string | null
+          id: string
+          kybe_did_public_ref: string | null
+          kybe_identity_id: string | null
+          passport_class: string
+          passport_grade: string | null
+          persona_id: string | null
+          persona_public_ref: string | null
+          personhood_proof_at: string | null
+          personhood_proof_ref: string | null
+          personhood_proof_type: string | null
+          registry_asset_id: string | null
+          registry_intake_id: string | null
+          requested_domains: Json
+          review_priority: string | null
+          root_did_public_ref: string | null
+          root_identity_id: string | null
+          submitted_at: string | null
+          updated_at: string
+          vault_content_hash: string | null
+          vault_content_id: string | null
+          vault_storage_provider: string | null
+        }
+        Insert: {
+          agent_card_url?: string | null
+          agent_iqube_ref?: string | null
+          agent_protocol?: string | null
+          application_payload?: Json | null
+          application_status?: string
+          assigned_steward_id?: string | null
+          being_declarations?: Json | null
+          consents?: Json
+          created_at?: string
+          decided_at?: string | null
+          did_persona_id?: string | null
+          id?: string
+          kybe_did_public_ref?: string | null
+          kybe_identity_id?: string | null
+          passport_class: string
+          passport_grade?: string | null
+          persona_id?: string | null
+          persona_public_ref?: string | null
+          personhood_proof_at?: string | null
+          personhood_proof_ref?: string | null
+          personhood_proof_type?: string | null
+          registry_asset_id?: string | null
+          registry_intake_id?: string | null
+          requested_domains?: Json
+          review_priority?: string | null
+          root_did_public_ref?: string | null
+          root_identity_id?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          vault_content_hash?: string | null
+          vault_content_id?: string | null
+          vault_storage_provider?: string | null
+        }
+        Update: {
+          agent_card_url?: string | null
+          agent_iqube_ref?: string | null
+          agent_protocol?: string | null
+          application_payload?: Json | null
+          application_status?: string
+          assigned_steward_id?: string | null
+          being_declarations?: Json | null
+          consents?: Json
+          created_at?: string
+          decided_at?: string | null
+          did_persona_id?: string | null
+          id?: string
+          kybe_did_public_ref?: string | null
+          kybe_identity_id?: string | null
+          passport_class?: string
+          passport_grade?: string | null
+          persona_id?: string | null
+          persona_public_ref?: string | null
+          personhood_proof_at?: string | null
+          personhood_proof_ref?: string | null
+          personhood_proof_type?: string | null
+          registry_asset_id?: string | null
+          registry_intake_id?: string | null
+          requested_domains?: Json
+          review_priority?: string | null
+          root_did_public_ref?: string | null
+          root_identity_id?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          vault_content_hash?: string | null
+          vault_content_id?: string | null
+          vault_storage_provider?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polity_passport_applications_did_persona_id_fkey"
+            columns: ["did_persona_id"]
+            isOneToOne: false
+            referencedRelation: "did_persona"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "polity_passport_applications_kybe_identity_id_fkey"
+            columns: ["kybe_identity_id"]
+            isOneToOne: false
+            referencedRelation: "kybe_identity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "polity_passport_applications_registry_intake_id_fkey"
+            columns: ["registry_intake_id"]
+            isOneToOne: false
+            referencedRelation: "registry_intakes"
+            referencedColumns: ["intake_id"]
+          },
+          {
+            foreignKeyName: "polity_passport_applications_root_identity_id_fkey"
+            columns: ["root_identity_id"]
+            isOneToOne: false
+            referencedRelation: "root_identity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polity_passport_records: {
+        Row: {
+          application_id: string | null
+          citizen_status: string | null
+          created_at: string
+          did_persona_id: string | null
+          expires_at: string | null
+          id: string
+          issued_at: string | null
+          issuer_id: string
+          issuer_signature: string | null
+          kybe_did_public_ref: string | null
+          kybe_identity_id: string | null
+          participant_status: string | null
+          passport_class: string
+          passport_grade: string | null
+          passport_id: string
+          persona_id: string | null
+          persona_public_ref: string | null
+          registry_record_id: string | null
+          renewal_of_passport_id: string | null
+          renewed_at: string | null
+          revocation_reason: string | null
+          revocation_receipt_ref: string | null
+          revoked: boolean
+          revoked_at: string | null
+          root_did_public_ref: string | null
+          root_identity_id: string | null
+          updated_at: string
+          vault_content_hash: string | null
+          vault_content_id: string | null
+        }
+        Insert: {
+          application_id?: string | null
+          citizen_status?: string | null
+          created_at?: string
+          did_persona_id?: string | null
+          expires_at?: string | null
+          id?: string
+          issued_at?: string | null
+          issuer_id?: string
+          issuer_signature?: string | null
+          kybe_did_public_ref?: string | null
+          kybe_identity_id?: string | null
+          participant_status?: string | null
+          passport_class: string
+          passport_grade?: string | null
+          passport_id: string
+          persona_id?: string | null
+          persona_public_ref?: string | null
+          registry_record_id?: string | null
+          renewal_of_passport_id?: string | null
+          renewed_at?: string | null
+          revocation_reason?: string | null
+          revocation_receipt_ref?: string | null
+          revoked?: boolean
+          revoked_at?: string | null
+          root_did_public_ref?: string | null
+          root_identity_id?: string | null
+          updated_at?: string
+          vault_content_hash?: string | null
+          vault_content_id?: string | null
+        }
+        Update: {
+          application_id?: string | null
+          citizen_status?: string | null
+          created_at?: string
+          did_persona_id?: string | null
+          expires_at?: string | null
+          id?: string
+          issued_at?: string | null
+          issuer_id?: string
+          issuer_signature?: string | null
+          kybe_did_public_ref?: string | null
+          kybe_identity_id?: string | null
+          participant_status?: string | null
+          passport_class?: string
+          passport_grade?: string | null
+          passport_id?: string
+          persona_id?: string | null
+          persona_public_ref?: string | null
+          registry_record_id?: string | null
+          renewal_of_passport_id?: string | null
+          renewed_at?: string | null
+          revocation_reason?: string | null
+          revocation_receipt_ref?: string | null
+          revoked?: boolean
+          revoked_at?: string | null
+          root_did_public_ref?: string | null
+          root_identity_id?: string | null
+          updated_at?: string
+          vault_content_hash?: string | null
+          vault_content_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polity_passport_records_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "polity_passport_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "polity_passport_records_did_persona_id_fkey"
+            columns: ["did_persona_id"]
+            isOneToOne: false
+            referencedRelation: "did_persona"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "polity_passport_records_kybe_identity_id_fkey"
+            columns: ["kybe_identity_id"]
+            isOneToOne: false
+            referencedRelation: "kybe_identity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "polity_passport_records_root_identity_id_fkey"
+            columns: ["root_identity_id"]
+            isOneToOne: false
+            referencedRelation: "root_identity"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
