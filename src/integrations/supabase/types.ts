@@ -406,33 +406,48 @@ export type Database = {
       }
       agent_root_identity: {
         Row: {
+          agent_card_slug: string | null
+          agent_card_url: string | null
           agent_class: string
           agent_id: string
+          bound_passport_id: string | null
           created_at: string | null
           description: string | null
           did_uri: string
           display_name: string | null
           id: string
+          sponsor_passport_id: string | null
+          sponsor_persona_id: string | null
           updated_at: string | null
         }
         Insert: {
+          agent_card_slug?: string | null
+          agent_card_url?: string | null
           agent_class: string
           agent_id: string
+          bound_passport_id?: string | null
           created_at?: string | null
           description?: string | null
           did_uri: string
           display_name?: string | null
           id?: string
+          sponsor_passport_id?: string | null
+          sponsor_persona_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          agent_card_slug?: string | null
+          agent_card_url?: string | null
           agent_class?: string
           agent_id?: string
+          bound_passport_id?: string | null
           created_at?: string | null
           description?: string | null
           did_uri?: string
           display_name?: string | null
           id?: string
+          sponsor_passport_id?: string | null
+          sponsor_persona_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -2230,6 +2245,7 @@ export type Database = {
           generation_index: number
           id: string
           image_url: string | null
+          origin_cartridge: string | null
           parent_id: string | null
           prompt: string
           qc_cost: number
@@ -2253,6 +2269,7 @@ export type Database = {
           generation_index?: number
           id?: string
           image_url?: string | null
+          origin_cartridge?: string | null
           parent_id?: string | null
           prompt: string
           qc_cost?: number
@@ -2276,6 +2293,7 @@ export type Database = {
           generation_index?: number
           id?: string
           image_url?: string | null
+          origin_cartridge?: string | null
           parent_id?: string | null
           prompt?: string
           qc_cost?: number
@@ -4453,6 +4471,11 @@ export type Database = {
           rqh_bucket_id: string | null
           rqh_partition_id: string | null
           rqh_synced_at: string | null
+          standing_bucket: number
+          standing_delegated: number
+          standing_overall: number
+          standing_personal: number
+          standing_stewardship: number
           total_tasks_claimed: number | null
           total_tasks_completed: number | null
           updated_at: string | null
@@ -4470,6 +4493,11 @@ export type Database = {
           rqh_bucket_id?: string | null
           rqh_partition_id?: string | null
           rqh_synced_at?: string | null
+          standing_bucket?: number
+          standing_delegated?: number
+          standing_overall?: number
+          standing_personal?: number
+          standing_stewardship?: number
           total_tasks_claimed?: number | null
           total_tasks_completed?: number | null
           updated_at?: string | null
@@ -4487,6 +4515,11 @@ export type Database = {
           rqh_bucket_id?: string | null
           rqh_partition_id?: string | null
           rqh_synced_at?: string | null
+          standing_bucket?: number
+          standing_delegated?: number
+          standing_overall?: number
+          standing_personal?: number
+          standing_stewardship?: number
           total_tasks_claimed?: number | null
           total_tasks_completed?: number | null
           updated_at?: string | null
@@ -4979,6 +5012,8 @@ export type Database = {
           source: string | null
           source_id: string | null
           source_type: string | null
+          standing_accrual_delta: number | null
+          standing_category: string | null
           task_template_id: string | null
           tenant_id: string
         }
@@ -5007,6 +5042,8 @@ export type Database = {
           source?: string | null
           source_id?: string | null
           source_type?: string | null
+          standing_accrual_delta?: number | null
+          standing_category?: string | null
           task_template_id?: string | null
           tenant_id: string
         }
@@ -5035,6 +5072,8 @@ export type Database = {
           source?: string | null
           source_id?: string | null
           source_type?: string | null
+          standing_accrual_delta?: number | null
+          standing_category?: string | null
           task_template_id?: string | null
           tenant_id?: string
         }
@@ -5292,6 +5331,7 @@ export type Database = {
           reward_qoyn: number | null
           schema_json: Json | null
           slug: string
+          standing_type: string
           tenant_id: string
           title: string
           updated_at: string | null
@@ -5329,6 +5369,7 @@ export type Database = {
           reward_qoyn?: number | null
           schema_json?: Json | null
           slug: string
+          standing_type?: string
           tenant_id: string
           title: string
           updated_at?: string | null
@@ -5366,6 +5407,7 @@ export type Database = {
           reward_qoyn?: number | null
           schema_json?: Json | null
           slug?: string
+          standing_type?: string
           tenant_id?: string
           title?: string
           updated_at?: string | null
@@ -5566,6 +5608,62 @@ export type Database = {
           to_did?: string
         }
         Relationships: []
+      }
+      delegation_agentkit_attestations: {
+        Row: {
+          attestation_id: string
+          attestation_ref: string
+          attestation_token: string
+          delegated_agent_root_id: string | null
+          delegation_grant_id: string
+          expires_at: string | null
+          issued_at: string
+          mode: string
+          revoked_at: string | null
+          sponsor_passport_id: string
+          sponsor_persona_id: string
+          sponsor_world_id_nullifier: string | null
+          verified_human: boolean
+        }
+        Insert: {
+          attestation_id?: string
+          attestation_ref: string
+          attestation_token: string
+          delegated_agent_root_id?: string | null
+          delegation_grant_id: string
+          expires_at?: string | null
+          issued_at?: string
+          mode?: string
+          revoked_at?: string | null
+          sponsor_passport_id: string
+          sponsor_persona_id: string
+          sponsor_world_id_nullifier?: string | null
+          verified_human?: boolean
+        }
+        Update: {
+          attestation_id?: string
+          attestation_ref?: string
+          attestation_token?: string
+          delegated_agent_root_id?: string | null
+          delegation_grant_id?: string
+          expires_at?: string | null
+          issued_at?: string
+          mode?: string
+          revoked_at?: string | null
+          sponsor_passport_id?: string
+          sponsor_persona_id?: string
+          sponsor_world_id_nullifier?: string | null
+          verified_human?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delegation_agentkit_attestations_delegated_agent_root_id_fkey"
+            columns: ["delegated_agent_root_id"]
+            isOneToOne: false
+            referencedRelation: "agent_root_identity"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deliveries: {
         Row: {
@@ -6489,6 +6587,57 @@ export type Database = {
           name?: string
           target_segments?: string[] | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      experience_task_completions: {
+        Row: {
+          cartridge_slug: string | null
+          completed_tasks: Json
+          created_at: string
+          experience_id: string
+          id: string
+          persona_id: string
+          receipt_id: string | null
+          reputation_applied: boolean
+          reward_amount: number | null
+          reward_asset: string | null
+          reward_granted: boolean
+          task_template_id: string | null
+          total_tasks: number
+          updated_at: string
+        }
+        Insert: {
+          cartridge_slug?: string | null
+          completed_tasks?: Json
+          created_at?: string
+          experience_id: string
+          id?: string
+          persona_id: string
+          receipt_id?: string | null
+          reputation_applied?: boolean
+          reward_amount?: number | null
+          reward_asset?: string | null
+          reward_granted?: boolean
+          task_template_id?: string | null
+          total_tasks?: number
+          updated_at?: string
+        }
+        Update: {
+          cartridge_slug?: string | null
+          completed_tasks?: Json
+          created_at?: string
+          experience_id?: string
+          id?: string
+          persona_id?: string
+          receipt_id?: string | null
+          reputation_applied?: boolean
+          reward_amount?: number | null
+          reward_asset?: string | null
+          reward_granted?: boolean
+          task_template_id?: string | null
+          total_tasks?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -8657,6 +8806,8 @@ export type Database = {
       }
       kybe_identity: {
         Row: {
+          agent_conversion_candidate: boolean
+          agent_conversion_candidate_at: string | null
           encrypted_soul_key: string | null
           id: string
           issued_at: string | null
@@ -8665,6 +8816,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          agent_conversion_candidate?: boolean
+          agent_conversion_candidate_at?: string | null
           encrypted_soul_key?: string | null
           id?: string
           issued_at?: string | null
@@ -8673,6 +8826,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          agent_conversion_candidate?: boolean
+          agent_conversion_candidate_at?: string | null
           encrypted_soul_key?: string | null
           id?: string
           issued_at?: string | null
@@ -9558,6 +9713,36 @@ export type Database = {
           },
         ]
       }
+      locker_ens_names: {
+        Row: {
+          ens_full: string
+          ens_id: string
+          ens_label: string
+          ens_parent: string
+          holder_persona_id: string
+          minted_at: string
+          status: string
+        }
+        Insert: {
+          ens_full: string
+          ens_id?: string
+          ens_label: string
+          ens_parent?: string
+          holder_persona_id: string
+          minted_at?: string
+          status?: string
+        }
+        Update: {
+          ens_full?: string
+          ens_id?: string
+          ens_label?: string
+          ens_parent?: string
+          holder_persona_id?: string
+          minted_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       mailbox: {
         Row: {
           created_at: string | null
@@ -9807,6 +9992,244 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "iqube_id_map"
             referencedColumns: ["iqube_id"]
+          },
+        ]
+      }
+      mobility_cases: {
+        Row: {
+          assigned_case_manager_id: string | null
+          business_continuity_risk: string | null
+          business_profile: Json
+          capability_profile: Json
+          capability_score: number | null
+          cartridge_type: string
+          case_status: string
+          case_type: string
+          classification: string
+          confidentiality_profile: Json
+          continuity_profile: Json
+          continuity_score: number | null
+          created_at: string
+          education_profile: Json
+          education_risk_level: string | null
+          family_profile: Json
+          financial_profile: Json
+          household_profile: Json
+          housing_profile: Json
+          housing_risk_level: string | null
+          id: string
+          ies_approved_at: string | null
+          ies_content: Json | null
+          ies_status: string
+          institutional_responses: Json
+          intake_completed_at: string | null
+          intake_sections_complete: string[]
+          marketa_forward_email: string | null
+          mobility_profile: Json
+          owner_persona_id: string
+          priority_level: string
+          recovery_velocity_class: string | null
+          srb_approved_at: string | null
+          srb_content: Json | null
+          srb_status: string
+          standing_profile: Json
+          standing_risk_level: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_case_manager_id?: string | null
+          business_continuity_risk?: string | null
+          business_profile?: Json
+          capability_profile?: Json
+          capability_score?: number | null
+          cartridge_type?: string
+          case_status?: string
+          case_type?: string
+          classification?: string
+          confidentiality_profile?: Json
+          continuity_profile?: Json
+          continuity_score?: number | null
+          created_at?: string
+          education_profile?: Json
+          education_risk_level?: string | null
+          family_profile?: Json
+          financial_profile?: Json
+          household_profile?: Json
+          housing_profile?: Json
+          housing_risk_level?: string | null
+          id?: string
+          ies_approved_at?: string | null
+          ies_content?: Json | null
+          ies_status?: string
+          institutional_responses?: Json
+          intake_completed_at?: string | null
+          intake_sections_complete?: string[]
+          marketa_forward_email?: string | null
+          mobility_profile?: Json
+          owner_persona_id: string
+          priority_level?: string
+          recovery_velocity_class?: string | null
+          srb_approved_at?: string | null
+          srb_content?: Json | null
+          srb_status?: string
+          standing_profile?: Json
+          standing_risk_level?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_case_manager_id?: string | null
+          business_continuity_risk?: string | null
+          business_profile?: Json
+          capability_profile?: Json
+          capability_score?: number | null
+          cartridge_type?: string
+          case_status?: string
+          case_type?: string
+          classification?: string
+          confidentiality_profile?: Json
+          continuity_profile?: Json
+          continuity_score?: number | null
+          created_at?: string
+          education_profile?: Json
+          education_risk_level?: string | null
+          family_profile?: Json
+          financial_profile?: Json
+          household_profile?: Json
+          housing_profile?: Json
+          housing_risk_level?: string | null
+          id?: string
+          ies_approved_at?: string | null
+          ies_content?: Json | null
+          ies_status?: string
+          institutional_responses?: Json
+          intake_completed_at?: string | null
+          intake_sections_complete?: string[]
+          marketa_forward_email?: string | null
+          mobility_profile?: Json
+          owner_persona_id?: string
+          priority_level?: string
+          recovery_velocity_class?: string | null
+          srb_approved_at?: string | null
+          srb_content?: Json | null
+          srb_status?: string
+          standing_profile?: Json
+          standing_risk_level?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mobility_critical_dates: {
+        Row: {
+          case_id: string
+          created_at: string
+          date_category: string
+          due_date: string
+          id: string
+          is_hard_deadline: boolean
+          label: string
+          notes: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+          workstream_key: string | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          date_category: string
+          due_date: string
+          id?: string
+          is_hard_deadline?: boolean
+          label: string
+          notes?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          workstream_key?: string | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          date_category?: string
+          due_date?: string
+          id?: string
+          is_hard_deadline?: boolean
+          label?: string
+          notes?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          workstream_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mobility_critical_dates_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "mobility_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mobility_workstreams: {
+        Row: {
+          assigned_agent_id: string | null
+          case_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          label: string
+          notes: string | null
+          priority: string
+          started_at: string | null
+          status: string
+          tasks: Json
+          tenant_id: string
+          updated_at: string
+          workstream_key: string
+        }
+        Insert: {
+          assigned_agent_id?: string | null
+          case_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          label: string
+          notes?: string | null
+          priority?: string
+          started_at?: string | null
+          status?: string
+          tasks?: Json
+          tenant_id?: string
+          updated_at?: string
+          workstream_key: string
+        }
+        Update: {
+          assigned_agent_id?: string | null
+          case_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          priority?: string
+          started_at?: string | null
+          status?: string
+          tasks?: Json
+          tenant_id?: string
+          updated_at?: string
+          workstream_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mobility_workstreams_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "mobility_cases"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -12254,6 +12677,202 @@ export type Database = {
           },
         ]
       }
+      passport_locker_grants: {
+        Row: {
+          delegated_agent_root_id: string | null
+          delegated_persona_id: string
+          expires_at: string | null
+          grant_id: string
+          granted_at: string
+          granted_by_persona_id: string
+          item_id: string
+          revoked_at: string | null
+          scope: string
+        }
+        Insert: {
+          delegated_agent_root_id?: string | null
+          delegated_persona_id: string
+          expires_at?: string | null
+          grant_id?: string
+          granted_at?: string
+          granted_by_persona_id: string
+          item_id: string
+          revoked_at?: string | null
+          scope?: string
+        }
+        Update: {
+          delegated_agent_root_id?: string | null
+          delegated_persona_id?: string
+          expires_at?: string | null
+          grant_id?: string
+          granted_at?: string
+          granted_by_persona_id?: string
+          item_id?: string
+          revoked_at?: string | null
+          scope?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_locker_grants_delegated_agent_root_id_fkey"
+            columns: ["delegated_agent_root_id"]
+            isOneToOne: false
+            referencedRelation: "agent_root_identity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passport_locker_grants_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "passport_locker_items"
+            referencedColumns: ["item_id"]
+          },
+        ]
+      }
+      passport_locker_items: {
+        Row: {
+          content_type: string
+          created_at: string
+          display_name: string
+          downloadable: boolean
+          encrypted_metadata: string | null
+          encryption_auth_tag: string | null
+          encryption_iv: string | null
+          holder_passport_id: string | null
+          holder_persona_id: string
+          item_id: string
+          size_bytes: number | null
+          storage_mode: string
+          sui_object_id: string | null
+          updated_at: string
+          walrus_blob_id: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          display_name: string
+          downloadable?: boolean
+          encrypted_metadata?: string | null
+          encryption_auth_tag?: string | null
+          encryption_iv?: string | null
+          holder_passport_id?: string | null
+          holder_persona_id: string
+          item_id?: string
+          size_bytes?: number | null
+          storage_mode?: string
+          sui_object_id?: string | null
+          updated_at?: string
+          walrus_blob_id: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          display_name?: string
+          downloadable?: boolean
+          encrypted_metadata?: string | null
+          encryption_auth_tag?: string | null
+          encryption_iv?: string | null
+          holder_passport_id?: string | null
+          holder_persona_id?: string
+          item_id?: string
+          size_bytes?: number | null
+          storage_mode?: string
+          sui_object_id?: string | null
+          updated_at?: string
+          walrus_blob_id?: string
+        }
+        Relationships: []
+      }
+      passport_qubetalk_channels: {
+        Row: {
+          channel_id: string
+          channel_status: string
+          closed_at: string | null
+          created_at: string
+          delegated_agent_root_id: string | null
+          delegated_persona_id: string
+          delegation_grant_id: string | null
+          holder_persona_id: string
+        }
+        Insert: {
+          channel_id?: string
+          channel_status?: string
+          closed_at?: string | null
+          created_at?: string
+          delegated_agent_root_id?: string | null
+          delegated_persona_id: string
+          delegation_grant_id?: string | null
+          holder_persona_id: string
+        }
+        Update: {
+          channel_id?: string
+          channel_status?: string
+          closed_at?: string | null
+          created_at?: string
+          delegated_agent_root_id?: string | null
+          delegated_persona_id?: string
+          delegation_grant_id?: string | null
+          holder_persona_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_qubetalk_channels_delegated_agent_root_id_fkey"
+            columns: ["delegated_agent_root_id"]
+            isOneToOne: false
+            referencedRelation: "agent_root_identity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passport_recommendations: {
+        Row: {
+          assessment_payload: Json | null
+          candidate_agent_card_url: string | null
+          candidate_application_id: string | null
+          created_at: string
+          id: string
+          reason: string | null
+          recommender_kind: string
+          recommender_persona_id: string
+          tenant_id: string
+          withdrawal_reason: string | null
+          withdrawn_at: string | null
+        }
+        Insert: {
+          assessment_payload?: Json | null
+          candidate_agent_card_url?: string | null
+          candidate_application_id?: string | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          recommender_kind: string
+          recommender_persona_id: string
+          tenant_id?: string
+          withdrawal_reason?: string | null
+          withdrawn_at?: string | null
+        }
+        Update: {
+          assessment_payload?: Json | null
+          candidate_agent_card_url?: string | null
+          candidate_application_id?: string | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          recommender_kind?: string
+          recommender_persona_id?: string
+          tenant_id?: string
+          withdrawal_reason?: string | null
+          withdrawn_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_recommendations_candidate_application_id_fkey"
+            columns: ["candidate_application_id"]
+            isOneToOne: false
+            referencedRelation: "polity_passport_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       passport_reputation_bindings: {
         Row: {
           active_restriction_count: number
@@ -12630,6 +13249,45 @@ export type Database = {
         }
         Relationships: []
       }
+      persona_ens_names: {
+        Row: {
+          ens_full: string
+          ens_id: string
+          ens_label: string
+          ens_parent: string
+          minted_at: string
+          namestone_response: Json | null
+          persona_id: string
+          persona_public_ref: string
+          released_at: string | null
+          status: string
+        }
+        Insert: {
+          ens_full: string
+          ens_id?: string
+          ens_label: string
+          ens_parent?: string
+          minted_at?: string
+          namestone_response?: Json | null
+          persona_id: string
+          persona_public_ref: string
+          released_at?: string | null
+          status?: string
+        }
+        Update: {
+          ens_full?: string
+          ens_id?: string
+          ens_label?: string
+          ens_parent?: string
+          minted_at?: string
+          namestone_response?: Json | null
+          persona_id?: string
+          persona_public_ref?: string
+          released_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       persona_google_tokens: {
         Row: {
           access_token: string
@@ -12870,6 +13528,51 @@ export type Database = {
         }
         Relationships: []
       }
+      persona_qube_mints: {
+        Row: {
+          display_label: string | null
+          kybe_did_public_ref: string | null
+          mint_id: string
+          mint_mode: string
+          minted_at: string
+          on_chain: boolean
+          persona_id: string
+          persona_public_ref: string
+          receipt_id: string | null
+          sui_object_id: string
+          updated_at: string
+          walrus_blob_id: string
+        }
+        Insert: {
+          display_label?: string | null
+          kybe_did_public_ref?: string | null
+          mint_id?: string
+          mint_mode: string
+          minted_at?: string
+          on_chain?: boolean
+          persona_id: string
+          persona_public_ref: string
+          receipt_id?: string | null
+          sui_object_id: string
+          updated_at?: string
+          walrus_blob_id: string
+        }
+        Update: {
+          display_label?: string | null
+          kybe_did_public_ref?: string | null
+          mint_id?: string
+          mint_mode?: string
+          minted_at?: string
+          on_chain?: boolean
+          persona_id?: string
+          persona_public_ref?: string
+          receipt_id?: string | null
+          sui_object_id?: string
+          updated_at?: string
+          walrus_blob_id?: string
+        }
+        Relationships: []
+      }
       persona_token_qube_ownership: {
         Row: {
           acquired_at: string
@@ -13047,6 +13750,8 @@ export type Database = {
           root_did: string
           root_id: string | null
           sol_address: string | null
+          sponsorship_capacity_base: number
+          sponsorship_capacity_earned: number
           status: string
           tenant_id: string
           type: string
@@ -13095,6 +13800,8 @@ export type Database = {
           root_did: string
           root_id?: string | null
           sol_address?: string | null
+          sponsorship_capacity_base?: number
+          sponsorship_capacity_earned?: number
           status?: string
           tenant_id: string
           type?: string
@@ -13143,6 +13850,8 @@ export type Database = {
           root_did?: string
           root_id?: string | null
           sol_address?: string | null
+          sponsorship_capacity_base?: number
+          sponsorship_capacity_earned?: number
           status?: string
           tenant_id?: string
           type?: string
@@ -13266,6 +13975,7 @@ export type Database = {
           kybe_identity_id: string | null
           passport_class: string
           passport_grade: string | null
+          passport_id: string | null
           persona_id: string | null
           persona_public_ref: string | null
           personhood_proof_at: string | null
@@ -13300,6 +14010,7 @@ export type Database = {
           kybe_identity_id?: string | null
           passport_class: string
           passport_grade?: string | null
+          passport_id?: string | null
           persona_id?: string | null
           persona_public_ref?: string | null
           personhood_proof_at?: string | null
@@ -13334,6 +14045,7 @@ export type Database = {
           kybe_identity_id?: string | null
           passport_class?: string
           passport_grade?: string | null
+          passport_id?: string | null
           persona_id?: string | null
           persona_public_ref?: string | null
           personhood_proof_at?: string | null
@@ -13385,8 +14097,10 @@ export type Database = {
       polity_passport_records: {
         Row: {
           application_id: string | null
+          canonical_citizen: boolean
           citizen_status: string | null
           created_at: string
+          credential_claimed_at: string | null
           did_persona_id: string | null
           expires_at: string | null
           id: string
@@ -13413,11 +14127,16 @@ export type Database = {
           updated_at: string
           vault_content_hash: string | null
           vault_content_id: string | null
+          world_id_nullifier_hash: string | null
+          world_id_verification_level: string | null
+          world_id_verified_at: string | null
         }
         Insert: {
           application_id?: string | null
+          canonical_citizen?: boolean
           citizen_status?: string | null
           created_at?: string
+          credential_claimed_at?: string | null
           did_persona_id?: string | null
           expires_at?: string | null
           id?: string
@@ -13444,11 +14163,16 @@ export type Database = {
           updated_at?: string
           vault_content_hash?: string | null
           vault_content_id?: string | null
+          world_id_nullifier_hash?: string | null
+          world_id_verification_level?: string | null
+          world_id_verified_at?: string | null
         }
         Update: {
           application_id?: string | null
+          canonical_citizen?: boolean
           citizen_status?: string | null
           created_at?: string
+          credential_claimed_at?: string | null
           did_persona_id?: string | null
           expires_at?: string | null
           id?: string
@@ -13475,6 +14199,9 @@ export type Database = {
           updated_at?: string
           vault_content_hash?: string | null
           vault_content_id?: string | null
+          world_id_nullifier_hash?: string | null
+          world_id_verification_level?: string | null
+          world_id_verified_at?: string | null
         }
         Relationships: [
           {
