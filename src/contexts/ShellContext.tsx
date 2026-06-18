@@ -261,7 +261,23 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   });
 
   // Runtime context (metaMe ↔ KNYT) — drives header lightning color and copilot framing
-  const [runtimeContext, setRuntimeContextState] = useState<RuntimeContext>("metame");
+  const [runtimeContext, setRuntimeContextState] = useState<RuntimeContext>("knyt");
+
+  // On mount: read server-side preference so admin/platform toggles sync on load.
+  useEffect(() => {
+    let cancelled = false;
+    const platformBase = import.meta.env.VITE_AIGENTIQ_API_URL || "https://dev-beta.aigentz.me";
+    void fetch(`${platformBase}/api/runtime/settings/context`, { cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if ((data.context === "metame" || data.context === "knyt") && !cancelled) {
+          setRuntimeContextState(data.context);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   // Idle timer refs — split: 3s for quick action layer, 4s for full collapse
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -500,6 +516,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     void menuAction("runtime-context", { runtime_context: next } as any).catch(() => {
       /* swallow — runtime context is local-first */
     });
+    // Persist server-side so the platform admin tab and other sessions sync.
+    const platformBase = import.meta.env.VITE_AIGENTIQ_API_URL || "https://dev-beta.aigentz.me";
+    void fetch(`${platformBase}/api/runtime/settings/context`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ context: next }),
+    }).catch(() => {});
   }, [sendRuntimeMessage]);
 
   /**
