@@ -261,7 +261,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   });
 
   // Runtime context (metaMe ↔ KNYT) — drives header lightning color and copilot framing
-  const [runtimeContext, setRuntimeContextState] = useState<RuntimeContext>("knyt");
+  const [runtimeContext, setRuntimeContextState] = useState<RuntimeContext>("metame");
 
   // On mount: read server-side preference so admin/platform toggles sync on load.
   useEffect(() => {
