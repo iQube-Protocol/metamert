@@ -260,8 +260,28 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     };
   });
 
-  // Runtime context (metaMe ↔ KNYT) — drives header lightning color and copilot framing
+  // Runtime context (metaMe ↔ KNYT) — drives header lightning color and copilot framing.
+  // Initial value is "metame"; on mount we hydrate from the platform's shared
+  // singleton at GET ${VITE_PLATFORM_BASE_URL}/api/runtime/settings/context so
+  // this shell stays in sync with the admin tab and the iframe runtime.
   const [runtimeContext, setRuntimeContextState] = useState<RuntimeContext>("metame");
+
+  // Hydrate runtime context from platform server (one-shot on mount).
+  useEffect(() => {
+    const base = (import.meta.env.VITE_PLATFORM_BASE_URL as string | undefined) ?? "https://dev-beta.aigentz.me";
+    let cancelled = false;
+    void fetch(`${base}/api/runtime/settings/context`, { cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok || cancelled) return;
+        const data = await res.json().catch(() => null);
+        const next = data?.context;
+        if ((next === "metame" || next === "knyt") && !cancelled) {
+          setRuntimeContextState(next);
+        }
+      })
+      .catch(() => { /* offline / CORS — keep local default */ });
+    return () => { cancelled = true; };
+  }, []);
 
   // Idle timer refs — split: 3s for quick action layer, 4s for full collapse
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
