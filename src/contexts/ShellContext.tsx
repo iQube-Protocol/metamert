@@ -501,36 +501,34 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   }, [launchCartridge]);
 
   /**
-   * Set the active runtime context (metaMe ↔ KNYT).
-   * Single RUNTIME_CONTEXT_CHANGE dispatch per platform contract.
+   * Set the active runtime context (metaMe ↔ KNYT). This is the ONLY path
+   * that can switch the shell into KNYT — startup hydration and iframe
+   * RUNTIME_LEAD_CHANGE are ignored per directive.
    */
   const setRuntimeContext = useCallback((next: RuntimeContext) => {
     console.log("[Shell] runtime-context: shell toggle →", next);
-    try { localStorage.setItem(RUNTIME_CONTEXT_PREF_KEY, next); } catch { /* ignore */ }
     setRuntimeContextState(next);
     sendRuntimeMessage("RUNTIME_CONTEXT_CHANGE", { context: next });
-    // Persist server-side so the platform admin tab and other sessions sync.
+    // Best-effort server persistence (non-blocking, ignore failures).
     const base = (import.meta.env.VITE_PLATFORM_BASE_URL as string | undefined) ?? "https://dev-beta.aigentz.me";
     void fetch(`${base}/api/runtime/settings/context`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ context: next }),
     }).catch(() => { /* swallow — runtime context is local-first */ });
-    // Best-effort AA-API notification (non-blocking)
     void menuAction("runtime-context", { runtime_context: next } as any).catch(() => {
-      /* swallow — runtime context is local-first */
+      /* swallow */
     });
   }, [sendRuntimeMessage]);
 
   /**
-   * Apply a runtime-originated lead change (RUNTIME_LEAD_CHANGE) without
-   * echoing RUNTIME_CONTEXT_CHANGE back to the iframe. Honors local pref:
-   * if the user has pinned a context, the iframe cannot override it.
+   * Apply a runtime-originated lead change (RUNTIME_LEAD_CHANGE).
+   * Per user directive: the iframe cannot force the shell into KNYT —
+   * only an explicit shell toggle can. Inbound "knyt" messages are dropped.
    */
   const applyRuntimeContextFromRuntime = useCallback((next: RuntimeContext) => {
-    const pref = readContextPref();
-    if (pref && pref !== next) {
-      console.log("[Shell] runtime-context: iframe asked for", next, "but local pref is", pref, "— ignoring");
+    if (next === "knyt") {
+      console.log("[Shell] runtime-context: ignoring iframe RUNTIME_LEAD_CHANGE → knyt (shell-toggle only)");
       return;
     }
     setRuntimeContextState(prev => {
