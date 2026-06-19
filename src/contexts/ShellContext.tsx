@@ -529,6 +529,8 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
    * Single RUNTIME_CONTEXT_CHANGE dispatch per platform contract.
    */
   const setRuntimeContext = useCallback((next: RuntimeContext) => {
+    console.log("[Shell] runtime-context: shell toggle →", next);
+    try { localStorage.setItem(RUNTIME_CONTEXT_PREF_KEY, next); } catch { /* ignore */ }
     setRuntimeContextState(next);
     sendRuntimeMessage("RUNTIME_CONTEXT_CHANGE", { context: next });
     // Persist server-side so the platform admin tab and other sessions sync.
@@ -546,14 +548,18 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Apply a runtime-originated lead change (RUNTIME_LEAD_CHANGE) without
-   * echoing RUNTIME_CONTEXT_CHANGE back to the iframe. Avoids feedback loops.
+   * echoing RUNTIME_CONTEXT_CHANGE back to the iframe. Honors local pref:
+   * if the user has pinned a context, the iframe cannot override it.
    */
   const applyRuntimeContextFromRuntime = useCallback((next: RuntimeContext) => {
+    const pref = readContextPref();
+    if (pref && pref !== next) {
+      console.log("[Shell] runtime-context: iframe asked for", next, "but local pref is", pref, "— ignoring");
+      return;
+    }
     setRuntimeContextState(prev => {
       if (prev === next) return prev;
       console.log("[Shell] RUNTIME_LEAD_CHANGE → applying runtimeContext:", next);
-      // Pulse the R/T trust dots to acknowledge the runtime lead handover,
-      // mirroring the inference animation triggered by prompt sends.
       setInferring(true);
       window.setTimeout(() => setInferring(false), 3000);
       return next;
