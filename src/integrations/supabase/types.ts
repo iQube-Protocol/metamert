@@ -2253,8 +2253,10 @@ export type Database = {
           rejected_at: string | null
           rejected_by: string | null
           rejection_reason: string | null
+          runtime_menu: string | null
           runtime_promoted_at: string | null
           runtime_promoted_by: string | null
+          runtime_submenu: string | null
           skill: string
           source_experience_id: string | null
           status: string
@@ -2277,8 +2279,10 @@ export type Database = {
           rejected_at?: string | null
           rejected_by?: string | null
           rejection_reason?: string | null
+          runtime_menu?: string | null
           runtime_promoted_at?: string | null
           runtime_promoted_by?: string | null
+          runtime_submenu?: string | null
           skill: string
           source_experience_id?: string | null
           status?: string
@@ -2301,8 +2305,10 @@ export type Database = {
           rejected_at?: string | null
           rejected_by?: string | null
           rejection_reason?: string | null
+          runtime_menu?: string | null
           runtime_promoted_at?: string | null
           runtime_promoted_by?: string | null
+          runtime_submenu?: string | null
           skill?: string
           source_experience_id?: string | null
           status?: string
@@ -10036,6 +10042,7 @@ export type Database = {
           standing_risk_level: string | null
           tenant_id: string
           updated_at: string
+          vsp_profile_id: string | null
         }
         Insert: {
           assigned_case_manager_id?: string | null
@@ -10077,6 +10084,7 @@ export type Database = {
           standing_risk_level?: string | null
           tenant_id?: string
           updated_at?: string
+          vsp_profile_id?: string | null
         }
         Update: {
           assigned_case_manager_id?: string | null
@@ -10118,8 +10126,17 @@ export type Database = {
           standing_risk_level?: string | null
           tenant_id?: string
           updated_at?: string
+          vsp_profile_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "mobility_cases_vsp_profile_id_fkey"
+            columns: ["vsp_profile_id"]
+            isOneToOne: false
+            referencedRelation: "vsp_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mobility_critical_dates: {
         Row: {
@@ -17702,6 +17719,176 @@ export type Database = {
           vertical?: string
           x_score?: string
           y_score?: string
+        }
+        Relationships: []
+      }
+      vsp_evidence: {
+        Row: {
+          classification: string
+          content_text: string
+          created_at: string
+          disclosure_policy: string
+          extracted_at: string | null
+          extracted_fact_count: number
+          extraction_status: string
+          id: string
+          label: string
+          profile_id: string
+          source_provenance: string | null
+          source_type: string
+          storage_backend: string | null
+          storage_ref: string | null
+          verification_status: string
+        }
+        Insert: {
+          classification?: string
+          content_text?: string
+          created_at?: string
+          disclosure_policy?: string
+          extracted_at?: string | null
+          extracted_fact_count?: number
+          extraction_status?: string
+          id?: string
+          label: string
+          profile_id: string
+          source_provenance?: string | null
+          source_type: string
+          storage_backend?: string | null
+          storage_ref?: string | null
+          verification_status?: string
+        }
+        Update: {
+          classification?: string
+          content_text?: string
+          created_at?: string
+          disclosure_policy?: string
+          extracted_at?: string | null
+          extracted_fact_count?: number
+          extraction_status?: string
+          id?: string
+          label?: string
+          profile_id?: string
+          source_provenance?: string | null
+          source_type?: string
+          storage_backend?: string | null
+          storage_ref?: string | null
+          verification_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vsp_evidence_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "vsp_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vsp_facts: {
+        Row: {
+          approved_at: string | null
+          confidence: string
+          created_at: string
+          domain: string
+          evidence_id: string | null
+          extracted_value: string
+          field: string
+          id: string
+          label: string
+          locked_at: string | null
+          principal_value: string | null
+          profile_id: string
+          status: string
+        }
+        Insert: {
+          approved_at?: string | null
+          confidence?: string
+          created_at?: string
+          domain: string
+          evidence_id?: string | null
+          extracted_value: string
+          field: string
+          id?: string
+          label: string
+          locked_at?: string | null
+          principal_value?: string | null
+          profile_id: string
+          status?: string
+        }
+        Update: {
+          approved_at?: string | null
+          confidence?: string
+          created_at?: string
+          domain?: string
+          evidence_id?: string | null
+          extracted_value?: string
+          field?: string
+          id?: string
+          label?: string
+          locked_at?: string | null
+          principal_value?: string | null
+          profile_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vsp_facts_evidence_id_fkey"
+            columns: ["evidence_id"]
+            isOneToOne: false
+            referencedRelation: "vsp_evidence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vsp_facts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "vsp_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vsp_profiles: {
+        Row: {
+          compiled_at: string | null
+          created_at: string
+          id: string
+          kybe_did_public_ref: string | null
+          label: string
+          owner_persona_id: string
+          persona_public_ref: string | null
+          profile_type: string
+          standing_graph: Json | null
+          status: string
+          updated_at: string
+          vsp_content: Json | null
+        }
+        Insert: {
+          compiled_at?: string | null
+          created_at?: string
+          id?: string
+          kybe_did_public_ref?: string | null
+          label?: string
+          owner_persona_id: string
+          persona_public_ref?: string | null
+          profile_type?: string
+          standing_graph?: Json | null
+          status?: string
+          updated_at?: string
+          vsp_content?: Json | null
+        }
+        Update: {
+          compiled_at?: string | null
+          created_at?: string
+          id?: string
+          kybe_did_public_ref?: string | null
+          label?: string
+          owner_persona_id?: string
+          persona_public_ref?: string | null
+          profile_type?: string
+          standing_graph?: Json | null
+          status?: string
+          updated_at?: string
+          vsp_content?: Json | null
         }
         Relationships: []
       }
