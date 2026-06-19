@@ -261,10 +261,18 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   });
 
   // Runtime context (metaMe ↔ KNYT) — drives header lightning color and copilot framing.
-  // Initial value is "metame"; on mount we hydrate from the platform's shared
-  // singleton at GET ${VITE_PLATFORM_BASE_URL}/api/runtime/settings/context so
-  // this shell stays in sync with the admin tab and the iframe runtime.
-  const [runtimeContext, setRuntimeContextState] = useState<RuntimeContext>("metame");
+  // The last *intentional* shell choice is remembered in localStorage and treated
+  // as source of truth. Server singleton and iframe RUNTIME_LEAD_CHANGE can only
+  // override when there is no local preference — this prevents a stale platform
+  // KNYT takeover from dragging the shell into KNYT on every reload.
+  const RUNTIME_CONTEXT_PREF_KEY = "mm_runtime_context_pref";
+  const readContextPref = (): RuntimeContext | null => {
+    try {
+      const v = localStorage.getItem(RUNTIME_CONTEXT_PREF_KEY);
+      return v === "metame" || v === "knyt" ? v : null;
+    } catch { return null; }
+  };
+  const [runtimeContext, setRuntimeContextState] = useState<RuntimeContext>(() => readContextPref() ?? "metame");
 
   // Hydrate runtime context from platform server (one-shot on mount).
   useEffect(() => {
@@ -275,7 +283,14 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
         if (!res.ok || cancelled) return;
         const data = await res.json().catch(() => null);
         const next = data?.context;
-        if ((next === "metame" || next === "knyt") && !cancelled) {
+        if (next !== "metame" && next !== "knyt") return;
+        const pref = readContextPref();
+        if (pref) {
+          console.log("[Shell] runtime-context: server returned", next, "but local pref is", pref, "— keeping local");
+          return;
+        }
+        if (!cancelled) {
+          console.log("[Shell] runtime-context: hydrated from server →", next);
           setRuntimeContextState(next);
         }
       })
