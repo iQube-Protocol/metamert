@@ -516,6 +516,13 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   const setRuntimeContext = useCallback((next: RuntimeContext) => {
     setRuntimeContextState(next);
     sendRuntimeMessage("RUNTIME_CONTEXT_CHANGE", { context: next });
+    // Persist server-side so the platform admin tab and other sessions sync.
+    const base = (import.meta.env.VITE_PLATFORM_BASE_URL as string | undefined) ?? "https://dev-beta.aigentz.me";
+    void fetch(`${base}/api/runtime/settings/context`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ context: next }),
+    }).catch(() => { /* swallow — runtime context is local-first */ });
     // Best-effort AA-API notification (non-blocking)
     void menuAction("runtime-context", { runtime_context: next } as any).catch(() => {
       /* swallow — runtime context is local-first */
