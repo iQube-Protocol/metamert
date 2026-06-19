@@ -261,41 +261,17 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
   });
 
   // Runtime context (metaMe ↔ KNYT) — drives header lightning color and copilot framing.
-  // The last *intentional* shell choice is remembered in localStorage and treated
-  // as source of truth. Server singleton and iframe RUNTIME_LEAD_CHANGE can only
-  // override when there is no local preference — this prevents a stale platform
-  // KNYT takeover from dragging the shell into KNYT on every reload.
+  // HARD RULE (per user directive 2026-06-19): the shell ALWAYS defaults to "metame"
+  // on load. KNYT is only ever activated by an explicit user toggle in this session
+  // via `setRuntimeContext("knyt")`. Server singleton and iframe RUNTIME_LEAD_CHANGE
+  // are intentionally ignored at startup — they cannot force a KNYT takeover.
   const RUNTIME_CONTEXT_PREF_KEY = "mm_runtime_context_pref";
-  const readContextPref = (): RuntimeContext | null => {
-    try {
-      const v = localStorage.getItem(RUNTIME_CONTEXT_PREF_KEY);
-      return v === "metame" || v === "knyt" ? v : null;
-    } catch { return null; }
-  };
-  const [runtimeContext, setRuntimeContextState] = useState<RuntimeContext>(() => readContextPref() ?? "metame");
+  const [runtimeContext, setRuntimeContextState] = useState<RuntimeContext>("metame");
 
-  // Hydrate runtime context from platform server (one-shot on mount).
+  // Proactively clear any stale persisted KNYT preference so legacy code paths
+  // cannot resurrect a KNYT takeover on reload.
   useEffect(() => {
-    const base = (import.meta.env.VITE_PLATFORM_BASE_URL as string | undefined) ?? "https://dev-beta.aigentz.me";
-    let cancelled = false;
-    void fetch(`${base}/api/runtime/settings/context`, { cache: "no-store" })
-      .then(async (res) => {
-        if (!res.ok || cancelled) return;
-        const data = await res.json().catch(() => null);
-        const next = data?.context;
-        if (next !== "metame" && next !== "knyt") return;
-        const pref = readContextPref();
-        if (pref) {
-          console.log("[Shell] runtime-context: server returned", next, "but local pref is", pref, "— keeping local");
-          return;
-        }
-        if (!cancelled) {
-          console.log("[Shell] runtime-context: hydrated from server →", next);
-          setRuntimeContextState(next);
-        }
-      })
-      .catch(() => { /* offline / CORS — keep local default */ });
-    return () => { cancelled = true; };
+    try { localStorage.removeItem(RUNTIME_CONTEXT_PREF_KEY); } catch { /* ignore */ }
   }, []);
 
   // Idle timer refs — split: 3s for quick action layer, 4s for full collapse
