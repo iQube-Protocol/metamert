@@ -408,14 +408,22 @@ export type Database = {
         Row: {
           agent_card_slug: string | null
           agent_card_url: string | null
+          agent_charter_version: string | null
           agent_class: string
           agent_id: string
           bound_passport_id: string | null
+          constitution_version: string | null
           created_at: string | null
+          delegation_framework_version: string | null
           description: string | null
           did_uri: string
           display_name: string | null
           id: string
+          is_aigent_me: boolean
+          revocation_authority_persona_id: string | null
+          revocation_reason: string | null
+          revocation_state: string
+          revocation_state_at: string | null
           sponsor_passport_id: string | null
           sponsor_persona_id: string | null
           updated_at: string | null
@@ -423,14 +431,22 @@ export type Database = {
         Insert: {
           agent_card_slug?: string | null
           agent_card_url?: string | null
+          agent_charter_version?: string | null
           agent_class: string
           agent_id: string
           bound_passport_id?: string | null
+          constitution_version?: string | null
           created_at?: string | null
+          delegation_framework_version?: string | null
           description?: string | null
           did_uri: string
           display_name?: string | null
           id?: string
+          is_aigent_me?: boolean
+          revocation_authority_persona_id?: string | null
+          revocation_reason?: string | null
+          revocation_state?: string
+          revocation_state_at?: string | null
           sponsor_passport_id?: string | null
           sponsor_persona_id?: string | null
           updated_at?: string | null
@@ -438,14 +454,22 @@ export type Database = {
         Update: {
           agent_card_slug?: string | null
           agent_card_url?: string | null
+          agent_charter_version?: string | null
           agent_class?: string
           agent_id?: string
           bound_passport_id?: string | null
+          constitution_version?: string | null
           created_at?: string | null
+          delegation_framework_version?: string | null
           description?: string | null
           did_uri?: string
           display_name?: string | null
           id?: string
+          is_aigent_me?: boolean
+          revocation_authority_persona_id?: string | null
+          revocation_reason?: string | null
+          revocation_state?: string
+          revocation_state_at?: string | null
           sponsor_passport_id?: string | null
           sponsor_persona_id?: string | null
           updated_at?: string | null
@@ -5612,6 +5636,51 @@ export type Database = {
           meta?: Json | null
           rights?: string[] | null
           to_did?: string
+        }
+        Relationships: []
+      }
+      deferred_token_qube_mints: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          iqube_id: string | null
+          minted_at: string | null
+          owner_address: string | null
+          persona_id: string
+          reason: string | null
+          status: string
+          target_chain: string
+          token_id_commitment: string
+          tx_hash: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          iqube_id?: string | null
+          minted_at?: string | null
+          owner_address?: string | null
+          persona_id: string
+          reason?: string | null
+          status?: string
+          target_chain: string
+          token_id_commitment: string
+          tx_hash?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          iqube_id?: string | null
+          minted_at?: string | null
+          owner_address?: string | null
+          persona_id?: string
+          reason?: string | null
+          status?: string
+          target_chain?: string
+          token_id_commitment?: string
+          tx_hash?: string | null
         }
         Relationships: []
       }
@@ -13545,9 +13614,51 @@ export type Database = {
         }
         Relationships: []
       }
+      persona_plans: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          founder_office_tier: string
+          id: string
+          persona_id: string
+          plan_tier: string
+          source: string
+          standing_tier: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          founder_office_tier?: string
+          id?: string
+          persona_id: string
+          plan_tier?: string
+          source?: string
+          standing_tier?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          founder_office_tier?: string
+          id?: string
+          persona_id?: string
+          plan_tier?: string
+          source?: string
+          standing_tier?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       persona_qube_mints: {
         Row: {
+          base_token_id: string | null
+          base_tx_hash: string | null
           display_label: string | null
+          iqube_id: string | null
           kybe_did_public_ref: string | null
           mint_id: string
           mint_mode: string
@@ -13561,7 +13672,10 @@ export type Database = {
           walrus_blob_id: string
         }
         Insert: {
+          base_token_id?: string | null
+          base_tx_hash?: string | null
           display_label?: string | null
+          iqube_id?: string | null
           kybe_did_public_ref?: string | null
           mint_id?: string
           mint_mode: string
@@ -13575,7 +13689,10 @@ export type Database = {
           walrus_blob_id: string
         }
         Update: {
+          base_token_id?: string | null
+          base_tx_hash?: string | null
           display_label?: string | null
+          iqube_id?: string | null
           kybe_did_public_ref?: string | null
           mint_id?: string
           mint_mode?: string
@@ -17722,6 +17839,87 @@ export type Database = {
         }
         Relationships: []
       }
+      venture_portfolios: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          owner_persona_id: string
+          payload: Json
+          priorities: Json
+          thesis: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          owner_persona_id: string
+          payload?: Json
+          priorities?: Json
+          thesis?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          owner_persona_id?: string
+          payload?: Json
+          priorities?: Json
+          thesis?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      venture_qubes: {
+        Row: {
+          created_at: string
+          id: string
+          iqube_id: string | null
+          last_path: string | null
+          layers: Json
+          owner_persona_id: string
+          schema_version: string
+          status: string
+          updated_at: string
+          venture_confidence: number | null
+          venture_name: string
+          venture_slug: string
+          venture_stage: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          iqube_id?: string | null
+          last_path?: string | null
+          layers?: Json
+          owner_persona_id: string
+          schema_version?: string
+          status?: string
+          updated_at?: string
+          venture_confidence?: number | null
+          venture_name: string
+          venture_slug: string
+          venture_stage?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          iqube_id?: string | null
+          last_path?: string | null
+          layers?: Json
+          owner_persona_id?: string
+          schema_version?: string
+          status?: string
+          updated_at?: string
+          venture_confidence?: number | null
+          venture_name?: string
+          venture_slug?: string
+          venture_stage?: string
+        }
+        Relationships: []
+      }
       vsp_evidence: {
         Row: {
           classification: string
@@ -17852,6 +18050,7 @@ export type Database = {
           compiled_at: string | null
           created_at: string
           id: string
+          iqube_id: string | null
           kybe_did_public_ref: string | null
           label: string
           owner_persona_id: string
@@ -17866,6 +18065,7 @@ export type Database = {
           compiled_at?: string | null
           created_at?: string
           id?: string
+          iqube_id?: string | null
           kybe_did_public_ref?: string | null
           label?: string
           owner_persona_id: string
@@ -17880,6 +18080,7 @@ export type Database = {
           compiled_at?: string | null
           created_at?: string
           id?: string
+          iqube_id?: string | null
           kybe_did_public_ref?: string | null
           label?: string
           owner_persona_id?: string
