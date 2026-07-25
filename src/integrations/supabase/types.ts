@@ -14,6 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_grants: {
+        Row: {
+          access_domain: string
+          allowed_experiments: string[] | null
+          expires_at: string | null
+          granted_at: string
+          id: string
+          passport_id: string | null
+          persona_id: string
+          receipt_id: string | null
+          revoked_at: string | null
+          role: string
+          source: string
+          source_id: string | null
+          status: string
+        }
+        Insert: {
+          access_domain: string
+          allowed_experiments?: string[] | null
+          expires_at?: string | null
+          granted_at?: string
+          id?: string
+          passport_id?: string | null
+          persona_id: string
+          receipt_id?: string | null
+          revoked_at?: string | null
+          role: string
+          source: string
+          source_id?: string | null
+          status?: string
+        }
+        Update: {
+          access_domain?: string
+          allowed_experiments?: string[] | null
+          expires_at?: string | null
+          granted_at?: string
+          id?: string
+          passport_id?: string | null
+          persona_id?: string
+          receipt_id?: string | null
+          revoked_at?: string | null
+          role?: string
+          source?: string
+          source_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      access_invitations: {
+        Row: {
+          access_domain: string
+          allowed_experiments: string[] | null
+          code_hash: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          intended_recipient: string | null
+          issuer_persona_id: string | null
+          label: string | null
+          max_uses: number
+          open_peer_channel: boolean
+          revoked_at: string | null
+          role: string
+          status: string
+          uses: number
+        }
+        Insert: {
+          access_domain: string
+          allowed_experiments?: string[] | null
+          code_hash: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          intended_recipient?: string | null
+          issuer_persona_id?: string | null
+          label?: string | null
+          max_uses?: number
+          open_peer_channel?: boolean
+          revoked_at?: string | null
+          role: string
+          status?: string
+          uses?: number
+        }
+        Update: {
+          access_domain?: string
+          allowed_experiments?: string[] | null
+          code_hash?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          intended_recipient?: string | null
+          issuer_persona_id?: string | null
+          label?: string | null
+          max_uses?: number
+          open_peer_channel?: boolean
+          revoked_at?: string | null
+          role?: string
+          status?: string
+          uses?: number
+        }
+        Relationships: []
+      }
       access_requests: {
         Row: {
           created_at: string
@@ -67,6 +169,7 @@ export type Database = {
           dvn_receipt_id: string | null
           id: string
           intent_id: string | null
+          invariants_used: string[]
           iqubes_used: string[]
           persona_id: string
           policy_envelope_id: string | null
@@ -90,6 +193,7 @@ export type Database = {
           dvn_receipt_id?: string | null
           id?: string
           intent_id?: string | null
+          invariants_used?: string[]
           iqubes_used?: string[]
           persona_id: string
           policy_envelope_id?: string | null
@@ -113,6 +217,7 @@ export type Database = {
           dvn_receipt_id?: string | null
           id?: string
           intent_id?: string | null
+          invariants_used?: string[]
           iqubes_used?: string[]
           persona_id?: string
           policy_envelope_id?: string | null
@@ -123,13 +228,6 @@ export type Database = {
           tools_used?: string[]
         }
         Relationships: [
-          {
-            foreignKeyName: "activity_receipts_intent_id_fkey"
-            columns: ["intent_id"]
-            isOneToOne: false
-            referencedRelation: "nbe_plans"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "activity_receipts_session_id_fkey"
             columns: ["session_id"]
@@ -233,6 +331,123 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      agent_gateway_clients: {
+        Row: {
+          client_id: string
+          client_name: string | null
+          created_at: string
+          redirect_uris: string[]
+        }
+        Insert: {
+          client_id: string
+          client_name?: string | null
+          created_at?: string
+          redirect_uris?: string[]
+        }
+        Update: {
+          client_id?: string
+          client_name?: string | null
+          created_at?: string
+          redirect_uris?: string[]
+        }
+        Relationships: []
+      }
+      agent_gateway_sessions: {
+        Row: {
+          agent_alias: string | null
+          agreement_id: string | null
+          auth_code_hash: string | null
+          cartridge_flags: Json | null
+          client_id: string | null
+          code_expires_at: string | null
+          consent_record: Json | null
+          consent_ref: string | null
+          created_at: string
+          display_label: string | null
+          expires_at: string | null
+          granted_scope: string[]
+          handshake_code: string
+          id: string
+          initiating_service: string
+          last_used_at: string | null
+          oauth_state: string | null
+          passport_status: Json | null
+          pkce_challenge: string | null
+          principal_public_ref: string | null
+          redirect_uri: string | null
+          requested_scope: string[]
+          revoked_at: string | null
+          service_agreements: Json
+          session_kind: string
+          status: string
+          subject_pairwise_ref: string | null
+          token_hash: string | null
+          upgrade_of: string | null
+        }
+        Insert: {
+          agent_alias?: string | null
+          agreement_id?: string | null
+          auth_code_hash?: string | null
+          cartridge_flags?: Json | null
+          client_id?: string | null
+          code_expires_at?: string | null
+          consent_record?: Json | null
+          consent_ref?: string | null
+          created_at?: string
+          display_label?: string | null
+          expires_at?: string | null
+          granted_scope?: string[]
+          handshake_code: string
+          id?: string
+          initiating_service?: string
+          last_used_at?: string | null
+          oauth_state?: string | null
+          passport_status?: Json | null
+          pkce_challenge?: string | null
+          principal_public_ref?: string | null
+          redirect_uri?: string | null
+          requested_scope?: string[]
+          revoked_at?: string | null
+          service_agreements?: Json
+          session_kind?: string
+          status?: string
+          subject_pairwise_ref?: string | null
+          token_hash?: string | null
+          upgrade_of?: string | null
+        }
+        Update: {
+          agent_alias?: string | null
+          agreement_id?: string | null
+          auth_code_hash?: string | null
+          cartridge_flags?: Json | null
+          client_id?: string | null
+          code_expires_at?: string | null
+          consent_record?: Json | null
+          consent_ref?: string | null
+          created_at?: string
+          display_label?: string | null
+          expires_at?: string | null
+          granted_scope?: string[]
+          handshake_code?: string
+          id?: string
+          initiating_service?: string
+          last_used_at?: string | null
+          oauth_state?: string | null
+          passport_status?: Json | null
+          pkce_challenge?: string | null
+          principal_public_ref?: string | null
+          redirect_uri?: string | null
+          requested_scope?: string[]
+          revoked_at?: string | null
+          service_agreements?: Json
+          session_kind?: string
+          status?: string
+          subject_pairwise_ref?: string | null
+          token_hash?: string | null
+          upgrade_of?: string | null
+        }
+        Relationships: []
       }
       agent_keys: {
         Row: {
@@ -548,6 +763,66 @@ export type Database = {
         }
         Relationships: []
       }
+      artifact_records: {
+        Row: {
+          actor_commitment: string | null
+          artefact_type: string | null
+          artifact_id: string
+          body: string
+          brief: string
+          cited_invariant_ids: Json
+          consequence_class: string
+          content_hash: string
+          created_at: string
+          delegate: string
+          id: string
+          permissions: Json | null
+          profile: string
+          receipt_id: string | null
+          runtime_host: string | null
+          sovereignty: Json | null
+          title: string
+        }
+        Insert: {
+          actor_commitment?: string | null
+          artefact_type?: string | null
+          artifact_id: string
+          body: string
+          brief?: string
+          cited_invariant_ids?: Json
+          consequence_class: string
+          content_hash: string
+          created_at?: string
+          delegate?: string
+          id?: string
+          permissions?: Json | null
+          profile: string
+          receipt_id?: string | null
+          runtime_host?: string | null
+          sovereignty?: Json | null
+          title: string
+        }
+        Update: {
+          actor_commitment?: string | null
+          artefact_type?: string | null
+          artifact_id?: string
+          body?: string
+          brief?: string
+          cited_invariant_ids?: Json
+          consequence_class?: string
+          content_hash?: string
+          created_at?: string
+          delegate?: string
+          id?: string
+          permissions?: Json | null
+          profile?: string
+          receipt_id?: string | null
+          runtime_host?: string | null
+          sovereignty?: Json | null
+          title?: string
+        }
+        Relationships: []
+      }
       asset_policies: {
         Row: {
           asset_id: string
@@ -638,22 +913,7 @@ export type Database = {
           status?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "assistant_sessions_experience_model_id_fkey"
-            columns: ["experience_model_id"]
-            isOneToOne: false
-            referencedRelation: "experience_models"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assistant_sessions_nbe_plan_id_fkey"
-            columns: ["nbe_plan_id"]
-            isOneToOne: false
-            referencedRelation: "nbe_plans"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       avl_comms_packs: {
         Row: {
@@ -987,6 +1247,147 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      canonical_plate_registry: {
+        Row: {
+          assets: Json
+          composed_by_commitment: string
+          constitutional_refs: string[]
+          cp_number: string
+          created_at: string
+          dependencies: string[]
+          form: string
+          id: string
+          kind: string
+          knowledge_qube_ref: string | null
+          machine_tags: string[]
+          message: string
+          published_at: string | null
+          ratified_at: string | null
+          status: string
+          structure: Json
+          title: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          assets?: Json
+          composed_by_commitment?: string
+          constitutional_refs?: string[]
+          cp_number: string
+          created_at?: string
+          dependencies?: string[]
+          form?: string
+          id?: string
+          kind?: string
+          knowledge_qube_ref?: string | null
+          machine_tags?: string[]
+          message?: string
+          published_at?: string | null
+          ratified_at?: string | null
+          status?: string
+          structure?: Json
+          title: string
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          assets?: Json
+          composed_by_commitment?: string
+          constitutional_refs?: string[]
+          cp_number?: string
+          created_at?: string
+          dependencies?: string[]
+          form?: string
+          id?: string
+          kind?: string
+          knowledge_qube_ref?: string | null
+          machine_tags?: string[]
+          message?: string
+          published_at?: string | null
+          ratified_at?: string | null
+          status?: string
+          structure?: Json
+          title?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      capability_evidence: {
+        Row: {
+          created_at: string
+          evidence: Json
+          goal_hash: string
+          id: string
+          intent_ref: string | null
+          receipt_id: string | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          evidence: Json
+          goal_hash: string
+          id?: string
+          intent_ref?: string | null
+          receipt_id?: string | null
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          evidence?: Json
+          goal_hash?: string
+          id?: string
+          intent_ref?: string | null
+          receipt_id?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
+      capability_registry: {
+        Row: {
+          capability_id: string
+          created_at: string
+          display_label: string
+          id: string
+          last_operational_receipt_id: string | null
+          lifecycle_state: string
+          object: Json
+          operational_validations: number
+          registered_receipt_id: string | null
+          standing: number
+          standing_band: string
+          updated_at: string
+        }
+        Insert: {
+          capability_id: string
+          created_at?: string
+          display_label: string
+          id?: string
+          last_operational_receipt_id?: string | null
+          lifecycle_state?: string
+          object: Json
+          operational_validations?: number
+          registered_receipt_id?: string | null
+          standing?: number
+          standing_band?: string
+          updated_at?: string
+        }
+        Update: {
+          capability_id?: string
+          created_at?: string
+          display_label?: string
+          id?: string
+          last_operational_receipt_id?: string | null
+          lifecycle_state?: string
+          object?: Json
+          operational_validations?: number
+          registered_receipt_id?: string | null
+          standing?: number
+          standing_band?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       cartridge_activations: {
         Row: {
@@ -2349,6 +2750,161 @@ export type Database = {
           },
         ]
       }
+      companion_captured_objects: {
+        Row: {
+          assigned_destination: string | null
+          assigned_ref_id: string | null
+          captured_at: string
+          content_text: string
+          created_at: string
+          id: string
+          persona_id: string
+          source_kind: string
+          source_url: string | null
+          status: string
+          title: string | null
+        }
+        Insert: {
+          assigned_destination?: string | null
+          assigned_ref_id?: string | null
+          captured_at?: string
+          content_text: string
+          created_at?: string
+          id?: string
+          persona_id: string
+          source_kind: string
+          source_url?: string | null
+          status?: string
+          title?: string | null
+        }
+        Update: {
+          assigned_destination?: string | null
+          assigned_ref_id?: string | null
+          captured_at?: string
+          content_text?: string
+          created_at?: string
+          id?: string
+          persona_id?: string
+          source_kind?: string
+          source_url?: string | null
+          status?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companion_captured_objects_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companion_observation_latest: {
+        Row: {
+          current_tab_domain: string | null
+          current_tab_title: string | null
+          granted_capabilities: string[]
+          observed_at: string
+          page_document_excerpt: string | null
+          persona_id: string
+          selection_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          current_tab_domain?: string | null
+          current_tab_title?: string | null
+          granted_capabilities?: string[]
+          observed_at: string
+          page_document_excerpt?: string | null
+          persona_id: string
+          selection_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          current_tab_domain?: string | null
+          current_tab_title?: string | null
+          granted_capabilities?: string[]
+          observed_at?: string
+          page_document_excerpt?: string | null
+          persona_id?: string
+          selection_text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companion_observation_latest_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: true
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companion_observer_grants: {
+        Row: {
+          capability: string
+          granted_at: string
+          id: string
+          persona_id: string
+          revoked_at: string | null
+          scope: string
+          site_domain: string | null
+        }
+        Insert: {
+          capability: string
+          granted_at?: string
+          id?: string
+          persona_id: string
+          revoked_at?: string | null
+          scope: string
+          site_domain?: string | null
+        }
+        Update: {
+          capability?: string
+          granted_at?: string
+          id?: string
+          persona_id?: string
+          revoked_at?: string | null
+          scope?: string
+          site_domain?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companion_observer_grants_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companion_standing_snapshots: {
+        Row: {
+          last_score: number
+          persona_id: string
+          updated_at: string
+        }
+        Insert: {
+          last_score: number
+          persona_id: string
+          updated_at?: string
+        }
+        Update: {
+          last_score?: number
+          persona_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companion_standing_snapshots_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: true
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       composer_experience_qubes: {
         Row: {
           blak_qube: Json
@@ -2424,6 +2980,54 @@ export type Database = {
           tenant_id?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      constitutional_agreements: {
+        Row: {
+          acceptance: Json | null
+          agreement_id: string
+          authorized_receipt_id: string | null
+          capability_ref: string | null
+          created_at: string
+          display_label: string
+          formed_receipt_id: string | null
+          id: string
+          object: Json
+          owner_commitment: string
+          selected_agent_ref: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          acceptance?: Json | null
+          agreement_id: string
+          authorized_receipt_id?: string | null
+          capability_ref?: string | null
+          created_at?: string
+          display_label: string
+          formed_receipt_id?: string | null
+          id?: string
+          object: Json
+          owner_commitment: string
+          selected_agent_ref?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          acceptance?: Json | null
+          agreement_id?: string
+          authorized_receipt_id?: string | null
+          capability_ref?: string | null
+          created_at?: string
+          display_label?: string
+          formed_receipt_id?: string | null
+          id?: string
+          object?: Json
+          owner_commitment?: string
+          selected_agent_ref?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -3382,6 +3986,273 @@ export type Database = {
         }
         Relationships: []
       }
+      corpus_candidate_sources: {
+        Row: {
+          acquisition_method: string
+          artifact_hash: string | null
+          authors: Json
+          campaign_domain: string
+          campaign_sub_domain: string | null
+          canonical_url: string
+          created_at: string
+          duplicate_of_source_id: string | null
+          evidence_row_id: string | null
+          extraction_status: string
+          extraction_warnings: Json
+          file_size_bytes: number | null
+          human_review_notes: string | null
+          id: string
+          issuer: string | null
+          license_status: string
+          mime_type: string | null
+          normalized_text: string
+          normalized_text_hash: string | null
+          page_count: number | null
+          provenance_class: string | null
+          publication_date: string | null
+          resolution_chain: Json
+          retrieved_at: string | null
+          review_workflow_status: string
+          source_id: string
+          structural_tags: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acquisition_method?: string
+          artifact_hash?: string | null
+          authors?: Json
+          campaign_domain: string
+          campaign_sub_domain?: string | null
+          canonical_url: string
+          created_at?: string
+          duplicate_of_source_id?: string | null
+          evidence_row_id?: string | null
+          extraction_status?: string
+          extraction_warnings?: Json
+          file_size_bytes?: number | null
+          human_review_notes?: string | null
+          id?: string
+          issuer?: string | null
+          license_status?: string
+          mime_type?: string | null
+          normalized_text?: string
+          normalized_text_hash?: string | null
+          page_count?: number | null
+          provenance_class?: string | null
+          publication_date?: string | null
+          resolution_chain?: Json
+          retrieved_at?: string | null
+          review_workflow_status?: string
+          source_id: string
+          structural_tags?: Json
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          acquisition_method?: string
+          artifact_hash?: string | null
+          authors?: Json
+          campaign_domain?: string
+          campaign_sub_domain?: string | null
+          canonical_url?: string
+          created_at?: string
+          duplicate_of_source_id?: string | null
+          evidence_row_id?: string | null
+          extraction_status?: string
+          extraction_warnings?: Json
+          file_size_bytes?: number | null
+          human_review_notes?: string | null
+          id?: string
+          issuer?: string | null
+          license_status?: string
+          mime_type?: string | null
+          normalized_text?: string
+          normalized_text_hash?: string | null
+          page_count?: number | null
+          provenance_class?: string | null
+          publication_date?: string | null
+          resolution_chain?: Json
+          retrieved_at?: string | null
+          review_workflow_status?: string
+          source_id?: string
+          structural_tags?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "corpus_candidate_sources_duplicate_of_source_id_fkey"
+            columns: ["duplicate_of_source_id"]
+            isOneToOne: false
+            referencedRelation: "corpus_candidate_sources"
+            referencedColumns: ["source_id"]
+          },
+          {
+            foreignKeyName: "corpus_candidate_sources_evidence_row_id_fkey"
+            columns: ["evidence_row_id"]
+            isOneToOne: false
+            referencedRelation: "discovery_evidence"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      corpus_coverage_pillars: {
+        Row: {
+          completeness_definition: string
+          created_at: string
+          domain: string
+          id: string
+          pillar_key: string
+          pillar_label: string
+          ratified_at: string | null
+          ratified_by: string | null
+          saturation_confirmed: boolean
+          saturation_confirmed_at: string | null
+          saturation_confirmed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          completeness_definition?: string
+          created_at?: string
+          domain: string
+          id?: string
+          pillar_key: string
+          pillar_label: string
+          ratified_at?: string | null
+          ratified_by?: string | null
+          saturation_confirmed?: boolean
+          saturation_confirmed_at?: string | null
+          saturation_confirmed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          completeness_definition?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          pillar_key?: string
+          pillar_label?: string
+          ratified_at?: string | null
+          ratified_by?: string | null
+          saturation_confirmed?: boolean
+          saturation_confirmed_at?: string | null
+          saturation_confirmed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      corpus_dependency_registry: {
+        Row: {
+          created_at: string
+          dependency_name: string
+          domain: string
+          id: string
+          ratified_at: string | null
+          ratified_by: string | null
+          relationship: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dependency_name: string
+          domain: string
+          id?: string
+          ratified_at?: string | null
+          ratified_by?: string | null
+          relationship?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dependency_name?: string
+          domain?: string
+          id?: string
+          ratified_at?: string | null
+          ratified_by?: string | null
+          relationship?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      corpus_domain_definitions: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          purpose: string
+          ratified_at: string | null
+          ratified_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          purpose?: string
+          ratified_at?: string | null
+          ratified_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          purpose?: string
+          ratified_at?: string | null
+          ratified_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      corpus_institutional_registry: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          institution_name: string
+          pillar_key: string
+          ratified_at: string | null
+          ratified_by: string | null
+          seed_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          institution_name: string
+          pillar_key: string
+          ratified_at?: string | null
+          ratified_by?: string | null
+          seed_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          institution_name?: string
+          pillar_key?: string
+          ratified_at?: string | null
+          ratified_by?: string | null
+          seed_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crm_admin_categories: {
         Row: {
           color: string | null
@@ -4049,13 +4920,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "crm_contributions_source_event_id_fkey"
-            columns: ["source_event_id"]
-            isOneToOne: false
-            referencedRelation: "orchestration_events"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "crm_contributions_task_template_id_fkey"
             columns: ["task_template_id"]
             isOneToOne: false
@@ -4502,6 +5366,7 @@ export type Database = {
           rqh_partition_id: string | null
           rqh_synced_at: string | null
           standing_bucket: number
+          standing_capability: number
           standing_delegated: number
           standing_overall: number
           standing_personal: number
@@ -4524,6 +5389,7 @@ export type Database = {
           rqh_partition_id?: string | null
           rqh_synced_at?: string | null
           standing_bucket?: number
+          standing_capability?: number
           standing_delegated?: number
           standing_overall?: number
           standing_personal?: number
@@ -4546,6 +5412,7 @@ export type Database = {
           rqh_partition_id?: string | null
           rqh_synced_at?: string | null
           standing_bucket?: number
+          standing_capability?: number
           standing_delegated?: number
           standing_overall?: number
           standing_personal?: number
@@ -5238,13 +6105,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "crm_rewards_source_event_id_fkey"
-            columns: ["source_event_id"]
-            isOneToOne: false
-            referencedRelation: "orchestration_events"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "crm_rewards_task_template_id_fkey"
             columns: ["task_template_id"]
             isOneToOne: false
@@ -5738,7 +6598,89 @@ export type Database = {
             referencedRelation: "agent_root_identity"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "delegation_agentkit_attestations_grant_fk"
+            columns: ["delegation_grant_id"]
+            isOneToOne: false
+            referencedRelation: "delegation_grants"
+            referencedColumns: ["grant_id"]
+          },
         ]
+      }
+      delegation_grants: {
+        Row: {
+          actions_taken: number
+          agent_root_did: string
+          allowed_actions: Json
+          allowed_surfaces: Json
+          created_at: string
+          curated_skills_only: boolean
+          disclosure_class: string
+          expires_at: string
+          explain_before_acting: boolean
+          forbidden_actions: Json
+          grant_id: string
+          handoff: Json | null
+          max_actions: number
+          persona_id: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          show_receipts: boolean
+          spend_autonomy: string | null
+          status: string
+          tenant_id: string
+          trust_band: string
+          updated_at: string
+        }
+        Insert: {
+          actions_taken?: number
+          agent_root_did: string
+          allowed_actions?: Json
+          allowed_surfaces?: Json
+          created_at?: string
+          curated_skills_only?: boolean
+          disclosure_class?: string
+          expires_at: string
+          explain_before_acting?: boolean
+          forbidden_actions?: Json
+          grant_id: string
+          handoff?: Json | null
+          max_actions?: number
+          persona_id: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          show_receipts?: boolean
+          spend_autonomy?: string | null
+          status?: string
+          tenant_id?: string
+          trust_band?: string
+          updated_at?: string
+        }
+        Update: {
+          actions_taken?: number
+          agent_root_did?: string
+          allowed_actions?: Json
+          allowed_surfaces?: Json
+          created_at?: string
+          curated_skills_only?: boolean
+          disclosure_class?: string
+          expires_at?: string
+          explain_before_acting?: boolean
+          forbidden_actions?: Json
+          grant_id?: string
+          handoff?: Json | null
+          max_actions?: number
+          persona_id?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          show_receipts?: boolean
+          spend_autonomy?: string | null
+          status?: string
+          tenant_id?: string
+          trust_band?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       deliveries: {
         Row: {
@@ -5783,6 +6725,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dev_loop_sessions: {
+        Row: {
+          created_at: string
+          persona_id: string
+          session_id: string
+          stage: string
+          state: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          persona_id: string
+          session_id: string
+          stage: string
+          state: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          persona_id?: string
+          session_id?: string
+          stage?: string
+          state?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       did_binding: {
         Row: {
@@ -5954,6 +6923,96 @@ export type Database = {
           price_knyt?: number
           series?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      discovery_candidates: {
+        Row: {
+          abstraction_level: string | null
+          confidence: number
+          created_at: string
+          discovery_class: string
+          discovery_provenance: Json
+          domain: string
+          evidence_ids: string[]
+          id: string
+          promoted_invariant_id: string | null
+          rationale: string
+          scope_level: string
+          statement: string
+          status: string
+          sub_domain: string | null
+          updated_at: string
+        }
+        Insert: {
+          abstraction_level?: string | null
+          confidence?: number
+          created_at?: string
+          discovery_class?: string
+          discovery_provenance?: Json
+          domain: string
+          evidence_ids?: string[]
+          id?: string
+          promoted_invariant_id?: string | null
+          rationale?: string
+          scope_level?: string
+          statement: string
+          status?: string
+          sub_domain?: string | null
+          updated_at?: string
+        }
+        Update: {
+          abstraction_level?: string | null
+          confidence?: number
+          created_at?: string
+          discovery_class?: string
+          discovery_provenance?: Json
+          domain?: string
+          evidence_ids?: string[]
+          id?: string
+          promoted_invariant_id?: string | null
+          rationale?: string
+          scope_level?: string
+          statement?: string
+          status?: string
+          sub_domain?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      discovery_evidence: {
+        Row: {
+          added_by_commitment: string
+          content: string
+          created_at: string
+          domain: string
+          id: string
+          source_kind: string
+          source_ref: string | null
+          sub_domain: string | null
+          title: string
+        }
+        Insert: {
+          added_by_commitment?: string
+          content: string
+          created_at?: string
+          domain: string
+          id?: string
+          source_kind?: string
+          source_ref?: string | null
+          sub_domain?: string | null
+          title: string
+        }
+        Update: {
+          added_by_commitment?: string
+          content?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          source_kind?: string
+          source_ref?: string | null
+          sub_domain?: string | null
+          title?: string
         }
         Relationships: []
       }
@@ -6584,6 +7643,7 @@ export type Database = {
           id: string
           inferred_at: string | null
           inferred_strategy: Json | null
+          operator_archetype: string | null
           persona_id: string
           primary_goal: string | null
           progress_model: string
@@ -6602,6 +7662,7 @@ export type Database = {
           id?: string
           inferred_at?: string | null
           inferred_strategy?: Json | null
+          operator_archetype?: string | null
           persona_id: string
           primary_goal?: string | null
           progress_model?: string
@@ -6620,20 +7681,13 @@ export type Database = {
           id?: string
           inferred_at?: string | null
           inferred_strategy?: Json | null
+          operator_archetype?: string | null
           persona_id?: string
           primary_goal?: string | null
           progress_model?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "experience_qubes_experience_model_id_fkey"
-            columns: ["experience_model_id"]
-            isOneToOne: false
-            referencedRelation: "experience_models"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       experience_strategies: {
         Row: {
@@ -6712,6 +7766,75 @@ export type Database = {
           reward_granted?: boolean
           task_template_id?: string | null
           total_tasks?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      experiment_results: {
+        Row: {
+          aggregates: Json
+          approved_at: string | null
+          approved_by_persona_id: string | null
+          content_hash: string
+          created_at: string
+          experiment: string
+          id: string
+          model: string
+          provider: string
+          receipt_id: string | null
+          results_json: string
+          submitted_by_persona_id: string | null
+          visibility: string
+        }
+        Insert: {
+          aggregates?: Json
+          approved_at?: string | null
+          approved_by_persona_id?: string | null
+          content_hash: string
+          created_at?: string
+          experiment: string
+          id?: string
+          model: string
+          provider: string
+          receipt_id?: string | null
+          results_json: string
+          submitted_by_persona_id?: string | null
+          visibility?: string
+        }
+        Update: {
+          aggregates?: Json
+          approved_at?: string | null
+          approved_by_persona_id?: string | null
+          content_hash?: string
+          created_at?: string
+          experiment?: string
+          id?: string
+          model?: string
+          provider?: string
+          receipt_id?: string | null
+          results_json?: string
+          submitted_by_persona_id?: string | null
+          visibility?: string
+        }
+        Relationships: []
+      }
+      experiment_run_counters: {
+        Row: {
+          period: string
+          persona_id: string
+          runs: number
+          updated_at: string
+        }
+        Insert: {
+          period: string
+          persona_id: string
+          runs?: number
+          updated_at?: string
+        }
+        Update: {
+          period?: string
+          persona_id?: string
+          runs?: number
           updated_at?: string
         }
         Relationships: []
@@ -7200,6 +8323,423 @@ export type Database = {
           wait_timeout_at?: string | null
         }
         Relationships: []
+      }
+      invariant_collection_members: {
+        Row: {
+          collection_id: string
+          created_at: string
+          id: string
+          invariant_id: string
+          position: number
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          id?: string
+          invariant_id: string
+          position?: number
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          id?: string
+          invariant_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invariant_collection_members_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "invariant_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invariant_collection_members_invariant_id_fkey"
+            columns: ["invariant_id"]
+            isOneToOne: false
+            referencedRelation: "invariants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invariant_collections: {
+        Row: {
+          created_at: string
+          curator_alias_commitment: string | null
+          curator_persona_id: string | null
+          description: string | null
+          id: string
+          name: string
+          namespace: string | null
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          curator_alias_commitment?: string | null
+          curator_persona_id?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          namespace?: string | null
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          curator_alias_commitment?: string | null
+          curator_persona_id?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          namespace?: string | null
+          slug?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      invariant_contexts: {
+        Row: {
+          applicability_conditions: Json | null
+          created_at: string
+          domain: string
+          id: string
+          interpretation: string | null
+          invariant_id: string
+          retrieval_tags: string[]
+        }
+        Insert: {
+          applicability_conditions?: Json | null
+          created_at?: string
+          domain: string
+          id?: string
+          interpretation?: string | null
+          invariant_id: string
+          retrieval_tags?: string[]
+        }
+        Update: {
+          applicability_conditions?: Json | null
+          created_at?: string
+          domain?: string
+          id?: string
+          interpretation?: string | null
+          invariant_id?: string
+          retrieval_tags?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invariant_contexts_invariant_id_fkey"
+            columns: ["invariant_id"]
+            isOneToOne: false
+            referencedRelation: "invariants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invariant_edges: {
+        Row: {
+          context_id: string | null
+          created_at: string
+          dvn_receipt_id: string | null
+          edge_type: string
+          from_invariant_id: string
+          id: string
+          provenance: Json
+          rationale: string | null
+          reasoning_provenance: Json
+          to_invariant_id: string
+          weight: number
+        }
+        Insert: {
+          context_id?: string | null
+          created_at?: string
+          dvn_receipt_id?: string | null
+          edge_type: string
+          from_invariant_id: string
+          id?: string
+          provenance?: Json
+          rationale?: string | null
+          reasoning_provenance?: Json
+          to_invariant_id: string
+          weight?: number
+        }
+        Update: {
+          context_id?: string | null
+          created_at?: string
+          dvn_receipt_id?: string | null
+          edge_type?: string
+          from_invariant_id?: string
+          id?: string
+          provenance?: Json
+          rationale?: string | null
+          reasoning_provenance?: Json
+          to_invariant_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invariant_edges_context_id_fkey"
+            columns: ["context_id"]
+            isOneToOne: false
+            referencedRelation: "invariant_contexts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invariant_edges_from_invariant_id_fkey"
+            columns: ["from_invariant_id"]
+            isOneToOne: false
+            referencedRelation: "invariants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invariant_edges_to_invariant_id_fkey"
+            columns: ["to_invariant_id"]
+            isOneToOne: false
+            referencedRelation: "invariants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invariant_node_flips: {
+        Row: {
+          authoritative: boolean
+          flipped_at: string
+          flipped_by_persona: string | null
+          node_id: string
+          rationale: string | null
+        }
+        Insert: {
+          authoritative?: boolean
+          flipped_at?: string
+          flipped_by_persona?: string | null
+          node_id: string
+          rationale?: string | null
+        }
+        Update: {
+          authoritative?: boolean
+          flipped_at?: string
+          flipped_by_persona?: string | null
+          node_id?: string
+          rationale?: string | null
+        }
+        Relationships: []
+      }
+      invariant_qubes: {
+        Row: {
+          aggregate_confidence: number
+          aggregate_standing: number
+          collection_id: string | null
+          created_at: string
+          creator_alias_commitment: string | null
+          creator_persona_id: string | null
+          dvn_receipt_id: string | null
+          id: string
+          iqube_id: string | null
+          manifest: Json
+          member_count: number
+          public_ref: string
+          status: string
+          supersedes_id: string | null
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          aggregate_confidence?: number
+          aggregate_standing?: number
+          collection_id?: string | null
+          created_at?: string
+          creator_alias_commitment?: string | null
+          creator_persona_id?: string | null
+          dvn_receipt_id?: string | null
+          id?: string
+          iqube_id?: string | null
+          manifest?: Json
+          member_count?: number
+          public_ref: string
+          status?: string
+          supersedes_id?: string | null
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          aggregate_confidence?: number
+          aggregate_standing?: number
+          collection_id?: string | null
+          created_at?: string
+          creator_alias_commitment?: string | null
+          creator_persona_id?: string | null
+          dvn_receipt_id?: string | null
+          id?: string
+          iqube_id?: string | null
+          manifest?: Json
+          member_count?: number
+          public_ref?: string
+          status?: string
+          supersedes_id?: string | null
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invariant_qubes_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "invariant_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invariant_qubes_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "invariant_qubes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invariant_shadow_observations: {
+        Row: {
+          cited_ids: string[]
+          id: string
+          item_count: number | null
+          kind: string
+          node_id: string
+          observed_at: string
+          rank_agreement: number | null
+          top_agreement: boolean | null
+          value_delta: number | null
+        }
+        Insert: {
+          cited_ids?: string[]
+          id?: string
+          item_count?: number | null
+          kind: string
+          node_id: string
+          observed_at?: string
+          rank_agreement?: number | null
+          top_agreement?: boolean | null
+          value_delta?: number | null
+        }
+        Update: {
+          cited_ids?: string[]
+          id?: string
+          item_count?: number | null
+          kind?: string
+          node_id?: string
+          observed_at?: string
+          rank_agreement?: number | null
+          top_agreement?: boolean | null
+          value_delta?: number | null
+        }
+        Relationships: []
+      }
+      invariants: {
+        Row: {
+          confidence: number
+          confidence_basis: string
+          created_at: string
+          creator_alias_commitment: string | null
+          creator_persona_id: string | null
+          dvn_receipt_id: string | null
+          id: string
+          namespace: string
+          ontology_class_id: string | null
+          provenance: Json
+          ratified_source: string | null
+          reach: number
+          reasoning_provenance: Json
+          seed_id: string | null
+          semantic_type: string | null
+          standing: number
+          standing_ref: Json | null
+          statement: string
+          status: string
+          supersedes_id: string | null
+          times_contradicted: number
+          times_referenced: number
+          times_used: number
+          times_validated: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          confidence?: number
+          confidence_basis?: string
+          created_at?: string
+          creator_alias_commitment?: string | null
+          creator_persona_id?: string | null
+          dvn_receipt_id?: string | null
+          id?: string
+          namespace: string
+          ontology_class_id?: string | null
+          provenance?: Json
+          ratified_source?: string | null
+          reach?: number
+          reasoning_provenance?: Json
+          seed_id?: string | null
+          semantic_type?: string | null
+          standing?: number
+          standing_ref?: Json | null
+          statement: string
+          status?: string
+          supersedes_id?: string | null
+          times_contradicted?: number
+          times_referenced?: number
+          times_used?: number
+          times_validated?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          confidence?: number
+          confidence_basis?: string
+          created_at?: string
+          creator_alias_commitment?: string | null
+          creator_persona_id?: string | null
+          dvn_receipt_id?: string | null
+          id?: string
+          namespace?: string
+          ontology_class_id?: string | null
+          provenance?: Json
+          ratified_source?: string | null
+          reach?: number
+          reasoning_provenance?: Json
+          seed_id?: string | null
+          semantic_type?: string | null
+          standing?: number
+          standing_ref?: Json | null
+          statement?: string
+          status?: string
+          supersedes_id?: string | null
+          times_contradicted?: number
+          times_referenced?: number
+          times_used?: number
+          times_validated?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invariants_ontology_class_id_fkey"
+            columns: ["ontology_class_id"]
+            isOneToOne: false
+            referencedRelation: "ontology_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invariants_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "invariants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       iq_blak_qubes: {
         Row: {
@@ -7942,7 +9482,6 @@ export type Database = {
           id: string
           persona_id: string
           stage: string
-          tenant_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -7954,7 +9493,6 @@ export type Database = {
           id?: string
           persona_id: string
           stage?: string
-          tenant_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -7966,7 +9504,6 @@ export type Database = {
           id?: string
           persona_id?: string
           stage?: string
-          tenant_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -10023,6 +11560,66 @@ export type Database = {
           thumbnail_uri?: string | null
           updated_at?: string
           width?: number | null
+        }
+        Relationships: []
+      }
+      memory_invariants: {
+        Row: {
+          cartridge_id: string
+          confidence: number
+          created_at: string
+          evidence: Json
+          human_validated: boolean
+          id: string
+          last_cited_at: string | null
+          last_confirmed_at: string | null
+          lineage: Json
+          persona_id: string
+          refute_count: number
+          source_seed_ids: string[]
+          statement: string
+          status: string
+          support_count: number
+          updated_at: string
+          validated_at: string | null
+        }
+        Insert: {
+          cartridge_id: string
+          confidence?: number
+          created_at?: string
+          evidence?: Json
+          human_validated?: boolean
+          id?: string
+          last_cited_at?: string | null
+          last_confirmed_at?: string | null
+          lineage?: Json
+          persona_id: string
+          refute_count?: number
+          source_seed_ids?: string[]
+          statement: string
+          status?: string
+          support_count?: number
+          updated_at?: string
+          validated_at?: string | null
+        }
+        Update: {
+          cartridge_id?: string
+          confidence?: number
+          created_at?: string
+          evidence?: Json
+          human_validated?: boolean
+          id?: string
+          last_cited_at?: string | null
+          last_confirmed_at?: string | null
+          lineage?: Json
+          persona_id?: string
+          refute_count?: number
+          source_seed_ids?: string[]
+          statement?: string
+          status?: string
+          support_count?: number
+          updated_at?: string
+          validated_at?: string | null
         }
         Relationships: []
       }
@@ -12422,6 +14019,86 @@ export type Database = {
         }
         Relationships: []
       }
+      ontology_classes: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          namespace: string
+          parent_id: string | null
+          semantic_type: string | null
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          namespace: string
+          parent_id?: string | null
+          semantic_type?: string | null
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          namespace?: string
+          parent_id?: string | null
+          semantic_type?: string | null
+          slug?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ontology_classes_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "ontology_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operator_model_qubes: {
+        Row: {
+          base_url_env: string | null
+          created_at: string
+          declared_by_commitment: string
+          id: string
+          key_env: string
+          model: string
+          provider: string
+          tier: string
+        }
+        Insert: {
+          base_url_env?: string | null
+          created_at?: string
+          declared_by_commitment: string
+          id: string
+          key_env: string
+          model: string
+          provider: string
+          tier?: string
+        }
+        Update: {
+          base_url_env?: string | null
+          created_at?: string
+          declared_by_commitment?: string
+          id?: string
+          key_env?: string
+          model?: string
+          provider?: string
+          tier?: string
+        }
+        Relationships: []
+      }
       ops_anchor_config: {
         Row: {
           batch_size_k: number
@@ -12642,6 +14319,8 @@ export type Database = {
           reputation_standing: string | null
           restriction_count: number
           restrictions_apply_only_to_privileges: boolean
+          steward_role: string | null
+          steward_role_updated_at: string | null
           updated_at: string
         }
         Insert: {
@@ -12656,6 +14335,8 @@ export type Database = {
           reputation_standing?: string | null
           restriction_count?: number
           restrictions_apply_only_to_privileges?: boolean
+          steward_role?: string | null
+          steward_role_updated_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -12670,6 +14351,8 @@ export type Database = {
           reputation_standing?: string | null
           restriction_count?: number
           restrictions_apply_only_to_privileges?: boolean
+          steward_role?: string | null
+          steward_role_updated_at?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -12867,6 +14550,133 @@ export type Database = {
           walrus_blob_id?: string
         }
         Relationships: []
+      }
+      passport_peer_channels: {
+        Row: {
+          created_at: string
+          created_by_ref: string
+          id: string
+          origin_domain: string | null
+          pair_key: string | null
+          principal_a_label: string | null
+          principal_a_ref: string
+          principal_b_label: string | null
+          principal_b_ref: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_ref: string
+          id?: string
+          origin_domain?: string | null
+          pair_key?: string | null
+          principal_a_label?: string | null
+          principal_a_ref: string
+          principal_b_label?: string | null
+          principal_b_ref: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by_ref?: string
+          id?: string
+          origin_domain?: string | null
+          pair_key?: string | null
+          principal_a_label?: string | null
+          principal_a_ref?: string
+          principal_b_label?: string | null
+          principal_b_ref?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      passport_peer_messages: {
+        Row: {
+          body: string
+          channel_id: string
+          created_at: string
+          id: string
+          sender_ref: string
+          type: string
+        }
+        Insert: {
+          body?: string
+          channel_id: string
+          created_at?: string
+          id?: string
+          sender_ref: string
+          type?: string
+        }
+        Update: {
+          body?: string
+          channel_id?: string
+          created_at?: string
+          id?: string
+          sender_ref?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_peer_messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "passport_peer_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passport_peer_shared_artifacts: {
+        Row: {
+          artifact_id: string
+          artifact_type: string
+          channel_id: string
+          copied_to_locker_at: string | null
+          created_at: string
+          id: string
+          location_ref: string | null
+          opened_at: string | null
+          relationship: string
+          rights: Json
+          shared_by_ref: string
+          title: string
+        }
+        Insert: {
+          artifact_id: string
+          artifact_type: string
+          channel_id: string
+          copied_to_locker_at?: string | null
+          created_at?: string
+          id?: string
+          location_ref?: string | null
+          opened_at?: string | null
+          relationship?: string
+          rights?: Json
+          shared_by_ref: string
+          title?: string
+        }
+        Update: {
+          artifact_id?: string
+          artifact_type?: string
+          channel_id?: string
+          copied_to_locker_at?: string | null
+          created_at?: string
+          id?: string
+          location_ref?: string | null
+          opened_at?: string | null
+          relationship?: string
+          rights?: Json
+          shared_by_ref?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_peer_shared_artifacts_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "passport_peer_channels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       passport_qubetalk_channels: {
         Row: {
@@ -13241,6 +15051,51 @@ export type Database = {
         }
         Relationships: []
       }
+      persona_agent_assignments: {
+        Row: {
+          active: boolean
+          agent_root_id: string
+          created_at: string
+          id: string
+          persona_id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          agent_root_id: string
+          created_at?: string
+          id?: string
+          persona_id: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          agent_root_id?: string
+          created_at?: string
+          id?: string
+          persona_id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_agent_assignments_agent_root_id_fkey"
+            columns: ["agent_root_id"]
+            isOneToOne: false
+            referencedRelation: "agent_root_identity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "persona_agent_assignments_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       persona_agent_binding: {
         Row: {
           agent_id: string
@@ -13335,6 +15190,72 @@ export type Database = {
         }
         Relationships: []
       }
+      persona_contacts: {
+        Row: {
+          address: string | null
+          created_at: string
+          display_name: string | null
+          email: string | null
+          email_2: string | null
+          email_3: string | null
+          first_name: string | null
+          fts: unknown
+          id: string
+          job_title: string | null
+          last_name: string | null
+          notes: string | null
+          organization: string | null
+          persona_id: string
+          phone: string | null
+          phone_2: string | null
+          source: string
+          source_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          email_2?: string | null
+          email_3?: string | null
+          first_name?: string | null
+          fts?: unknown
+          id?: string
+          job_title?: string | null
+          last_name?: string | null
+          notes?: string | null
+          organization?: string | null
+          persona_id: string
+          phone?: string | null
+          phone_2?: string | null
+          source?: string
+          source_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          email_2?: string | null
+          email_3?: string | null
+          first_name?: string | null
+          fts?: unknown
+          id?: string
+          job_title?: string | null
+          last_name?: string | null
+          notes?: string | null
+          organization?: string | null
+          persona_id?: string
+          phone?: string | null
+          phone_2?: string | null
+          source?: string
+          source_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       persona_ens_names: {
         Row: {
           ens_full: string
@@ -13370,6 +15291,39 @@ export type Database = {
           persona_id?: string
           persona_public_ref?: string
           released_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      persona_external_refs: {
+        Row: {
+          audience: string
+          created_at: string
+          generation: number
+          id: string
+          persona_id: string
+          ref: string
+          revoked_at: string | null
+          status: string
+        }
+        Insert: {
+          audience: string
+          created_at?: string
+          generation?: number
+          id?: string
+          persona_id: string
+          ref: string
+          revoked_at?: string | null
+          status?: string
+        }
+        Update: {
+          audience?: string
+          created_at?: string
+          generation?: number
+          id?: string
+          persona_id?: string
+          ref?: string
+          revoked_at?: string | null
           status?: string
         }
         Relationships: []
@@ -13616,37 +15570,46 @@ export type Database = {
       }
       persona_plans: {
         Row: {
+          aigentz_tier: string | null
           created_at: string
           current_period_end: string | null
           founder_office_tier: string
           id: string
           persona_id: string
           plan_tier: string
+          research_tier: string | null
           source: string
+          sovereign_selection: string | null
           standing_tier: string
           status: string
           updated_at: string
         }
         Insert: {
+          aigentz_tier?: string | null
           created_at?: string
           current_period_end?: string | null
           founder_office_tier?: string
           id?: string
           persona_id: string
           plan_tier?: string
+          research_tier?: string | null
           source?: string
+          sovereign_selection?: string | null
           standing_tier?: string
           status?: string
           updated_at?: string
         }
         Update: {
+          aigentz_tier?: string | null
           created_at?: string
           current_period_end?: string | null
           founder_office_tier?: string
           id?: string
           persona_id?: string
           plan_tier?: string
+          research_tier?: string | null
           source?: string
+          sovereign_selection?: string | null
           standing_tier?: string
           status?: string
           updated_at?: string
@@ -14088,6 +16051,96 @@ export type Database = {
           tenant_id?: string
           updated_at?: string
           workflow_ref?: string | null
+        }
+        Relationships: []
+      }
+      plan_checkout_sessions: {
+        Row: {
+          checkout_id: string
+          created_at: string
+          external_ref: string | null
+          paypal_order_id: string | null
+          persona_id: string
+          price_usd_cents: number
+          rail: string
+          status: string
+          tier_key: string
+          updated_at: string
+        }
+        Insert: {
+          checkout_id: string
+          created_at?: string
+          external_ref?: string | null
+          paypal_order_id?: string | null
+          persona_id: string
+          price_usd_cents: number
+          rail: string
+          status?: string
+          tier_key: string
+          updated_at?: string
+        }
+        Update: {
+          checkout_id?: string
+          created_at?: string
+          external_ref?: string | null
+          paypal_order_id?: string | null
+          persona_id?: string
+          price_usd_cents?: number
+          rail?: string
+          status?: string
+          tier_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      plan_premium_config: {
+        Row: {
+          description: string | null
+          premium_key: string
+          updated_at: string
+          updated_by: string | null
+          value_bps: number
+        }
+        Insert: {
+          description?: string | null
+          premium_key: string
+          updated_at?: string
+          updated_by?: string | null
+          value_bps: number
+        }
+        Update: {
+          description?: string | null
+          premium_key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value_bps?: number
+        }
+        Relationships: []
+      }
+      plan_price_config: {
+        Row: {
+          active: boolean
+          description: string | null
+          price_usd_cents: number
+          tier_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          description?: string | null
+          price_usd_cents: number
+          tier_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          description?: string | null
+          price_usd_cents?: number
+          tier_key?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -14992,6 +17045,48 @@ export type Database = {
           id?: number
           scope?: string
           scope_value?: string
+        }
+        Relationships: []
+      }
+      reasoning_trajectories: {
+        Row: {
+          activated_seed_ids: string[]
+          cartridge_id: string
+          created_at: string
+          discarded_seed_ids: string[]
+          id: string
+          intent_digest: string
+          memory_ids_cited: string[]
+          outcome: string
+          persona_id: string
+          produced_invariant_id: string | null
+          session_marker: string | null
+        }
+        Insert: {
+          activated_seed_ids?: string[]
+          cartridge_id: string
+          created_at?: string
+          discarded_seed_ids?: string[]
+          id?: string
+          intent_digest: string
+          memory_ids_cited?: string[]
+          outcome: string
+          persona_id: string
+          produced_invariant_id?: string | null
+          session_marker?: string | null
+        }
+        Update: {
+          activated_seed_ids?: string[]
+          cartridge_id?: string
+          created_at?: string
+          discarded_seed_ids?: string[]
+          id?: string
+          intent_digest?: string
+          memory_ids_cited?: string[]
+          outcome?: string
+          persona_id?: string
+          produced_invariant_id?: string | null
+          session_marker?: string | null
         }
         Relationships: []
       }
@@ -16283,6 +18378,267 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      research_backlog_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          linked_experiment_ids: string[]
+          linked_hypothesis_ids: string[]
+          priority: string
+          review_history: Json
+          slug: string
+          source_note: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          linked_experiment_ids?: string[]
+          linked_hypothesis_ids?: string[]
+          priority?: string
+          review_history?: Json
+          slug: string
+          source_note?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          linked_experiment_ids?: string[]
+          linked_hypothesis_ids?: string[]
+          priority?: string
+          review_history?: Json
+          slug?: string
+          source_note?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      research_candidate_experiments: {
+        Row: {
+          charter_ref: string | null
+          created_at: string
+          depends_on: string[]
+          family: string | null
+          governing_invariants: string[]
+          hypothesis: string
+          id: string
+          layer: string | null
+          review_history: Json
+          series_id: string | null
+          slug: string
+          source_note: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          charter_ref?: string | null
+          created_at?: string
+          depends_on?: string[]
+          family?: string | null
+          governing_invariants?: string[]
+          hypothesis: string
+          id?: string
+          layer?: string | null
+          review_history?: Json
+          series_id?: string | null
+          slug: string
+          source_note?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          charter_ref?: string | null
+          created_at?: string
+          depends_on?: string[]
+          family?: string | null
+          governing_invariants?: string[]
+          hypothesis?: string
+          id?: string
+          layer?: string | null
+          review_history?: Json
+          series_id?: string | null
+          slug?: string
+          source_note?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      research_candidate_invariants: {
+        Row: {
+          created_at: string
+          depends_on: string[]
+          id: string
+          namespace: string | null
+          promoted_invariant_id: string | null
+          rationale: string | null
+          review_history: Json
+          slug: string
+          source_note: string | null
+          statement: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          depends_on?: string[]
+          id?: string
+          namespace?: string | null
+          promoted_invariant_id?: string | null
+          rationale?: string | null
+          review_history?: Json
+          slug: string
+          source_note?: string | null
+          statement: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          depends_on?: string[]
+          id?: string
+          namespace?: string | null
+          promoted_invariant_id?: string | null
+          rationale?: string | null
+          review_history?: Json
+          slug?: string
+          source_note?: string | null
+          statement?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      research_candidate_principles: {
+        Row: {
+          charter_ref: string | null
+          created_at: string
+          depends_on: string[]
+          id: string
+          rationale: string | null
+          review_history: Json
+          slug: string
+          source_note: string | null
+          statement: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          charter_ref?: string | null
+          created_at?: string
+          depends_on?: string[]
+          id?: string
+          rationale?: string | null
+          review_history?: Json
+          slug: string
+          source_note?: string | null
+          statement: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          charter_ref?: string | null
+          created_at?: string
+          depends_on?: string[]
+          id?: string
+          rationale?: string | null
+          review_history?: Json
+          slug?: string
+          source_note?: string | null
+          statement?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      research_objects: {
+        Row: {
+          created_at: string
+          id: string
+          lifecycle_state: string
+          object_id: string
+          object_kind: string
+          payload: Json
+          receipt_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lifecycle_state: string
+          object_id: string
+          object_kind: string
+          payload: Json
+          receipt_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lifecycle_state?: string
+          object_id?: string
+          object_kind?: string
+          payload?: Json
+          receipt_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      research_report_versions: {
+        Row: {
+          content: string
+          content_hash: string
+          created_at: string
+          grounded_on: Json
+          id: string
+          published_at: string | null
+          receipt_id: string | null
+          scope: string
+          sovereignty: Json | null
+          title: string
+          version: number
+        }
+        Insert: {
+          content: string
+          content_hash: string
+          created_at?: string
+          grounded_on?: Json
+          id?: string
+          published_at?: string | null
+          receipt_id?: string | null
+          scope?: string
+          sovereignty?: Json | null
+          title: string
+          version: number
+        }
+        Update: {
+          content?: string
+          content_hash?: string
+          created_at?: string
+          grounded_on?: Json
+          id?: string
+          published_at?: string | null
+          receipt_id?: string | null
+          scope?: string
+          sovereignty?: Json | null
+          title?: string
+          version?: number
+        }
+        Relationships: []
       }
       reward_grants: {
         Row: {
@@ -18877,6 +21233,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      x409_invitations: {
+        Row: {
+          agreement_id: string
+          claimed_at: string | null
+          claimed_item_id: string | null
+          code: string
+          created_at: string
+          id: string
+          label: string | null
+          status: string
+        }
+        Insert: {
+          agreement_id: string
+          claimed_at?: string | null
+          claimed_item_id?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          status?: string
+        }
+        Update: {
+          agreement_id?: string
+          claimed_at?: string | null
+          claimed_item_id?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          status?: string
+        }
+        Relationships: []
       }
     }
     Views: {
