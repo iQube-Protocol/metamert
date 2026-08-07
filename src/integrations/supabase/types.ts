@@ -3986,6 +3986,54 @@ export type Database = {
         }
         Relationships: []
       }
+      corpus_acquisition_seeds: {
+        Row: {
+          candidate_source_id: string | null
+          claim: string
+          content_hash: string | null
+          created_at: string
+          document_url: string
+          domain: string
+          id: string
+          institution_name: string
+          pillar_key: string
+          resolved_url: string | null
+          updated_at: string
+          verification_checked_at: string | null
+          verification_status: string | null
+        }
+        Insert: {
+          candidate_source_id?: string | null
+          claim?: string
+          content_hash?: string | null
+          created_at?: string
+          document_url: string
+          domain: string
+          id?: string
+          institution_name: string
+          pillar_key: string
+          resolved_url?: string | null
+          updated_at?: string
+          verification_checked_at?: string | null
+          verification_status?: string | null
+        }
+        Update: {
+          candidate_source_id?: string | null
+          claim?: string
+          content_hash?: string | null
+          created_at?: string
+          document_url?: string
+          domain?: string
+          id?: string
+          institution_name?: string
+          pillar_key?: string
+          resolved_url?: string | null
+          updated_at?: string
+          verification_checked_at?: string | null
+          verification_status?: string | null
+        }
+        Relationships: []
+      }
       corpus_candidate_sources: {
         Row: {
           acquisition_method: string
@@ -4223,9 +4271,15 @@ export type Database = {
           pillar_key: string
           ratified_at: string | null
           ratified_by: string | null
+          resolved_url: string | null
           seed_url: string | null
+          source_tier: string | null
           status: string
           updated_at: string
+          verification_checked_at: string | null
+          verification_detail: Json | null
+          verification_status: string | null
+          verified_at: string | null
         }
         Insert: {
           created_at?: string
@@ -4235,9 +4289,15 @@ export type Database = {
           pillar_key: string
           ratified_at?: string | null
           ratified_by?: string | null
+          resolved_url?: string | null
           seed_url?: string | null
+          source_tier?: string | null
           status?: string
           updated_at?: string
+          verification_checked_at?: string | null
+          verification_detail?: Json | null
+          verification_status?: string | null
+          verified_at?: string | null
         }
         Update: {
           created_at?: string
@@ -4247,9 +4307,15 @@ export type Database = {
           pillar_key?: string
           ratified_at?: string | null
           ratified_by?: string | null
+          resolved_url?: string | null
           seed_url?: string | null
+          source_tier?: string | null
           status?: string
           updated_at?: string
+          verification_checked_at?: string | null
+          verification_detail?: Json | null
+          verification_status?: string | null
+          verified_at?: string | null
         }
         Relationships: []
       }
@@ -6929,6 +6995,8 @@ export type Database = {
       discovery_candidates: {
         Row: {
           abstraction_level: string | null
+          artifact_payload: Json
+          artifact_type: string
           confidence: number
           created_at: string
           discovery_class: string
@@ -6937,6 +7005,7 @@ export type Database = {
           evidence_ids: string[]
           id: string
           promoted_invariant_id: string | null
+          promoted_profile_id: string | null
           rationale: string
           scope_level: string
           statement: string
@@ -6946,6 +7015,8 @@ export type Database = {
         }
         Insert: {
           abstraction_level?: string | null
+          artifact_payload?: Json
+          artifact_type?: string
           confidence?: number
           created_at?: string
           discovery_class?: string
@@ -6954,6 +7025,7 @@ export type Database = {
           evidence_ids?: string[]
           id?: string
           promoted_invariant_id?: string | null
+          promoted_profile_id?: string | null
           rationale?: string
           scope_level?: string
           statement: string
@@ -6963,6 +7035,8 @@ export type Database = {
         }
         Update: {
           abstraction_level?: string | null
+          artifact_payload?: Json
+          artifact_type?: string
           confidence?: number
           created_at?: string
           discovery_class?: string
@@ -6971,6 +7045,7 @@ export type Database = {
           evidence_ids?: string[]
           id?: string
           promoted_invariant_id?: string | null
+          promoted_profile_id?: string | null
           rationale?: string
           scope_level?: string
           statement?: string
@@ -7015,6 +7090,115 @@ export type Database = {
           title?: string
         }
         Relationships: []
+      }
+      domain_profile_presentation_events: {
+        Row: {
+          applied_presentation_threshold: number | null
+          confidence: number | null
+          id: string
+          occurred_at: string
+          outcome: string
+          profile_id: string
+          resolution_level: string
+          subject_type: string
+        }
+        Insert: {
+          applied_presentation_threshold?: number | null
+          confidence?: number | null
+          id?: string
+          occurred_at?: string
+          outcome: string
+          profile_id: string
+          resolution_level: string
+          subject_type: string
+        }
+        Update: {
+          applied_presentation_threshold?: number | null
+          confidence?: number | null
+          id?: string
+          occurred_at?: string
+          outcome?: string
+          profile_id?: string
+          resolution_level?: string
+          subject_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domain_profile_presentation_events_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "domain_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      domain_profiles: {
+        Row: {
+          aliases: string[]
+          assertion_provenance: string
+          capability_modules: string[]
+          confidence: number | null
+          created_at: string
+          evidence: Json
+          id: string
+          overlay_context: string
+          presentation_threshold: number | null
+          rationale: string
+          source_candidate_id: string | null
+          subject_id: string
+          subject_type: string
+          updated_at: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: Json
+        }
+        Insert: {
+          aliases?: string[]
+          assertion_provenance: string
+          capability_modules?: string[]
+          confidence?: number | null
+          created_at?: string
+          evidence?: Json
+          id?: string
+          overlay_context?: string
+          presentation_threshold?: number | null
+          rationale?: string
+          source_candidate_id?: string | null
+          subject_id: string
+          subject_type?: string
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: Json
+        }
+        Update: {
+          aliases?: string[]
+          assertion_provenance?: string
+          capability_modules?: string[]
+          confidence?: number | null
+          created_at?: string
+          evidence?: Json
+          id?: string
+          overlay_context?: string
+          presentation_threshold?: number | null
+          rationale?: string
+          source_candidate_id?: string | null
+          subject_id?: string
+          subject_type?: string
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domain_profiles_source_candidate_id_fkey"
+            columns: ["source_candidate_id"]
+            isOneToOne: false
+            referencedRelation: "discovery_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dvn_attestations: {
         Row: {
@@ -7839,6 +8023,57 @@ export type Database = {
         }
         Relationships: []
       }
+      experiment_workspace_items: {
+        Row: {
+          created_at: string
+          created_by_ref: string | null
+          detail: string | null
+          due_date: string | null
+          id: string
+          kind: string
+          layer: string | null
+          linked_agreement_id: string | null
+          linked_intent_id: string | null
+          owner_agent_id: string | null
+          status: string
+          title: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_ref?: string | null
+          detail?: string | null
+          due_date?: string | null
+          id?: string
+          kind: string
+          layer?: string | null
+          linked_agreement_id?: string | null
+          linked_intent_id?: string | null
+          owner_agent_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by_ref?: string | null
+          detail?: string | null
+          due_date?: string | null
+          id?: string
+          kind?: string
+          layer?: string | null
+          linked_agreement_id?: string | null
+          linked_intent_id?: string | null
+          owner_agent_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       financial_aggregates: {
         Row: {
           avg_daily_surplus: number | null
@@ -8043,6 +8278,102 @@ export type Database = {
         }
         Relationships: []
       }
+      governance_ratifications: {
+        Row: {
+          act: string
+          amendment_ids: string[]
+          anchoring_is_retrospective: boolean
+          authority_basis: string
+          content_cid: string | null
+          content_hash: string
+          content_hash_scope: string
+          created_at: string
+          decision_id: string
+          document_id: string
+          document_path: string
+          document_title: string
+          document_version: string
+          domain: string
+          effective_at: string | null
+          framework_id: string | null
+          historical_content_recoverable: boolean | null
+          id: string
+          object: Json
+          previous_content_hash: string | null
+          published_at: string | null
+          ratification_kind: string
+          ratified_at: string
+          ratified_by_ref: string
+          receipt_id: string | null
+          recorded_at: string
+          summary: string
+          supersedes: string[]
+          updated_at: string
+        }
+        Insert: {
+          act?: string
+          amendment_ids?: string[]
+          anchoring_is_retrospective?: boolean
+          authority_basis: string
+          content_cid?: string | null
+          content_hash: string
+          content_hash_scope?: string
+          created_at?: string
+          decision_id: string
+          document_id: string
+          document_path: string
+          document_title: string
+          document_version: string
+          domain?: string
+          effective_at?: string | null
+          framework_id?: string | null
+          historical_content_recoverable?: boolean | null
+          id?: string
+          object: Json
+          previous_content_hash?: string | null
+          published_at?: string | null
+          ratification_kind?: string
+          ratified_at: string
+          ratified_by_ref: string
+          receipt_id?: string | null
+          recorded_at?: string
+          summary: string
+          supersedes?: string[]
+          updated_at?: string
+        }
+        Update: {
+          act?: string
+          amendment_ids?: string[]
+          anchoring_is_retrospective?: boolean
+          authority_basis?: string
+          content_cid?: string | null
+          content_hash?: string
+          content_hash_scope?: string
+          created_at?: string
+          decision_id?: string
+          document_id?: string
+          document_path?: string
+          document_title?: string
+          document_version?: string
+          domain?: string
+          effective_at?: string | null
+          framework_id?: string | null
+          historical_content_recoverable?: boolean | null
+          id?: string
+          object?: Json
+          previous_content_hash?: string | null
+          published_at?: string | null
+          ratification_kind?: string
+          ratified_at?: string
+          ratified_by_ref?: string
+          receipt_id?: string | null
+          recorded_at?: string
+          summary?: string
+          supersedes?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hcp_profile: {
         Row: {
           persona_id: string
@@ -8102,6 +8433,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      horizen_pulse_correlation_traces: {
+        Row: {
+          agent_id: string | null
+          agent_slug: string
+          attempt_id: string
+          authorization_id: string | null
+          chain: string | null
+          classification: string
+          classification_reason: string
+          created_at: string
+          issued_at: string | null
+          local_contract_error: string | null
+          normalized_submission: Json | null
+          raw_submit_response: Json | null
+          reached_partner_submission: boolean
+          selected_message_hash: string | null
+          selected_message_length: number | null
+          selected_message_source: string | null
+          signature_ref: string | null
+          status_reads: Json
+          status_reread_arguments: Json | null
+          submit_arguments: Json | null
+          timestamps: Json
+          wallet_address: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          agent_slug: string
+          attempt_id: string
+          authorization_id?: string | null
+          chain?: string | null
+          classification: string
+          classification_reason: string
+          created_at?: string
+          issued_at?: string | null
+          local_contract_error?: string | null
+          normalized_submission?: Json | null
+          raw_submit_response?: Json | null
+          reached_partner_submission: boolean
+          selected_message_hash?: string | null
+          selected_message_length?: number | null
+          selected_message_source?: string | null
+          signature_ref?: string | null
+          status_reads?: Json
+          status_reread_arguments?: Json | null
+          submit_arguments?: Json | null
+          timestamps?: Json
+          wallet_address?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          agent_slug?: string
+          attempt_id?: string
+          authorization_id?: string | null
+          chain?: string | null
+          classification?: string
+          classification_reason?: string
+          created_at?: string
+          issued_at?: string | null
+          local_contract_error?: string | null
+          normalized_submission?: Json | null
+          raw_submit_response?: Json | null
+          reached_partner_submission?: boolean
+          selected_message_hash?: string | null
+          selected_message_length?: number | null
+          selected_message_source?: string | null
+          signature_ref?: string | null
+          status_reads?: Json
+          status_reread_arguments?: Json | null
+          submit_arguments?: Json | null
+          timestamps?: Json
+          wallet_address?: string | null
+        }
+        Relationships: []
       }
       identity_aliases: {
         Row: {
@@ -9068,43 +9474,55 @@ export type Database = {
       iqube_mint_stubs: {
         Row: {
           autonomys_cid: string | null
+          blak_qube_id: string | null
+          blakqube_auth_tag: string | null
           blakqube_ciphertext: string | null
           blakqube_iv: string | null
           chain_tx: string | null
           created_at: string
           id: string
           iqube_type: string
+          meta_qube_id: string | null
           metaqube_payload: Json | null
           status: string
           template_id: string | null
+          token_qube_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           autonomys_cid?: string | null
+          blak_qube_id?: string | null
+          blakqube_auth_tag?: string | null
           blakqube_ciphertext?: string | null
           blakqube_iv?: string | null
           chain_tx?: string | null
           created_at?: string
           id?: string
           iqube_type: string
+          meta_qube_id?: string | null
           metaqube_payload?: Json | null
           status?: string
           template_id?: string | null
+          token_qube_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           autonomys_cid?: string | null
+          blak_qube_id?: string | null
+          blakqube_auth_tag?: string | null
           blakqube_ciphertext?: string | null
           blakqube_iv?: string | null
           chain_tx?: string | null
           created_at?: string
           id?: string
           iqube_type?: string
+          meta_qube_id?: string | null
           metaqube_payload?: Json | null
           status?: string
           template_id?: string | null
+          token_qube_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -11324,6 +11742,54 @@ export type Database = {
             referencedColumns: ["program_id"]
           },
         ]
+      }
+      linked_external_wallets: {
+        Row: {
+          address: string
+          authority_role: string
+          chain: string
+          control_status: string
+          created_at: string
+          id: string
+          may_sign_principal_mandate: boolean
+          originating_write_path: string
+          proof_ref: string | null
+          proven_at: string | null
+          provider: string
+          subject_persona_id: string
+          wallet_type: string
+        }
+        Insert: {
+          address: string
+          authority_role?: string
+          chain: string
+          control_status?: string
+          created_at?: string
+          id: string
+          may_sign_principal_mandate?: boolean
+          originating_write_path: string
+          proof_ref?: string | null
+          proven_at?: string | null
+          provider: string
+          subject_persona_id: string
+          wallet_type?: string
+        }
+        Update: {
+          address?: string
+          authority_role?: string
+          chain?: string
+          control_status?: string
+          created_at?: string
+          id?: string
+          may_sign_principal_mandate?: boolean
+          originating_write_path?: string
+          proof_ref?: string | null
+          proven_at?: string | null
+          provider?: string
+          subject_persona_id?: string
+          wallet_type?: string
+        }
+        Relationships: []
       }
       locker_ens_names: {
         Row: {
@@ -14252,6 +14718,81 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_authorization_requests: {
+        Row: {
+          agent_id: string | null
+          authorization_id: string
+          created_at: string
+          expires_at: string
+          issued_at: string | null
+          key_ref: string
+          network: string
+          nonce: string
+          partner: string
+          partner_status: string | null
+          payload_hash: string | null
+          purpose: string
+          receipt_ref: string | null
+          refusal_code: string | null
+          refusal_detail: string | null
+          signature_ref: string | null
+          signer_address: string | null
+          state: string
+          subject_aigent_iqube_id: string
+          submission_ref: string | null
+          updated_at: string
+          wallet_address: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          authorization_id: string
+          created_at?: string
+          expires_at: string
+          issued_at?: string | null
+          key_ref: string
+          network: string
+          nonce: string
+          partner: string
+          partner_status?: string | null
+          payload_hash?: string | null
+          purpose: string
+          receipt_ref?: string | null
+          refusal_code?: string | null
+          refusal_detail?: string | null
+          signature_ref?: string | null
+          signer_address?: string | null
+          state?: string
+          subject_aigent_iqube_id: string
+          submission_ref?: string | null
+          updated_at?: string
+          wallet_address?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          authorization_id?: string
+          created_at?: string
+          expires_at?: string
+          issued_at?: string | null
+          key_ref?: string
+          network?: string
+          nonce?: string
+          partner?: string
+          partner_status?: string | null
+          payload_hash?: string | null
+          purpose?: string
+          receipt_ref?: string | null
+          refusal_code?: string | null
+          refusal_detail?: string | null
+          signature_ref?: string | null
+          signer_address?: string | null
+          state?: string
+          subject_aigent_iqube_id?: string
+          submission_ref?: string | null
+          updated_at?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
       partner_outreach: {
         Row: {
           committed: boolean | null
@@ -14364,6 +14905,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      passport_connection_challenges: {
+        Row: {
+          audience: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          nonce_hash: string
+          origin: string
+          provisional_connection_id: string
+          requested_action: string
+          wallet_address: string | null
+        }
+        Insert: {
+          audience: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          nonce_hash: string
+          origin: string
+          provisional_connection_id: string
+          requested_action?: string
+          wallet_address?: string | null
+        }
+        Update: {
+          audience?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          nonce_hash?: string
+          origin?: string
+          provisional_connection_id?: string
+          requested_action?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
       }
       passport_infractions: {
         Row: {
@@ -14551,6 +15131,48 @@ export type Database = {
         }
         Relationships: []
       }
+      passport_passkey_credentials: {
+        Row: {
+          auth_user_id: string
+          backed_up: boolean
+          created_at: string
+          credential_id: string
+          friendly_name: string | null
+          id: string
+          last_used_at: string | null
+          public_key: string
+          revoked_at: string | null
+          sign_count: number
+          transports: Json
+        }
+        Insert: {
+          auth_user_id: string
+          backed_up?: boolean
+          created_at?: string
+          credential_id: string
+          friendly_name?: string | null
+          id?: string
+          last_used_at?: string | null
+          public_key: string
+          revoked_at?: string | null
+          sign_count?: number
+          transports?: Json
+        }
+        Update: {
+          auth_user_id?: string
+          backed_up?: boolean
+          created_at?: string
+          credential_id?: string
+          friendly_name?: string | null
+          id?: string
+          last_used_at?: string | null
+          public_key?: string
+          revoked_at?: string | null
+          sign_count?: number
+          transports?: Json
+        }
+        Relationships: []
+      }
       passport_peer_channels: {
         Row: {
           created_at: string
@@ -14674,6 +15296,72 @@ export type Database = {
             columns: ["channel_id"]
             isOneToOne: false
             referencedRelation: "passport_peer_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passport_pending_auth: {
+        Row: {
+          assurance_level: string
+          audience: string
+          auth_user_id: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          kybe_identity_id: string
+          origin: string
+          persona_activation_consumed_at: string | null
+          persona_activation_handoff_consumed_at: string | null
+          root_identity_id: string
+          selected_persona_id: string | null
+          transaction_token_hash: string
+        }
+        Insert: {
+          assurance_level: string
+          audience: string
+          auth_user_id: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          kybe_identity_id: string
+          origin: string
+          persona_activation_consumed_at?: string | null
+          persona_activation_handoff_consumed_at?: string | null
+          root_identity_id: string
+          selected_persona_id?: string | null
+          transaction_token_hash: string
+        }
+        Update: {
+          assurance_level?: string
+          audience?: string
+          auth_user_id?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          kybe_identity_id?: string
+          origin?: string
+          persona_activation_consumed_at?: string | null
+          persona_activation_handoff_consumed_at?: string | null
+          root_identity_id?: string
+          selected_persona_id?: string | null
+          transaction_token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passport_pending_auth_kybe_identity_id_fkey"
+            columns: ["kybe_identity_id"]
+            isOneToOne: false
+            referencedRelation: "kybe_identity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passport_pending_auth_root_identity_id_fkey"
+            columns: ["root_identity_id"]
+            isOneToOne: false
+            referencedRelation: "root_identity"
             referencedColumns: ["id"]
           },
         ]
@@ -18640,6 +19328,60 @@ export type Database = {
         }
         Relationships: []
       }
+      reviewer_agreement_authorizations: {
+        Row: {
+          agreement_hash: string
+          agreement_id: string
+          agreement_version: string
+          authorized_at: string
+          conflict_declared: boolean
+          conflict_statement: string | null
+          experiment_id: string
+          id: string
+          package_scope: Json
+          passport_ref: string | null
+          persona_id: string
+          proof_ref: string | null
+          receipt_id: string | null
+          reviewer_ref: string
+          status: string
+        }
+        Insert: {
+          agreement_hash: string
+          agreement_id: string
+          agreement_version: string
+          authorized_at?: string
+          conflict_declared?: boolean
+          conflict_statement?: string | null
+          experiment_id: string
+          id?: string
+          package_scope?: Json
+          passport_ref?: string | null
+          persona_id: string
+          proof_ref?: string | null
+          receipt_id?: string | null
+          reviewer_ref: string
+          status?: string
+        }
+        Update: {
+          agreement_hash?: string
+          agreement_id?: string
+          agreement_version?: string
+          authorized_at?: string
+          conflict_declared?: boolean
+          conflict_statement?: string | null
+          experiment_id?: string
+          id?: string
+          package_scope?: Json
+          passport_ref?: string | null
+          persona_id?: string
+          proof_ref?: string | null
+          receipt_id?: string | null
+          reviewer_ref?: string
+          status?: string
+        }
+        Relationships: []
+      }
       reward_grants: {
         Row: {
           amount_knyt: number
@@ -19078,6 +19820,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      signing_requests: {
+        Row: {
+          action_kind: string
+          authority_credential: string | null
+          consequence: string
+          created_at: string
+          expires_at: string
+          id: string
+          network: string
+          nonce: string
+          payload: string
+          payload_hash: string
+          principal_persona_id: string
+          receipt_destination: string
+          refusal_code: string | null
+          refusal_detail: string | null
+          resolved_at: string | null
+          signature: string | null
+          signer_address: string | null
+          signer_role: string
+          status: string
+          subject_agent_ref: string | null
+          subject_aigentqube_id: string | null
+          wallet_ref: string
+        }
+        Insert: {
+          action_kind: string
+          authority_credential?: string | null
+          consequence: string
+          created_at?: string
+          expires_at: string
+          id: string
+          network: string
+          nonce: string
+          payload: string
+          payload_hash: string
+          principal_persona_id: string
+          receipt_destination: string
+          refusal_code?: string | null
+          refusal_detail?: string | null
+          resolved_at?: string | null
+          signature?: string | null
+          signer_address?: string | null
+          signer_role: string
+          status?: string
+          subject_agent_ref?: string | null
+          subject_aigentqube_id?: string | null
+          wallet_ref: string
+        }
+        Update: {
+          action_kind?: string
+          authority_credential?: string | null
+          consequence?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          network?: string
+          nonce?: string
+          payload?: string
+          payload_hash?: string
+          principal_persona_id?: string
+          receipt_destination?: string
+          refusal_code?: string | null
+          refusal_detail?: string | null
+          resolved_at?: string | null
+          signature?: string | null
+          signer_address?: string | null
+          signer_role?: string
+          status?: string
+          subject_agent_ref?: string | null
+          subject_aigentqube_id?: string | null
+          wallet_ref?: string
+        }
+        Relationships: []
       }
       sites: {
         Row: {
@@ -22515,6 +23332,7 @@ export type Database = {
         }
         Returns: string
       }
+      venture_receipt_action_type_constraint: { Args: never; Returns: string[] }
     }
     Enums: {
       codex_asset_kind:
